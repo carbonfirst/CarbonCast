@@ -2,7 +2,6 @@ import csv
 import math
 from datetime import datetime as dt
 from datetime import timezone as tz
-from cv2 import mean
 
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
@@ -11,34 +10,30 @@ import pandas as pd
 import pmdarima as pm
 import pytz as pytz
 import seaborn as sns
-from keras import metrics, optimizers, regularizers
 from keras.layers import Dense, Flatten
 from keras.layers import LSTM
 from keras.layers.convolutional import AveragePooling1D, Conv1D, MaxPooling1D
-from keras.layers.core import Activation, Dropout
 from keras.layers.normalization.batch_normalization import BatchNormalization
 from keras.models import Sequential
 from scipy.sparse import data
 from sklearn.utils import validation
 from statsmodels.tsa.arima_model import ARIMA
 from statsmodels.tsa.stattools import adfuller
-from sklearn.linear_model import LassoCV
 import tensorflow as tf
 from tensorflow import keras
 from keras.callbacks import EarlyStopping
 from keras.callbacks import ModelCheckpoint
 from keras.models import load_model
 
+import common
+
 
 ############################# MACRO START #######################################
 print("Start")
-# ISO_LIST = ["BPAT", "CISO", "ERCO", "SOCO", "SWPP", "FPL", "ISNE", "NYIS", "PJM", "MISO"]
 # ISO_LIST = ["CISO", "ERCO", "ISNE", "PJM"]
 ISO_LIST = ["CISO"]
-LOCAL_TIMEZONES = {"BPAT": "US/Pacific", "CISO": "US/Pacific", "ERCO": "US/Central", 
-                    "SOCO" :"US/Central", "SWPP": "US/Central", "FPL": "US/Eastern", 
-                    "ISNE": "US/Eastern", "NYIS": "US/Eastern", "PJM": "US/Eastern", 
-                    "MISO": "US/Eastern", "SE": "CET", "GB": "UTC", "DE": "CET"}
+LOCAL_TIMEZONES = {"CISO": "US/Pacific", "ERCO": "US/Central", "ISNE": "US/Eastern", 
+                    "PJM": "US/Eastern", "SE": "CET", "GB": "UTC"}
 IN_FILE_NAME = None
 OUT_FILE_NAME = None
 LOCAL_TIMEZONE = None
@@ -76,9 +71,12 @@ UNKNOWN_DE = 11
 START_COL = NAT_GAS
 
 
+FORECASTS_ONE_DAY_AT_A_TIME = True
 NUM_VAL_DAYS = 30
-TRAINING_WINDOW_HOURS = 24
-PREDICTION_WINDOW_HOURS = 24
+TRAINING_WINDOW_HOURS = 96
+if (FORECASTS_ONE_DAY_AT_A_TIME is True):
+    TRAINING_WINDOW_HOURS = 24
+PREDICTION_WINDOW_HOURS = 96
 MODEL_SLIDING_WINDOW_LEN = 24
 BUFFER_HOURS = PREDICTION_WINDOW_HOURS - 24
 DAY_INTERVAL = 1
@@ -112,6 +110,7 @@ NUM_FEATURES = NUM_FEATURES_DICT[FUEL[START_COL]]
 ############################# MACRO END #########################################
 
 def initialize(inFileName, localTimezone):
+    global START_COL
     # load the new file
     dataset = pd.read_csv(inFileName, header=0, infer_datetime_format=True, 
                             parse_dates=['UTC time'], index_col=['UTC time'])
@@ -121,7 +120,7 @@ def initialize(inFileName, localTimezone):
     dateTime = dataset.index.values
     
     print("\nAdding features related to date & time...")
-    modifiedDataset = addDateTimeFeatures(dataset, dateTime)
+    modifiedDataset = common.addDateTimeFeatures(dataset, dateTime, START_COL)
     dataset = modifiedDataset
     print("Features related to date & time added")
 
@@ -141,123 +140,7 @@ def initialize(inFileName, localTimezone):
 
     return dataset, dateTime, bufferPeriod, bufferDates
 
-def scaleDataset(trainData, valData, testData):
-    # Scaling columns to range (0, 1)
-    row, col = trainData.shape[0], trainData.shape[1]
-    ftMin, ftMax = [], []
-    for i in range(col):
-        fmax= trainData[0, i]
-        fmin = trainData[0, i]
-        for j in range(len(trainData[:, i])):
-            if(fmax < trainData[j, i]):
-                fmax = trainData[j, i]
-            if (fmin > trainData[j, i]):
-                fmin = trainData[j, i]
-        ftMin.append(fmin)
-        ftMax.append(fmax)
-        # print(fmax, fmin)
-
-    for i in range(col):
-        if((ftMax[i] - ftMin[i]) == 0):
-            continue
-        trainData[:, i] = (trainData[:, i] - ftMin[i]) / (ftMax[i] - ftMin[i])
-        valData[:, i] = (valData[:, i] - ftMin[i]) / (ftMax[i] - ftMin[i])
-        testData[:, i] = (testData[:, i] - ftMin[i]) / (ftMax[i] - ftMin[i])
-
-    return trainData, valData, testData, ftMin, ftMax
-
-def inverseDataNormalization(data, cmax, cmin):
-    cdiff = cmax-cmin
-    unscaledData = np.zeros_like(data)
-    for i in range(data.shape[0]):
-        unscaledData[i] = max(data[i]*cdiff + cmin, 0)
-    return unscaledData
-
-def getDatesInLocalTimeZone(dateTime):
-    global LOCAL_TIMEZONE
-    dates = []
-    fromZone = pytz.timezone("UTC")
-    for i in range(0, len(dateTime), 24):
-        day = pd.to_datetime(dateTime[i]).replace(tzinfo=fromZone)
-        day = day.astimezone(LOCAL_TIMEZONE)
-        dates.append(day)    
-    return dates
-
-def getAvgContributionBySource(dataset):
-    contribution = {}
-    for col in dataset.columns:
-        if "frac" in col:
-            avgContribution = np.mean(dataset[col].values)
-            print(col, ": ", avgContribution)
-            contribution[col[5:]] = avgContribution
-    contribution = dict(sorted(contribution.items(), key=lambda item: item[1]))
-    return contribution
-
-# Date time feature engineering
-def addDateTimeFeatures(dataset, dateTime):
-    global CARBON_INTENSITY_COL
-    dates = []
-    hourList = []
-    hourSin, hourCos = [], []
-    monthList = []
-    monthSin, monthCos = [], []
-    weekendList = []
-    columns = dataset.columns
-    secInDay = 24 * 60 * 60 # Seconds in day 
-    secInYear = year = (365.25) * secInDay # Seconds in year 
-
-    day = pd.to_datetime(dateTime[0])
-    isWeekend = 0
-    zero = 0
-    one = 0
-    for i in range(0, len(dateTime)):
-        day = pd.to_datetime(dateTime[i])
-        dates.append(day)
-        hourList.append(day.hour)
-        hourSin.append(np.sin(day.hour * (2 * np.pi / 24)))
-        hourCos.append(np.cos(day.hour * (2 * np.pi / 24)))
-        monthList.append(day.month)
-        monthSin.append(np.sin(day.timestamp() * (2 * np.pi / secInYear)))
-        monthCos.append(np.cos(day.timestamp() * (2 * np.pi / secInYear)))
-        if (day.weekday() < 5):
-            isWeekend = 0
-            zero +=1
-        else:
-            isWeekend = 1
-            one +=1
-        weekendList.append(isWeekend)        
-    loc = START_COL+1
-    print(zero, one)
-    # hour of day feature
-    dataset.insert(loc=loc, column="hour_sin", value=hourSin)
-    dataset.insert(loc=loc+1, column="hour_cos", value=hourCos)
-    # month of year feature
-    dataset.insert(loc=loc+2, column="month_sin", value=monthSin)
-    dataset.insert(loc=loc+3, column="month_cos", value=monthCos)
-    # is weekend feature
-    dataset.insert(loc=loc+4, column="weekend", value=weekendList)
-
-    # print(dataset.columns)
-    print(dataset.head())
-    return dataset
-
-def splitDataset(dataset, testDataSize, valDataSize): # testDataSize, valDataSize are in days
-    global PREDICTION_WINDOW_HOURS
-    global TRAINING_WINDOW_HOURS
-    print("No. of rows in dataset:", len(dataset))
-    valData = None
-    numTestEntries = testDataSize * 24
-    numValEntries = valDataSize * 24
-    trainData, testData = dataset[:-numTestEntries], dataset[-numTestEntries:]
-    fullTrainData = np.copy(trainData)
-    trainData, valData = trainData[:-numValEntries], trainData[-numValEntries:]
-    # trainData = trainData[:(len(trainData)//PREDICTION_WINDOW_HOURS)*PREDICTION_WINDOW_HOURS]
-    print("No. of rows in training set:", len(trainData))
-    print("No. of rows in validation set:", len(valData))
-    print("No. of rows in test set:", len(testData))
-    return trainData, valData, testData, fullTrainData
-
-# convert history into inputs and outputs
+# convert training data into inputs and outputs (labels)
 def manipulateTrainingDataShape(data, trainWindowHours, labelWindowHours): 
     print("Data shape: ", data.shape)
     X, y = list(), list()
@@ -271,18 +154,16 @@ def manipulateTrainingDataShape(data, trainWindowHours, labelWindowHours):
         X.append(xInput)
         y.append(data[trainWindow:labelWindow, CARBON_INTENSITY_COL])
         # print(data[trainWindow:labelWindow, 0])
-    # print("First train window: ", X[0])
-    # print("First label window: ", y[0])
     return np.array(X, dtype=np.float64), np.array(y, dtype=np.float64)
 
-def manipulateTestDataShape(data, slidingWindowLen, predictionWindowHours, isDataDates=False): 
+def manipulateTestDataShape(data, slidingWindowLen, predictionWindowHours, isDates=False): 
     X = list()
     # step over the entire history one time step at a time
     for i in range(0, len(data)-(predictionWindowHours)+1, slidingWindowLen):
         # define the end of the input sequence
         predictionWindow = i + predictionWindowHours
         X.append(data[i:predictionWindow])
-    if (isDataDates is False):
+    if (isDates is False):
         X = np.array(X, dtype=np.float64)
     else:
         X = np.array(X)
@@ -317,48 +198,26 @@ def trainANN(trainX, trainY, valX, valY, hyperParams):
     hist = model.fit(trainX, trainY, epochs=epochs, batch_size=batchSize[0], verbose=2,
                         validation_data=(valX, valY), callbacks=[es, mc])
     model = load_model("best_model_ann.h5")
-    showModelSummary(hist, model)
+    common.showModelSummary(hist, model)
     return model, n_features
 
-def showModelSummary(history, model):
-    print("Showing model summary...")
-    model.summary()
-    print("***** Model summary shown *****")
-    # list all data in history
-    print(history.history.keys()) # ['loss', 'mean_absolute_error', 'val_loss', 'val_mean_absolute_error']
-    fig = plt.figure()
-    subplt1 = fig.add_subplot(2, 1, 1)
-    subplt1.plot(history.history['mean_absolute_error'])
-    subplt1.plot(history.history['val_mean_absolute_error'])
-    subplt1.legend(['train MAE', 'val_MAE'], loc="upper left")
-    # summarize history for loss
-    subplt2 = fig.add_subplot(2, 1, 2)
-    subplt2.plot(history.history['loss'])
-    subplt2.plot(history.history['val_loss'])
-    subplt2.legend(['train RMSE', 'val RMSE'], loc="upper left")
     
-    # plt.plot(history.history["loss"])
-    # plt.xlabel('epoch')
-    # plt.ylabel("RMSE")
-    # plt.title('Training loss (RMSE)')
-    return
 
-# evaluate a single model
 # walk-forward validation
-def validate(trainX, trainY, model, history, testData, trainWindowHours, numFeatures):
+def getOneShotForecasts(trainX, trainY, model, history, testData, trainWindowHours, numFeatures):
     global MODEL_SLIDING_WINDOW_LEN
     global BUFFER_HOURS
     # walk-forward validation over each day
     print("Testing...")
     predictions = list()
     for i in range(0, ((len(testData)//24)-(BUFFER_HOURS//24))):
-        # predict the day
-        yhat_sequence, newTrainingData = predict(model, history, trainWindowHours, numFeatures)
-        # store the predictions
+        # predict n days in one shot
+        yhat_sequence, newTrainingData = getForecasts(model, history, trainWindowHours, numFeatures)
         predictions.append(yhat_sequence)
         # get real observation and add to history for predicting the next day
-        history.extend(testData[i:i+MODEL_SLIDING_WINDOW_LEN, :].tolist())
-        newLabel = testData[i:i+MODEL_SLIDING_WINDOW_LEN,0].reshape(1, MODEL_SLIDING_WINDOW_LEN)
+        currentDayHours = i* MODEL_SLIDING_WINDOW_LEN
+        history.extend(testData[currentDayHours:currentDayHours+MODEL_SLIDING_WINDOW_LEN, :].tolist())
+        newLabel = testData[currentDayHours:currentDayHours+MODEL_SLIDING_WINDOW_LEN,0].reshape(1, MODEL_SLIDING_WINDOW_LEN)
         np.append(trainX, newTrainingData)
         np.append(trainY, newLabel)
 
@@ -366,76 +225,56 @@ def validate(trainX, trainY, model, history, testData, trainWindowHours, numFeat
         trainX = trainX[:-(NUM_VAL_DAYS*TRAINING_WINDOW_HOURS)]
         valY = trainY[-(NUM_VAL_DAYS*TRAINING_WINDOW_HOURS):]
         trainY = trainY[:-(NUM_VAL_DAYS*TRAINING_WINDOW_HOURS)]
-        # if (i%180 == 0):
-        #     print(trainX.shape, trainY.shape)
-        #     print(valX.shape, valY.shape)
-        #     updateModel(model, trainX, trainY, valX, valY)
+
     # evaluate predictions days for each day
     predictedData = np.array(predictions, dtype=np.float64)
     return predictedData
 
-def updateModel(model, trainX, trainY, valX, valY):
-    print("Updating model after 6 months")
-    # opt = tf.keras.optimizers.Adam(learning_rate=0.001)
-    model.compile(loss="mse", optimizer="adam",
-                metrics=['mean_absolute_error'])
-    # simple early stopping
-    es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=10)
-    mc = ModelCheckpoint('updated_best_model.h5', monitor='val_loss', mode='min', verbose=1, save_best_only=True)
+def getDayAheadForecasts(trainX, trainY, model, history, testData, 
+                            trainWindowHours, numFeatures, depVarColumn):
+    global MODEL_SLIDING_WINDOW_LEN
+    global PREDICTION_WINDOW_HOURS
+    global BUFFER_HOURS
+    # walk-forward validation over each day
+    print("Testing...")
+    predictions = list()
+    for i in range(0, ((len(testData)//24)-(BUFFER_HOURS//24))):
+        dayAheadPredictions = list()
+        # predict n days, 1 day at a time
+        tempHistory = history.copy()
+        for j in range(0, PREDICTION_WINDOW_HOURS, 24):
+            yhat_sequence, newTrainingData = getForecasts(model, tempHistory, trainWindowHours, numFeatures)
+            dayAheadPredictions.extend(yhat_sequence)
+            # add current prediction to history for predicting the next day
+            latestHistory = testData[i+j:i+j+24, :].tolist()
+            for k in range(24):
+                latestHistory[k][depVarColumn] = yhat_sequence[k]
+            tempHistory.extend(latestHistory)
 
-# fit network
-    # hist = model.fit(trainX, trainY, epochs=epochs, batch_size=bSize, verbose=verbose)
-    hist = model.fit(trainX, trainY, epochs=100, batch_size=5, verbose=2,
-                        validation_data=(valX, valY), callbacks=[es, mc])
+        # get real observation and add to history for predicting the next day
+        currentDayHours = i* MODEL_SLIDING_WINDOW_LEN
+        history.extend(testData[currentDayHours:currentDayHours+MODEL_SLIDING_WINDOW_LEN, :].tolist())
+        predictions.append(dayAheadPredictions)
 
-    # model = load_model("updated_best_model.h5")
-    return model
+    # evaluate predictions days for each day
+    predictedData = np.array(predictions, dtype=np.float64)
+    return predictedData
 
 
-def predict(model, history, trainWindowHours, numFeatures):
+def getForecasts(model, history, trainWindowHours, numFeatures):
     # flatten data
     data = np.array(history, dtype=np.float64)
-    # print("Data shape: ", data.shape)
     # retrieve last observations for input data
     input_x = data[-trainWindowHours:]
-    # print("ip shape: ", input_x.shape)
     # reshape into [1, n_input, num_features]
     input_x = input_x.reshape((1, len(input_x), numFeatures))
-    # forecast the next day
     # print("ip_x shape: ", input_x.shape)
     yhat = model.predict(input_x, verbose=0)
     # we only want the vector forecast
     yhat = yhat[0]
     return yhat, input_x
 
-def writeOutFile(outFileName, data, fuel):
-    print("Writing to ", outFileName, "...")
-    fields = ["datetime", fuel+"_actual", "avg_"+fuel+"_production_forecast"]
-    
-    # writing to csv file 
-    with open(outFileName, 'w') as csvfile: 
-        # creating a csv writer object 
-        csvwriter = csv.writer(csvfile)   
-        # writing the fields 
-        csvwriter.writerow(fields) 
-        # writing the data rows 
-        csvwriter.writerows(data)
-
-def showPlots():
-    plt.show()
-
-def getScores(scaledActual, scaledPredicted, unscaledActual, unscaledPredicted):
-    print("Actual data shape, Predicted data shape: ", scaledActual.shape, scaledPredicted.shape)
-    mse = tf.keras.losses.MeanSquaredError()
-    rmseScore = round(math.sqrt(mse(scaledActual, scaledPredicted)), 6)
-
-    mape = tf.keras.losses.MeanAbsolutePercentageError()
-    mapeTensor =  mape(unscaledActual, unscaledPredicted)
-    mapeScore = mapeTensor.numpy()
-
-    return rmseScore, mapeScore
-
-def getHyperParams():
+def getANNHyperParams():
     hyperParams = {}
     hyperParams['epoch'] = 100 # DIP
     hyperParams['batchsize'] = [10] # 10 for coal, nuclear, nat_gas
@@ -459,6 +298,9 @@ for ISO in ISO_LIST:
     # OUT_FILE_NAME_PREFIX = "../final_weather_data/"+ISO+"/fuel_forecast/"+ISO+"_NR_Forecast"
     IN_FILE_NAME = "../extn/"+ISO+"/fuel_forecast/"+ISO+"_"+FUEL[START_COL]+"_2019_clean.csv"
     OUT_FILE_NAME_PREFIX = "../extn/"+ISO+"/fuel_forecast/"+ISO+"_"+str(PREDICTION_WINDOW_HOURS)+"_hr_src_prod_forecast"
+    if(FORECASTS_ONE_DAY_AT_A_TIME is True):
+        OUT_FILE_NAME_PREFIX = OUT_FILE_NAME_PREFIX + "_DA"
+    
     LOCAL_TIMEZONE = pytz.timezone(LOCAL_TIMEZONES[ISO])
     if ISO == "SE":
         PLOT_TITLE = "SWEDEN"
@@ -500,7 +342,7 @@ for ISO in ISO_LIST:
 
         # split into train and test
         print("Spliting dataset into train/test...")
-        trainData, valData, testData, fullTrainData = splitDataset(dataset.values, NUM_TEST_DAYS, 
+        trainData, valData, testData, fullTrainData = common.splitDataset(dataset.values, NUM_TEST_DAYS, 
                                                 NUM_VAL_DAYS)
         trainDates = dateTime[: -(NUM_TEST_DAYS*24)]
         fullTrainDates = np.copy(trainDates)
@@ -514,8 +356,6 @@ for ISO in ISO_LIST:
         if(len(bufferDates)>0):
             testDates = np.append(testDates, bufferDates)
             testData = np.vstack((testData, bufferPeriod))
-
-        print(testDates[:10])
 
         print("TrainData shape: ", trainData.shape) # (days x hour) x features
         print("ValData shape: ", valData.shape) # (days x hour) x features
@@ -542,29 +382,23 @@ for ISO in ISO_LIST:
         print("Features: ", featureList)
 
         print("Scaling data...")
-        # trainData, testData = normalizeDataset(trainData, testData)
         # unscaledTestData = np.zeros(testData.shape[0])
         # for i in range(testData.shape[0]):
         #     unscaledTestData[i] = testData[i, CARBON_INTENSITY_COL]
-        trainData, valData, testData, ftMin, ftMax = scaleDataset(trainData, valData, testData)
+        trainData, valData, testData, ftMin, ftMax = common.scaleDataset(trainData, valData, testData)
         print("***** Data scaling done *****")
-        
-        # print("Analyzing time series data...")
-        # analyzeTimeSeries(dataset, trainData, testData, dateTime)
-        # print("***** Data analysis done *****")
-
-        # restructure into windows of hourly data
-        # trainData = np.array(np.split(trainData, len(trainData)/TRAINING_WINDOW_HOURS), dtype=np.float64)
-        # valData = np.array(np.split(valData, len(valData)/PREDICTION_WINDOW_HOURS), dtype=np.float64)
-        # testData = np.array(np.split(testData, len(testData)/PREDICTION_WINDOW_HOURS), dtype=np.float64)
-
         print(trainData.shape, valData.shape, testData.shape)
 
 
         print("\nManipulating training data...")
-        X, y = manipulateTrainingDataShape(trainData, TRAINING_WINDOW_HOURS, PREDICTION_WINDOW_HOURS)
-        # Next line actually labels validation data
-        valX, valY = manipulateTrainingDataShape(valData, TRAINING_WINDOW_HOURS, PREDICTION_WINDOW_HOURS)
+        if (FORECASTS_ONE_DAY_AT_A_TIME is True):
+            X, y = manipulateTrainingDataShape(trainData, TRAINING_WINDOW_HOURS, TRAINING_WINDOW_HOURS)
+            # Next line actually labels validation data
+            valX, valY = manipulateTrainingDataShape(valData, TRAINING_WINDOW_HOURS, TRAINING_WINDOW_HOURS)
+        else:
+            X, y = manipulateTrainingDataShape(trainData, TRAINING_WINDOW_HOURS, PREDICTION_WINDOW_HOURS)
+            # Next line actually labels validation data
+            valX, valY = manipulateTrainingDataShape(valData, TRAINING_WINDOW_HOURS, PREDICTION_WINDOW_HOURS)
                                         
         print("***** Training data manipulation done *****")
         print("X.shape, y.shape: ", X.shape, y.shape)
@@ -574,17 +408,21 @@ for ISO in ISO_LIST:
         idx = 0
         baselineRMSE, baselineMAPE = [], []
         bestRMSE, bestMAPE = [], []
+        predictedData = None
         
-        hyperParams = getHyperParams()
+        hyperParams = getANNHyperParams()
 
         for xx in range(NUMBER_OF_EXPERIMENTS):
             print("\n[BESTMODEL] Starting training...")
             bestModel, numFeatures = trainANN(X, y, valX, valY, hyperParams)
             print("***** Training done *****")
-            # history = valData[-1,:, 0:numFeatures].tolist()
             history = valData[-TRAINING_WINDOW_HOURS:, :].tolist()
-            predictedData = validate(X, y, bestModel, history, testData, TRAINING_WINDOW_HOURS, 
-                                                                    numFeatures)
+            if (FORECASTS_ONE_DAY_AT_A_TIME is True):
+                predictedData = getDayAheadForecasts(X, y, bestModel, history, testData, 
+                                    TRAINING_WINDOW_HOURS, numFeatures, CARBON_INTENSITY_COL)
+            else:
+                predictedData = getOneShotForecasts(X, y, bestModel, history, testData, 
+                                    TRAINING_WINDOW_HOURS, numFeatures)
             
             actualData = manipulateTestDataShape(testData[:, CARBON_INTENSITY_COL], 
                     MODEL_SLIDING_WINDOW_LEN, PREDICTION_WINDOW_HOURS, False)
@@ -596,15 +434,15 @@ for ISO in ISO_LIST:
             print("ActualData shape: ", actualData.shape)
             actual = np.reshape(actualData, actualData.shape[0]*actualData.shape[1])
             print("actual.shape: ", actual.shape)
-            unscaledTestData = inverseDataNormalization(actual, ftMax[CARBON_INTENSITY_COL], 
+            unscaledTestData = common.inverseDataScaling(actual, ftMax[CARBON_INTENSITY_COL], 
                                 ftMin[CARBON_INTENSITY_COL])
             predictedData = predictedData.astype(np.float64)
             print("PredictedData shape: ", predictedData.shape)
             predicted = np.reshape(predictedData, predictedData.shape[0]*predictedData.shape[1])
             print("predicted.shape: ", predicted.shape)
-            unScaledPredictedData = inverseDataNormalization(predicted, 
+            unScaledPredictedData = common.inverseDataScaling(predicted, 
                         ftMax[CARBON_INTENSITY_COL], ftMin[CARBON_INTENSITY_COL])
-            rmseScore, mapeScore = getScores(actualData, predictedData, 
+            rmseScore, mapeScore = common.getScores(actualData, predictedData, 
                                         unscaledTestData, unScaledPredictedData)
             print("***** Forecast done *****")
             print("[BESTMODEL] Overall RMSE score: ", rmseScore)
@@ -620,10 +458,6 @@ for ISO in ISO_LIST:
         print(bestMAPE)
         periodRMSE.append(bestRMSE)
         periodMAPE.append(bestMAPE)
-
-        
-        # print("Avg actual values:", np.mean(actual))
-        # print("Avg predicted values:", np.mean(predicted))
         ######################## END #####################
 
         data = []
@@ -633,7 +467,7 @@ for ISO in ISO_LIST:
             row.append(str(unscaledTestData[i]))
             row.append(str(unScaledPredictedData[i]))
             data.append(row)
-        writeOutFile(OUT_FILE_NAME, data, featureList[0])
+        common.writeOutFile(OUT_FILE_NAME, data, featureList[0])
 
     plotTitle = PLOT_TITLE + "_" + str(featureList[0])
     plotBaseline = False
@@ -646,8 +480,5 @@ for ISO in ISO_LIST:
     print("RMSE: ", periodRMSE)
     print("MAPE: ", periodMAPE)
     print("####################", ISO, " done ####################\n\n")
-
-# print(rmse)
-
 
 print("End")

@@ -13,39 +13,68 @@ Affiliation: University of Massachusetts, Amherst
 #### CarbonCastCNN
 #### CarbonCastLR -->
 
-## Regions covered 
-1. US: 
-    * California
-    * Pennsylvania-Jersey-Marylan Interconnection
-    * Texas
-    * New England
-2. Europe:
+## 1. Regions covered 
+* US: 
+    * California ([CISO]())
+    * Pennsylvania-Jersey-Maryland Interconnection ([PJM]())
+    * Texas ([ERCOT]())
+    * New England ([ISO-NE]())
+* Europe (European regions are monitored by [ENTSOE]()):
     * Sweden
     * Germany
 
-## Data Sources
+## 2. Data Sources
 US ISO electricity generation by source: [EIA hourly grid monitor](https://www.eia.gov/electricity/gridmonitor/dashboard/electric_overview/US48/US48)
 
-Europe zones electricity generation by source:
+European regions electricity generation by source: [ENTSOE]()
 
-Weather forecasts:
+Weather forecasts: [GFS weather forecast archive]()
 
 Solar Wind Forecasts:
-* CISO:
-* European zones:
+* CISO: [OASIS]()
+* European regions: [ENTSOE]()
+* We currently do not have solar/wind forecasts for other regions, and hence generate them using ANN models in our first tier.
 
-## Usage
-### Running CarbonCast
-1. CarbonCastCNN:
-python3 forecastCarbonIntensity.py
-2. CarbonCastLR:
-python3 lrCarbonIntensity.py
+## 3. Usage
+### 3.1 Installing dependencies:
+CarbonCast requires Python 3, Keras & Tensorflow 2.x <br>
+Other required packages:
+* Numpy, Pandas, MatplotLib, SKLearn, Pytz, Datetime
+<!-- * ``` pip3 install numpy, matplotlib, sklearn, datetime, matplotlib ``` -->
 
-### Weather data cleaning and aggregation
-### Obtaining & cleaning source production forecasts
+### 3.2 Getting Weather data:
+The aggregated & cleaned weather forecasts that we have used for our regions are provided in ```data/```. If you need weather forecasts for other regions, or even for the same regions (eg. if you want to use a different aggregation method), the procedure is as follows:<br>
+* GitHub repo of script to fetch weather data can be found [here]().
+* Once you have obtained the grib2 files, use the following files to aggregate & clean the data:<br>
+```python3 dataCollectionScript.py```<br>
+```python3 cleanWeatherData.py```<br>
 
-### Changing confifurations:
+### 3.3 Getting source production forecasts:
+For getting source production forecasts in the first-tier, run the following file:<br>
+```python3 sourceProductionForecast.py ```<br>
+Note that you need to change the config.json file to get a particular source production forecast for a specific region. Example:
+``` <example> ```<br>
+A detailed description of how to configure is given in Section 3.5
+### 3.4 Running CarbonCast
+1. CarbonCastCNN: <br>
+```python3 carbonCastCNN.py```
+2. CarbonCastLR: <br>
+```python3 carbonCastLR.py```
+
+### 3.5 Configuring CarbonCast:
 Change the config.json file for desired configurations. Below are the fields used in the file along with their meaning:<br>
 PREDICTION_WINDOW_HOURS: Prediction window in hours. (Default: 24, for day-ahead forecasting)
 
-## Citing CarbonCast:
+### 3.6 Output (forecasts):
+
+## 4. Developer mode
+
+We welcome users to suggest modifications to improve CarbonCast and/or add new features or models to the existing codebase. 
+<!-- Use the developer branch to make edits and submit a change. -->
+
+## 5. Citing CarbonCast
+If you use CarbonCast, please consider citing our paper. The BibTex format is as follows: <br>
+``` under review ```
+
+## 7. Acknowledgements
+This work is part of the [CarbonFirst](http://carbonfirst.org/) project, supported by NSF grant <> & VMware.
