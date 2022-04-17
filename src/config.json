@@ -10,53 +10,61 @@
     "FILE_DIR": "../final_weather_data/",
 
     // "ISO_LIST": ["CISO", "PJM", "ERCO", "ISNE", "SE", "DE"],
-    "ISO_LIST": ["CISO"],
+    "ISO_LIST": ["ERCO"],
     "NUM_TEST_DAYS": 184, //last 6 months of 2021
     "NUM_VAL_DAYS": 181, // first 6 months of 2021, make it 181 if OUT_WINDOW_LEN is 24
-    "IN_SLIDING_WINDOW_LEN": 24, 
-    "OUT_SLIDING_WINDOW_LEN": 24,
-    "TOP_N_FEATURES": 21,
+    "MODEL_SLIDING_WINDOW_LEN": 24, 
+    "TRAINING_WINDOW_HOURS": 24, 
+    "PREDICTION_WINDOW_HOURS": 24,
+    "TOP_N_FEATURES": 5,
     "NUMBER_OF_EXPERIMENTS_PER_ISO": 3,
 
     "CISO": {
-        "IN_FILE_NAME": "../final_weather_data/CISO/CISO_forecast_carbon.csv",
+        // "IN_FILE_NAME": "../data/CISO/CISO_forecast_carbon.csv",
+        "IN_FILE_NAME": "../data/CISO/CISO_forecast_carbon_linear_reg.csv",
         "LOCAL_TIMEZONE": "US/Pacific",
-        "NUM_FEATURES": 1,
-        "START_COL": 3
-    },
-
-    "PJM": {
-        "IN_FILE_NAME": "../final_weather_data/PJM/PJM_forecast_carbon.csv",
-        "LOCAL_TIMEZONE": "US/Eastern",
-        "NUM_FEATURES": 25,
-        "START_COL": 3
-    },
-
-    "ERCO": {
-        "IN_FILE_NAME": "../final_weather_data/ERCO/ERCO_forecast_carbon.csv",
-        "LOCAL_TIMEZONE": "US/Central",
-        "NUM_FEATURES": 23,
-        "START_COL": 3
-    },
-
-    "ISNE": {
-        "IN_FILE_NAME": "../final_weather_data/ISNE/ISNE_forecast_carbon.csv",
-        "LOCAL_TIMEZONE": "US/Eastern",
+        // "NUM_FEATURES": 24, // only solar wind forecasts with CNN. Others also changed
         "NUM_FEATURES": 24,
         "START_COL": 3
     },
 
+    "PJM": {
+        "IN_FILE_NAME": "../data/PJM/PJM_forecast_carbon_linear_reg.csv",
+        "LOCAL_TIMEZONE": "US/Eastern",
+        // "NUM_FEATURES": 25,
+        "NUM_FEATURES": 21,
+        "START_COL": 3
+    },
+
+    "ERCO": {
+        "IN_FILE_NAME": "../data/ERCO/ERCO_forecast_carbon.csv",
+        "LOCAL_TIMEZONE": "US/Central",
+        "NUM_FEATURES": 24,
+        // "NUM_FEATURES": 20,
+        "START_COL": 3
+    },
+
+    "ISNE": {
+        "IN_FILE_NAME": "../data/ISNE/ISNE_forecast_carbon_linear_reg.csv",
+        "LOCAL_TIMEZONE": "US/Eastern",
+        // "NUM_FEATURES": 24,
+        "NUM_FEATURES": 20,
+        "START_COL": 3
+    },
+
     "SE": {
-        "IN_FILE_NAME": "../final_weather_data/SE/SE_forecast_carbon.csv",
+        "IN_FILE_NAME": "../data/SE/SE_forecast_carbon_linear_reg.csv",
         "LOCAL_TIMEZONE": "CET",
-        "NUM_FEATURES": 19,
+        // "NUM_FEATURES": 19,
+        "NUM_FEATURES": 16,
         "START_COL": 2
     },
 
     "DE": {
-        "IN_FILE_NAME": "../final_weather_data/DE/DE_forecast_carbon.csv",
+        "IN_FILE_NAME": "../data/DE/DE_forecast_carbon_linear_reg.csv",
         "LOCAL_TIMEZONE": "CET",
-        "NUM_FEATURES": 31,
+        // "NUM_FEATURES": 31,
+        "NUM_FEATURES": 23,
         "START_COL": 1
     },
 
