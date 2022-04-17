@@ -1,0 +1,4 @@
+@set UPDATED 8 April 2008
+@set UPDATED-MONTH April 2008
+@set EDITION 3.6.3
+@set VERSION 3.6.3

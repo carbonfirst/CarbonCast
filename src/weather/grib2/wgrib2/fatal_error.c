@@ -1,0 +1,40 @@
+#include <stdio.h>
+#include <stdarg.h>
+#include <stdlib.h>
+#ifdef CALLABLE_WGRIB2
+#include <setjmp.h>
+#endif
+#include "wgrib2.h"
+
+/*
+ * write fatal error message .. so to have common format 
+ * Public Domain 2004 Wesley Ebisuzaki, George Trojan (2021)
+ * v1.0   original release (2004)
+ * v1.X   added fatal_error_XY, code for callable wgrib2, calls to err_bin, err_string
+ * v2.0   replace various fatal_error*(..) by one routine using vfprintf(..)  George Trojan
+ *
+ *   fatal_error(ARGS) is replacement for
+ *         fprintf(ARGS)
+ *         do_fatal_error_processing
+ */
+#ifdef CALLABLE_WGRIB2
+extern jmp_buf fatal_err;
+#endif
+
+
+void fatal_error(const char *fmt, ...)
+{
+    va_list arg;
+    va_start(arg, fmt);
+    fprintf(stderr, "\n*** FATAL ERROR: ");
+    vfprintf(stderr, fmt, arg);
+    fprintf(stderr," ***\n\n");
+    va_end(arg);
+
+    err_bin(1); err_string(1);
+#ifdef CALLABLE_WGRIB2
+    longjmp(fatal_err,1);
+#endif
+    exit(8);
+    return;
+}

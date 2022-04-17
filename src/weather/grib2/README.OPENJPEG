@@ -1,0 +1,7 @@
+requires cmake v3.9+ and g++ to be installed
+wgrib2/decenc_jpeg.c is based on ECMWF code and licensed under 
+   the terms of the Apache Licence Version 2.0
+
+To enable, edit grib2/makefile
+   USE_JASPER=0
+   USE_OPENJPEG=1

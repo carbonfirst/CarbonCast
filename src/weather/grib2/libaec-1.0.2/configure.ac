@@ -1,0 +1,34 @@
+AC_PREREQ([2.64])
+AC_INIT([libaec], [1.0.2], [rosenhauer@dkrz.de])
+
+AC_CONFIG_MACRO_DIR([m4])
+AC_CONFIG_AUX_DIR([config])
+AC_CONFIG_SRCDIR([src/libaec.h])
+AC_CONFIG_HEADERS(config/config.h)
+
+LT_INIT
+gl_VISIBILITY
+AM_INIT_AUTOMAKE([foreign])
+AM_MAINTAINER_MODE([enable])
+
+AC_PROG_CC_C99
+
+AC_HEADER_STDC
+
+AC_C_BIGENDIAN
+AC_C_INLINE
+AC_TYPE_INT64_T
+AC_TYPE_SIZE_T
+AC_TYPE_UINT32_T
+AC_TYPE_UINT64_T
+AC_TYPE_UINT8_T
+AC_C_INLINE
+AC_C_RESTRICT
+
+AC_CHECK_FUNCS([memset strstr snprintf])
+AC_CHECK_DECLS(__builtin_clzll)
+
+AM_EXTRA_RECURSIVE_TARGETS([bench benc bdec])
+
+AC_CONFIG_FILES([Makefile src/Makefile tests/Makefile])
+AC_OUTPUT

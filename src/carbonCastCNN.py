@@ -45,11 +45,11 @@ NUM_VAL_DAYS = configurationData["NUM_VAL_DAYS"] # first 6 months of 2021
 TRAINING_WINDOW_HOURS = configurationData["TRAINING_WINDOW_HOURS"]
 MODEL_SLIDING_WINDOW_LEN = configurationData["MODEL_SLIDING_WINDOW_LEN"]
 PREDICTION_WINDOW_HOURS = configurationData["PREDICTION_WINDOW_HOURS"]
+MAX_PREDICTION_WINDOW_HOURS = configurationData["MAX_PREDICTION_WINDOW_HOURS"]
 TOP_N_FEATURES = configurationData["TOP_N_FEATURES"]
 DAY_INTERVAL = 1
 MONTH_INTERVAL = 1
 CARBON_INTENSITY_COL = 0
-NUM_SPLITS = 4
 NUMBER_OF_EXPERIMENTS = configurationData["NUMBER_OF_EXPERIMENTS_PER_ISO"]
 
 FORECASTS_ONE_DAY_AT_A_TIME = True
@@ -177,7 +177,7 @@ def manipulateTestDataShape(data, slidingWindowLen, predictionWindowHours, isDat
     return X
 
 # train the model
-def train(trainX, trainY, valX, valY, hyperParams):
+def trainModel(trainX, trainY, valX, valY, hyperParams):
     # define parameters
     print("Training...")
     global NUM_SPLITS
@@ -268,7 +268,7 @@ def getOneShotForecasts(trainX, trainY, model, history, testData, trainWindowHou
     # walk-forward validation over each day
     global MODEL_SLIDING_WINDOW_LEN
     global BUFFER_HOURS
-    print("Testing...")
+    print("Testing (one shot forecasts)...")
     predictions = list()
     for i in range(0, ((len(testData)//24)-(BUFFER_HOURS//24))):
         # predict the day
@@ -288,9 +288,10 @@ def getDayAheadForecasts(trainX, trainY, model, history, testData,
                             trainWindowHours, numFeatures, depVarColumn):
     global MODEL_SLIDING_WINDOW_LEN
     global PREDICTION_WINDOW_HOURS
+    global MAX_PREDICTION_WINDOW_HOURS
     global BUFFER_HOURS
     # walk-forward validation over each day
-    print("Testing...")
+    print("Testing (day ahead forecasts)...")
     predictions = list()
     for i in range(0, ((len(testData)//24)-(BUFFER_HOURS//24))):
         dayAheadPredictions = list()
@@ -579,7 +580,7 @@ for ISO in ISO_LIST:
         bestRMSE = []
         for xx in range(NUMBER_OF_EXPERIMENTS):
             print("\n[BESTMODEL] Starting training...")
-            bestModel, numFeatures = train(X, y, valX, valY, config)
+            bestModel, numFeatures = trainModel(X, y, valX, valY, config)
             print("***** Training done *****")
             history = valData[-TRAINING_WINDOW_HOURS:, 0:numFeatures].tolist()
             if (FORECASTS_ONE_DAY_AT_A_TIME is True):

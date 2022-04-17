@@ -1,0 +1,669 @@
+--------------------
+./configure --prefix=/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2 --static
+Tue 07 Dec 2021 11:19:58 AM EST
+Checking for gcc...
+=== ztest8425.c ===
+extern int getchar();
+int hello() {return getchar();}
+===
+gcc -c ztest8425.c
+... using gcc
+
+Checking for obsessive-compulsive compiler options...
+=== ztest8425.c ===
+int foo() { return 0; }
+===
+gcc -c -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/include -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/jasper-1.900.1/src/libjasper/include ztest8425.c
+
+Building static library libz.a version 1.2.11 with gcc.
+
+=== ztest8425.c ===
+#include <stdio.h>
+#include <stdlib.h>
+size_t dummy = 0;
+===
+gcc -c -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/include -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/jasper-1.900.1/src/libjasper/include ztest8425.c
+Checking for size_t... Yes.
+
+
+=== ztest8425.c ===
+#include <sys/types.h>
+off64_t dummy = 0;
+===
+gcc -c -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/include -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/jasper-1.900.1/src/libjasper/include -D_LARGEFILE64_SOURCE=1 ztest8425.c
+Checking for off64_t... Yes.
+Checking for fseeko... Yes.
+
+=== ztest8425.c ===
+#include <string.h>
+#include <errno.h>
+int main() { return strlen(strerror(errno)); }
+===
+gcc -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/include -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/jasper-1.900.1/src/libjasper/include -D_LARGEFILE64_SOURCE=1 -o ztest8425 ztest8425.c
+Checking for strerror... Yes.
+
+=== ztest8425.c ===
+#include <unistd.h>
+int main() { return 0; }
+===
+gcc -c -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/include -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/jasper-1.900.1/src/libjasper/include -D_LARGEFILE64_SOURCE=1 ztest8425.c
+Checking for unistd.h... Yes.
+
+=== ztest8425.c ===
+#include <stdarg.h>
+int main() { return 0; }
+===
+gcc -c -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/include -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/jasper-1.900.1/src/libjasper/include -D_LARGEFILE64_SOURCE=1 ztest8425.c
+Checking for stdarg.h... Yes.
+
+=== ztest8425.c ===
+#include <stdio.h>
+#include <stdarg.h>
+#include "zconf.h"
+int main()
+{
+#ifndef STDC
+  choke me
+#endif
+  return 0;
+}
+===
+gcc -c -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/include -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/jasper-1.900.1/src/libjasper/include -D_LARGEFILE64_SOURCE=1 ztest8425.c
+Checking whether to use vs[n]printf() or s[n]printf()... using vs[n]printf().
+
+=== ztest8425.c ===
+#include <stdio.h>
+#include <stdarg.h>
+int mytest(const char *fmt, ...)
+{
+  char buf[20];
+  va_list ap;
+  va_start(ap, fmt);
+  vsnprintf(buf, sizeof(buf), fmt, ap);
+  va_end(ap);
+  return 0;
+}
+int main()
+{
+  return (mytest("Hello%d\n", 1));
+}
+===
+gcc -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/include -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/jasper-1.900.1/src/libjasper/include -D_LARGEFILE64_SOURCE=1 -o ztest8425 ztest8425.c
+Checking for vsnprintf() in stdio.h... Yes.
+
+=== ztest8425.c ===
+#include <stdio.h>
+#include <stdarg.h>
+int mytest(const char *fmt, ...)
+{
+  int n;
+  char buf[20];
+  va_list ap;
+  va_start(ap, fmt);
+  n = vsnprintf(buf, sizeof(buf), fmt, ap);
+  va_end(ap);
+  return n;
+}
+int main()
+{
+  return (mytest("Hello%d\n", 1));
+}
+===
+gcc -c -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/include -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/jasper-1.900.1/src/libjasper/include -D_LARGEFILE64_SOURCE=1 ztest8425.c
+Checking for return value of vsnprintf()... Yes.
+
+=== ztest8425.c ===
+#define ZLIB_INTERNAL __attribute__((visibility ("hidden")))
+int ZLIB_INTERNAL foo;
+int main()
+{
+  return 0;
+}
+===
+gcc -c -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/include -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/jasper-1.900.1/src/libjasper/include -D_LARGEFILE64_SOURCE=1 ztest8425.c
+Checking for attribute(visibility) support... Yes.
+
+ALL = static all64
+AR = ar
+ARFLAGS = rc
+CC = gcc
+CFLAGS = -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/include -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/jasper-1.900.1/src/libjasper/include -D_LARGEFILE64_SOURCE=1 -DHAVE_HIDDEN
+CPP = gcc -E
+EXE =
+LDCONFIG = ldconfig
+LDFLAGS =
+LDSHARED = gcc
+LDSHAREDLIBC = -lc
+OBJC = $(OBJZ) $(OBJG)
+PIC_OBJC = $(PIC_OBJZ) $(PIC_OBJG)
+RANLIB = ranlib
+SFLAGS = -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/include -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/jasper-1.900.1/src/libjasper/include -fPIC -D_LARGEFILE64_SOURCE=1 -DHAVE_HIDDEN
+SHAREDLIB =
+SHAREDLIBM =
+SHAREDLIBV =
+STATICLIB = libz.a
+TEST = all teststatic test64
+VER = 1.2.11
+Z_U4 =
+SRCDIR =
+exec_prefix = ${prefix}
+includedir = ${prefix}/include
+libdir = ${exec_prefix}/lib
+mandir = ${prefix}/share/man
+prefix = /mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2
+sharedlibdir = ${libdir}
+uname = Linux
+--------------------
+
+
+--------------------
+./configure --prefix=/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2 --static
+Tue 07 Dec 2021 11:24:19 AM EST
+Checking for gcc...
+=== ztest34504.c ===
+extern int getchar();
+int hello() {return getchar();}
+===
+gcc -c ztest34504.c
+... using gcc
+
+Checking for obsessive-compulsive compiler options...
+=== ztest34504.c ===
+int foo() { return 0; }
+===
+gcc -c -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/include -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/jasper-1.900.1/src/libjasper/include ztest34504.c
+
+Building static library libz.a version 1.2.11 with gcc.
+
+=== ztest34504.c ===
+#include <stdio.h>
+#include <stdlib.h>
+size_t dummy = 0;
+===
+gcc -c -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/include -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/jasper-1.900.1/src/libjasper/include ztest34504.c
+Checking for size_t... Yes.
+
+
+=== ztest34504.c ===
+#include <sys/types.h>
+off64_t dummy = 0;
+===
+gcc -c -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/include -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/jasper-1.900.1/src/libjasper/include -D_LARGEFILE64_SOURCE=1 ztest34504.c
+Checking for off64_t... Yes.
+Checking for fseeko... Yes.
+
+=== ztest34504.c ===
+#include <string.h>
+#include <errno.h>
+int main() { return strlen(strerror(errno)); }
+===
+gcc -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/include -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/jasper-1.900.1/src/libjasper/include -D_LARGEFILE64_SOURCE=1 -o ztest34504 ztest34504.c
+Checking for strerror... Yes.
+
+=== ztest34504.c ===
+#include <unistd.h>
+int main() { return 0; }
+===
+gcc -c -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/include -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/jasper-1.900.1/src/libjasper/include -D_LARGEFILE64_SOURCE=1 ztest34504.c
+Checking for unistd.h... Yes.
+
+=== ztest34504.c ===
+#include <stdarg.h>
+int main() { return 0; }
+===
+gcc -c -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/include -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/jasper-1.900.1/src/libjasper/include -D_LARGEFILE64_SOURCE=1 ztest34504.c
+Checking for stdarg.h... Yes.
+
+=== ztest34504.c ===
+#include <stdio.h>
+#include <stdarg.h>
+#include "zconf.h"
+int main()
+{
+#ifndef STDC
+  choke me
+#endif
+  return 0;
+}
+===
+gcc -c -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/include -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/jasper-1.900.1/src/libjasper/include -D_LARGEFILE64_SOURCE=1 ztest34504.c
+Checking whether to use vs[n]printf() or s[n]printf()... using vs[n]printf().
+
+=== ztest34504.c ===
+#include <stdio.h>
+#include <stdarg.h>
+int mytest(const char *fmt, ...)
+{
+  char buf[20];
+  va_list ap;
+  va_start(ap, fmt);
+  vsnprintf(buf, sizeof(buf), fmt, ap);
+  va_end(ap);
+  return 0;
+}
+int main()
+{
+  return (mytest("Hello%d\n", 1));
+}
+===
+gcc -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/include -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/jasper-1.900.1/src/libjasper/include -D_LARGEFILE64_SOURCE=1 -o ztest34504 ztest34504.c
+Checking for vsnprintf() in stdio.h... Yes.
+
+=== ztest34504.c ===
+#include <stdio.h>
+#include <stdarg.h>
+int mytest(const char *fmt, ...)
+{
+  int n;
+  char buf[20];
+  va_list ap;
+  va_start(ap, fmt);
+  n = vsnprintf(buf, sizeof(buf), fmt, ap);
+  va_end(ap);
+  return n;
+}
+int main()
+{
+  return (mytest("Hello%d\n", 1));
+}
+===
+gcc -c -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/include -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/jasper-1.900.1/src/libjasper/include -D_LARGEFILE64_SOURCE=1 ztest34504.c
+Checking for return value of vsnprintf()... Yes.
+
+=== ztest34504.c ===
+#define ZLIB_INTERNAL __attribute__((visibility ("hidden")))
+int ZLIB_INTERNAL foo;
+int main()
+{
+  return 0;
+}
+===
+gcc -c -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/include -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/jasper-1.900.1/src/libjasper/include -D_LARGEFILE64_SOURCE=1 ztest34504.c
+Checking for attribute(visibility) support... Yes.
+
+ALL = static all64
+AR = ar
+ARFLAGS = rc
+CC = gcc
+CFLAGS = -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/include -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/jasper-1.900.1/src/libjasper/include -D_LARGEFILE64_SOURCE=1 -DHAVE_HIDDEN
+CPP = gcc -E
+EXE =
+LDCONFIG = ldconfig
+LDFLAGS =
+LDSHARED = gcc
+LDSHAREDLIBC = -lc
+OBJC = $(OBJZ) $(OBJG)
+PIC_OBJC = $(PIC_OBJZ) $(PIC_OBJG)
+RANLIB = ranlib
+SFLAGS = -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/include -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/jasper-1.900.1/src/libjasper/include -fPIC -D_LARGEFILE64_SOURCE=1 -DHAVE_HIDDEN
+SHAREDLIB =
+SHAREDLIBM =
+SHAREDLIBV =
+STATICLIB = libz.a
+TEST = all teststatic test64
+VER = 1.2.11
+Z_U4 =
+SRCDIR =
+exec_prefix = ${prefix}
+includedir = ${prefix}/include
+libdir = ${exec_prefix}/lib
+mandir = ${prefix}/share/man
+prefix = /mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2
+sharedlibdir = ${libdir}
+uname = Linux
+--------------------
+
+
+--------------------
+./configure --prefix=/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2 --static
+Tue 07 Dec 2021 11:27:40 AM EST
+Checking for gcc...
+=== ztest44442.c ===
+extern int getchar();
+int hello() {return getchar();}
+===
+gcc -c ztest44442.c
+... using gcc
+
+Checking for obsessive-compulsive compiler options...
+=== ztest44442.c ===
+int foo() { return 0; }
+===
+gcc -c -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/include -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/jasper-1.900.1/src/libjasper/include ztest44442.c
+
+Building static library libz.a version 1.2.11 with gcc.
+
+=== ztest44442.c ===
+#include <stdio.h>
+#include <stdlib.h>
+size_t dummy = 0;
+===
+gcc -c -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/include -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/jasper-1.900.1/src/libjasper/include ztest44442.c
+Checking for size_t... Yes.
+
+
+=== ztest44442.c ===
+#include <sys/types.h>
+off64_t dummy = 0;
+===
+gcc -c -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/include -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/jasper-1.900.1/src/libjasper/include -D_LARGEFILE64_SOURCE=1 ztest44442.c
+Checking for off64_t... Yes.
+Checking for fseeko... Yes.
+
+=== ztest44442.c ===
+#include <string.h>
+#include <errno.h>
+int main() { return strlen(strerror(errno)); }
+===
+gcc -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/include -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/jasper-1.900.1/src/libjasper/include -D_LARGEFILE64_SOURCE=1 -o ztest44442 ztest44442.c
+Checking for strerror... Yes.
+
+=== ztest44442.c ===
+#include <unistd.h>
+int main() { return 0; }
+===
+gcc -c -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/include -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/jasper-1.900.1/src/libjasper/include -D_LARGEFILE64_SOURCE=1 ztest44442.c
+Checking for unistd.h... Yes.
+
+=== ztest44442.c ===
+#include <stdarg.h>
+int main() { return 0; }
+===
+gcc -c -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/include -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/jasper-1.900.1/src/libjasper/include -D_LARGEFILE64_SOURCE=1 ztest44442.c
+Checking for stdarg.h... Yes.
+
+=== ztest44442.c ===
+#include <stdio.h>
+#include <stdarg.h>
+#include "zconf.h"
+int main()
+{
+#ifndef STDC
+  choke me
+#endif
+  return 0;
+}
+===
+gcc -c -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/include -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/jasper-1.900.1/src/libjasper/include -D_LARGEFILE64_SOURCE=1 ztest44442.c
+Checking whether to use vs[n]printf() or s[n]printf()... using vs[n]printf().
+
+=== ztest44442.c ===
+#include <stdio.h>
+#include <stdarg.h>
+int mytest(const char *fmt, ...)
+{
+  char buf[20];
+  va_list ap;
+  va_start(ap, fmt);
+  vsnprintf(buf, sizeof(buf), fmt, ap);
+  va_end(ap);
+  return 0;
+}
+int main()
+{
+  return (mytest("Hello%d\n", 1));
+}
+===
+gcc -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/include -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/jasper-1.900.1/src/libjasper/include -D_LARGEFILE64_SOURCE=1 -o ztest44442 ztest44442.c
+Checking for vsnprintf() in stdio.h... Yes.
+
+=== ztest44442.c ===
+#include <stdio.h>
+#include <stdarg.h>
+int mytest(const char *fmt, ...)
+{
+  int n;
+  char buf[20];
+  va_list ap;
+  va_start(ap, fmt);
+  n = vsnprintf(buf, sizeof(buf), fmt, ap);
+  va_end(ap);
+  return n;
+}
+int main()
+{
+  return (mytest("Hello%d\n", 1));
+}
+===
+gcc -c -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/include -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/jasper-1.900.1/src/libjasper/include -D_LARGEFILE64_SOURCE=1 ztest44442.c
+Checking for return value of vsnprintf()... Yes.
+
+=== ztest44442.c ===
+#define ZLIB_INTERNAL __attribute__((visibility ("hidden")))
+int ZLIB_INTERNAL foo;
+int main()
+{
+  return 0;
+}
+===
+gcc -c -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/include -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/jasper-1.900.1/src/libjasper/include -D_LARGEFILE64_SOURCE=1 ztest44442.c
+Checking for attribute(visibility) support... Yes.
+
+ALL = static all64
+AR = ar
+ARFLAGS = rc
+CC = gcc
+CFLAGS = -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/include -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/jasper-1.900.1/src/libjasper/include -D_LARGEFILE64_SOURCE=1 -DHAVE_HIDDEN
+CPP = gcc -E
+EXE =
+LDCONFIG = ldconfig
+LDFLAGS =
+LDSHARED = gcc
+LDSHAREDLIBC = -lc
+OBJC = $(OBJZ) $(OBJG)
+PIC_OBJC = $(PIC_OBJZ) $(PIC_OBJG)
+RANLIB = ranlib
+SFLAGS = -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/include -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/jasper-1.900.1/src/libjasper/include -fPIC -D_LARGEFILE64_SOURCE=1 -DHAVE_HIDDEN
+SHAREDLIB =
+SHAREDLIBM =
+SHAREDLIBV =
+STATICLIB = libz.a
+TEST = all teststatic test64
+VER = 1.2.11
+Z_U4 =
+SRCDIR =
+exec_prefix = ${prefix}
+includedir = ${prefix}/include
+libdir = ${exec_prefix}/lib
+mandir = ${prefix}/share/man
+prefix = /mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2
+sharedlibdir = ${libdir}
+uname = Linux
+--------------------
+
+
+--------------------
+./configure --prefix=/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2 --static
+Tue 07 Dec 2021 11:31:41 AM EST
+=== ztest69930.c ===
+extern int getchar();
+int hello() {return getchar();}
+===
+gcc -c ztest69930.c
+... using gcc
+
+Checking for obsessive-compulsive compiler options...
+=== ztest69930.c ===
+int foo() { return 0; }
+===
+gcc -c -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/include -Wall -Wmissing-prototypes -Wold-style-definition -Werror=format-security -ffast-math -O3 -DGFORTRAN -fopenmp -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/jasper-1.900.1/src/libjasper/include ztest69930.c
+ztest69930.c:1:5: warning: no previous prototype for ‘foo’ [-Wmissing-prototypes]
+    1 | int foo() { return 0; }
+      |     ^~~
+ztest69930.c: In function ‘foo’:
+ztest69930.c:1:5: warning: old-style function definition [-Wold-style-definition]
+
+Building static library libz.a version 1.2.11 with gcc.
+
+=== ztest69930.c ===
+#include <stdio.h>
+#include <stdlib.h>
+size_t dummy = 0;
+===
+gcc -c -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/include -Wall -Wmissing-prototypes -Wold-style-definition -Werror=format-security -ffast-math -O3 -DGFORTRAN -fopenmp -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/jasper-1.900.1/src/libjasper/include ztest69930.c
+Checking for size_t... Yes.
+
+
+=== ztest69930.c ===
+#include <sys/types.h>
+off64_t dummy = 0;
+===
+gcc -c -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/include -Wall -Wmissing-prototypes -Wold-style-definition -Werror=format-security -ffast-math -O3 -DGFORTRAN -fopenmp -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/jasper-1.900.1/src/libjasper/include -D_LARGEFILE64_SOURCE=1 ztest69930.c
+Checking for off64_t... Yes.
+Checking for fseeko... Yes.
+
+=== ztest69930.c ===
+#include <string.h>
+#include <errno.h>
+int main() { return strlen(strerror(errno)); }
+===
+gcc -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/include -Wall -Wmissing-prototypes -Wold-style-definition -Werror=format-security -ffast-math -O3 -DGFORTRAN -fopenmp -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/jasper-1.900.1/src/libjasper/include -D_LARGEFILE64_SOURCE=1 -o ztest69930 ztest69930.c
+ztest69930.c: In function ‘main’:
+ztest69930.c:3:5: warning: old-style function definition [-Wold-style-definition]
+    3 | int main() { return strlen(strerror(errno)); }
+      |     ^~~~
+Checking for strerror... Yes.
+
+=== ztest69930.c ===
+#include <unistd.h>
+int main() { return 0; }
+===
+gcc -c -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/include -Wall -Wmissing-prototypes -Wold-style-definition -Werror=format-security -ffast-math -O3 -DGFORTRAN -fopenmp -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/jasper-1.900.1/src/libjasper/include -D_LARGEFILE64_SOURCE=1 ztest69930.c
+ztest69930.c: In function ‘main’:
+ztest69930.c:2:5: warning: old-style function definition [-Wold-style-definition]
+    2 | int main() { return 0; }
+      |     ^~~~
+Checking for unistd.h... Yes.
+
+=== ztest69930.c ===
+#include <stdarg.h>
+int main() { return 0; }
+===
+gcc -c -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/include -Wall -Wmissing-prototypes -Wold-style-definition -Werror=format-security -ffast-math -O3 -DGFORTRAN -fopenmp -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/jasper-1.900.1/src/libjasper/include -D_LARGEFILE64_SOURCE=1 ztest69930.c
+ztest69930.c: In function ‘main’:
+ztest69930.c:2:5: warning: old-style function definition [-Wold-style-definition]
+    2 | int main() { return 0; }
+      |     ^~~~
+Checking for stdarg.h... Yes.
+
+=== ztest69930.c ===
+#include <stdio.h>
+#include <stdarg.h>
+#include "zconf.h"
+int main()
+{
+#ifndef STDC
+  choke me
+#endif
+  return 0;
+}
+===
+gcc -c -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/include -Wall -Wmissing-prototypes -Wold-style-definition -Werror=format-security -ffast-math -O3 -DGFORTRAN -fopenmp -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/jasper-1.900.1/src/libjasper/include -D_LARGEFILE64_SOURCE=1 ztest69930.c
+ztest69930.c: In function ‘main’:
+ztest69930.c:4:5: warning: old-style function definition [-Wold-style-definition]
+    4 | int main()
+      |     ^~~~
+Checking whether to use vs[n]printf() or s[n]printf()... using vs[n]printf().
+
+=== ztest69930.c ===
+#include <stdio.h>
+#include <stdarg.h>
+int mytest(const char *fmt, ...)
+{
+  char buf[20];
+  va_list ap;
+  va_start(ap, fmt);
+  vsnprintf(buf, sizeof(buf), fmt, ap);
+  va_end(ap);
+  return 0;
+}
+int main()
+{
+  return (mytest("Hello%d\n", 1));
+}
+===
+gcc -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/include -Wall -Wmissing-prototypes -Wold-style-definition -Werror=format-security -ffast-math -O3 -DGFORTRAN -fopenmp -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/jasper-1.900.1/src/libjasper/include -D_LARGEFILE64_SOURCE=1 -o ztest69930 ztest69930.c
+ztest69930.c:3:5: warning: no previous prototype for ‘mytest’ [-Wmissing-prototypes]
+    3 | int mytest(const char *fmt, ...)
+      |     ^~~~~~
+ztest69930.c: In function ‘main’:
+ztest69930.c:12:5: warning: old-style function definition [-Wold-style-definition]
+   12 | int main()
+      |     ^~~~
+Checking for vsnprintf() in stdio.h... Yes.
+
+=== ztest69930.c ===
+#include <stdio.h>
+#include <stdarg.h>
+int mytest(const char *fmt, ...)
+{
+  int n;
+  char buf[20];
+  va_list ap;
+  va_start(ap, fmt);
+  n = vsnprintf(buf, sizeof(buf), fmt, ap);
+  va_end(ap);
+  return n;
+}
+int main()
+{
+  return (mytest("Hello%d\n", 1));
+}
+===
+gcc -c -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/include -Wall -Wmissing-prototypes -Wold-style-definition -Werror=format-security -ffast-math -O3 -DGFORTRAN -fopenmp -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/jasper-1.900.1/src/libjasper/include -D_LARGEFILE64_SOURCE=1 ztest69930.c
+ztest69930.c:3:5: warning: no previous prototype for ‘mytest’ [-Wmissing-prototypes]
+    3 | int mytest(const char *fmt, ...)
+      |     ^~~~~~
+ztest69930.c: In function ‘main’:
+ztest69930.c:13:5: warning: old-style function definition [-Wold-style-definition]
+   13 | int main()
+      |     ^~~~
+Checking for return value of vsnprintf()... Yes.
+
+=== ztest69930.c ===
+#define ZLIB_INTERNAL __attribute__((visibility ("hidden")))
+int ZLIB_INTERNAL foo;
+int main()
+{
+  return 0;
+}
+===
+gcc -c -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/include -Wall -Wmissing-prototypes -Wold-style-definition -Werror=format-security -ffast-math -O3 -DGFORTRAN -fopenmp -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/jasper-1.900.1/src/libjasper/include -D_LARGEFILE64_SOURCE=1 ztest69930.c
+ztest69930.c: In function ‘main’:
+ztest69930.c:3:5: warning: old-style function definition [-Wold-style-definition]
+    3 | int main()
+      |     ^~~~Checking for attribute(visibility) support... No.
+
+ALL = static all64
+AR = ar
+ARFLAGS = rc
+CC = gcc
+CFLAGS = -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/include -Wall -Wmissing-prototypes -Wold-style-definition -Werror=format-security -ffast-math -O3 -DGFORTRAN -fopenmp -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/jasper-1.900.1/src/libjasper/include -D_LARGEFILE64_SOURCE=1
+CPP = gcc -E
+EXE =
+LDCONFIG = ldconfig
+LDFLAGS =
+LDSHARED = gcc
+LDSHAREDLIBC = -lc
+OBJC = $(OBJZ) $(OBJG)
+PIC_OBJC = $(PIC_OBJZ) $(PIC_OBJG)
+RANLIB = ranlib
+SFLAGS = -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/include -Wall -Wmissing-prototypes -Wold-style-definition -Werror=format-security -ffast-math -O3 -DGFORTRAN -fopenmp -I/mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2/jasper-1.900.1/src/libjasper/include -fPIC -D_LARGEFILE64_SOURCE=1
+SHAREDLIB =
+SHAREDLIBM =
+SHAREDLIBV =
+STATICLIB = libz.a
+TEST = all teststatic test64
+VER = 1.2.11
+Z_U4 =
+SRCDIR =
+exec_prefix = ${prefix}
+includedir = ${prefix}/include
+libdir = ${exec_prefix}/lib
+mandir = ${prefix}/share/man
+prefix = /mnt/68204F1D204EF19C/UMass_Amherst/PhD_Research/Carbon_Forecast/weather_data/grib2
+sharedlibdir = ${libdir}
+uname = Linux
+--------------------
+
+
