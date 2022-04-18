@@ -354,10 +354,64 @@ def plotTimeSeries(dataset):
     plt.show()
     return
 
+def plotSrcVariations(natGas, renewables, generation, x):
+    fig, ax = plt.subplots()
+
+    natGas = natGas[24*30*8: 24*30*9]
+    renewables = renewables[24*30*8: 24*30*9]
+    generation = generation[24*30*8: 24*30*9]
+    x = x[24*30*8: 24*30*9]
+
+
+    # sources = ["Nat gas", "Renewables"]
+    # y = np.transpose(np.column_stack((natGas, renewables)))
+
+    # fig, ax = plt.subplots()
+    # ax.xaxis.set_major_formatter(mdates.DateFormatter("%m-%d"))
+    # pal = ["#d08e59", "#60b45d"]
+    # ax.set_ylabel("Electricity generated (MWh)", fontsize=19)
+    # ax.set_xlabel("Local Time", fontsize=19)
+    # # ax.grid(axis="x")
+    # ax.tick_params(axis="x", labelsize=18, labelrotation=30)
+    # ax.tick_params(axis="y", labelsize=18)
+    # # ax.set_yticks(fontsize=16)
+    # lns1 = ax.stackplot(x, y, labels=sources, colors=pal)
+    # # ax.legend(loc='lower center', ncol=4)
+
+    # ax2 = ax.twinx()
+    # ax2.xaxis.set_major_formatter(mdates.DateFormatter("%m-%d"))
+    # ax2.set_ylabel("Total generation (MWh)", fontsize=19)
+    # ax2.tick_params(axis="y", labelsize=18)
+    # lns2 = ax2.plot(x, generation, "k--", label="Total generation")
+    # lns = lns1+lns2
+    # labs = [l.get_label() for l in lns]
+    # ax2.legend(lns, labs, bbox_to_anchor=(0.5, 1), loc='lower center', ncol=5, framealpha=0.3, fontsize=19)
+
+
+
+    ax.plot(x, generation, label="Generation", color="#bcbcbc")
+    ax.plot(x, natGas, label="Nat gas", color="r")
+    ax.plot(x, renewables, label="Renewables", color="g")
+    ax.xaxis.set_major_formatter(mdates.DateFormatter("%m-%d"))
+    # ax.xaxis.set_major_locator(mdates.MonthLocator(interval=MONTH_INTERVAL, tz=pytz.timezone("US/Pacific")))
+    ax.xaxis.set_major_locator(mdates.DayLocator(interval=DAY_INTERVAL, tz=pytz.timezone("US/Pacific")))
+    
+    # plt.xlabel("Local time")
+    # plt.xlabel("Local Time", fontsize=19)
+    plt.ylabel("Electricity (MW)", fontsize=21)
+    # plt.title(plotTitle)
+    plt.grid(axis="x")
+    plt.xticks(rotation=45, fontsize=18)
+    plt.yticks(fontsize=18)
+
+    plt.legend(fontsize=18, bbox_to_anchor=(0.5, 1), ncol=3, loc='lower center')
+    plt.show()
+
+
 
 idx=0
 CARBON_INTENSITY_COLUMN = 3
-ISO_LIST = ["ERCO"]
+ISO_LIST = ["CISO"]
 # for iso in ISO_LIST:
 #     # IN_FILE_NAME = iso+"/fuel_forecast/"+iso+"_2019_clean.csv"
     # IN_FILE_NAME = "./"+iso+"/"+iso+"_plot.csv"
@@ -410,9 +464,23 @@ ISO_LIST = ["ERCO"]
 # ############ CISO plots end ############
 
 ############ General plots start ############
-IN_FILE_NAME = "../general_plots/ISO_source_contrib.csv"
-dataset = pd.read_csv(IN_FILE_NAME, header=0)
-plotPercentageBarGraph(dataset)
+IN_FILE_NAME = "../data/"+ISO_LIST[0]+"/"+ISO_LIST[0]+"_source_mix.csv"
+dataset = pd.read_csv(IN_FILE_NAME, header = 0, infer_datetime_format=True, parse_dates=["UTC time"])
+natGas = dataset["nat_gas"].values
+generation = dataset["net_generation"].values
+solar = dataset["solar"].values
+solar = np.asarray(solar, dtype=np.float64)
+wind = dataset["wind"].values
+wind = np.asarray(wind, dtype=np.float64)
+hydro = dataset["hydro"].values
+hydeo = np.asarray(hydro, dtype=np.float64)
+renewables = np.add(solar, wind)
+renewables = np.add(renewables, hydro)
+plotSrcVariations(natGas, renewables, generation, dataset["UTC time"].values)
+
+# IN_FILE_NAME = "../general_plots/ISO_source_contrib.csv"
+# dataset = pd.read_csv(IN_FILE_NAME, header=0)
+# plotPercentageBarGraph(dataset)
 
 # IN_FILE_NAME = "../general_plots/ISO_mape.csv"
 # dataset = pd.read_csv(IN_FILE_NAME, header=0)

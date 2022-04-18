@@ -22,7 +22,7 @@ from keras.callbacks import EarlyStopping
 from keras.callbacks import ModelCheckpoint
 from keras.models import load_model, save_model
 
-import shap
+# import shap
 import json5 as json
 
 import common
@@ -579,6 +579,7 @@ for ISO in ISO_LIST:
         bestMAPE = []
         bestRMSE = []
         for xx in range(NUMBER_OF_EXPERIMENTS):
+            print("ITERATION ", xx+1,":")
             print("\n[BESTMODEL] Starting training...")
             bestModel, numFeatures = trainModel(X, y, valX, valY, config)
             print("***** Training done *****")

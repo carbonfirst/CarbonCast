@@ -1,5 +1,6 @@
 import csv
 import math
+import sys
 from datetime import datetime as dt
 from datetime import timezone as tz
 
@@ -9,14 +10,6 @@ import numpy as np
 import pandas as pd
 import pytz as pytz
 import seaborn as sns
-# from keras import metrics, optimizers, regularizers
-# from keras.initializers import initializers_v2
-# from keras.layers import Dense, Flatten
-# from keras.layers.convolutional import AveragePooling1D, Conv1D, MaxPooling1D
-# from keras.layers.core import Activation, Dropout
-# from keras.layers.normalization.batch_normalization import BatchNormalization
-# from keras.models import Sequential
-import tensorflow as tf
 from numpy.lib.utils import source
 from pandas.core.frame import DataFrame
 from pandas.io.formats import style
@@ -32,19 +25,19 @@ LOCAL_TIMEZONES = {"BPAT": "US/Pacific", "CISO": "US/Pacific", "ERCO": "US/Centr
                     "ISNE": "US/Eastern", "NYIS": "US/Eastern", "PJM": "US/Eastern", 
                     "MISO": "US/Eastern"}
 # START_ROW = {"CISO": 30712, "ERCO": 30714, "ISNE": 30715, "PJM": 30715}
-ISO = "ERCO"
 IN_FILE_NAME = None
 OUT_FILE_NAME = None
 
 DAY_INTERVAL = 1
 MONTH_INTERVAL = 1
 
+# Lifecycle carbon emission factors
 #carbon rate used by electricityMap. Checkout this link:
-# https://github.com/tmrowco/electricitymap-contrib/blob/master/config/co2eq_parameters.json
-carbonRate = {"coal": 820, "biomass": 230, "nat_gas": 490, "geothermal": 38, "hydro": 24,
+# https://github.com/tmrowco/electricitymap-contrib/blob/master/config/co2eq_parameters_lifecycle.json
+carbonRateLifecycle = {"coal": 820, "biomass": 230, "nat_gas": 490, "geothermal": 38, "hydro": 24,
                 "nuclear": 12, "oil": 650, "solar": 45, "unknown": 700, 
                 "other": 700, "wind": 11} # g/kWh
-forcast_carbonRate = {"avg_coal_production_forecast": 820, "avg_biomass_production_forecast": 230, 
+forcast_carbonRateLifecycle = {"avg_coal_production_forecast": 820, "avg_biomass_production_forecast": 230, 
                 "avg_nat_gas_production_forecast": 490, "avg_geothermal_production_forecast": 38, 
                 "avg_hydro_production_forecast": 24, "avg_nuclear_production_forecast": 12, 
                 "avg_oil_production_forecast": 650, "avg_solar_production_forecast": 45, 
@@ -61,6 +54,16 @@ forcast_carbonRate = {"avg_coal_production_forecast": 820, "avg_biomass_producti
 #                 "avg_unknown_production_forecast": 292.9, "avg_other_production_forecast": 700, 
 #                 "avg_wind_production_forecast": 11} # SE
 
+# Median direct emission factors
+carbonRateDirect = {"coal": 760, "biomass": 0, "nat_gas": 370, "geothermal": 0, "hydro": 0,
+                "nuclear": 0, "oil": 406, "solar": 0, "unknown": 575, 
+                "other": 575, "wind": 0} # g/kWh # check for biomass. it is > 0
+forcast_carbonRateDirect = {"avg_coal_production_forecast": 760, "avg_biomass_production_forecast": 0, 
+                "avg_nat_gas_production_forecast": 370, "avg_geothermal_production_forecast": 0, 
+                "avg_hydro_production_forecast": 0, "avg_nuclear_production_forecast": 0, 
+                "avg_oil_production_forecast": 406, "avg_solar_production_forecast": 0, 
+                "avg_unknown_production_forecast": 575, "avg_other_production_forecast": 575, 
+                "avg_wind_production_forecast": 0} # g/kWh # correct biomass
 
 
 
@@ -131,10 +134,10 @@ def fillMissingHours(dataset, datetime, hourlyDateTime):
 
 
 
-def calculateCarbonIntensity(dataset, carbonRate):
+def calculateCarbonIntensity(dataset, carbonRate, numSources):
     carbonIntensity = 0
     carbonCol = []
-    miniDataset = dataset.iloc[:, CARBON_INTENSITY_COLUMN:]
+    miniDataset = dataset.iloc[:, CARBON_INTENSITY_COLUMN:CARBON_INTENSITY_COLUMN+numSources]
     print("**", miniDataset.columns.values)
     rowSum = miniDataset.sum(axis=1).to_list()
     for i in range(len(miniDataset)):
@@ -145,7 +148,7 @@ def calculateCarbonIntensity(dataset, carbonRate):
             for j in range(1, len(dataset.columns.values)):
                 if(dataset.iloc[i, j] == 0):
                     dataset.iloc[i, j] = dataset.iloc[i-1, j]
-                miniDataset.iloc[i] = dataset.iloc[i, CARBON_INTENSITY_COLUMN:]
+                miniDataset.iloc[i] = dataset.iloc[i, CARBON_INTENSITY_COLUMN:CARBON_INTENSITY_COLUMN+numSources]
                 # print(miniDataset.iloc[i])
             rowSum[i] = rowSum[i-1]
         carbonIntensity = 0
@@ -396,13 +399,27 @@ def removeDuplicateDataDE(dataset):
 
 
 idx=0
-CARBON_INTENSITY_COLUMN = 1
-ISO_LIST = ["PL"]
+CARBON_INTENSITY_COLUMN = 2
+ISO_LIST = ["SE"]
+
+if(len(sys.argv) < 3):
+    print("Parameters missing. Usage: python3 carbonDataCleaner.py <emissionFactorType (-l/-d)> <# electricity sources>")
+    exit(0)
+emissionFactorType = "lifecycle" #default
+if(sys.argv[1]=="-l"):
+    emissionFactorType = "lifecycle" # default
+else:
+    emissionFactorType = "direct"
+numSources = int(sys.argv[2])
+
+
 for iso in ISO_LIST:
     # IN_FILE_NAME = iso+"/fuel_forecast/"+iso+"_2019_clean.csv"
-    IN_FILE_NAME = iso+"/"+iso+"_forecast_carbon_copy.csv"
+    IN_FILE_NAME = "../data/"+iso+"/"+iso+"_source_mix.csv"
     # IN_FILE_NAME = iso+"/"+iso+"_solar_wind_fcst_final.csv"
-    OUT_FILE_NAME = iso+"/"+iso+"_forecast_carbon.csv"
+    OUT_FILE_NAME = "../data/"+iso+"/"+iso+"_forecast_carbon_lifecycle.csv"
+    if (emissionFactorType == "direct"):
+        OUT_FILE_NAME = "../data/"+iso+"/"+iso+"_forecast_carbon_direct.csv"
     # IN_FILE_NAME = iso+"/"+iso+"_2019.csv"
     # OUT_FILE_NAME = iso+"/fuel_forecast/"+iso+"_2019_clean2.csv"
     startRow = 0 #START_ROW[iso]
@@ -479,7 +496,14 @@ for iso in ISO_LIST:
     # print(modifiedDataset.tail())
     # modifiedDataset.to_csv(IN_FILE_NAME)
     # exit(0)
-    dataset = calculateCarbonIntensity(dataset, carbonRate)
+
+    if(emissionFactorType == "lifecycle"):
+        print("Calculating carbon intensity using lifecycle emission factors...")
+        dataset = calculateCarbonIntensity(dataset, carbonRateLifecycle, numSources)
+    else:
+        print("Calculating carbon intensity using direct emission factors...")
+        dataset = calculateCarbonIntensity(dataset, carbonRateDirect, numSources)
+
     # dataset = addDayAheadForecastColumns(dataset, 0.1)
     # print(dataset.head())
     dataset.to_csv(OUT_FILE_NAME)
