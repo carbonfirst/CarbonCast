@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 import pytz as pytz
 
-ISO = "CISO"
+ISO = "PJM"
 LOCAL_TIMEZONES = {"BPAT": "US/Pacific", "CISO": "US/Pacific", "ERCO": "US/Central", 
                     "SOCO" :"US/Central", "SWPP": "US/Central", "FPL": "US/Eastern", 
                     "ISNE": "US/Eastern", "NYIS": "US/Eastern", "PJM": "US/Eastern", 

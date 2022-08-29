@@ -7,7 +7,8 @@ import csv
 import math
 import numpy as np
 
-ISO_LIST = ["CISO"]
+ISO_LIST = ["PJM"]
+# IF 2 CONSECUTIVE FILES ARE NOT PRESENT, MANUALLY ADD THEM
 
 GRIB2_CMD = "grib2/wgrib2/wgrib2"
 # FILE_DIR = "gfs.0p25.2020010100-2021010100.f000.grib2/"
@@ -76,7 +77,7 @@ def getFileList(yearList=[2020], fileDir = None, fcstCol=FCST):
                                 print(filePath + " doesn't exist also")
                         else:
                             fileList.append(filePath)
-                        prevFile = fileName
+                            prevFile = fileName # assuming the first file to be searched is always present
     return fileList
 
 def getWeatherData(fileList, csvFields, outFileName, fcstCol, weatherVariable):
@@ -136,6 +137,8 @@ def getWeatherData(fileList, csvFields, outFileName, fcstCol, weatherVariable):
     return
 
 def getWindData(fileList, csvFields, outFileName):
+    # print(len(fileList))
+    # exit(0)
     with open(outFileName, 'w') as csvfile: 
         # creating a csv writer object 
         csvwriter = csv.writer(csvfile)                    
@@ -143,6 +146,7 @@ def getWindData(fileList, csvFields, outFileName):
         csvwriter.writerow(csvFields)
     fileIdx = 0
     rows = []
+    
     while fileIdx < len(fileList):
         row = None
         lat = None
@@ -378,15 +382,15 @@ for ISO in ISO_LIST:
     #                     "../final_weather_data/"+ISO+"/"+ISO+"_AVG_DSWRF.csv",
     #                     "../final_weather_data/"+ISO+"/"+ISO+"_AVG_PCP.csv"]
 
-    FILE_DIR = [#"../extn/"+ISO+"/ugrd_vgrd/",
-            # "../extn/"+ISO+"/tmp_dpt/",
-            # "../extn/"+ISO+"/tmp_dpt/",
+    FILE_DIR = ["../extn/"+ISO+"/ugrd_vgrd/",
+            "../extn/"+ISO+"/tmp_dpt/",
+            "../extn/"+ISO+"/tmp_dpt/",
             "../extn/"+ISO+"/dswrf/",
             "../extn/"+ISO+"/apcp/"]
 
-    OUT_FILE_NAME_LIST = [#"../extn/"+ISO+"/"+ISO+"_AVG_WIND_SPEED.csv",
-                        # "../extn/"+ISO+"/"+ISO+"_AVG_TEMP.csv",
-                        # "../extn/"+ISO+"/"+ISO+"_AVG_DPT.csv",
+    OUT_FILE_NAME_LIST = ["../extn/"+ISO+"/"+ISO+"_AVG_WIND_SPEED.csv",
+                        "../extn/"+ISO+"/"+ISO+"_AVG_TEMP.csv",
+                        "../extn/"+ISO+"/"+ISO+"_AVG_DPT.csv",
                         "../extn/"+ISO+"/"+ISO+"_AVG_DSWRF.csv",
                         "../extn/"+ISO+"/"+ISO+"_AVG_PCP.csv"]
     print("*******************", ISO, "*******************")

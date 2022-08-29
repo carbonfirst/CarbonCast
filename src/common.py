@@ -49,16 +49,18 @@ def getScores(scaledActual, scaledPredicted, unscaledActual, unscaledPredicted):
 
     return rmseScore, mapeScore
 
-def writeOutFile(outFileName, data, fuel):
+def writeOutFile(outFileName, data, fuel, writeMode):
     print("Writing to ", outFileName, "...")
     fields = ["datetime", fuel+"_actual", "avg_"+fuel+"_production_forecast"]
+    # fields = ["datetime", "actual", "forecast"]
     
     # writing to csv file 
-    with open(outFileName, 'w') as csvfile: 
+    with open(outFileName, writeMode) as csvfile: 
         # creating a csv writer object 
         csvwriter = csv.writer(csvfile)   
-        # writing the fields 
-        csvwriter.writerow(fields) 
+        # writing the fields
+        if (writeMode == "w"): 
+            csvwriter.writerow(fields) 
         # writing the data rows 
         csvwriter.writerows(data)
 
@@ -89,6 +91,24 @@ def scaleDataset(trainData, valData, testData):
         testData[:, i] = (testData[:, i] - ftMin[i]) / (ftMax[i] - ftMin[i])
 
     return trainData, valData, testData, ftMin, ftMax
+
+def scaleColumn(data, ftMin, ftMax):
+    # Scaling columns to range (0, 1)
+    col = len(data)
+    for i in range(col):
+        # print(data[i], ftMin, ftMax)
+        data[i] = (data[i] - ftMin) / (ftMax - ftMin)
+        # print(data[i])
+
+    return data
+
+def inverseScaleColumn(data, cmin, cmax):
+    cdiff = cmax-cmin
+    unscaledData = np.zeros_like(data)
+    for i in range(data.shape[0]):
+        unscaledData[i] = round(max(data[i]*cdiff + cmin, 0), 5)
+    return unscaledData
+
 
 # Date time feature engineering
 def addDateTimeFeatures(dataset, dateTime, startCol):
@@ -134,14 +154,30 @@ def addDateTimeFeatures(dataset, dateTime, startCol):
     dataset.insert(loc=loc+4, column="weekend", value=weekendList)
 
     # print(dataset.columns)
-    print(dataset.head())
+    # print(dataset.head())
     return dataset
 
-def splitDataset(dataset, testDataSize, valDataSize): # testDataSize, valDataSize are in days
+def splitDataset(dataset, testDataSize, valDataSize, predictionWindowDiff): # testDataSize, valDataSize are in days
+    print("No. test days:", testDataSize)
+    print("No. val days:", valDataSize)
     print("No. of rows in dataset:", len(dataset))
     valData = None
     numTestEntries = testDataSize * 24
     numValEntries = valDataSize * 24
+    trainData, testData = dataset[:-numTestEntries], dataset[-numTestEntries:]
+    fullTrainData = np.copy(trainData)
+    trainData, valData = trainData[:-numValEntries], trainData[-numValEntries:]
+    # trainData = trainData[:-predictionWindowDiff]
+    print("No. of rows in training set:", len(trainData))
+    print("No. of rows in validation set:", len(valData))
+    print("No. of rows in test set:", len(testData))
+    return trainData, valData, testData, fullTrainData
+
+def splitWeatherDataset(dataset, testDataSize, valDataSize, predictionWindowHours): # testDataSize, valDataSize are in days
+    print("No. of rows in weather dataset:", len(dataset))
+    valData = None
+    numTestEntries = testDataSize * predictionWindowHours
+    numValEntries = valDataSize * predictionWindowHours
     trainData, testData = dataset[:-numTestEntries], dataset[-numTestEntries:]
     fullTrainData = np.copy(trainData)
     trainData, valData = trainData[:-numValEntries], trainData[-numValEntries:]

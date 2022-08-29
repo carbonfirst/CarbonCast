@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import pytz as pytz
+from scipy.fftpack import ss_diff
 import tensorflow as tf
 import matplotlib.pyplot as plt
 import csv
@@ -8,6 +9,7 @@ import math
 import seaborn as sns
 from statsmodels.tsa.stattools import adfuller
 import matplotlib.dates as mdates
+import sys
 
 
 
@@ -326,6 +328,7 @@ def plotFeatures(X, trainDates, features, localTimeZone, dayInterval = 1, select
     return
 
 def plotPieChart(iso, data, features):
+    print(features)
     fig = plt.figure()
     avgdata = np.mean(data, axis=0)
     sum = np.sum(avgdata)
@@ -415,3 +418,172 @@ def plotBoxplots(isoDailyMape):
 
 def showPlots():
     plt.show()
+
+def writeDailyMapeToFile(iteration, data, fileName):
+    with open(fileName, "w") as f:
+        writer = csv.writer(f)
+        writer.writerows(data)
+    return
+
+def plotDailyMapeCDF(data1, data2, title): # data1: DACF, data2: CarbonCast
+    # No of Data points
+    N = len(data1)
+    
+
+    bins1 = int(np.amax(data1) + 1)
+    bins2 = int(np.amax(data2) + 1)
+    # print(data, bins)
+    
+    # getting data of the histogram
+    count1, bins_count1 = np.histogram(data1, bins=bins1)
+    count2, bins_count2 = np.histogram(data2, bins=bins2)
+    
+    # finding the PDF of the histogram using count values
+    pdf1 = count1 / sum(count1)
+    pdf2 = count2 / sum(count2)
+    
+    # using numpy np.cumsum to calculate the CDF
+    # We can also find using the PDF values by looping and adding
+    cdf1 = np.cumsum(pdf1)
+    cdf2 = np.cumsum(pdf2)
+
+
+    # plotting PDF and CDF
+    # plt.plot(bins_count[1:], pdf, color="red", label="PDF")
+    plt.plot(bins_count1[1:], cdf1, label="Non-hierarchical", linestyle = "dashed", linewidth = 6)
+    plt.plot(bins_count2[1:], cdf2, label="CarbonCast", linewidth = 6)
+    plt.grid(axis="both")
+    # plt.title(title)
+    plt.xlabel("MAPE (%)", fontsize=21)
+    plt.ylabel("CDF", fontsize=21)
+    plt.yticks(np.arange(0.0, 1.1, 0.1), fontsize=19)
+    plt.xticks(fontsize=19)
+    plt.legend(fontsize=19)
+    plt.show()
+    return
+
+def plotCDF(iso, directory):
+    carbonCastFile1 = "../extn/"+iso+"/buildsys/lifecycle_final/file5.csv"
+    carbonCastFile2 = "../extn/"+iso+"/buildsys/lifecycle_final/file7.csv"
+    carbonCastFile3 = "../extn/"+iso+"/buildsys/lifecycle_final/file9.csv"
+
+    cdata1 = pd.read_csv(carbonCastFile1, header=None)
+    # print(cdata1.head())
+    cdata2 = pd.read_csv(carbonCastFile2, header=None)
+    # print(cdata2.head())
+    cdata3 = pd.read_csv(carbonCastFile3, header=None)
+    # print(cdata3.head())
+    # print(cdata1.shape, cdata2.shape)
+    cdata = pd.DataFrame(index=range(cdata1.shape[0]),columns=range(cdata1.shape[1]))
+    for i in range(cdata1.shape[0]):
+        for j in range(cdata1.shape[1]):
+            cdata.iloc[i, j] = cdata1.iloc[i, j] + cdata2.iloc[i, j] + cdata3.iloc[i, j] 
+    cdata = cdata.to_numpy()
+    cdata = cdata/3
+    print(cdata.shape)
+    print("Daywise statistics...")
+    for i in range(0, 4):
+        print("Prediction day ", i+1, "(", (i*24), " - ", (i+1)*24, " hrs)")
+        print("Mean MAPE: ", round(np.mean(cdata[:, i]), 2))
+        print("Median MAPE: ", round(np.percentile(cdata[:, i], 50), 2))
+        print("90th percentile MAPE: ", round(np.percentile(cdata[:, i], 90), 2))
+        print("95th percentile MAPE: ", round(np.percentile(cdata[:, i], 95), 2))
+        print("99th percentile MAPE: ", round(np.percentile(cdata[:, i], 99), 2))
+    # print(cdata)
+
+    print("Mean : ", round(np.mean(cdata), 2))
+    print("Median : ", round(np.percentile(cdata, 50), 2))
+    print("90th : ", round(np.percentile(cdata, 90), 2))
+    print("95th : ", round(np.percentile(cdata, 95), 2))
+
+    dacfFile = "../extn/"+iso+"/buildsys/lifecycle_final/dacf.csv"
+    ddata = pd.read_csv(dacfFile)
+
+    for i in range(4):
+        plotDailyMapeCDF(ddata.iloc[:, i], cdata[:, i], "Day "+str(i+1))
+    
+    return
+
+# Add Gaussian noise to forecast features
+def addNoiseToForecast(iso, source, dev=0.05):
+    percentNoise = dev*100
+    inFile = "../extn/"+iso+"/noise/"+iso+"_direct_emissions.csv"
+    # outFile = "../extn/"+iso+"/noise/"+source+"_"+str(int(percentNoise))+"_percent.csv"
+    outFile = "../extn/"+iso+"/noise/"+source+"_50.csv"
+    dataset = pd.read_csv(inFile)
+    modifiedDataset = pd.DataFrame()
+    # energySources = ["forecast_coal", "forecast_nat_gas", "forecast_nuclear", 
+    #                 "forecast_oil", "forecast_hydro", "forecast_solar", "forecast_wind"]
+    sourceFcst = "avg_"+source+"_production_forecast"
+    for col in dataset.columns:
+        noisyForecast = []
+        if col == source:
+            val = dataset[col].values
+            print(val)
+            for j in range(0, len(val), 24):
+                tmpVal = val[j:j+24]
+                sourceMean = np.mean(tmpVal)
+                stdDev = dev * sourceMean
+                noise = np.random.normal(loc=0, scale=stdDev, size=len(tmpVal))
+                noisyForecast.extend(noise)
+                # print(len(noisyForecast))
+            # sourceMean = np.mean(val)
+            # stdDev = dev * sourceMean
+            # noise = np.random.normal(loc=0, scale=stdDev, size=len(val))
+            # noisyForecast = np.add(dataset[col], noise)
+            noisyForecast = np.add(dataset[col], noisyForecast)
+            noisyForecast = np.maximum(0, noisyForecast)
+
+            # rng = np.random.default_rng(12345)
+            # noisyForecast = rng.integers(low=0, high=np.amax(val), size=len(val))
+            
+            # modifiedDataset[col] = dataset[col]
+            # modifiedDataset[sourceFcst] = noisyForecast
+            modifiedDataset[col] = noisyForecast
+        else:
+            modifiedDataset[col] = dataset[col]
+    modifiedDataset.to_csv(outFile)
+    return modifiedDataset
+
+def manipulateNoisyForecasts(iso):
+    inFile = "../extn/"+iso+"/noise/nat_gas_50.csv"
+    outFile = "../extn/"+iso+"/noise/nat_gas_50_96hr.csv"
+    dataset = pd.read_csv(inFile)
+    modifiedDataset = pd.DataFrame()
+    for col in dataset.columns:
+        if (col == "UTC time"):
+            data = manipulateTestDataShape(dataset[col], 24, 96, True)
+            data = np.reshape(data, data.shape[0]*data.shape[1])
+            modifiedDataset[col] = data
+        elif (col == "carbon_intensity"):
+            continue
+        else:
+            sourceFcst = "avg_"+col+"_production_forecast"
+            data = manipulateTestDataShape(dataset[col], 24, 96, False)
+            data = np.reshape(data, data.shape[0]*data.shape[1])
+            modifiedDataset[sourceFcst] = data
+    modifiedDataset.to_csv(outFile)
+    return
+
+def manipulateTestDataShape(data, slidingWindowLen, predictionWindowHours, isDates=False): 
+    X = list()
+    # step over the entire history one time step at a time
+    for i in range(0, len(data)-(predictionWindowHours)+1, slidingWindowLen):
+        # define the end of the input sequence
+        predictionWindow = i + predictionWindowHours
+        X.append(data[i:predictionWindow])
+    if (isDates is False):
+        X = np.array(X, dtype=np.float64)
+    else:
+        X = np.array(X)
+    return X
+
+if __name__ == "__main__":
+    if (sys.argv[2] == "l"):
+        plotCDF(sys.argv[1], "lifecycle")
+    else:
+        plotCDF(sys.argv[1], "direct")
+    # addNoiseToForecast("CISO", "nat_gas", dev=0.5)
+
+    # manipulateNoisyForecasts("CISO")
+

@@ -1,17 +1,16 @@
 # CarbonCast
-A system to predict short-term carbon intensity in the power grids using machine learning.<br>
+CarbonCast: Multi-Day Forecasting of Grid Carbon Intensity<br>
 [Link to paper]()
 
-Version: 1.0 <br>
-Authors: Diptyaroop Maji, Ramesh K Sitaraman, Prashant Shenoy <br>
+Version: 2.0 (updated architecture) <br>
+Authors: Diptyaroop Maji, Prashant Shenoy, Ramesh K Sitaraman <br>
 Affiliation: University of Massachusetts, Amherst
 
 
 <!-- ## CarbonCast Architecture
 ### First tier
 ### Second Tier
-#### CarbonCastCNN
-#### CarbonCastLR -->
+-->
 
 ## 1. Regions covered 
 * US: 
