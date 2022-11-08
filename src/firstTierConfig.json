@@ -1,0 +1,195 @@
+{
+    "GENERAL_INFO": {
+        "APP_NAME": "CarbonCast",
+        "VERSION": "v2.0",
+        "CONFIGURATION_TIER": "Tier-1",
+        "YEAR": 2022,
+        "AUTHOR": "Diptyaroop Maji",
+        "AFFILIATION": "University of Massachusetts, Amherst"
+    },
+
+    // Regions: CISO, PJM, ERCO, ISNE, SE, DE, AUS_QLD
+    // Can include multiple regions in the list, separated by comma.    
+    "REGION": ["CISO"],
+    "NUM_VAL_DAYS": 30, // 1 month
+    "MODEL_SLIDING_WINDOW_LEN": 24, 
+    "TRAINING_WINDOW_HOURS": 24, 
+    "PREDICTION_WINDOW_HOURS": 96,
+    "MAX_PREDICTION_WINDOW_HOURS": 96, // max is 96, but if we only want to predict 48 hours, change the PREDICTION_WINDOW_HOURS field
+    "NUM_WEATHER_FEATURES": 5,
+    "NUMBER_OF_EXPERIMENTS_PER_REGION": 4,
+
+    "TRAIN_TEST_PERIOD": {
+        "PERIOD_0": {
+            // Train - Jan - Dec 2019, Test - Jan - Jun 2020
+            "DATASET_LIMITER": 13128,
+            "OUT_FILE_SUFFIX": "h1_2020",
+            "NUM_TEST_DAYS": 182
+        },
+        "PERIOD_1": {
+            // Train - Jan 2019 - Jun 2020, Test - Jul - Dec 2020
+            "DATASET_LIMITER": 17544,
+            "OUT_FILE_SUFFIX": "h2_2020",
+            "NUM_TEST_DAYS": 184
+        },
+        "PERIOD_2": {
+            // Train - Jan 2020 - Dec 2020, Test - Jan - Jun 2021
+            "DATASET_LIMITER": 21888,
+            "OUT_FILE_SUFFIX": "h1_2021",
+            "NUM_TEST_DAYS": 181
+        },
+        "PERIOD_3": {
+            // Train - Jan 2020 - Jun 2021, Test - Jul - Dec 2021
+            "DATASET_LIMITER": 26304,
+            "OUT_FILE_SUFFIX": "h2_2021",
+            "NUM_TEST_DAYS": 184
+        }
+    },
+
+    "NUM_FEATURES_PER_SOURCE": {
+        "coal":6, 
+        "nat_gas":6, 
+        "nuclear":6, 
+        "oil":6, 
+        "hydro":11, 
+        "solar": 11,
+        "wind":11, 
+        "other":6, 
+        "unknown": 6, 
+        "biomass": 6, 
+        "geothermal":6, 
+        "demand":6
+    },
+
+    "FIRST_TIER_ANN_MODEL_HYPERPARAMS": {
+        "EPOCH": 100,
+        "BATCH_SIZE": [10],
+        "ACTIVATION_FUNC": "relu",
+        "LOSS_FUNC": "mse",
+        "LEARNING_RATE": 0.01,
+        "HIDDEN_UNITS": [50, 34] // [50, 50]]#, [20, 50]] #, [50, 50]]
+    },
+
+    "IN_FILE_NAME_SUFFIX": "_2019_clean.csv",
+
+    "CISO": {
+        "IN_FILE_NAME_PREFIX": "../data/CISO/fuel_forecast/CISO_",
+        "WEATHER_FORECAST_IN_FILE_NAME": "../data/CISO/CISO_weather_forecast.csv",
+        "OUT_FILE_NAME_PREFIX": "../data/CISO/fuel_forecast/CISO_ANN_DA",
+        "LOCAL_TIMEZONE": "US/Pacific",
+        "NUM_FEATURES": 6,
+        "NUM_WEATHER_FEATURES": 5,
+        "START_COL": 1,
+        "SOURCES": ["COAL", "NAT_GAS", "NUCLEAR", "OIL", "HYDRO", "SOLAR", "WIND", "OTHER"],
+        "SOURCE_COL": [3, 4, 5, 6, 7, 8, 9, 10],
+        "PARTIAL_FORECAST_AVAILABILITY_LIST": [1, 1, 1, 1, 1, 1, 1, 1],
+        // Solar/wind day ahead forecasts are available. For other sources,
+        // using day-ahead forecasts obtained for DACF for consistency
+        "PARTIAL_FORECAST_HOURS": 24 // change this later to list if required
+    },    
+
+    "PJM": {
+        "IN_FILE_NAME_PREFIX": "../data/PJM/fuel_forecast/PJM_",
+        "WEATHER_FORECAST_IN_FILE_NAME": "../data/PJM/PJM_weather_forecast.csv",
+        "OUT_FILE_NAME_PREFIX": "../data/PJM/fuel_forecast/PJM_ANN_DA",
+        "LOCAL_TIMEZONE": "US/Eastern",
+        "NUM_FEATURES": 6, 
+        "NUM_WEATHER_FEATURES": 5,
+        "START_COL": 1,
+        "SOURCES": ["COAL", "NAT_GAS", "NUCLEAR", "OIL", "HYDRO", "SOLAR", "WIND", "OTHER"],
+        "SOURCE_COL": [3, 4, 5, 6, 7, 8, 9, 10],
+        "PARTIAL_FORECAST_AVAILABILITY_LIST": [1, 1, 1, 1, 1, 1, 1, 1], // 0 -- False, 1 -- True
+        // Using day-ahead forecasts obtained for DACF for consistency
+        "PARTIAL_FORECAST_HOURS": 24
+    },
+
+    "ERCO": {
+        "IN_FILE_NAME_PREFIX": "../data/ERCO/fuel_forecast/ERCO_",
+        "WEATHER_FORECAST_IN_FILE_NAME": "../data/ERCO/ERCO_weather_forecast.csv",
+        "OUT_FILE_NAME_PREFIX": "../data/ERCO/fuel_forecast/ERCO_ANN_DA",
+        "LOCAL_TIMEZONE": "US/Central",
+        "NUM_FEATURES": 6,
+        "NUM_WEATHER_FEATURES": 5,
+        "START_COL": 1,
+        "SOURCES": ["COAL", "NAT_GAS", "NUCLEAR", "OIL", "HYDRO", "SOLAR", "WIND", "OTHER"],
+        "SOURCE_COL": [3, 4, 5, 6, 7, 8, 9, 10],
+        "PARTIAL_FORECAST_AVAILABILITY_LIST": [1, 1, 1, 1, 1, 1, 1], // 0 -- False, 1 -- True
+        // Using day-ahead forecasts obtained for DACF for consistency
+        "PARTIAL_FORECAST_HOURS": 24
+    },
+
+    "ISNE": {
+        "IN_FILE_NAME_PREFIX": "../data/ISNE/fuel_forecast/ISNE_",
+        "WEATHER_FORECAST_IN_FILE_NAME": "../data/ISNE/ISNE_weather_forecast.csv",
+        "OUT_FILE_NAME_PREFIX": "../data/ISNE/fuel_forecast/ISNE_ANN_DA",
+        "LOCAL_TIMEZONE": "US/Eastern",
+        "NUM_FEATURES": 6,
+        "NUM_WEATHER_FEATURES": 5,
+        "START_COL": 1,
+        "SOURCES": ["COAL", "NAT_GAS", "NUCLEAR", "OIL", "HYDRO", "SOLAR", "WIND", "OTHER"],
+        "SOURCE_COL": [3, 4, 5, 6, 7, 8, 9, 10],
+        "PARTIAL_FORECAST_AVAILABILITY_LIST": [1, 1, 1, 1, 1, 1, 1, 1], // 0 -- False, 1 -- True
+        // Using day-ahead forecasts obtained for DACF for consistency
+        "PARTIAL_FORECAST_HOURS": 24
+    },
+
+    "SE": {
+        "IN_FILE_NAME_PREFIX": "../data/SE/fuel_forecast/SE_",
+        "WEATHER_FORECAST_IN_FILE_NAME": "../data/SE/SE_weather_forecast.csv",
+        "OUT_FILE_NAME_PREFIX": "../data/SE/fuel_forecast/SE_ANN_DA",
+        "LOCAL_TIMEZONE": "CET",
+        "NUM_FEATURES": 6,
+        "NUM_WEATHER_FEATURES": 5,
+        "START_COL": 1,
+        "SOURCES": ["NUCLEAR", "UNKNOWN", "WIND", "HYDRO"], // "unknown" and "other" are same
+        "SOURCE_COL": [3, 4, 5, 6],
+        "PARTIAL_FORECAST_AVAILABILITY_LIST": [1, 1, 1, 1], // 0 -- False, 1 -- True
+        // Solar/wind day ahead forecasts are available. For other sources,
+        // using day-ahead forecasts obtained for DACF for consistency
+        "PARTIAL_FORECAST_HOURS": 24
+    },
+
+    "DE": {
+        "IN_FILE_NAME_PREFIX": "../data/DE/fuel_forecast/DE_",
+        "WEATHER_FORECAST_IN_FILE_NAME": "../data/DE/DE_weather_forecast.csv",
+        "OUT_FILE_NAME_PREFIX": "../data/DE/fuel_forecast/DE_ANN_DA",
+        "LOCAL_TIMEZONE": "CET",
+        "NUM_FEATURES": 6,
+        "NUM_WEATHER_FEATURES": 5,
+        "START_COL": 1,
+        "SOURCES": ["BIOMASS", "COAL", "NAT_GAS", "GEOTHERMAL", "HYDRO", "NUCLEAR", "OIL", "SOLAR", "WIND", "UNKNOWN"],
+        "SOURCE_COL": [2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+        "PARTIAL_FORECAST_AVAILABILITY_LIST": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1], // 0 -- False, 1 -- True
+        // Solar/wind day ahead forecasts are available. For other sources,
+        // using day-ahead forecasts obtained for DACF for consistency
+        "PARTIAL_FORECAST_HOURS": 24
+    },
+
+    "AUS_QLD": {
+        "IN_FILE_NAME_PREFIX": "../data/AUS_QLD/fuel_forecast/AUS_QLD_",
+        "WEATHER_FORECAST_IN_FILE_NAME": "../data/AUS_QLD/AUS_QLD_weather_forecast.csv",
+        "OUT_FILE_NAME_PREFIX": "../data/AUS_QLD/fuel_forecast/AUS_QLD_ANN_DA",
+        "LOCAL_TIMEZONE": "UTC", // what is the time zone for AUS_QLD?
+        "NUM_FEATURES": 6,
+        "NUM_WEATHER_FEATURES": 5,
+        "START_COL": 1,
+        "SOURCES": ["COAL", "NAT_GAS", "OIL", "HYDRO", "WIND", "BIOMASS", "SOLAR"],
+        "SOURCE_COL": [2, 3, 4, 5, 6, 7, 8],
+        "PARTIAL_FORECAST_AVAILABILITY_LIST": [0, 0, 0, 0, 0, 0, 0], // 0 -- False, 1 -- True
+        "PARTIAL_FORECAST_HOURS": 24
+    },
+
+    // "AUS_SA": {
+    //     "IN_FILE_NAME_PREFIX": "../data/AUS_SA/fuel_forecast/AUS_SA_",
+    //     "WEATHER_FORECAST_IN_FILE_NAME": "../data/AUS_SA/AUS_SA_weather_forecast.csv",
+    //     "OUT_FILE_NAME_PREFIX": "../data/AUS_SA/fuel_forecast/AUS_SA_ANN_DA",
+    //     "LOCAL_TIMEZONE": "UTC", // what is the time zone for AUS_SA?
+    //     "NUM_FEATURES": 6,
+    //     "NUM_WEATHER_FEATURES": 5,
+    //     "START_COL": 1,
+    //     "SOURCES": ["NAT_GAS", "OIL", "WIND", "SOLAR"],
+    //     "SOURCE_COL": [2, 3, 4, 5],
+    //     "PARTIAL_FORECAST_AVAILABILITY_LIST": [0, 0, 0, 0], // 0 -- False, 1 -- True
+    //     "PARTIAL_FORECAST_HOURS": 24
+    // }
+}

@@ -64,6 +64,10 @@ def writeOutFile(outFileName, data, fuel, writeMode):
         # writing the data rows 
         csvwriter.writerows(data)
 
+def dumpRandomDataToFile(fileName, data, writeMode):
+    with open(fileName, writeMode) as dumpFile:
+        dumpFile.writelines(data)
+
 def showPlots():
     plt.show()
 
@@ -157,7 +161,7 @@ def addDateTimeFeatures(dataset, dateTime, startCol):
     # print(dataset.head())
     return dataset
 
-def splitDataset(dataset, testDataSize, valDataSize, predictionWindowDiff): # testDataSize, valDataSize are in days
+def splitDataset(dataset, testDataSize, valDataSize, predictionWindowDiff=0): # testDataSize, valDataSize are in days
     print("No. test days:", testDataSize)
     print("No. val days:", valDataSize)
     print("No. of rows in dataset:", len(dataset))
