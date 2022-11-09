@@ -177,19 +177,5 @@
         "SOURCE_COL": [2, 3, 4, 5, 6, 7, 8],
         "PARTIAL_FORECAST_AVAILABILITY_LIST": [0, 0, 0, 0, 0, 0, 0], // 0 -- False, 1 -- True
         "PARTIAL_FORECAST_HOURS": 24
-    },
-
-    // "AUS_SA": {
-    //     "IN_FILE_NAME_PREFIX": "../data/AUS_SA/fuel_forecast/AUS_SA_",
-    //     "WEATHER_FORECAST_IN_FILE_NAME": "../data/AUS_SA/AUS_SA_weather_forecast.csv",
-    //     "OUT_FILE_NAME_PREFIX": "../data/AUS_SA/fuel_forecast/AUS_SA_ANN_DA",
-    //     "LOCAL_TIMEZONE": "UTC", // what is the time zone for AUS_SA?
-    //     "NUM_FEATURES": 6,
-    //     "NUM_WEATHER_FEATURES": 5,
-    //     "START_COL": 1,
-    //     "SOURCES": ["NAT_GAS", "OIL", "WIND", "SOLAR"],
-    //     "SOURCE_COL": [2, 3, 4, 5],
-    //     "PARTIAL_FORECAST_AVAILABILITY_LIST": [0, 0, 0, 0], // 0 -- False, 1 -- True
-    //     "PARTIAL_FORECAST_HOURS": 24
-    // }
+    }
 }
