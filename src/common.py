@@ -52,7 +52,8 @@ def getScores(scaledActual, scaledPredicted, unscaledActual, unscaledPredicted):
 def writeOutFile(outFileName, data, fuel, writeMode):
     print("Writing to ", outFileName, "...")
     fields = ["datetime", fuel+"_actual", "avg_"+fuel+"_production_forecast"]
-    # fields = ["datetime", "actual", "forecast"]
+    if (fuel == "carbon_intensity"):
+        fields = ["datetime", fuel+"_actual", "avg_"+fuel+"_forecast"]
     
     # writing to csv file 
     with open(outFileName, writeMode) as csvfile: 
