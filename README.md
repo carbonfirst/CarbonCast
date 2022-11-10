@@ -15,9 +15,13 @@ Affiliation: University of Massachusetts, Amherst
 
 <!-- [TODO:] Update readme about weather, config, cef etc.. Include weather src files, update data files. -->
 ## 0. Disclaimer
-We will be updating this repo as we update/improve/extend CarbonCast. Please check back in a while to see if anything is updated. <br>
+We will be periodically updating this repo as we update/improve/extend CarbonCast. Even after cloning the repo, please check back in a while to see if anything is updated. <br>
 If something is not working, please check whether some recent update has already fixed that. <br>
 In case something is not working in the latest version, or if there are any doubts/questions/suggestions, please feel free to reach us at dmaji at cs dot umass dot edu.
+
+### 0.1 Current status:
+Code files: Up to date as of 11/09/2022 <br>
+Data files: Up to date as of 08/29/2022. Final validation required. Will be done by 11/14/2022. <br>
 
 ## 1. Regions covered 
 * US: 
