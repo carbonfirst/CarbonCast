@@ -1,3 +1,0 @@
-ras_cod.lo: ras_cod.c /usr/include/stdc-predef.h
-
-/usr/include/stdc-predef.h:

@@ -9,15 +9,15 @@ import numpy as np
 import pandas as pd
 import pytz as pytz
 
-ISO = "PJM"
+ISO = "AUS_SA"
 LOCAL_TIMEZONES = {"BPAT": "US/Pacific", "CISO": "US/Pacific", "ERCO": "US/Central", 
                     "SOCO" :"US/Central", "SWPP": "US/Central", "FPL": "US/Eastern", 
                     "ISNE": "US/Eastern", "NYIS": "US/Eastern", "PJM": "US/Eastern", 
                     "MISO": "US/Eastern", "SE": "CET", "GB": "UTC", "DK-DK2": "CET",
                     "DE": "CET", "PL": "CET"}
-LOCAL_TIMEZONE = pytz.timezone(LOCAL_TIMEZONES[ISO])
+# LOCAL_TIMEZONE = pytz.timezone(LOCAL_TIMEZONES[ISO])
 # FILE_DIR = "../final_weather_data/"+ISO+"/" #/2019_weather_data
-FILE_DIR = "../extn/"+ISO+"/"
+FILE_DIR = "../extn/"+ISO+"/weather_data/"
 IN_FILE_NAMES = [ISO+"_AVG_WIND_SPEED.csv", ISO+"_AVG_TEMP.csv", ISO+"_AVG_DPT.csv", ISO+"_AVG_DSWRF.csv", ISO+"_AVG_PCP.csv"]
 OUT_FILE_NAMES = [ISO+"_aggregated_weather_data.csv"]
 COLUMN_NAME = ["forecast_avg_wind_speed_wMean", "forecast_avg_temperature_wMean", "forecast_avg_dewpoint_wMean", 

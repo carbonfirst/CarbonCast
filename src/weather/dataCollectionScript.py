@@ -1,3 +1,12 @@
+'''
+This file uses the code from https://towardsdatascience.com/the-correct-way-to-average-the-globe-92ceecd172b7 
+for the below two functions:
+    earth_radius()
+    area_grid()
+These functions aggregate the weather data over a specified bounding box.
+'''
+
+
 import subprocess
 from collections import namedtuple
 from calendar import monthrange
@@ -7,7 +16,7 @@ import csv
 import math
 import numpy as np
 
-ISO_LIST = ["PJM"]
+ISO_LIST = ["AUS_QLD"]
 # IF 2 CONSECUTIVE FILES ARE NOT PRESENT, MANUALLY ADD THEM
 
 GRIB2_CMD = "grib2/wgrib2/wgrib2"
@@ -15,9 +24,11 @@ GRIB2_CMD = "grib2/wgrib2/wgrib2"
 
 FILE_PREFIX = "gfs.0p25."
 UGRD_VGRD_SEPRATOR = {"CISO": 1886, "PJM": 2556, "SE": 2296, "DK-DK2": 221, 
-                        "ERCO": 2116, "ISNE": 1056, "GB": 1978, "DE": 1254, "PL": 984}
+                        "ERCO": 2116, "ISNE": 1056, "GB": 1978, "DE": 1254, 
+                        "PL": 984, "AUS_NSW": 64, "AUS_QLD": 5695, "AUS_SA": 2809}
 TMP_DPT_SEPARATOR = {"CISO": 1886, "PJM": 2556, "SE": 2296, "DK-DK2": 221, 
-                        "ERCO": 2116, "ISNE": 1056, "GB": 1978, "DE": 1254, "PL": 984}
+                        "ERCO": 2116, "ISNE": 1056, "GB": 1978, "DE": 1254, 
+                        "PL": 984, "AUS_NSW": 64, "AUS_QLD": 5695, "AUS_SA": 2809}
 
 HOUR = ["00"] ##, "06", "12", "18"]
 FCST = ["000", "003", "006", "009", "012", "015", "018", "021", "024",
@@ -382,17 +393,24 @@ for ISO in ISO_LIST:
     #                     "../final_weather_data/"+ISO+"/"+ISO+"_AVG_DSWRF.csv",
     #                     "../final_weather_data/"+ISO+"/"+ISO+"_AVG_PCP.csv"]
 
-    FILE_DIR = ["../extn/"+ISO+"/ugrd_vgrd/",
-            "../extn/"+ISO+"/tmp_dpt/",
-            "../extn/"+ISO+"/tmp_dpt/",
-            "../extn/"+ISO+"/dswrf/",
-            "../extn/"+ISO+"/apcp/"]
+    FILE_DIR = ["../extn/"+ISO+"/weather_data/ugrd_vgrd/",
+            "../extn/"+ISO+"/weather_data/tmp_dpt/",
+            "../extn/"+ISO+"/weather_data/tmp_dpt/",
+            "../extn/"+ISO+"/weather_data/dswrf/",
+            "../extn/"+ISO+"/weather_data/apcp/"]
 
-    OUT_FILE_NAME_LIST = ["../extn/"+ISO+"/"+ISO+"_AVG_WIND_SPEED.csv",
-                        "../extn/"+ISO+"/"+ISO+"_AVG_TEMP.csv",
-                        "../extn/"+ISO+"/"+ISO+"_AVG_DPT.csv",
-                        "../extn/"+ISO+"/"+ISO+"_AVG_DSWRF.csv",
-                        "../extn/"+ISO+"/"+ISO+"_AVG_PCP.csv"]
+    OUT_FILE_NAME_LIST = ["../extn/"+ISO+"/weather_data/"+ISO+"_AVG_WIND_SPEED.csv",
+                        "../extn/"+ISO+"/weather_data/"+ISO+"_AVG_TEMP.csv",
+                        "../extn/"+ISO+"/weather_data/"+ISO+"_AVG_DPT.csv",
+                        "../extn/"+ISO+"/weather_data/"+ISO+"_AVG_DSWRF.csv",
+                        "../extn/"+ISO+"/weather_data/"+ISO+"_AVG_PCP.csv"]
+
+    # FILE_DIR = ["../extn/"+ISO+"/weather_data/tmp_dpt/",
+    #         "../extn/"+ISO+"/weather_data/tmp_dpt/"]
+            
+    # OUT_FILE_NAME_LIST = ["../extn/"+ISO+"/weather_data/"+ISO+"_AVG_TEMP.csv",
+    #                     "../extn/"+ISO+"/weather_data/"+ISO+"_AVG_DPT.csv"]
+
     print("*******************", ISO, "*******************")
     for xx in range(len(OUT_FILE_NAME_LIST)):
         if ("WIND" in OUT_FILE_NAME_LIST[xx]):
