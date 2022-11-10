@@ -19,7 +19,7 @@
     "NUMBER_OF_EXPERIMENTS_PER_REGION": 1,
 
     "SECOND_TIER_CNN_LSTM_MODEL_HYPERPARAMS": {
-        "EPOCH": 1,
+        "EPOCH": 100,
         "BATCH_SIZE": [10],
         "ACTIVATION_FUNC": "relu",
         "LOSS_FUNC": "mse",
