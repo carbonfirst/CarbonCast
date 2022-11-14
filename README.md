@@ -20,8 +20,8 @@ If something is not working, please check whether some recent update has already
 In case something is not working in the latest version, or if there are any doubts/questions/suggestions, please feel free to reach us at dmaji at cs dot umass dot edu.
 
 ### 0.1 Current status:
-Code files: Up to date as of 11/09/2022 <br>
-Data files: Up to date as of 08/29/2022. Final validation required. Will be done by 11/14/2022. <br>
+Code files: Up to date as of 11/09/2022. <br>
+Data files: Up to date as of 11/14/2022. <br>
 
 ## 1. Regions covered 
 * US: 
@@ -59,14 +59,16 @@ We use the following formula for calculating avg carbon intensity:<br>
 <br>
 <i>CI<sub>avg</sub></i> = Average carbon intensity (real-time or forecast) of a region <br>
 <i>E<sub>i</sub></i> = Electricity produced by source i. <br>
-<i>CEF<sub>i</sub></i> = Carbon emission factor (lifecycle/direct) of source i. <br><br>
+<i>CEF<sub>i</sub></i> = Carbon emission factor (lifecycle/direct) of source i. <br>
+
+We have provided the file ``` carbonIntensityCalculator.py ``` to calculate both real-time/historical average CI values as well as carbon intensity forecasts from source prodution forecasts. Please refer to Section 4.4 for details.
 
 ## 4. Usage
 ### 4.1 Installing dependencies:
 CarbonCast requires Python 3, Keras and Tensorflow 2.x <br>
 Other required packages:
 * Numpy, Pandas, MatplotLib, SKLearn, Pytz, Datetime
-* wgrib2 (fore weather data). Please refer [here](https://www.cpc.ncep.noaa.gov/products/wesley/wgrib2/compile_questions.html) for details.
+* wgrib2 (for weather data). Please refer [here](https://www.cpc.ncep.noaa.gov/products/wesley/wgrib2/compile_questions.html) for details.
 <!-- * ``` pip3 install numpy, matplotlib, sklearn, datetime, matplotlib ``` -->
 
 ### 4.2 Getting Weather data:
@@ -89,7 +91,15 @@ For getting source production forecasts in the first-tier, run the following fil
 You can get source production forecasts of multiple regions together. Just add the new regions in the "REGION" parameter.
 <!-- A detailed description of how to configure is given in Section 3.5 -->
 
-### 4.4 Getting carbon intensity forecasts
+### 4.4 Calculating carbon intensity (real-time/historical/from source production forecasts):
+For calculating real-time/historical carbon intensity from source data, or carbon intensity forecasts from the source production forecast data using the formula, run the following file: <br>
+```python3 carbonIntensityCalculator.py <region> <-l/-d> <-f/-r> <num_sources>```<br>
+<b>Regions:</b> <i>CISO, PJM, ERCO, ISNE, SE, DE</i> <br>
+<b><-l/-d>:</b> <i>Lifecycle/Direct</i> <br>
+<b><-f/-r>:</b> <i>Forecast/Real-time (or, historical)</i> <br>
+<b>num_sources:</b> <i>No. of electricity producting sources in that region.</i> <br>
+
+### 4.5 Getting carbon intensity forecasts using CarbonCast:
 For getting 96-hour average carbon intensity forecasts, run the following file: <br>
 ```python3 secondTierForecasts.py <configFileName> <-l/-d>```<br>
 <b>Configuration file name:</b> <i>secondTierConfig.json</i> <br>
