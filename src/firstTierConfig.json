@@ -8,7 +8,7 @@
         "AFFILIATION": "University of Massachusetts, Amherst"
     },
 
-    // Regions: CISO, PJM, ERCO, ISNE, SE, DE, AUS_QLD
+    // Regions: CISO, PJM, ERCO, ISNE, NYISO, FPL, BPAT, SE, DE, ES, NL, PL, AUS_QLD
     // Can include multiple regions in the list, separated by comma.    
     "REGION": ["CISO"],
     "NUM_VAL_DAYS": 30, // 1 month
@@ -17,7 +17,7 @@
     "PREDICTION_WINDOW_HOURS": 96,
     "MAX_PREDICTION_WINDOW_HOURS": 96, // max is 96, but if we only want to predict 48 hours, change the PREDICTION_WINDOW_HOURS field
     "NUM_WEATHER_FEATURES": 5,
-    "NUMBER_OF_EXPERIMENTS_PER_REGION": 4,
+    "NUMBER_OF_EXPERIMENTS_PER_REGION": 1,
 
     "TRAIN_TEST_PERIOD": {
         "PERIOD_0": {
@@ -176,6 +176,94 @@
         "SOURCES": ["COAL", "NAT_GAS", "OIL", "HYDRO", "WIND", "BIOMASS", "SOLAR"],
         "SOURCE_COL": [2, 3, 4, 5, 6, 7, 8],
         "PARTIAL_FORECAST_AVAILABILITY_LIST": [0, 0, 0, 0, 0, 0, 0], // 0 -- False, 1 -- True
+        "PARTIAL_FORECAST_HOURS": 24
+    },
+
+    "BPAT": {
+        "IN_FILE_NAME_PREFIX": "../data/BPAT/fuel_forecast/BPAT_",
+        "WEATHER_FORECAST_IN_FILE_NAME": "../data/BPAT/BPAT_weather_forecast.csv",
+        "OUT_FILE_NAME_PREFIX": "../data/BPAT/fuel_forecast/BPAT_ANN_DA",
+        "LOCAL_TIMEZONE": "US/Pacific",
+        "NUM_FEATURES": 6,
+        "NUM_WEATHER_FEATURES": 5,
+        "START_COL": 1,
+        "SOURCES": ["NAT_GAS", "NUCLEAR", "HYDRO", "SOLAR", "WIND", "OTHER"],
+        "SOURCE_COL": [0, 1, 2, 3, 4, 5],
+        "PARTIAL_FORECAST_AVAILABILITY_LIST": [0, 0, 0, 0, 0, 0], // 0 -- False, 1 -- True
+        "PARTIAL_FORECAST_HOURS": 24
+    },
+
+    "ES": {
+        "IN_FILE_NAME_PREFIX": "../data/ES/fuel_forecast/ES_",
+        "WEATHER_FORECAST_IN_FILE_NAME": "../data/ES/ES_weather_forecast.csv",
+        "OUT_FILE_NAME_PREFIX": "../data/ES/fuel_forecast/ES_ANN_DA",
+        "LOCAL_TIMEZONE": "CET",
+        "NUM_FEATURES": 6,
+        "NUM_WEATHER_FEATURES": 5,
+        "START_COL": 1,
+        "SOURCES": ["SOLAR", "UNKNOWN", "NAT_GAS", "COAL", "WIND", "HYDRO", "NUCLEAR", "BIOMASS", "OIL"],
+        "SOURCE_COL": [0, 1, 2, 3, 4, 5, 6, 7, 8],
+        "PARTIAL_FORECAST_AVAILABILITY_LIST": [1, 0, 0, 0, 1, 0, 0, 0, 0], // 0 -- False, 1 -- True
+        // Solar/wind day ahead forecasts are available.
+        "PARTIAL_FORECAST_HOURS": 24
+    },
+
+    "FPL": {
+        "IN_FILE_NAME_PREFIX": "../data/FPL/fuel_forecast/FPL_",
+        "WEATHER_FORECAST_IN_FILE_NAME": "../data/FPL/FPL_weather_forecast.csv",
+        "OUT_FILE_NAME_PREFIX": "../data/FPL/fuel_forecast/FPL_ANN_DA",
+        "LOCAL_TIMEZONE": "US/Eastern",
+        "NUM_FEATURES": 6,
+        "NUM_WEATHER_FEATURES": 5,
+        "START_COL": 1,
+        "SOURCES": ["NAT_GAS", "NUCLEAR", "SOLAR", "OTHER"],
+        "SOURCE_COL": [0, 1, 2, 3],
+        "PARTIAL_FORECAST_AVAILABILITY_LIST": [0, 0, 0, 0], // 0 -- False, 1 -- True
+        "PARTIAL_FORECAST_HOURS": 24
+    },
+
+    "NYISO": {
+        "IN_FILE_NAME_PREFIX": "../data/NYISO/fuel_forecast/NYISO_",
+        "WEATHER_FORECAST_IN_FILE_NAME": "../data/NYISO/NYISO_weather_forecast.csv",
+        "OUT_FILE_NAME_PREFIX": "../data/NYISO/fuel_forecast/NYISO_ANN_DA",
+        "LOCAL_TIMEZONE": "US/Eastern",
+        "NUM_FEATURES": 6,
+        "NUM_WEATHER_FEATURES": 5,
+        "START_COL": 1,
+        "SOURCES": ["NAT_GAS", "NUCLEAR", "OIL", "HYDRO", "WIND", "OTHER"],
+        "SOURCE_COL": [0, 1, 2, 3, 4, 5],
+        "PARTIAL_FORECAST_AVAILABILITY_LIST": [0, 0, 0, 0, 0, 0], // 0 -- False, 1 -- True
+        "PARTIAL_FORECAST_HOURS": 24
+    },
+
+    "PL": {
+        "IN_FILE_NAME_PREFIX": "../data/PL/fuel_forecast/PL_",
+        "WEATHER_FORECAST_IN_FILE_NAME": "../data/PL/PL_weather_forecast.csv",
+        "OUT_FILE_NAME_PREFIX": "../data/PL/fuel_forecast/PL_ANN_DA",
+        "LOCAL_TIMEZONE": "CET",
+        "NUM_FEATURES": 6,
+        "NUM_WEATHER_FEATURES": 5,
+        "START_COL": 1,
+        "SOURCES": ["WIND", "HYDRO", "BIOMASS", "NAT_GAS", "OIL", "COAL", "SOLAR"],
+        "SOURCE_COL": [0, 1, 2, 3, 4, 5, 6],
+        "PARTIAL_FORECAST_AVAILABILITY_LIST": [1, 0, 0, 0, 0, 0, 1], // 0 -- False, 1 -- True
+        // Solar/wind day ahead forecasts are available. For other sources,
+        "PARTIAL_FORECAST_HOURS": 24
+    },
+
+    "NL": {
+        "IN_FILE_NAME_PREFIX": "../data/NL/fuel_forecast/NL_",
+        "WEATHER_FORECAST_IN_FILE_NAME": "../data/NL/NL_weather_forecast.csv",
+        "OUT_FILE_NAME_PREFIX": "../data/NL/fuel_forecast/NL_ANN_DA",
+        "LOCAL_TIMEZONE": "CET",
+        "NUM_FEATURES": 6,
+        "NUM_WEATHER_FEATURES": 5,
+        "START_COL": 1,
+        "SOURCES": ["HYDRO", "BIOMASS", "WIND", "SOLAR", "UNKNOWN", "COAL", "NUCLEAR", "NAT_GAS"], // HYDRO is always 0. Remove later
+        "SOURCE_COL": [0, 1, 2, 3, 4, 5, 6, 7],
+        "PARTIAL_FORECAST_AVAILABILITY_LIST": [0, 0, 0, 0, 0, 0, 0, 0], // 0 -- False, 1 -- True 
+        // Solar/wind day ahead forecasts are available, but they are orders of magnitude different from actual generation.
+        // Hence, not including those.
         "PARTIAL_FORECAST_HOURS": 24
     }
 }
