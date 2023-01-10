@@ -4,7 +4,7 @@ CarbonCast: Multi-Day Forecasting of Grid Carbon Intensity
 <br>
 CarbonCast provides average carbon intensity forecasts up to 96 hours. This is an extension of [DACF](https://github.com/carbonfirst/DACF), which provides only day-ahead carbon intensity forecasts.
 
-Version: 2.0 <br>
+Version: 2.1 <br>
 Authors: Diptyaroop Maji, Prashant Shenoy, Ramesh K Sitaraman <br>
 Affiliation: University of Massachusetts, Amherst
 
@@ -22,22 +22,34 @@ In case something is not working in the latest version, or if there are any doub
 
 ### 0.1 Current status:
 Code files: Up to date as of 11/09/2022. <br>
-Data files: Up to date as of 11/14/2022. <br>
+Data files: Up to date as of 01/10/2023. <br>
 
 ## 1. Regions covered 
-* US: 
+* US (): 
     * California ([CISO](https://www.caiso.com/Pages/default.aspx))
+    * Florida ([FPL](https://www.fpl.com/))
+    * New England ([ISO-NE](https://www.iso-ne.com/). We refer the region as ISNE.)
+    * New York ([NYISO](https://www.nyiso.com/))
     * Pennsylvania-Jersey-Maryland Interconnection ([PJM](https://www.pjm.com/))
-    * Texas ([ERCOT](https://www.ercot.com/))
-    * New England ([ISO-NE](https://www.iso-ne.com/))
+    * Texas ([ERCOT](https://www.ercot.com/). We refer the region as ERCO)
+    * Washington ([BPAT](https://www.bpa.gov/))
 * Europe (European regions are monitored by [ENTSOE](https://transparency.entsoe.eu/)):
-    * Sweden
-    * Germany
+    * Germany (DE)
+    * Netherlands (NL)
+    * Spain (ES)
+    * Sweden (SE)
+    * Poland (PL)
+* Australia (Data for Australian regions is available at [OpenNEM](https://opennem.org.au/energy/nem/?range=7d&interval=30m))
+    * Queensland (AUS-QLD)
+<!-- * Canada
+    * Ontario ([IESO](). We refer the region as CA_ON) -->
 
 ## 2. Data Sources
 US ISO electricity generation by source: [EIA hourly grid monitor](https://www.eia.gov/electricity/gridmonitor/dashboard/electric_overview/US48/US48)
 
 European regions electricity generation by source: [ENTSOE](https://transparency.entsoe.eu/)
+
+Australian regions electricity generation by source: [OpenNEM](https://opennem.org.au/energy/nem/?range=7d&interval=30m)
 
 Weather forecasts: [GFS weather forecast archive](https://rda.ucar.edu/datasets/ds084.1/)
 
@@ -69,7 +81,7 @@ We have provided the file ``` carbonIntensityCalculator.py ``` to calculate both
 CarbonCast requires Python 3, Keras and Tensorflow 2.x <br>
 Other required packages:
 * Numpy, Pandas, MatplotLib, SKLearn, Pytz, Datetime
-* wgrib2 (for weather data). Please refer [here](https://www.cpc.ncep.noaa.gov/products/wesley/wgrib2/compile_questions.html) for details.
+* wgrib2 (for weather data). Please refer [here](https://www.cpc.ncep.noaa.gov/products/wesley/wgrib2/compile_questions.html) for compilation/installation details. If you are using MacOS and having trouble compiling wgrib2, please refer to [this](https://theweatherguy.net/blog/weather-links-info/how-to-install-and-compile-wgrib2-on-mac-os-10-14-6-mojave/) article.
 <!-- * ``` pip3 install numpy, matplotlib, sklearn, datetime, matplotlib ``` -->
 
 ### 4.2 Getting Weather data:
@@ -87,7 +99,7 @@ If you are using any other weather aggregating method, please feel free to modif
 For getting source production forecasts in the first-tier, run the following file:<br>
 ```python3 firstTierForecasts.py <configFileName> ```<br>
 <b>Configuration file name:</b> <i>firstTierConfig.json</i> <br>
-<b>Regions:</b> <i>CISO, PJM, ERCO, ISNE, SE, DE</i> <br>
+<b>Regions:</b> <i>CISO, PJM, ERCO, ISNE, NYISO, FPL, BPAT, SE, DE, ES, NL, PL, AUS_QLD</i> <br>
 <b>Sources:</b> <i>coal, nat_gas, oil, solar, wind, hydro, unknown, geothermal, biomass, nuclear</i> <br>
 You can get source production forecasts of multiple regions together. Just add the new regions in the "REGION" parameter.
 <!-- A detailed description of how to configure is given in Section 3.5 -->
@@ -95,7 +107,7 @@ You can get source production forecasts of multiple regions together. Just add t
 ### 4.4 Calculating carbon intensity (real-time/historical/from source production forecasts):
 For calculating real-time/historical carbon intensity from source data, or carbon intensity forecasts from the source production forecast data using the formula, run the following file: <br>
 ```python3 carbonIntensityCalculator.py <region> <-l/-d> <-f/-r> <num_sources>```<br>
-<b>Regions:</b> <i>CISO, PJM, ERCO, ISNE, SE, DE</i> <br>
+<b>Regions:</b> <i>CISO, PJM, ERCO, ISNE, NYISO, FPL, BPAT, SE, DE, ES, NL, PL, AUS_QLD</i> <br>
 <b><-l/-d>:</b> <i>Lifecycle/Direct</i> <br>
 <b><-f/-r>:</b> <i>Forecast/Real-time (or, historical)</i> <br>
 <b>num_sources:</b> <i>No. of electricity producting sources in that region.</i> <br>
@@ -104,7 +116,7 @@ For calculating real-time/historical carbon intensity from source data, or carbo
 For getting 96-hour average carbon intensity forecasts, run the following file: <br>
 ```python3 secondTierForecasts.py <configFileName> <-l/-d>```<br>
 <b>Configuration file name:</b> <i>secondTierConfig.json</i> <br>
-<b>Regions:</b> <i>CISO, PJM, ERCO, ISNE, SE, DE</i> <br>
+<b>Regions:</b> <i>CISO, PJM, ERCO, ISNE, NYISO, FPL, BPAT, SE, DE, ES, NL, PL, AUS_QLD</i> <br>
 <b><-l/-d>:</b> <i>Lifecycle/Direct</i> <br>
 You can get carbon intensity forecasts of multiple regions together. Just add the new regions in the "REGION" parameter.
 
@@ -119,10 +131,11 @@ We welcome users to suggest modifications to improve CarbonCast and/or add new f
 
 ## 6. Citing CarbonCast
 If you use CarbonCast, please consider citing our paper. The BibTex format is as follows: <br>
-&nbsp; &nbsp; &nbsp; &nbsp;@article{maji2022carboncast,<br>
-&nbsp; &nbsp; &nbsp; &nbsp;  title={CarbonCast: Multi-Day Forecasting of Grid Carbon Intensity},<br>
+&nbsp; &nbsp; &nbsp; &nbsp;@inproceedings{maji2022carboncast,<br>
+&nbsp; &nbsp; &nbsp; &nbsp;  title={CarbonCast: multi-day forecasting of grid carbon intensity},<br>
 &nbsp; &nbsp; &nbsp; &nbsp;  author={Maji, Diptyaroop and Shenoy, Prashant and Sitaraman, Ramesh K},<br>
-&nbsp; &nbsp; &nbsp; &nbsp;  booktitle={Proceedings of the Ninth ACM International Conference on Systems for Energy-Efficient Built Environments},<br>
+&nbsp; &nbsp; &nbsp; &nbsp;  booktitle={Proceedings of the 9th ACM International Conference on Systems for Energy-Efficient Buildings, Cities, and Transportation},<br>
+&nbsp; &nbsp; &nbsp; &nbsp;  pages={198--207},
 &nbsp; &nbsp; &nbsp; &nbsp;  year={2022}<br>
 &nbsp; &nbsp; &nbsp; &nbsp;}<br>
 
