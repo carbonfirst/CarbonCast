@@ -2,7 +2,10 @@ import os
 import requests
 import pandas as pd
 
+# public key for EIA API
 EIA_API_KEY="CZdQsisRJzwOfqUWV3jiMPNEx3ZbHcuJ2VQus04i"
+
+# map EIA fuel types to source types
 EIA_SOURCE_MAP = {
     "OTH": "other", 
     "COL": "coal",
@@ -14,9 +17,11 @@ EIA_SOURCE_MAP = {
     "OIL": "oil"
     }
 
+# list of balancing authorities to get data for
 EIA_BAL_AUTH_LIST = [ 'CISO', 'FPL', 'ISNE', 'NYISO', 'PJM', 'ERCO', 'BPAT']
 
 
+# get production data by source type from EIA API
 def getProductionDataBySourceTypeDataFromEIA(ba):
     print(ba)
     API_URL="https://api.eia.gov/v2/electricity/rto/fuel-type-data/data?api_key="
@@ -34,6 +39,7 @@ def getProductionDataBySourceTypeDataFromEIA(ba):
     responseData = resp.json()["response"]["data"]
     return responseData, startTime
 
+# parse production data by source type from EIA API
 def parseEIAProductionDataBySourceType(data, startTime):
     datasetColumns = []
     datasetColumns.append("UTC time")
@@ -61,7 +67,6 @@ if __name__ == "__main__":
     for balAuth in EIA_BAL_AUTH_LIST:
         data, startTime = getProductionDataBySourceTypeDataFromEIA(balAuth)
         dataset, numSources = parseEIAProductionDataBySourceType(data, startTime)
-        print(dataset)
         script_dir = os.path.abspath('.')
         csv_path = os.path.join(script_dir, f"data/{balAuth}/day/{startTime[:-3]}.csv")
         with open(csv_path, 'w') as f:
