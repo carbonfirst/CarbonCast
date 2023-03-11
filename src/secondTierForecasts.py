@@ -42,15 +42,17 @@ PREDICTION_WINDOW_HOURS = None
 MAX_PREDICTION_WINDOW_HOURS = None
 MODEL_SLIDING_WINDOW_LEN = None
 BUFFER_HOURS = None
+SAVED_MODEL_LOCATION = None
 ############################# MACRO END #########################################
 
-def runSecondTier(configFileName, cefType):
+def runSecondTier(configFileName, cefType, loadFromSavedModel):
     global TRAINING_WINDOW_HOURS
     global PREDICTION_WINDOW_HOURS
     global MAX_PREDICTION_WINDOW_HOURS
     global MODEL_SLIDING_WINDOW_LEN
     global BUFFER_HOURS
     global DEPENDENT_VARIABLE_COL
+    global SAVED_MODEL_LOCATION
 
     secondTierConfig = {}
 
@@ -69,6 +71,13 @@ def runSecondTier(configFileName, cefType):
     BUFFER_HOURS = PREDICTION_WINDOW_HOURS - 24
 
     regionList = secondTierConfig["REGION"]
+    if (loadFromSavedModel is True):
+        NUMBER_OF_EXPERIMENTS = 1
+        if (cefType == "-l"):
+            SAVED_MODEL_LOCATION = secondTierConfig["LIFECYCLE_SAVED_MODEL_LOCATION"]
+        else:
+            SAVED_MODEL_LOCATION = secondTierConfig["DIRECT_SAVED_MODEL_LOCATION"]
+    writeCIForecastsToFile = secondTierConfig["WRITE_CI_FORECASTS_TO_FILE"]
 
     for region in regionList:
         print("CarbonCast: CNN-LSTM model for region:", region)
@@ -146,8 +155,8 @@ def runSecondTier(configFileName, cefType):
         for exptNum in range(NUMBER_OF_EXPERIMENTS):
             print("Iteration: ", exptNum)
             regionDailyMape = {}
-            bestModel, numFeaturesInTraining = trainingandValidationPhase(trainData, wTrainData, 
-                                            valData, wValData, secondTierConfig, exptNum)            
+            bestModel, numFeaturesInTraining = trainingandValidationPhase(region, trainData, wTrainData, 
+                                            valData, wValData, secondTierConfig, exptNum, loadFromSavedModel)            
             history = valData[-TRAINING_WINDOW_HOURS:, :]
             weatherData = None
             weatherData = wValData[-MAX_PREDICTION_WINDOW_HOURS:, :]
@@ -197,7 +206,8 @@ def runSecondTier(configFileName, cefType):
                 row.append(str(unscaledTestData[i]))
                 row.append(str(unscaledPredictedData[i]))
                 data.append(row)
-            common.writeOutFile(outFileNamePrefix+"_"+str(exptNum)+".csv", data, "carbon_intensity", "w")
+            if (writeCIForecastsToFile == "True"):
+                common.writeOutFile(outFileNamePrefix+"_"+str(exptNum)+".csv", data, "carbon_intensity", "w")
 
         print("[BEST] Average RMSE after ", NUMBER_OF_EXPERIMENTS, " expts: ", np.mean(bestRMSE))
         print("[BEST] Average MAPE after ", NUMBER_OF_EXPERIMENTS, " expts: ", np.mean(bestMAPE))
@@ -332,14 +342,22 @@ def manipulateTestDataShape(data, slidingWindowLen, predictionWindowHours, isDat
     return X
 
 # train the model
-def trainModel(trainX, trainY, valX, valY, hyperParams, iteration):
+def trainModel(trainX, trainY, valX, valY, hyperParams, iteration, region, loadFromSavedModel):
+    global SAVED_MODEL_LOCATION
+
     # define parameters
     print("Training...")
-    verbose = 2
+    verbose = 0
     hist = None
     bestModel = None
     n_timesteps, n_features, n_outputs = trainX.shape[1], trainX.shape[2], trainY.shape[1]
     print("Timesteps: ", n_timesteps, "No. of features: ", n_features, "No. of outputs: ", n_outputs)
+
+    if (loadFromSavedModel is True):
+        print("-s parameter specified. Loading model from ", SAVED_MODEL_LOCATION+region+".h5")
+        bestModel = load_model(SAVED_MODEL_LOCATION+"/"+region+".h5")
+        return bestModel, n_features
+
     epochs = hyperParams["epoch"]    
     batchSize = hyperParams["batchsize"]
     activationFunc = hyperParams["actv"]
@@ -372,14 +390,14 @@ def trainModel(trainX, trainY, valX, valY, hyperParams, iteration):
     model.compile(loss=lossFunc, optimizer=opt, metrics=['mean_absolute_error'])
     # simple early stopping
     es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=10)
-    mc = ModelCheckpoint("best_model_iter"+str(iteration)+".h5", monitor='val_loss', mode='min', verbose=1, save_best_only=True)
+    mc = ModelCheckpoint(region+"_best_model_iter"+str(iteration)+".h5", monitor='val_loss', mode='min', verbose=1, save_best_only=True)
     rlr = ReduceLROnPlateau(monitor="val_loss", mode="min", factor=0.1, patience=6, verbose=1, min_lr=minLearningRate)
 
 # fit network
     hist = model.fit(trainX, trainY, epochs=epochs, batch_size=batchSize[0], verbose=verbose,
                         validation_data=(valX, valY), callbacks=[rlr, es, mc])
 
-    bestModel = load_model("best_model_iter"+str(iteration)+".h5")
+    bestModel = load_model(region+"_best_model_iter"+str(iteration)+".h5")
 # showModelSummary(hist, model)
 # print("Loss history: ", hist.history)
     # showModelSummary(hist, bestModel, "CNN")
@@ -614,7 +632,8 @@ def fillMissingData(data): # If some data is missing (NaN), use the same value a
                 data[i, j] = data[i-1, j]
     return data
 
-def trainingandValidationPhase(trainData, wTrainData, valData, wValData, secondTierConfig, exptNum):
+def trainingandValidationPhase(region, trainData, wTrainData, valData, wValData, secondTierConfig, 
+                               exptNum, loadFromSavedModel):
     global TRAINING_WINDOW_HOURS
 
     print("\nManipulating training data...")
@@ -626,7 +645,7 @@ def trainingandValidationPhase(trainData, wTrainData, valData, wValData, secondT
 
     hyperParams = getHyperParams(secondTierConfig)
     print("\n[BESTMODEL] Starting training...")
-    bestTrainedModel, numFeatures = trainModel(X, y, valX, valY, hyperParams, exptNum)
+    bestTrainedModel, numFeatures = trainModel(X, y, valX, valY, hyperParams, exptNum, region, loadFromSavedModel)
     print("***** Training done *****")
     return bestTrainedModel, numFeatures
 
@@ -657,11 +676,18 @@ def getUnscaledForecastsAndForecastAccuracy(testData, testDates, predictedData, 
 
 if __name__ == "__main__":
     print("CarbonCast second tier. Refer github repo for regions & sources.")
-    if (len(sys.argv) != 3):
-        print("Usage: python3 secondTierForecasts.py <configFileName> <-l (lifecycle)/ -d (direct)>")
+    loadFromSavedModel = False
+    if (len(sys.argv) < 3):
+        print("Usage: python3 secondTierForecasts.py <configFileName> <-l (lifecycle)/ -d (direct)> <-s>")
+        print("-s is optional. If provided, CarbonCast will load an already saved model.")
+        print("Otherwise, CarbonCast will train the second tier model.")
         print("")
         exit(0)
+    else:
+        if (len(sys.argv) == 4 and sys.argv[3] == "-s"):
+            loadFromSavedModel = True
     configFileName = sys.argv[1]
     cefType = sys.argv[2]
-    runSecondTier(configFileName, cefType)
+    
+    runSecondTier(configFileName, cefType, loadFromSavedModel)
     print("End")
