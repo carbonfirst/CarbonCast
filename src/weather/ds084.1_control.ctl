@@ -1,5 +1,5 @@
 dataset=ds084.1
-date=202112010000/to/202201310000 # DATE CHANGED
+date=202112010000/to/202201310000 # change start and end dates as required
 datetype=init
 param=A PCP
 level=SFC:0
@@ -12,10 +12,31 @@ elon=154
 product=3-hour Accumulation (initial+0 to initial+3)/6-hour Accumulation (initial+0 to initial+6)/3-hour Accumulation (initial+6 to initial+9)/6-hour Accumulation (initial+6 to initial+12)/3-hour Accumulation (initial+12 to initial+15)/6-hour Accumulation (initial+12 to initial+18)/3-hour Accumulation (initial+18 to initial+21)/6-hour Accumulation (initial+18 to initial+24)/3-hour Accumulation (initial+24 to initial+27)/6-hour Accumulation (initial+24 to initial+30)/3-hour Accumulation (initial+30 to initial+33)/6-hour Accumulation (initial+30 to initial+36)/3-hour Accumulation (initial+36 to initial+39)/6-hour Accumulation (initial+36 to initial+42)/3-hour Accumulation (initial+42 to initial+45)/6-hour Accumulation (initial+42 to initial+48)/3-hour Accumulation (initial+48 to initial+51)/6-hour Accumulation (initial+48 to initial+54)/3-hour Accumulation (initial+54 to initial+57)/6-hour Accumulation (initial+54 to initial+60)/3-hour Accumulation (initial+60 to initial+63)/6-hour Accumulation (initial+60 to initial+66)/3-hour Accumulation (initial+66 to initial+69)/6-hour Accumulation (initial+66 to initial+72)/3-hour Accumulation (initial+72 to initial+75)/6-hour Accumulation (initial+72 to initial+78)/3-hour Accumulation (initial+72 to initial+81)/6-hour Accumulation (initial+78 to initial+84)/3-hour Accumulation (initial+84 to initial+87)/6-hour Accumulation (initial+84 to initial+90)/3-hour Accumulation (initial+90 to initial+93)/6-hour Accumulation (initial+90 to initial+96)
 targetdir=/glade/scratch
 
-#U GRD/V GRD HTGL:10 FCST
-#TMP/DPT HTGL:2 FCST
-#DSWRF SFC:0 AVG
-#A PCP SFC:0 ACCU
+
+# Weather variables (replace lines 4 & 5 above as required):
+
+# 1. Wind speed. We obtain the u- & v- components of wind & then calculate the magintude of wind speed
+# param=U GRD/V GRD
+# level=HTGL:10
+# Uncomment line 10. Comment lines 11 & 12
+
+# 2. Temperature & Dewpoint temperature.
+# param=TMP/DPT
+# level=HTGL:2
+# Uncomment line 10. Comment lines 11 & 12
+
+# 3. Downward shortwave radiation flux (solar irradiance).
+# param=DSWRF
+# level=SFC:0
+# Uncomment line 11. Comment lines 10 & 12
+
+# 1. Total annual precipitation.
+# param=A PCP
+# level=SFC:0
+# Uncomment line 12. Comment lines 10 & 11
+
+
+# Bounding boxes for the regions covered. Change lines 6-9 with relevant values.
 
 # CISO: nlat=42 slat=32 wlon=-124.75 elon=-113.5
 # PJM: nlat=43 slat=34.25 wlon=-91 elon=-73.5
