@@ -21,11 +21,12 @@ If something is not working, please check whether some recent update has already
 In case something is not working in the latest version, or if there are any doubts/questions/suggestions, please feel free to reach us at dmaji at cs dot umass dot edu.
 
 ### 0.1 Current status:
-Code files: Up to date as of 11/09/2022. <br>
+Code files: Up to date as of 03/11/2023. <br>
 Data files: Up to date as of 01/10/2023. <br>
+Latest stable commit: <br>
 
 ## 1. Regions covered 
-* US (): 
+* US (US region data collected from [EIA](https://www.eia.gov/electricity/gridmonitor/dashboard/electric_overview/US48/US48)):
     * California ([CISO](https://www.caiso.com/Pages/default.aspx))
     * Florida ([FPL](https://www.fpl.com/))
     * New England ([ISO-NE](https://www.iso-ne.com/). We refer the region as ISNE.)
@@ -76,26 +77,47 @@ We use the following formula for calculating avg carbon intensity:<br>
 
 We have provided the file ``` carbonIntensityCalculator.py ``` to calculate both real-time/historical average CI values as well as carbon intensity forecasts from source prodution forecasts. Please refer to Section 4.4 for details.
 
-## 4. Usage
+## 4. Running CarbonCast with existing datasets and models
+
 ### 4.1 Installing dependencies:
-CarbonCast requires Python 3, Keras and Tensorflow 2.x <br>
+CarbonCast requires Python3. <br>
 Other required packages:
-* Numpy, Pandas, MatplotLib, SKLearn, Pytz, Datetime
+* Required python modules are listed in ```requirements.txt```.<br>
+Run ```pip3 install -U -r requirements.txt``` for installing the dependecies.
 * wgrib2 (for weather data). Please refer [here](https://www.cpc.ncep.noaa.gov/products/wesley/wgrib2/compile_questions.html) for compilation/installation details. If you are using MacOS and having trouble compiling wgrib2, please refer to [this](https://theweatherguy.net/blog/weather-links-info/how-to-install-and-compile-wgrib2-on-mac-os-10-14-6-mojave/) article.
 <!-- * ``` pip3 install numpy, matplotlib, sklearn, datetime, matplotlib ``` -->
 
-### 4.2 Getting Weather data:
-The aggregated and cleaned weather forecasts that we have used for our regions are provided in ```data/```. If you need weather forecasts for other regions, or even for the same regions (eg. if you want to use a different aggregation method or if you want to forecast for a different time period), the procedure is as follows:<br>
-* GitHub repo of script to fetch weather data can be found [here](https://github.com/NCAR/rda-apps-clients). You can either follow the instructions there and download weather forecasts in grib2 format, or clone the above repo and add these two files in the repo: <br>
-    ``` getWeatherData.py,  ds084.1_control.ctl ``` <br>
-Then, run: ```python3 getWeatherData.py```<br>
-This file uses ``` ds084.1_control.ctl ``` as a template file to download 96-hour weather forecasting data for a particular region. Change the template file for different regions and weather variables (weather variables include wind speed, temperature, dewpoint temperature, solar irradiance (dswrf), and precipitation).
+### 4.2 Running CarbonCast using saved models/Reproducing results from paper:
+We have saved second-tier models for each region which you can use with existing & new datasets to get 96-hour CI forecasts. These models are trained with data from Jan-Dec 2020 and validated with data from Jan-Jun 2021, so that results similar to the paper can be obtained when tested over Jul-Dec 2021. Each region has 2 saved models --- one for lifecycle CEF & the other for direct CEF. If you are using new datasets, you may need to update the models with new training data or generate new models.<br>
+To run CarbonCast using the saved model for any region, run: <br>
+```python3 secondTierForecasts.py <configFileName> <-l/-d> <-s>```<br>
+<b>Configuration file name:</b> <i>secondTierConfig.json</i> <br>
+<b>Regions:</b> <i>CISO, PJM, ERCO, ISNE, NYISO, FPL, BPAT, SE, DE, ES, NL, PL, AUS_QLD.</i> You can specify the region(s) in the configuration file. <br>
+<b><-l/-d>:</b> <i>Lifecycle/Direct.</i> Relevant saved model for the specified region(s) will be loaded.<br>
+<b><-s>: </b> <i>Use saved model.</i> Parameter that tells CarbonCast to use saved models and not train a new model.
+
+
+## 5 Running CarbonCast from scratch
+To run CarbonCast from scratch (with new data/for new regions etc.), first install the dependencies mentioned in Section 4.1.
+
+### 5.1 Getting Weather data:
+The aggregated and cleaned weather forecasts that we have used for our regions are provided in ```data/```. If you need weather forecasts for other regions, or even for the same regions (e.g., if you want to use a different aggregation method or if you want to forecast for a different time period), the procedure is mentioned below.<br>
+* We fetch weather data from the [GFS weather forecast archive](https://rda.ucar.edu/datasets/ds084.1/). You will need to register 
+before you can get weather data. Once you have registered, do the following:
+* GitHub repo of script to fetch weather data can be found [here](https://github.com/NCAR/rda-apps-clients). You can follow the instructions there and download weather forecasts in grib2 format. The repo has a sample [Jupyter Notebook](https://github.com/NCAR/rda-apps-clients/blob/main/src/python/rdams_client_example.ipynb) with step-by-step instructions. Remember to modify the notebook as required (e.g., changing the dataset id (dsid)).
+* Otherwise, clone the above repo and add the following two files in the ```rda-apps-clients/src/python``` folder: <br>
+    ``` src/weather/getWeatherData.py,  src/weather/ds084.1_control.ctl ``` <br>
+```getWeatherData.py``` uses ``` ds084.1_control.ctl ``` as a template file to download 96-hour weather forecasting data for a particular region. Change the template file for different regions and weather variables (weather variables include wind speed, temperature, dewpoint temperature, solar irradiance (dswrf), and precipitation). The template file has instructions on how to modify it for different regions and weather variables. After you have configured the template file, run: ```python3 getWeatherData.py```<br>
+* You may need to add your credentials in ```rda-apps-clients/src/python/rdams_client.py``` for API calls to work. To do that, add the following as the first line in ```get_authentication()```:<br>
+```write_pw_file(<username>, <password>)```
 * Once you have obtained the grib2 files, use the following files to aggregate and clean the data:<br>
 ```python3 dataCollectionScript.py``` -- this file uses code from [here](https://towardsdatascience.com/the-correct-way-to-average-the-globe-92ceecd172b7) for aggregating weather forecasts over a specified region. <br>
 ```python3 cleanWeatherData.py``` -- this file cleans the data and generates hourly files for the above specified weather variables.<br>
+You will need to modify the relevant fields in the above two files to successfully parse & clean the weather data. <br>
 If you are using any other weather aggregating method, please feel free to modify the above files as required.
 
-### 4.3 Getting source production forecasts:
+### 5.2 Getting source production forecasts:
+You will need to obtain, clean, & format the datasets before you can get source production forecasts. You may also need to modify the configuration file as required.<br>
 For getting source production forecasts in the first-tier, run the following file:<br>
 ```python3 firstTierForecasts.py <configFileName> ```<br>
 <b>Configuration file name:</b> <i>firstTierConfig.json</i> <br>
@@ -104,7 +126,7 @@ For getting source production forecasts in the first-tier, run the following fil
 You can get source production forecasts of multiple regions together. Just add the new regions in the "REGION" parameter.
 <!-- A detailed description of how to configure is given in Section 3.5 -->
 
-### 4.4 Calculating carbon intensity (real-time/historical/from source production forecasts):
+### 5.3 Calculating carbon intensity (real-time/historical/from source production forecasts):
 For calculating real-time/historical carbon intensity from source data, or carbon intensity forecasts from the source production forecast data using the formula, run the following file: <br>
 ```python3 carbonIntensityCalculator.py <region> <-l/-d> <-f/-r> <num_sources>```<br>
 <b>Regions:</b> <i>CISO, PJM, ERCO, ISNE, NYISO, FPL, BPAT, SE, DE, ES, NL, PL, AUS_QLD</i> <br>
@@ -112,7 +134,7 @@ For calculating real-time/historical carbon intensity from source data, or carbo
 <b><-f/-r>:</b> <i>Forecast/Real-time (or, historical)</i> <br>
 <b>num_sources:</b> <i>No. of electricity producting sources in that region.</i> <br>
 
-### 4.5 Getting carbon intensity forecasts using CarbonCast:
+### 5.4 Getting carbon intensity forecasts using CarbonCast:
 For getting 96-hour average carbon intensity forecasts, run the following file: <br>
 ```python3 secondTierForecasts.py <configFileName> <-l/-d>```<br>
 <b>Configuration file name:</b> <i>secondTierConfig.json</i> <br>
@@ -124,20 +146,20 @@ You can get carbon intensity forecasts of multiple regions together. Just add th
 Change the firstTierConfig.json and secondTierConfig.json files for desired configurations. Below are the fields used in the file along with their meaning:<br>
 PREDICTION_WINDOW_HOURS: Prediction window in hours. (Default: 96) -->
 
-## 5. Developer mode
+## 6. Developer mode
 
 We welcome users to suggest modifications to improve CarbonCast and/or add new features or models to the existing codebase. Please feel free to contact us at dmaji at cs dot umass dot edu with suggestions (or even working patches!)
 <!-- Use the developer branch to make edits and submit a change. -->
 
-## 6. Citing CarbonCast
+## 7. Citing CarbonCast
 If you use CarbonCast, please consider citing our paper. The BibTex format is as follows: <br>
 &nbsp; &nbsp; &nbsp; &nbsp;@inproceedings{maji2022carboncast,<br>
 &nbsp; &nbsp; &nbsp; &nbsp;  title={CarbonCast: multi-day forecasting of grid carbon intensity},<br>
 &nbsp; &nbsp; &nbsp; &nbsp;  author={Maji, Diptyaroop and Shenoy, Prashant and Sitaraman, Ramesh K},<br>
 &nbsp; &nbsp; &nbsp; &nbsp;  booktitle={Proceedings of the 9th ACM International Conference on Systems for Energy-Efficient Buildings, Cities, and Transportation},<br>
-&nbsp; &nbsp; &nbsp; &nbsp;  pages={198--207},
+&nbsp; &nbsp; &nbsp; &nbsp;  pages={198--207},<br>
 &nbsp; &nbsp; &nbsp; &nbsp;  year={2022}<br>
 &nbsp; &nbsp; &nbsp; &nbsp;}<br>
 
-## 7. Acknowledgements
+## 8. Acknowledgements
 This work is part of the [CarbonFirst](http://carbonfirst.org/) project, supported by NSF grants 2105494, 2021693, and 2020888, and a grant from VMware.
