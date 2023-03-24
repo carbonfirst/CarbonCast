@@ -38,17 +38,35 @@ targetdir=/glade/scratch
 
 # Bounding boxes for the regions covered. Change lines 6-9 with relevant values.
 
+# US regions
 # CISO: nlat=42 slat=32 wlon=-124.75 elon=-113.5
 # PJM: nlat=43 slat=34.25 wlon=-91 elon=-73.5
 # ERCOT: nlat=36.5 slat=25.25 wlon=-104.5 elon=-93.25
 # ISNE: nlat=48 slat=40 wlon=-74.25 elon=-66.5
-# SE: nlat=69 slat=55.25 wlon=11.25 elon=21.25
-# GB: nlat=61 slat=49.75 wlon=-8.25 elon=2.25
-# DE: nlat=55.25 slat=47.25 wlon=5.75 elon=15
-# CA-ON: nlat=57.25 slat=41.25 wlon=-95.75 elon=-73.75
-# DK-DK2: nlat=57.75 slat=54.75 wlon=7.25 elon=11.25
-# PL: nlat=54.75 slat=49 wlon=14 elon=24
-# MISO: [-107.862115248933, 28.4286900252724], [-81.9130970652477, 49.884274119856]
+# MISO: nlat=50.00 slat=28.50 wlon=-107.75 elon=-81.75
+# BPAT: nlat=49.50 slat=39.50 wlon=-125.25 elon=-105.50
+# SWPP: nlat=49.50 slat=30.25 wlon=-107.75 elon=-89.50
+# SOCO: nlat=35.50 slat=29.25 wlon=-90.50 elon=-80.25 
+# FPL: nlat=31.25 slat=24.00 wlon=-83.50 elon=-79.50 
+# NYISO: nlat=45.50 slat=40.00 wlon=-80.25 elon=-71.25 
+
+
+# EU regions
+# Sweden: SE: nlat=69 slat=55.25 wlon=11.25 elon=21.25
+# GReat Britain: GB: nlat=61 slat=49.75 wlon=-8.25 elon=2.25
+# Germany: DE: nlat=55.25 slat=47.25 wlon=5.75 elon=15
+# Denmark zone 2: DK-DK2: nlat=57.75 slat=54.75 wlon=7.25 elon=11.25
+# Poland: PL: nlat=54.75 slat=49 wlon=14 elon=24
+# Finland: FI: nlat=70.00 slat=59.75 wlon=20.50 elon=31.50
+# France: FR: nlat=51.25 slat=42.25 wlon=-5.25 elon=8.25 
+# Spain: ES: nlat=43.75 slat=36.00 wlon=-9.25 elon=3.50
+# Belgium: BE: nlat=51.50 slat=49.50 wlon=2.50 elon=6.25
+# Netherlands: NL: nlat=53.50 slat=50.75 wlon=3.25 elon=7.00
+
+# AUS regions
 # AUS-NSW: nlat=-34.75 slat=-36.50 wlon=148.25 elon=150
 # AUS_QLD: nlat=-8.75 slat=-29.75 wlon=137.50 elon=154
-# AUS_SA: nlat=-25.50 slat=-38.50 wlon=128.50 elon=141.50 
+# AUS_SA: nlat=-25.50 slat=-38.50 wlon=128.50 elon=141.50
+
+# Other regions
+# Canada-Ontario: CA-ON: nlat=57.25 slat=41.25 wlon=-95.75 elon=-73.75
