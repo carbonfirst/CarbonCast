@@ -84,7 +84,7 @@ CarbonCast requires Python3. <br>
 Other required packages:
 * Required python modules are listed in ```requirements.txt```.<br>
 Run ```pip3 install -U -r requirements.txt``` for installing the dependecies.
-* wgrib2 (for weather data). Please refer [here](https://www.cpc.ncep.noaa.gov/products/wesley/wgrib2/compile_questions.html) for compilation/installation details. If you are using MacOS and having trouble compiling wgrib2, please refer to [this](https://theweatherguy.net/blog/weather-links-info/how-to-install-and-compile-wgrib2-on-mac-os-10-14-6-mojave/) article. Once wgrib2 is installed, run the following command to access wgrib2 from anywhere in the terminal:
+* wgrib2 (for weather data). Please refer [here](https://www.cpc.ncep.noaa.gov/products/wesley/wgrib2/compile_questions.html) for compilation/installation details. If you are using MacOS and having trouble compiling wgrib2, please refer to [this](https://theweatherguy.net/blog/weather-links-info/how-to-install-and-compile-wgrib2-on-mac-os-10-14-6-mojave/) article. Once wgrib2 is installed, go to the grib2 directory and run the following command to access wgrib2 from anywhere in the terminal:
 ```cp -rfv wgrib2/wgrib2 /usr/local/bin/wgrib2```
 <!-- * ``` pip3 install numpy, matplotlib, sklearn, datetime, matplotlib ``` -->
 
