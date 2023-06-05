@@ -92,8 +92,10 @@ def scaleDataset(trainData, valData, testData):
         if((ftMax[i] - ftMin[i]) == 0):
             continue
         trainData[:, i] = (trainData[:, i] - ftMin[i]) / (ftMax[i] - ftMin[i])
-        valData[:, i] = (valData[:, i] - ftMin[i]) / (ftMax[i] - ftMin[i])
-        testData[:, i] = (testData[:, i] - ftMin[i]) / (ftMax[i] - ftMin[i])
+        if valData is not None:
+            valData[:, i] = (valData[:, i] - ftMin[i]) / (ftMax[i] - ftMin[i])
+        if testData is not None:
+            testData[:, i] = (testData[:, i] - ftMin[i]) / (ftMax[i] - ftMin[i])
 
     return trainData, valData, testData, ftMin, ftMax
 

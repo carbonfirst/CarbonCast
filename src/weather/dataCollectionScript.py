@@ -15,14 +15,15 @@ import pandas as pd
 import csv
 import math
 import numpy as np
+import os
 
-ISO_LIST = ["AUS_QLD"]
+ISO_LIST = ["CISO"]
 # IF 2 CONSECUTIVE FILES ARE NOT PRESENT, MANUALLY ADD THEM
 
-GRIB2_CMD = "grib2/wgrib2/wgrib2"
+GRIB2_CMD = "wgrib2"
 # FILE_DIR = "gfs.0p25.2020010100-2021010100.f000.grib2/"
 
-FILE_PREFIX = "gfs.0p25."
+FILE_PREFIX = "gfs.t00z.pgrb2.0p25."
 UGRD_VGRD_SEPRATOR = {"CISO": 1886, "PJM": 2556, "SE": 2296, "DK-DK2": 221, 
                         "ERCO": 2116, "ISNE": 1056, "GB": 1978, "DE": 1254, 
                         "PL": 984, "AUS_NSW": 64, "AUS_QLD": 5695, "AUS_SA": 2809}
@@ -31,67 +32,54 @@ TMP_DPT_SEPARATOR = {"CISO": 1886, "PJM": 2556, "SE": 2296, "DK-DK2": 221,
                         "PL": 984, "AUS_NSW": 64, "AUS_QLD": 5695, "AUS_SA": 2809}
 
 HOUR = ["00"] ##, "06", "12", "18"]
-FCST = ["000", "003", "006", "009", "012", "015", "018", "021", "024",
-                "027", "030", "033", "036", "039", "042", "045", "048",
-                "051", "054", "057", "060", "063", "066", "069", "072",
-                "075", "078", "081", "084", "087", "090", "093", "096"]
+# FCST = ["000", "003", "006", "009", "012", "015", "018", "021", "024",
+#                 "027", "030", "033", "036", "039", "042", "045", "048",
+#                 "051", "054", "057", "060", "063", "066", "069", "072",
+#                 "075", "078", "081", "084", "087", "090", "093", "096"]
 FCST_AVG_ACC = ["003", "006", "009", "012", "015", "018", "021", "024",
                 "027", "030", "033", "036", "039", "042", "045", "048",
                 "051", "054", "057", "060", "063", "066", "069", "072",
                 "075", "078", "081", "084", "087", "090", "093", "096"]
 YEARS = [2019, 2020, 2021]
 HEADER = ["startDate", "endDate", "param", "level", "longitude", "latitude", "value"]
-CSV_FILE_FIELDS_FCST = ["datetime", "param", "level", "latitude", "longitude", "Analysis", "3 hr fcst", 
-        "6 hr fcst", "9 hr fcst", "12 hr fcst", "15 hr fcst", "18 hr fcst",
-        "21 hr fcst", "24 hr fcst", "27 hr fcst", "30 hr fcst", "33 hr fcst",
-        "36 hr fcst", "39 hr fcst", "42 hr fcst", "45 hr fcst", "48 hr fcst",
-        "51 hr fcst", "54 hr fcst", "57 hr fcst", "60 hr fcst", "63 hr fcst",
-        "66 hr fcst", "69 hr fcst", "72 hr fcst", "75 hr fcst", "78 hr fcst",
-        "81 hr fcst", "84 hr fcst", "87 hr fcst", "90 hr fcst", "93 hr fcst", "96 hr fcst"]
-CSV_FILE_FIELDS_AVG = ["datetime", "param", "level", "latitude", "longitude", "0-3 hr avg", 
-        "0-6 hr avg", "6-9 hr avg", "6-12 hr avg", "12-15 hr avg", "12-18 hr avg",
-        "18-21 hr avg", "18-24 hr avg", "24-27 hr avg", "24-30 hr avg", "30-33 hr avg",
-        "30-36 hr avg", "36-39 hr avg", "36-42 hr avg", "42-45 hr avg", "42-48 hr avg",
-        "48-51 hr avg", "48-54 hr avg", "54-57 hr avg", "54-60 hr avg", "60-63 hr avg",
-        "60-66 hr avg", "66-69 hr avg", "66-72 hr avg", "72-75 hr avg", "72-78 hr avg",
-        "78-81 hr avg", "78-84 hr avg", "84-87 hr avg", "84-90 hr avg", "90-93 hr avg", "90-96 hr avg"] 
-CSV_FILE_FIELDS_ACC = ["datetime", "param", "level", "latitude", "longitude", "0-3 hr acc", 
-        "0-6 hr acc", "6-9 hr acc", "6-12 hr acc", "12-15 hr acc", "12-18 hr acc",
-        "18-21 hr acc", "18-24 hr acc", "24-27 hr acc", "24-30 hr acc", "30-33 hr acc",
-        "30-36 hr acc", "36-39 hr acc", "36-42 hr acc", "42-45 hr acc", "42-48 hr acc",
-        "48-51 hr acc", "48-54 hr acc", "54-57 hr acc", "54-60 hr acc", "60-63 hr acc",
-        "60-66 hr acc", "66-69 hr acc", "66-72 hr acc", "72-75 hr acc", "72-78 hr acc",
-        "78-81 hr acc", "78-84 hr acc", "84-87 hr acc", "84-90 hr acc", "90-93 hr acc", "90-96 hr acc"] 
+CSV_FILE_FIELDS_FCST = ["datetime", "param", "level", "latitude", "longitude", "Analysis"]
+CSV_FILE_FIELDS_FCST.extend([str(i) + " hr fcst" for i in range(1, 96)])
+CSV_FILE_FIELDS_AVG = ["datetime", "param", "level", "latitude", "longitude"]
+CSV_FILE_FIELDS_AVG.extend([str(i) + " hr avg" for i in range(1, 96)]) 
+CSV_FILE_FIELDS_ACC = ["datetime", "param", "level", "latitude", "longitude"]
+CSV_FILE_FIELDS_ACC.extend([str(i) + " hr acc" for i in range(1, 96)]) 
 
-def getFileList(yearList=[2020], fileDir = None, fcstCol=FCST):
+def getFileList(year, month, day, fileDir = None):
     fileList = []
     prevFile = None
-    for year in yearList:
-        for month in range(1, 13): # Month is always 1..12
-            for day in range(1, monthrange(year, month)[1] + 1):
-                curDate = str(year)+f"{month:02d}"+f"{day:02d}"
-                fileName = FILE_PREFIX + str(curDate)
-                oldFileName = fileName
-                for hr in HOUR:
-                    for fcst in fcstCol:
-                        fileName = oldFileName
-                        fileName +=str(hr) + ".f"+str(fcst)+".grib2"
-                        filePath = ""
-                        filePath = fileDir + fileName
-                        if (os.path.exists(filePath) == False):
-                            print(filePath + " doesn't exist")
-                            filePath = fileDir + str(prevFile)
-                            if (os.path.exists(filePath) == True):
-                                fileList.append(filePath)
-                                print("Using previous forecast value with file: ", prevFile)
-                            else:
-                                print(filePath + " doesn't exist also")
-                        else:
-                            fileList.append(filePath)
-                            prevFile = fileName # assuming the first file to be searched is always present
+    curDate = str(year) + str(month) + str(day)
+    fileName = FILE_PREFIX + str(curDate)
+    oldFileName = fileName
+    for fcst in range(1, 96):
+        fileName = oldFileName
+
+        if fcst < 10:
+            fcst = "0" + str(fcst)
+        else:
+            fcst = str(fcst)
+        fileName += f".f00{fcst}.grib2"
+        filePath = ""
+        filePath = f"{fileDir}/{fileName}"
+        if (os.path.exists(filePath) == False):
+            print(filePath + " doesn't exist")
+            filePath = fileDir + str(prevFile)
+            if (os.path.exists(filePath) == True):
+                fileList.append(filePath)
+                print("Using previous forecast value with file: ", prevFile)
+            else:
+                print(filePath + " doesn't exist also")
+        else:
+            fileList.append(filePath)
+            prevFile = fileName # assuming the first file to be searched is always present
     return fileList
 
-def getWeatherData(fileList, csvFields, outFileName, fcstCol, weatherVariable):
+def getWeatherData(fileList, csvFields, outFileName, weatherVariable):
+    ISO = 'CISO'
     with open(outFileName, 'w') as csvfile: 
         # creating a csv writer object 
         csvwriter = csv.writer(csvfile)                    
@@ -104,7 +92,7 @@ def getWeatherData(fileList, csvFields, outFileName, fcstCol, weatherVariable):
         lat = None
         lon = None
         # weatherValues = []
-        for i in range(len(fcstCol)):
+        for i in range(1, 96):
             val = subprocess.call(GRIB2_CMD + " " + fileList[fileIdx] + " -csv tmp.csv", shell=True)
             fileIdx+=1
             if(val == 0):
@@ -115,9 +103,13 @@ def getWeatherData(fileList, csvFields, outFileName, fcstCol, weatherVariable):
                     dataset = dataset[:TMP_DPT_SEPARATOR[ISO]]
                 elif (weatherVariable == "DPT"):
                     dataset = dataset[TMP_DPT_SEPARATOR[ISO]:]
-                if (i==0):
+                elif (weatherVariable == "APCP"):
+                    dataset = dataset[:TMP_DPT_SEPARATOR[ISO]]
+                if (i==1):
                     lat = np.unique(dataset["latitude"].values)
                     lon = np.unique(dataset["longitude"].values)
+                    print('lat =', len(lat))
+                    print('lon = ', len(lon))
                     grid_cell_area = area_grid(lat, lon)
                     total_area_of_earth = np.sum(grid_cell_area)
                 # averageValue = round(dataset["value"].mean(), 5)
@@ -127,6 +119,7 @@ def getWeatherData(fileList, csvFields, outFileName, fcstCol, weatherVariable):
                                 dataset["latitude"].iloc[0], dataset["longitude"].iloc[0]]
 
                 value = dataset["value"].values
+                print('value len = ', len(value))
                 # weighted_mean = np.mean(temperature)
                 value = np.reshape(value, (len(lat), len(lon)))
                 weighted_mean = (value * grid_cell_area) / total_area_of_earth
@@ -141,6 +134,8 @@ def getWeatherData(fileList, csvFields, outFileName, fcstCol, weatherVariable):
         # print(weatherValues)
         # row.extend(weatherValues) 
         rows.append(row)
+    if weatherVariable == "TEMP" or weatherVariable == "DPT":
+        rows[0].insert(5, rows[0][5])  
     with open(outFileName, 'a') as csvfile:
         csvwriter = csv.writer(csvfile)
         csvwriter.writerows(rows)
@@ -148,6 +143,7 @@ def getWeatherData(fileList, csvFields, outFileName, fcstCol, weatherVariable):
     return
 
 def getWindData(fileList, csvFields, outFileName):
+    ISO = 'CISO'
     # print(len(fileList))
     # exit(0)
     with open(outFileName, 'w') as csvfile: 
@@ -165,7 +161,7 @@ def getWindData(fileList, csvFields, outFileName):
         grid_cell_area = None
         total_area_of_earth = None
         # weatherValues = []
-        for i in range(len(FCST)):
+        for i in range(1, 96):
             val = subprocess.call(GRIB2_CMD + " " + fileList[fileIdx] + " -csv tmp.csv", shell=True)
             fileIdx+=1
             if(val == 0):
@@ -174,7 +170,7 @@ def getWindData(fileList, csvFields, outFileName):
                 # print(dataset.head(2))
                 vdataset = dataset[UGRD_VGRD_SEPRATOR[ISO]:]
                 udataset = dataset[:UGRD_VGRD_SEPRATOR[ISO]]
-                if (i==0):
+                if (i==1):
                     lat = np.unique(dataset["latitude"].values)
                     lon = np.unique(dataset["longitude"].values)
                     grid_cell_area = area_grid(lat, lon)
@@ -189,7 +185,6 @@ def getWindData(fileList, csvFields, outFileName):
                 weighted_mean = (value * grid_cell_area) / total_area_of_earth
                 weighted_mean = np.sum(weighted_mean)
                 row.append(weighted_mean)
-                
                 delFile = subprocess.call("rm tmp.csv", shell=True)
                 if(delFile != 0):
                     print("Error: Process call failed -- rm")
@@ -199,6 +194,7 @@ def getWindData(fileList, csvFields, outFileName):
         # print(weatherValues)
         # row.extend(weatherValues) 
         rows.append(row)
+    rows[0].insert(5, rows[0][5])  
     with open(outFileName, 'a') as csvfile:
         csvwriter = csv.writer(csvfile)
         csvwriter.writerows(rows)
@@ -217,57 +213,59 @@ def getWindSpeedAcrossAllRegions(inFileName):
     avgWindSpeedList = []
     uWindFileList = None
     if (inFileName is None):
-        uWindFileList = getFileList(2020, "SE/ugrd_vgrd/")
+        uWindFileList = getFileList(range(96), 2020, "SE/ugrd_vgrd/")
     else:
-        uWindFileList = getFileList(2020, inFileName)
+        uWindFileList = getFileList(range(96), 2020, inFileName)
     # vWindFileList = getFileList(2020, "ds084_1/vGRD/")
-    fileIdx = 0
-    rows = []
-    while fileIdx < len(uWindFileList):
-        row = None
-        # weatherValues = []
-        for i in range(len(FCST)):
-            uval = subprocess.call(GRIB2_CMD + " " + uWindFileList[fileIdx] + " -csv utmp.csv", shell=True)
-            if(uval == 0):
-                vval = 0 #subprocess.call(GRIB2_CMD + " " + vWindFileList[fileIdx] + " -csv vtmp.csv", shell=True)
-                fileIdx+=1
-                if (vval == 0):
-                    udataset = pd.read_csv("utmp.csv", infer_datetime_format=True, 
-                            names=HEADER)
-                    # vdataset = pd.read_csv("vtmp.csv", infer_datetime_format=True, 
-                    #         names=HEADER)
-                    vdataset = udataset[UGRD_VGRD_SEPRATOR[ISO]:]
-                    udataset = udataset[:UGRD_VGRD_SEPRATOR[ISO]]
-                    # if row is None:
-                    #     row = [dataset["startDate"].iloc[cityIdx], dataset["param"].iloc[cityIdx], dataset["level"].iloc[cityIdx],
-                    #                 dataset["latitude"].iloc[cityIdx], dataset["longitude"].iloc[cityIdx]]
+    # fileIdx = 0
+    # rows = []
+    # while fileIdx < len(uWindFileList):
+    #     row = None
+    #     # weatherValues = []
+    #     for i in range(97):
+    #         uval = subprocess.call(GRIB2_CMD + " " + uWindFileList[fileIdx] + " -csv utmp.csv", shell=True)
+    #         if(uval == 0):
+    #             vval = 0 #subprocess.call(GRIB2_CMD + " " + vWindFileList[fileIdx] + " -csv vtmp.csv", shell=True)
+    #             fileIdx+=1
+    #             if (vval == 0):
+    #                 udataset = pd.read_csv("utmp.csv", infer_datetime_format=True, 
+    #                         names=HEADER)
+    #                 # vdataset = pd.read_csv("vtmp.csv", infer_datetime_format=True, 
+    #                 #         names=HEADER)
+    #                 vdataset = udataset[UGRD_VGRD_SEPRATOR[ISO]:]
+    #                 udataset = udataset[:UGRD_VGRD_SEPRATOR[ISO]]
+    #                 # if row is None:
+    #                 #     row = [dataset["startDate"].iloc[cityIdx], dataset["param"].iloc[cityIdx], dataset["level"].iloc[cityIdx],
+    #                 #                 dataset["latitude"].iloc[cityIdx], dataset["longitude"].iloc[cityIdx]]
 
-                    maxWindSpeed = 0
-                    totalWindSpeed = 0
-                    avgWindSpeed = 0
-                    for j in range(len(udataset)):
-                        u = udataset["value"].iloc[j]
-                        v = vdataset["value"].iloc[j]
-                        windSpeed = math.sqrt(u*u + v*v)
-                        totalWindSpeed +=windSpeed
-                        if  windSpeed> maxWindSpeed:
-                            maxWindSpeed = windSpeed
-                    avgWindSpeed = totalWindSpeed/len(udataset)
-                    maxWindSpeedList.append([udataset["startDate"].iloc[0], maxWindSpeed])
-                    totalWindSpeedList.append([udataset["startDate"].iloc[0], totalWindSpeed])
-                    avgWindSpeedList.append([udataset["startDate"].iloc[0], avgWindSpeed])
-                    # delFile = subprocess.call("rm utmp.csv", shell=True)
-                    # if(delFile != 0):
-                    #     print("Error: Process call failed -- rm")
-                else:
-                    print("Error: Process call failed -- ", GRIB2_CMD)
-            else:
-                print("Error: Process call failed -- ", GRIB2_CMD)
-        # writing to csv file
-        # print(weatherValues)
-        # row.extend(weatherValues) 
-        # rows.append(row)
-    return maxWindSpeedList, totalWindSpeedList, avgWindSpeedList
+    #                 maxWindSpeed = 0
+    #                 totalWindSpeed = 0
+    #                 avgWindSpeed = 0
+    #                 for j in range(len(udataset)):
+    #                     u = udataset["value"].iloc[j]
+    #                     v = vdataset["value"].iloc[j]
+    #                     windSpeed = math.sqrt(u*u + v*v)
+    #                     totalWindSpeed +=windSpeed
+    #                     if  windSpeed> maxWindSpeed:
+    #                         maxWindSpeed = windSpeed
+    #                 avgWindSpeed = totalWindSpeed/len(udataset)
+    #                 maxWindSpeedList.append([udataset["startDate"].iloc[0], maxWindSpeed])
+    #                 totalWindSpeedList.append([udataset["startDate"].iloc[0], totalWindSpeed])
+    #                 avgWindSpeedList.append([udataset["startDate"].iloc[0], avgWindSpeed])
+    #                 # delFile = subprocess.call("rm utmp.csv", shell=True)
+    #                 # if(delFile != 0):
+    #                 #     print("Error: Process call failed -- rm")
+    #             else:
+    #                 print("Error: Process call failed -- ", GRIB2_CMD)
+    #         else:
+    #             print("Error: Process call failed -- ", GRIB2_CMD)
+    #     # writing to csv file
+    #     # print(weatherValues)
+    #     # row.extend(weatherValues) 
+    #     # rows.append(row)
+    # return maxWindSpeedList, totalWindSpeedList, avgWindSpeedList
+
+    print(uWindFileList)
 
 def getTotalDWSRFcrossAllRegions():
     totalWindSpeedList = []
@@ -379,60 +377,63 @@ def area_grid(lat, lon):
 # pd.DataFrame(avgDwsrfList).to_csv("PJM_avgDWSRF.csv")
 
 
+# date = YYYY-MM-DD
+def average_weather_data(date):
 
-for ISO in ISO_LIST:
-    # FILE_DIR = ["../final_weather_data/"+ISO+"/ugrd_vgrd/", #/2019_weather_data
-    #         "../final_weather_data/"+ISO+"/tmp_dpt/",
-    #         "../final_weather_data/"+ISO+"/tmp_dpt/",
-    #         "../final_weather_data/"+ISO+"/dswrf/",
-    #         "../final_weather_data/"+ISO+"/apcp/"]
+    for ISO in ISO_LIST:
+        # FILE_DIR = ["../final_weather_data/"+ISO+"/ugrd_vgrd/", #/2019_weather_data
+        #         "../final_weather_data/"+ISO+"/tmp_dpt/",
+        #         "../final_weather_data/"+ISO+"/tmp_dpt/",
+        #         "../final_weather_data/"+ISO+"/dswrf/",
+        #         "../final_weather_data/"+ISO+"/apcp/"]
 
-    # OUT_FILE_NAME_LIST = ["../final_weather_data/"+ISO+"/"+ISO+"_AVG_WIND_SPEED.csv", #/2019_weather_data
-    #                     "../final_weather_data/"+ISO+"/"+ISO+"_AVG_TEMP.csv",
-    #                     "../final_weather_data/"+ISO+"/"+ISO+"_AVG_DPT.csv",
-    #                     "../final_weather_data/"+ISO+"/"+ISO+"_AVG_DSWRF.csv",
-    #                     "../final_weather_data/"+ISO+"/"+ISO+"_AVG_PCP.csv"]
+        # OUT_FILE_NAME_LIST = ["../final_weather_data/"+ISO+"/"+ISO+"_AVG_WIND_SPEED.csv", #/2019_weather_data
+        #                     "../final_weather_data/"+ISO+"/"+ISO+"_AVG_TEMP.csv",
+        #                     "../final_weather_data/"+ISO+"/"+ISO+"_AVG_DPT.csv",
+        #                     "../final_weather_data/"+ISO+"/"+ISO+"_AVG_DSWRF.csv",
+        #                     "../final_weather_data/"+ISO+"/"+ISO+"_AVG_PCP.csv"]
 
-    FILE_DIR = ["../extn/"+ISO+"/weather_data/ugrd_vgrd/",
-            "../extn/"+ISO+"/weather_data/tmp_dpt/",
-            "../extn/"+ISO+"/weather_data/tmp_dpt/",
-            "../extn/"+ISO+"/weather_data/dswrf/",
-            "../extn/"+ISO+"/weather_data/apcp/"]
+        filedir = os.path.dirname(__file__)
+        FILE_DIR = [os.path.normpath(os.path.join(filedir, "extn/"+ISO+"/weather_data/ugrd_vgrd/")), 
+                    os.path.normpath(os.path.join(filedir, "extn/"+ISO+"/weather_data/tmp_dpt/")),
+                    os.path.normpath(os.path.join(filedir, "extn/"+ISO+"/weather_data/tmp_dpt/")),
+                    os.path.normpath(os.path.join(filedir, "extn/"+ISO+"/weather_data/dswrf/")),
+                    os.path.normpath(os.path.join(filedir, "extn/"+ISO+"/weather_data/apcp/"))]
 
-    OUT_FILE_NAME_LIST = ["../extn/"+ISO+"/weather_data/"+ISO+"_AVG_WIND_SPEED.csv",
-                        "../extn/"+ISO+"/weather_data/"+ISO+"_AVG_TEMP.csv",
-                        "../extn/"+ISO+"/weather_data/"+ISO+"_AVG_DPT.csv",
-                        "../extn/"+ISO+"/weather_data/"+ISO+"_AVG_DSWRF.csv",
-                        "../extn/"+ISO+"/weather_data/"+ISO+"_AVG_PCP.csv"]
+        OUT_FILE_NAME_LIST = [os.path.normpath(os.path.join(filedir, "extn/"+ISO+"/weather_data/"+ISO+"_AVG_WIND_SPEED.csv")),
+                            os.path.normpath(os.path.join(filedir, "extn/"+ISO+"/weather_data/"+ISO+"_AVG_TEMP.csv")),
+                            os.path.normpath(os.path.join(filedir, "extn/"+ISO+"/weather_data/"+ISO+"_AVG_DPT.csv")),
+                            os.path.normpath(os.path.join(filedir, "extn/"+ISO+"/weather_data/"+ISO+"_AVG_DSWRF.csv")),
+                            os.path.normpath(os.path.join(filedir, "extn/"+ISO+"/weather_data/"+ISO+"_AVG_APCP.csv"))]
 
-    # FILE_DIR = ["../extn/"+ISO+"/weather_data/tmp_dpt/",
-    #         "../extn/"+ISO+"/weather_data/tmp_dpt/"]
-            
-    # OUT_FILE_NAME_LIST = ["../extn/"+ISO+"/weather_data/"+ISO+"_AVG_TEMP.csv",
-    #                     "../extn/"+ISO+"/weather_data/"+ISO+"_AVG_DPT.csv"]
+        # FILE_DIR = ["../extn/"+ISO+"/weather_data/tmp_dpt/",
+        #         "../extn/"+ISO+"/weather_data/tmp_dpt/"]
+                
+        # OUT_FILE_NAME_LIST = ["../extn/"+ISO+"/weather_data/"+ISO+"_AVG_TEMP.csv",
+        #                     "../extn/"+ISO+"/weather_data/"+ISO+"_AVG_DPT.csv"]
 
-    print("*******************", ISO, "*******************")
-    for xx in range(len(OUT_FILE_NAME_LIST)):
-        if ("WIND" in OUT_FILE_NAME_LIST[xx]):
-            fileList = getFileList(YEARS, FILE_DIR[xx], fcstCol=FCST)
-            print("WIND: ", OUT_FILE_NAME_LIST[xx])
-            getWindData(fileList, CSV_FILE_FIELDS_FCST, OUT_FILE_NAME_LIST[xx])
-        else:
-            if ("TEMP" in OUT_FILE_NAME_LIST[xx]):
-                fileList = getFileList(YEARS, FILE_DIR[xx], fcstCol=FCST)
-                print("TEMP: ", OUT_FILE_NAME_LIST[xx])
-                getWeatherData(fileList, CSV_FILE_FIELDS_FCST, OUT_FILE_NAME_LIST[xx], FCST, "TEMP")
-            elif ("DPT" in OUT_FILE_NAME_LIST[xx]):
-                fileList = getFileList(YEARS, FILE_DIR[xx], fcstCol=FCST)
-                print("DPT: ", OUT_FILE_NAME_LIST[xx])
-                getWeatherData(fileList, CSV_FILE_FIELDS_FCST, OUT_FILE_NAME_LIST[xx], FCST, "DPT")
-            elif ("DSWRF" in OUT_FILE_NAME_LIST[xx]):
-                fileList = getFileList(YEARS, FILE_DIR[xx], fcstCol=FCST_AVG_ACC)
-                print("DSWRF: ", OUT_FILE_NAME_LIST[xx])
-                getWeatherData(fileList, CSV_FILE_FIELDS_AVG, OUT_FILE_NAME_LIST[xx], FCST_AVG_ACC, "DSWRF")
-            elif ("PCP" in OUT_FILE_NAME_LIST[xx]):
-                fileList = getFileList(YEARS, FILE_DIR[xx], fcstCol=FCST_AVG_ACC)
-                print("PCP: ", OUT_FILE_NAME_LIST[xx])
-                getWeatherData(fileList, CSV_FILE_FIELDS_ACC, OUT_FILE_NAME_LIST[xx], FCST_AVG_ACC, "PCP")
-    print("*******************", ISO, " done *******************")
+        print("*******************", ISO, "*******************")
+        for xx in range(len(OUT_FILE_NAME_LIST)):
+            if ("WIND" in OUT_FILE_NAME_LIST[xx]):
+                fileList = getFileList(date[0:4], date[5:7], date[8:10], FILE_DIR[xx])
+                print("WIND: ", OUT_FILE_NAME_LIST[xx])
+                getWindData(fileList, CSV_FILE_FIELDS_FCST, OUT_FILE_NAME_LIST[xx])
+            else:
+                if ("TEMP" in OUT_FILE_NAME_LIST[xx]):
+                    fileList = getFileList(date[0:4], date[5:7], date[8:10], FILE_DIR[xx])
+                    print("TEMP: ", OUT_FILE_NAME_LIST[xx])
+                    getWeatherData(fileList, CSV_FILE_FIELDS_FCST, OUT_FILE_NAME_LIST[xx], "TEMP")
+                elif ("DPT" in OUT_FILE_NAME_LIST[xx]):
+                    fileList = getFileList(date[0:4], date[5:7], date[8:10], FILE_DIR[xx])
+                    print("DPT: ", OUT_FILE_NAME_LIST[xx])
+                    getWeatherData(fileList, CSV_FILE_FIELDS_FCST, OUT_FILE_NAME_LIST[xx], "DPT")
+                elif ("DSWRF" in OUT_FILE_NAME_LIST[xx]):
+                    fileList = getFileList(date[0:4], date[5:7], date[8:10], FILE_DIR[xx])
+                    print("DSWRF: ", OUT_FILE_NAME_LIST[xx])
+                    getWeatherData(fileList, CSV_FILE_FIELDS_AVG, OUT_FILE_NAME_LIST[xx], "DSWRF")
+                elif ("APCP" in OUT_FILE_NAME_LIST[xx]):
+                    fileList = getFileList(date[0:4], date[5:7], date[8:10], FILE_DIR[xx])
+                    print("APCP: ", OUT_FILE_NAME_LIST[xx])
+                    getWeatherData(fileList, CSV_FILE_FIELDS_ACC, OUT_FILE_NAME_LIST[xx], "APCP")
+        print("*******************", ISO, " done *******************")
 

@@ -22,13 +22,13 @@ EIA_BAL_AUTH_LIST = [ 'CISO', 'FPL', 'ISNE', 'NYIS', 'PJM', 'ERCO', 'BPAT']
 
 
 # get production data by source type from EIA API
-def getProductionDataBySourceTypeDataFromEIA(ba):
+def getProductionDataBySourceTypeDataFromEIA(ba, date):
     print(ba)
     API_URL="https://api.eia.gov/v2/electricity/rto/fuel-type-data/data?api_key="
     API_URL_SORT_PARAMS="sort[0][column]=period&sort[0][direction]=asc&sort[1][column]=fueltype&sort[1][direction]=desc"
     API_URL_SUFFIX="&frequency=hourly&data[]=value&facets[respondent][]={}&"+API_URL_SORT_PARAMS+"&start={}&end={}&offset=0&length=5000"
-    startTime = "2023-03-01T00"
-    endTime = "2023-03-01T23"
+    startTime = date + "T00"
+    endTime = date + "T23"
     URL = API_URL+EIA_API_KEY+API_URL_SUFFIX.format(ba, startTime, endTime)
     resp = requests.get(URL)
     print(resp.url)
@@ -63,11 +63,17 @@ def parseEIAProductionDataBySourceType(data, startTime):
     dataset = pd.DataFrame(electricityProductionData, columns=datasetColumns)
     return dataset, numSources
 
-if __name__ == "__main__":
+def getEIAData(date):
+    filedir = os.path.dirname(__file__)
     for balAuth in EIA_BAL_AUTH_LIST:
-        data, startTime = getProductionDataBySourceTypeDataFromEIA(balAuth)
+        data, startTime = getProductionDataBySourceTypeDataFromEIA(balAuth, date)
         dataset, numSources = parseEIAProductionDataBySourceType(data, startTime)
-        script_dir = os.path.abspath('.')
-        csv_path = os.path.join(script_dir, f"data/{balAuth}/day/{startTime[:-3]}.csv")
+        # script_dir = os.path.abspath('.')
+        # csv_path = os.path.join(script_dir, f"data/{balAuth}/day/{startTime[:-3]}.csv")
+
+        csv_path = os.path.normpath(os.path.join(filedir, f"../{balAuth}/day/{startTime[:-3]}.csv"))
         with open(csv_path, 'w') as f:
             dataset.to_csv(f, index=False)
+
+if __name__ == "__main__":
+    getEIAData("2023-05-21")

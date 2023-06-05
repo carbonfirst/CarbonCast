@@ -167,7 +167,7 @@ def runFirstTier(configFileName):
                     ######################## START #####################                    
                     print("Iteration: ", exptNum)
                     bestModel = trainingandValidationPhase(trainData, wTrainData, 
-                                                    valData, wValData, firstTierConfig)
+                                                    valData, wValData, firstTierConfig, source)
 
                     history = valData[-TRAINING_WINDOW_HOURS:, :]
                     weatherData = None
@@ -265,7 +265,7 @@ def fillMissingData(data): # If some data is missing (NaN), use the same value a
                 data[i, j] = data[i-1, j]
     return data
 
-def trainingandValidationPhase(trainData, wTrainData, valData, wValData, firstTierConfig):
+def trainingandValidationPhase(trainData, wTrainData, valData, wValData, firstTierConfig, source):
     global TRAINING_WINDOW_HOURS
     print("\nManipulating training data...")
     X, y = manipulateTrainingDataShape(trainData, TRAINING_WINDOW_HOURS, wTrainData)
@@ -277,7 +277,7 @@ def trainingandValidationPhase(trainData, wTrainData, valData, wValData, firstTi
     print("X.shape, y.shape: ", X.shape, y.shape)
     hyperParams = getANNHyperParams(firstTierConfig)                
     print("\n[BESTMODEL] Starting training...")
-    bestTrainedModel = trainANN(X, y, valX, valY, hyperParams)
+    bestTrainedModel = trainANN(X, y, valX, valY, hyperParams, source)
     print("***** Training done *****")
     return bestTrainedModel
 
@@ -330,7 +330,7 @@ def manipulateTestDataShape(data, isDates=False):
     return X
 
 
-def trainANN(trainX, trainY, valX, valY, hyperParams):
+def trainANN(trainX, trainY, valX, valY, hyperParams, source):
     n_timesteps, n_features, n_outputs = trainX.shape[1], trainX.shape[2], trainY.shape[1]
     epochs = hyperParams["epoch"]
     batchSize = hyperParams["batchsize"]
@@ -348,12 +348,12 @@ def trainANN(trainX, trainY, valX, valY, hyperParams):
     model.compile(loss=lossFunc, optimizer=opt,
                     metrics=['mean_absolute_error'])
     es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=10)
-    mc = ModelCheckpoint('best_model_ann.h5', monitor='val_loss', mode='min', verbose=1, save_best_only=True)
+    mc = ModelCheckpoint(f'{source}.h5', monitor='val_loss', mode='min', verbose=1, save_best_only=True)
     # fit network
     # hist = model.fit(trainX, trainY, epochs=epochs, batch_size=bSize, verbose=verbose)
     hist = model.fit(trainX, trainY, epochs=epochs, batch_size=batchSize[0], verbose=2,
                         validation_data=(valX, valY), callbacks=[es, mc])
-    model = load_model("best_model_ann.h5")
+    model = load_model(f"{source}.h5")
     common.showModelSummary(hist, model)
     print("Number of features used in training: ", n_features)
     return model

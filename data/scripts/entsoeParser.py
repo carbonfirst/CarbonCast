@@ -46,8 +46,8 @@ ENTSOE_SOURCE_MAP = {
 
 ENTSOE_REGIONS = ['DE', 'NL', 'ES', 'SE', 'PL']
 
-startTime = pd.Timestamp('20230109', tz='UTC')
-endTime = pd.Timestamp('20230110', tz='UTC')
+startTime = pd.Timestamp('20230309', tz='UTC')
+endTime = pd.Timestamp('20230310', tz='UTC')
 
 def getProductionDataBySourceTypeDataFromENTSOE(region):
     client = EntsoePandasClient(api_key=ENTSOE_API_KEY)
@@ -105,7 +105,7 @@ if __name__ == "__main__":
     for region in ENTSOE_REGIONS:
         script_dir = os.path.abspath('.')
         csv_path = os.path.join(script_dir, f"../{region}/day/{str(startTime)[:10]}.csv")
-        data, startTime = getProductionDataBySourceTypeDataFromENTSOE('DE')
+        data, startTime = getProductionDataBySourceTypeDataFromENTSOE(region)
         dataset, numSources = parseENTSOEProductionDataBySourceType(data)
         with open(csv_path, 'w') as f:
             dataset.to_csv(f, index=False)

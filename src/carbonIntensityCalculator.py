@@ -5,6 +5,7 @@ carbon intensity forecasts from source production forecasts (DACF).
 CODE TO WRITE CARBON DATA TO FILE IS CURRENTLY COMMENTED. UNCOMMENT IF REQUIRED.
 '''
 
+import os
 import csv
 import math
 import sys
@@ -22,7 +23,7 @@ CARBON_INTENSITY_COLUMN = 1 # column for real-time carbon intensity
 SRC_START_COL = 1
 PREDICTION_WINDOW_HOURS = 96
 MODEL_SLIDING_WINDOW_LEN = 24
-TEST_PERIOD = "Jul_Dec_2021"
+TEST_PERIOD = "day"
 
 # Operational carbon emission factors
 # Carbon rate used by electricityMap. Checkout this link:
@@ -198,28 +199,30 @@ def getMape(dates, actual, forecast, predictionWindowHours):
     # return avgDailyMape, mapeScore
     return dailyMapeScore, mapeScore, dailyRmseScore
 
-def runProgram(region, isLifecycle, isForecast, numSources):
+def runProgram(region, isLifecycle, isForecast, numSources, date):
     REAL_TIME_SRC_IN_FILE_NAME = None
     CARBON_FROM_REAL_TIME_SRC_OUT_FILE_NAME = None
     FORECAST_SRC_IN_FILE_NAME = None
     CARBON_FROM_SRC_FORECASTS_OUT_FILE_NAME = None
+    filedir = os.path.dirname(__file__)
 
     if (isLifecycle is True):
         if (isForecast is True):
-            REAL_TIME_SRC_IN_FILE_NAME = "../data/"+region+"/"+region+"_carbon_lifecycle_"+TEST_PERIOD+".csv"
-            CARBON_FROM_SRC_FORECASTS_OUT_FILE_NAME = "../data/"+region+"/"+region+"_carbon_from_src_prod_forecasts_lifecycle_"+TEST_PERIOD+".csv"
-            FORECAST_SRC_IN_FILE_NAME = "../data/"+region+"/"+region+"_96hr_source_prod_forecasts_DA_"+TEST_PERIOD+".csv"
+
+            REAL_TIME_SRC_IN_FILE_NAME = os.path.normpath(os.path.join(filedir, "../data/"+region+"/"+region+"_carbon_lifecycle_"+TEST_PERIOD+".csv"))
+            CARBON_FROM_SRC_FORECASTS_OUT_FILE_NAME = os.path.normpath(os.path.join(filedir, "../data/"+region+"/"+region+"_carbon_from_src_prod_forecasts_lifecycle_"+TEST_PERIOD+".csv"))
+            FORECAST_SRC_IN_FILE_NAME = os.path.normpath(os.path.join(filedir, "../data/"+region+"/"+region+"_96hr_source_prod_forecasts_DA_"+TEST_PERIOD+".csv"))
         else:
-            REAL_TIME_SRC_IN_FILE_NAME = "../data/"+region+"/"+region+".csv"
-            CARBON_FROM_REAL_TIME_SRC_OUT_FILE_NAME = "../data/"+region+"/"+region+"_lifecycle_emissions.csv"
+            REAL_TIME_SRC_IN_FILE_NAME = os.path.normpath(os.path.join(filedir, f"../data/{region}/day/{date}.csv"))
+            CARBON_FROM_REAL_TIME_SRC_OUT_FILE_NAME = os.path.normpath(os.path.join(filedir, "../data/"+region+"/day/"+region+"_lifecycle_emissions.csv"))
     else:
         if (isForecast is True):
-            REAL_TIME_SRC_IN_FILE_NAME = "../data/"+region+"/"+region+"_carbon_direct_"+TEST_PERIOD+".csv"
-            CARBON_FROM_SRC_FORECASTS_OUT_FILE_NAME = "../data/"+region+"/"+region+"_carbon_from_src_prod_forecasts_direct_"+TEST_PERIOD+".csv"
-            FORECAST_SRC_IN_FILE_NAME = "../data/"+region+"/"+region+"_96hr_source_prod_forecasts_DA_"+TEST_PERIOD+".csv"
+            REAL_TIME_SRC_IN_FILE_NAME = os.path.normpath(os.path.join(filedir, "../data/"+region+"/"+region+"_carbon_direct_"+TEST_PERIOD+".csv"))
+            CARBON_FROM_SRC_FORECASTS_OUT_FILE_NAME = os.path.normpath(os.path.join(filedir, "../data/"+region+"/"+region+"_carbon_from_src_prod_forecasts_direct_"+TEST_PERIOD+".csv"))
+            FORECAST_SRC_IN_FILE_NAME = os.path.normpath(os.path.join(filedir, "../data/"+region+"/"+region+"_96hr_source_prod_forecasts_DA_"+TEST_PERIOD+".csv"))
         else:
-            REAL_TIME_SRC_IN_FILE_NAME = "../data/"+region+"/"+region+".csv"
-            CARBON_FROM_REAL_TIME_SRC_OUT_FILE_NAME = "../data/"+region+"/"+region+"_direct_emissions.csv"
+            REAL_TIME_SRC_IN_FILE_NAME = os.path.normpath(os.path.join(filedir, f"../data/{region}/day/{date}.csv"))
+            CARBON_FROM_REAL_TIME_SRC_OUT_FILE_NAME = os.path.normpath(os.path.join(filedir, "../data/"+region+"/day/"+region+"_direct_emissions.csv"))
 
     
     dataset = initialize(REAL_TIME_SRC_IN_FILE_NAME)
@@ -283,7 +286,7 @@ def runProgram(region, isLifecycle, isForecast, numSources):
         # outputDataset.to_csv(CARBON_FROM_SRC_FORECASTS_OUT_FILE_NAME)
     else:
         print("Real time carbon intensities:")
-        # dataset.to_csv(CARBON_FROM_REAL_TIME_SRC_OUT_FILE_NAME)
+        dataset.to_csv(CARBON_FROM_REAL_TIME_SRC_OUT_FILE_NAME, index = False)
     
     return
 
@@ -306,5 +309,5 @@ if __name__ == "__main__":
     if (sys.argv[3].lower() == "-f"):
         isForecast = True
     numSources = int(sys.argv[4])
-    runProgram(region, isLifecycle, isForecast, numSources)
+    runProgram(region, isLifecycle, isForecast, numSources, '2023-05-21')
     print("Calculating carbon intensity for region: ", sys.argv[1], " done.")
