@@ -1,12 +1,12 @@
 dataset=ds084.1
-date=202112010000/to/202201310000 # change start and end dates as required
+date=202008110000/to/202012310000 # change start and end dates as required
 datetype=init
 param=A PCP
 level=SFC:0
-nlat=-8.75
-slat=-29.75
-wlon=137.50
-elon=154
+nlat=50
+slat=24
+wlon=-125.25
+elon=-66.5
 #product=Analysis/3-hour Forecast/6-hour Forecast/9-hour Forecast/12-hour Forecast/15-hour Forecast/18-hour Forecast/21-hour Forecast/24-hour Forecast/27-hour Forecast/30-hour Forecast/33-hour Forecast/36-hour Forecast/39-hour Forecast/42-hour Forecast/45-hour Forecast/48-hour Forecast/51-hour Forecast/54-hour Forecast/57-hour Forecast/60-hour Forecast/63-hour Forecast/66-hour Forecast/69-hour Forecast/72-hour Forecast/75-hour Forecast/78-hour Forecast/81-hour Forecast/84-hour Forecast/87-hour Forecast/90-hour Forecast/93-hour Forecast/96-hour Forecast
 #product=3-hour Average (initial+0 to initial+3)/6-hour Average (initial+0 to initial+6)/3-hour Average (initial+6 to initial+9)/6-hour Average (initial+6 to initial+12)/3-hour Average (initial+12 to initial+15)/6-hour Average (initial+12 to initial+18)/3-hour Average (initial+18 to initial+21)/6-hour Average (initial+18 to initial+24)/3-hour Average (initial+24 to initial+27)/6-hour Average (initial+24 to initial+30)/3-hour Average (initial+30 to initial+33)/6-hour Average (initial+30 to initial+36)/3-hour Average (initial+36 to initial+39)/6-hour Average (initial+36 to initial+42)/3-hour Average (initial+42 to initial+45)/6-hour Average (initial+42 to initial+48)/3-hour Average (initial+48 to initial+51)/6-hour Average (initial+48 to initial+54)/3-hour Average (initial+54 to initial+57)/6-hour Average (initial+54 to initial+60)/3-hour Average (initial+60 to initial+63)/6-hour Average (initial+60 to initial+66)/3-hour Average (initial+66 to initial+69)/6-hour Average (initial+66 to initial+72)/3-hour Average (initial+72 to initial+75)/6-hour Average (initial+72 to initial+78)/3-hour Average (initial+72 to initial+81)/6-hour Average (initial+78 to initial+84)/3-hour Average (initial+84 to initial+87)/6-hour Average (initial+84 to initial+90)/3-hour Average (initial+90 to initial+93)/6-hour Average (initial+90 to initial+96)
 product=3-hour Accumulation (initial+0 to initial+3)/6-hour Accumulation (initial+0 to initial+6)/3-hour Accumulation (initial+6 to initial+9)/6-hour Accumulation (initial+6 to initial+12)/3-hour Accumulation (initial+12 to initial+15)/6-hour Accumulation (initial+12 to initial+18)/3-hour Accumulation (initial+18 to initial+21)/6-hour Accumulation (initial+18 to initial+24)/3-hour Accumulation (initial+24 to initial+27)/6-hour Accumulation (initial+24 to initial+30)/3-hour Accumulation (initial+30 to initial+33)/6-hour Accumulation (initial+30 to initial+36)/3-hour Accumulation (initial+36 to initial+39)/6-hour Accumulation (initial+36 to initial+42)/3-hour Accumulation (initial+42 to initial+45)/6-hour Accumulation (initial+42 to initial+48)/3-hour Accumulation (initial+48 to initial+51)/6-hour Accumulation (initial+48 to initial+54)/3-hour Accumulation (initial+54 to initial+57)/6-hour Accumulation (initial+54 to initial+60)/3-hour Accumulation (initial+60 to initial+63)/6-hour Accumulation (initial+60 to initial+66)/3-hour Accumulation (initial+66 to initial+69)/6-hour Accumulation (initial+66 to initial+72)/3-hour Accumulation (initial+72 to initial+75)/6-hour Accumulation (initial+72 to initial+78)/3-hour Accumulation (initial+72 to initial+81)/6-hour Accumulation (initial+78 to initial+84)/3-hour Accumulation (initial+84 to initial+87)/6-hour Accumulation (initial+84 to initial+90)/3-hour Accumulation (initial+90 to initial+93)/6-hour Accumulation (initial+90 to initial+96)
@@ -48,7 +48,44 @@ targetdir=/glade/scratch
 # SWPP: nlat=49.50 slat=30.25 wlon=-107.75 elon=-89.50
 # SOCO: nlat=35.50 slat=29.25 wlon=-90.50 elon=-80.25 
 # FPL: nlat=31.25 slat=24.00 wlon=-83.50 elon=-79.50 
-# NYISO: nlat=45.50 slat=40.00 wlon=-80.25 elon=-71.25 
+# NYISO: nlat=45.50 slat=40.00 wlon=-80.25 elon=-71.25
+# BANC: nlat=41.75 slat=37.00 wlon=-124.00 elon=-120.00
+# LDWP: nlat=38.00 slat=33.25 wlon=-119.00 elon=-117.00
+# TIDC: nlat=38.25 slat=36.75 wlon=-121.75 elon=-119.75
+# DUK: nlat=37.00 slat=33.00 wlon=-84.75 elon=-77.75 
+# SC: nlat=35.25 slat=31.50 wlon=-82.75 elon=-78.00 
+# SCEG: nlat=35.25 slat=31.50 wlon=-83.00 elon=-78.75 
+# SPA: nlat=40.75 slat=34.25 wlon=-98.00 elon=-89.00 
+# FMPP: nlat=30.75 slat=24.00 wlon=-83.00 elon=-79.50 
+# FPC: nlat=31.25 slat=25.75 wlon=-86.50 elon=-80.00 
+# TAL: nlat=31.25 slat=29.75 wlon=-84.75 elon=-83.50 
+# TEC: nlat=29.00 slat=27.00 wlon=-83.25 elon=-81.25 
+# AECI: nlat=41.75 slat=34.25 wlon=-98.50 elon=-88.50 
+# LGEE: nlat=39.50 slat=36.00 wlon=-89.75 elon=-82.25 
+# DOPD: nlat=49.50 slat=46.75 wlon=-120.75 elon=-118.25 
+# GCPD: nlat=48.50 slat=46.25 wlon=-120.50 elon=-118.50 
+# GRID: nlat=46.25 slat=44.75 wlon=-119.75 elon=-118.25 
+# IPCO: nlat=47.25 slat=41.50 wlon=-120.50 elon=-111.00 
+# NEVP: nlat=42.50 slat=34.50 wlon=-122.00 elon=-111.00 
+# NWMT: nlat=49.50 slat=43.25 wlon=-116.50 elon=-103.50 
+# PACE: nlat=45.50 slat=33.00 wlon=-115.75 elon=-104.25 
+# PACW: nlat=47.50 slat=38.75 wlon=-124.75 elon=-115.75 
+# PGE: nlat=46.50 slat=44.25 wlon=-124.25 elon=-121.25 
+# PSCO: nlat=41.75 slat=35.75 wlon=-109.50 elon=-102.00 
+# PSEI: nlat=49.50 slat=45.75 wlon=-123.75 elon=-119.75 
+# SCL: nlat=48.25 slat=47.00 wlon=-123.00 elon=-121.75 
+# TPWR: nlat=48.25 slat=45.75 wlon=-124.00 elon=-120.50 
+# WACM: nlat=48.00  slat=35.50 wlon=-114.50 elon=-95.75 
+# SOCO: nlat=35.50 slat=29.50 wlon=-90.50 elon=-80.25 
+# AZPS: nlat=36.75 slat=30.75 wlon=-115.25 elon=-108.75 
+# EPE: nlat=34.00  slat=26.75 wlon=-108.75 elon=-98.25 
+# PNM: nlat=44.50 slat=30.75 wlon=-123.50 elon=-101.50 
+# SRP: nlat=34.50 slat=32.00 wlon=-113.75 elon=-110.50 
+# TEPC: nlat=36.75 slat=31.25 wlon=-115.25 elon=-110.00 
+# WALC: nlat=44.00 slat=30.75 wlon=-124.25 elon=-105.00 
+# TVA: nlat=38.00 slat=31.75 wlon=-90.75 elon=-81.25
+
+
 
 
 # EU regions
@@ -67,6 +104,8 @@ targetdir=/glade/scratch
 # AUS-NSW: nlat=-34.75 slat=-36.50 wlon=148.25 elon=150
 # AUS_QLD: nlat=-8.75 slat=-29.75 wlon=137.50 elon=154
 # AUS_SA: nlat=-25.50 slat=-38.50 wlon=128.50 elon=141.50
+# AUS-VIC: nlat=-33.50 slat=-39.50 wlon=140.50 elon=150.50 
+
 
 # Other regions
 # Canada-Ontario: CA-ON: nlat=57.25 slat=41.25 wlon=-95.75 elon=-73.75

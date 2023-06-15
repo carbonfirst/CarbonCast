@@ -8,18 +8,17 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pytz as pytz
+import os
+import sys
 
+ISO_LIST = ["CISO", "PJM", "ERCOT", "ISNE", "MISO", "SWPP", "SOCO", "BPAT", "FPL", "NYISO", "BANC", "LDWP", 
+                     "TIDC", "DUK", "SC", "SCEG", "SPA", "FPC", "AECI",
+                     "GCPD", "GRID", "IPCO", "NEVP", "NWMT", "PACE", "PACW", "PSCO", "PSEI", "SCL", 
+                     "TPWR", "WACM", "SOCO", "AZPS", "EPE", "SRP", "WALC", "TVA"]
 ISO = "AUS_SA"
-LOCAL_TIMEZONES = {"BPAT": "US/Pacific", "CISO": "US/Pacific", "ERCO": "US/Central", 
-                    "SOCO" :"US/Central", "SWPP": "US/Central", "FPL": "US/Eastern", 
-                    "ISNE": "US/Eastern", "NYIS": "US/Eastern", "PJM": "US/Eastern", 
-                    "MISO": "US/Eastern", "SE": "CET", "GB": "UTC", "DK-DK2": "CET",
-                    "DE": "CET", "PL": "CET"}
-# LOCAL_TIMEZONE = pytz.timezone(LOCAL_TIMEZONES[ISO])
+
 # FILE_DIR = "../final_weather_data/"+ISO+"/" #/2019_weather_data
-FILE_DIR = "../extn/"+ISO+"/weather_data/"
-IN_FILE_NAMES = [ISO+"_AVG_WIND_SPEED.csv", ISO+"_AVG_TEMP.csv", ISO+"_AVG_DPT.csv", ISO+"_AVG_DSWRF.csv", ISO+"_AVG_PCP.csv"]
-OUT_FILE_NAMES = [ISO+"_aggregated_weather_data.csv"]
+FILE_DIR = "./total_aggregated_weather_data/"
 COLUMN_NAME = ["forecast_avg_wind_speed_wMean", "forecast_avg_temperature_wMean", "forecast_avg_dewpoint_wMean", 
                 "forecast_avg_dswrf_wMean", "forecast_avg_precipitation_wMean"]
 
@@ -30,7 +29,8 @@ PREDICTION_WINDOW_HOURS = 24 * PREDICTION_PERIOD_DAYS
 def readFile(inFileName):
     print("Filename: ", inFileName)
     dataset = pd.read_csv(inFileName, header=0, infer_datetime_format=True, 
-                            parse_dates=['datetime'], index_col=['datetime'])    
+                            parse_dates=['datetime'], index_col=['datetime'])
+    dataset = dataset.iloc[:, 1:]    
     print(dataset.head())
     print(dataset.columns)
     dateTime = dataset.index.values
@@ -130,25 +130,68 @@ def calcluateWindSpeed(dataset):
         dataset["forecast_wind_speed"].iloc[i] = round(math.sqrt(u*u * v*v), 5)
     return dataset
 
-dataset, dateTime = readFile(FILE_DIR+IN_FILE_NAMES[0])
-# writeLocalTimeToFile(dataset, dateTime, OUT_FILE_NAMES[i])
-hourlyDateTime = createHourlyTimeCol(dateTime)
-modifiedDataset = pd.DataFrame(index=hourlyDateTime, 
-        columns=COLUMN_NAME)
-modifiedDataset.index.name = "datetime"
-for i in range(len(IN_FILE_NAMES)):
-    dataset, dateTime = readFile(FILE_DIR+IN_FILE_NAMES[i])
-    colName = modifiedDataset.columns.values[i]
-    modifiedDataset[colName].iloc[0] = 0
-    if "dswrf" in colName:
-        modifiedDataset = createAvgOrAccForecastColumns(dataset, modifiedDataset, colName, "avg")
-    elif "precipitation" in colName:
-        modifiedDataset = createAvgOrAccForecastColumns(dataset, modifiedDataset, colName, "acc")
-    else:
-        modifiedDataset = createForecastColumns(dataset, modifiedDataset, colName)    
-    modifiedDataset[colName].iloc[0] = modifiedDataset[colName].iloc[1]
-    
-modifiedDataset.to_csv(FILE_DIR+OUT_FILE_NAMES[0])
+
+def startScript():
+    for iso in ISO_LIST:
+        IN_FILE_NAMES = [iso+"_WIND_SPEED.csv", iso+"_TEMP.csv", iso+"_DPT.csv", 
+                         iso+"_DSWRF.csv", iso+"_APCP.csv"]
+        OUT_FILE_NAMES = [iso+"_aggregated_weather_data.csv"]
+        dataset, dateTime = readFile(FILE_DIR+IN_FILE_NAMES[0])
+        # writeLocalTimeToFile(dataset, dateTime, OUT_FILE_NAMES[i])
+        hourlyDateTime = createHourlyTimeCol(dateTime)
+        modifiedDataset = pd.DataFrame(index=hourlyDateTime, 
+                columns=COLUMN_NAME)
+        modifiedDataset.index.name = "datetime"
+        for i in range(len(IN_FILE_NAMES)):
+            dataset, dateTime = readFile(FILE_DIR+IN_FILE_NAMES[i])
+            colName = modifiedDataset.columns.values[i]
+            modifiedDataset[colName].iloc[0] = 0
+            if "dswrf" in colName:
+                modifiedDataset = createAvgOrAccForecastColumns(dataset, modifiedDataset, colName, "avg")
+            elif "precipitation" in colName:
+                modifiedDataset = createAvgOrAccForecastColumns(dataset, modifiedDataset, colName, "acc")
+            else:
+                modifiedDataset = createForecastColumns(dataset, modifiedDataset, colName)
+            modifiedDataset[colName].iloc[0] = modifiedDataset[colName].iloc[1]
+            
+        modifiedDataset.to_csv(FILE_DIR+OUT_FILE_NAMES[0])
+    return
+
+def aggregateWeatherDataAcrossYears(years):
+    inFileDir = ""
+    outFileDir = "./total_aggregated_weather_data/"
+    dataset = [None]*len(years)
+    weatherVariables = ["apcp", "dpt", "dswrf", "temp", "wind_speed"]
+
+    for region in ISO_LIST:
+        for wv in weatherVariables:
+            for i in range(len(years)):
+                inFileDir = "./aggregate_weather_data_"+str(years[i])+"/"
+                inFileName = inFileDir+region+"_"+wv+".csv"
+                outFileName = outFileDir+region+"_"+wv.upper()+".csv"
+                print(inFileName)  
+                if (not os.path.exists(inFileName)):
+                    print(inFileName, "does not exist")
+                    continue                
+                dataset[i] = pd.read_csv(inFileName, header=0)
+            for i in range(1, len(years)):
+                dataset[0] = pd.concat([dataset[0], dataset[i]])
+            modifiedDataset = pd.DataFrame(dataset[0])
+            modifiedDataset.set_index("datetime")
+            
+            # print(modifiedDataset.head())
+            modifiedDataset.to_csv(outFileName)
+
+if __name__ == "__main__":
+    startScript()
+
+    # years = [2019, 2020, 2021, 2022]
+    # aggregateWeatherDataAcrossYears(years)
+
+
+
+
+
 
     
     
