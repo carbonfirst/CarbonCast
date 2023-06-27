@@ -37,6 +37,7 @@ TRAINING_WINDOW_HOURS = None
 PREDICTION_WINDOW_HOURS = None
 MODEL_SLIDING_WINDOW_LEN = None
 BUFFER_HOURS = None
+
 ############################# MACRO END #########################################
 
 def runFirstTier(configFileName):
@@ -65,24 +66,26 @@ def runFirstTier(configFileName):
         sourceColList = regionConfig["SOURCE_COL"]
         trainTestPeriodConfig = firstTierConfig["TRAIN_TEST_PERIOD"]
         weatherForecastInFileName = regionConfig["WEATHER_FORECAST_IN_FILE_NAME"]
+        SAVED_MODEL_LOCATION = firstTierConfig["SAVED_MODEL_LOCATION"]+region+"/"
+        aggregatedForecastFileName = regionConfig["AGGREGATED_FORECAST_OUT_FILE_NAME"]
 
 
         sourceIdx = 0
+        outFileNamePrefix = regionConfig["OUT_FILE_NAME_PREFIX"]
         for source in sourceList:
             inFileName = regionConfig["IN_FILE_NAME_PREFIX"] + source.lower() + firstTierConfig["IN_FILE_NAME_SUFFIX"]
-            outFileNamePrefix = regionConfig["OUT_FILE_NAME_PREFIX"]
             sourceCol = sourceColList[sourceIdx]
             partialSourceProductionForecastAvailable = regionConfig["PARTIAL_FORECAST_AVAILABILITY_LIST"][sourceIdx]
             partialForecastHours =  regionConfig["PARTIAL_FORECAST_HOURS"]
             print(inFileName)
             print(weatherForecastInFileName)
             isRenewableSource = False
-            numFeatures = regionConfig["NUM_FEATURES"]
+            numFeatures = firstTierConfig["NUM_FEATURES"]
             numWeatherFeatures = 0
             if (source == "SOLAR" or source == "WIND" or source == "HYDRO"):
                 isRenewableSource = True
             if (isRenewableSource == True):
-                numWeatherFeatures = regionConfig["NUM_WEATHER_FEATURES"]
+                numWeatherFeatures = firstTierConfig["NUM_WEATHER_FEATURES"]
 
             for exptNum in range(NUMBER_OF_EXPERIMENTS):
                 outFileName = outFileNamePrefix + "_" + source.lower() + "_iter" + str(exptNum) + ".csv"
@@ -147,6 +150,8 @@ def runFirstTier(configFileName):
                     trainData, valData, testData, ftMin, ftMax = common.scaleDataset(trainData, valData, testData)
                     print(trainData.shape, valData.shape, testData.shape)
 
+                    wFtMin = []
+                    wFtMax = []
                     if(isRenewableSource):
                         wTrainData = fillMissingData(wTrainData)
                         wValData = fillMissingData(wValData)
@@ -164,10 +169,25 @@ def runFirstTier(configFileName):
                         # print(partialSourceProductionForecast, ftMax[DEPENDENT_VARIABLE_COL], ftMin[DEPENDENT_VARIABLE_COL])
                     print("***** Data scaling done *****")
 
+
+                    if (periodIdx == len(trainTestPeriodConfig)-1):
+                        print("Saving min & max values for each column in file...")
+                        with open(SAVED_MODEL_LOCATION+region+"_"+source+"_min_max_values.txt", "w") as f:
+                            f.writelines(str(ftMin))
+                            f.write("\n")
+                            f.writelines(str(ftMax))
+                            f.write("\n")
+                            if (isRenewableSource):
+                                f.writelines(str(wFtMin))
+                                f.write("\n")
+                                f.writelines(str(wFtMax))
+                                f.write("\n")
+                        print("Min-max values saved")
+
                     ######################## START #####################                    
                     print("Iteration: ", exptNum)
-                    bestModel = trainingandValidationPhase(trainData, wTrainData, 
-                                                    valData, wValData, firstTierConfig)
+                    bestModel = trainingandValidationPhase(trainData, wTrainData, valData, wValData, 
+                                                           firstTierConfig, SAVED_MODEL_LOCATION, region, source)
 
                     history = valData[-TRAINING_WINDOW_HOURS:, :]
                     weatherData = None
@@ -205,10 +225,10 @@ def runFirstTier(configFileName):
                     ######################## END #####################
 
                 ###
-                common.dumpRandomDataToFile("../data/"+region+"/fuel_forecast/"+region+
-                        "_RMSE_iter"+str(exptNum)+source.lower()+".txt", str(periodRMSE), "w")
-                common.dumpRandomDataToFile("../data/"+region+"/fuel_forecast/"+region+
-                        "_MAPE_iter"+str(exptNum)+source.lower()+".txt", str(periodMAPE), "w")
+                # common.dumpRandomDataToFile("../data/"+region+"/fuel_forecast/"+region+
+                #         "_RMSE_iter"+str(exptNum)+source.lower()+".txt", str(periodRMSE), "w")
+                # common.dumpRandomDataToFile("../data/"+region+"/fuel_forecast/"+region+
+                #         "_MAPE_iter"+str(exptNum)+source.lower()+".txt", str(periodMAPE), "w")
                 ###
 
                 print("RMSE: ", periodRMSE)
@@ -217,6 +237,33 @@ def runFirstTier(configFileName):
 
             print("####################", region, source, " done ####################\n\n")
         print("Source production forecast for region: ", region, " done.")
+        aggregateDataAndGenerateForecastFile(firstTierConfig, sourceList, weatherForecastInFileName,
+                                             outFileNamePrefix, aggregatedForecastFileName)
+    return
+
+def aggregateDataAndGenerateForecastFile(firstTierConfig, sourceList, weatherForecastFile,
+                                         sourceForecastFileNamePrefix, aggregatedForecastFileName):
+    
+    weatherDatasetStartRow = firstTierConfig["ROW_START_FOR_2020"]
+    weatherDatasetEndRow = firstTierConfig["ROW_END_FOR_2022"]
+    sourceForecastDatasetEndRow = firstTierConfig["SOURCE_FORECAST_ROW_END_FOR_2022"]
+
+    weatherDataset = pd.read_csv(weatherForecastFile, header=0, index_col=["datetime"])
+    weatherDataset = weatherDataset[weatherDatasetStartRow:weatherDatasetEndRow]
+    modifiedDataset = weatherDataset.copy()
+    for source in sourceList:
+        sourceForecastFileName = sourceForecastFileNamePrefix + "_" + source.lower() + "_iter0.csv" # TODO: for now, only 1 iteration. generalize later
+        sourceForecastDataset = pd.read_csv(sourceForecastFileName, header=0, index_col=["datetime"])
+        sourceForecastDataset = sourceForecastDataset[:sourceForecastDatasetEndRow]
+        forecastColumnName = "avg_"+source.lower()+"_production_forecast"
+        modifiedDataset[forecastColumnName] = sourceForecastDataset[forecastColumnName].values
+    print(modifiedDataset.shape)
+    # print(modifiedDataset.head(2))
+    # print(modifiedDataset.tail(2))
+
+    # print("Writing weather+source production forecasts to file...")
+    modifiedDataset.to_csv(aggregatedForecastFileName)
+    # print("All forecasts written to a single file")
     return
 
 def initialize(inFileName, weatherForecastInFileName, startCol, datasetLimiter,
@@ -231,8 +278,10 @@ def initialize(inFileName, weatherForecastInFileName, startCol, datasetLimiter,
     # print(dataset.columns)
     dateTime = dataset.index.values
 
+    # weatherDataset = pd.read_csv(weatherForecastInFileName, header=0, infer_datetime_format=True, 
+    #                         parse_dates=['UTC time'], index_col=['UTC time'])
     weatherDataset = pd.read_csv(weatherForecastInFileName, header=0, infer_datetime_format=True, 
-                            parse_dates=['UTC time'], index_col=['UTC time'])
+                            parse_dates=['datetime'], index_col=['datetime'])
     # print(weatherDataset.head())
     
     print("\nAdding features related to date & time...")
@@ -265,7 +314,8 @@ def fillMissingData(data): # If some data is missing (NaN), use the same value a
                 data[i, j] = data[i-1, j]
     return data
 
-def trainingandValidationPhase(trainData, wTrainData, valData, wValData, firstTierConfig):
+def trainingandValidationPhase(trainData, wTrainData, valData, wValData, 
+                               firstTierConfig, savedModelLocation, region, source):
     global TRAINING_WINDOW_HOURS
     print("\nManipulating training data...")
     X, y = manipulateTrainingDataShape(trainData, TRAINING_WINDOW_HOURS, wTrainData)
@@ -277,7 +327,7 @@ def trainingandValidationPhase(trainData, wTrainData, valData, wValData, firstTi
     print("X.shape, y.shape: ", X.shape, y.shape)
     hyperParams = getANNHyperParams(firstTierConfig)                
     print("\n[BESTMODEL] Starting training...")
-    bestTrainedModel = trainANN(X, y, valX, valY, hyperParams)
+    bestTrainedModel = trainANN(X, y, valX, valY, hyperParams, savedModelLocation, region, source)
     print("***** Training done *****")
     return bestTrainedModel
 
@@ -330,7 +380,7 @@ def manipulateTestDataShape(data, isDates=False):
     return X
 
 
-def trainANN(trainX, trainY, valX, valY, hyperParams):
+def trainANN(trainX, trainY, valX, valY, hyperParams, savedModelLocation, region, source):
     n_timesteps, n_features, n_outputs = trainX.shape[1], trainX.shape[2], trainY.shape[1]
     epochs = hyperParams["epoch"]
     batchSize = hyperParams["batchsize"]
@@ -346,14 +396,14 @@ def trainANN(trainX, trainY, valX, valY, hyperParams):
     
     opt = tf.keras.optimizers.Adam(learning_rate = learningRates)
     model.compile(loss=lossFunc, optimizer=opt,
-                    metrics=['mean_absolute_error'])
-    es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=10)
-    mc = ModelCheckpoint('best_model_ann.h5', monitor='val_loss', mode='min', verbose=1, save_best_only=True)
+                    metrics=["mean_absolute_error"])
+    es = EarlyStopping(monitor="val_loss", mode="min", verbose=1, patience=10)
+    mc = ModelCheckpoint(savedModelLocation+region+"_"+source+"_best_model_ann.h5", monitor="val_loss", mode="min", verbose=1, save_best_only=True)
     # fit network
     # hist = model.fit(trainX, trainY, epochs=epochs, batch_size=bSize, verbose=verbose)
     hist = model.fit(trainX, trainY, epochs=epochs, batch_size=batchSize[0], verbose=2,
                         validation_data=(valX, valY), callbacks=[es, mc])
-    model = load_model("best_model_ann.h5")
+    model = load_model(savedModelLocation+region+"_"+source+"_best_model_ann.h5")
     common.showModelSummary(hist, model)
     print("Number of features used in training: ", n_features)
     return model
