@@ -75,6 +75,7 @@ def showPlots():
 def scaleDataset(trainData, valData, testData):
     # Scaling columns to range (0, 1)
     row, col = trainData.shape[0], trainData.shape[1]
+    # print(row, col)
     ftMin, ftMax = [], []
     for i in range(col):
         fmax= trainData[0, i]
@@ -86,14 +87,17 @@ def scaleDataset(trainData, valData, testData):
                 fmin = trainData[j, i]
         ftMin.append(fmin)
         ftMax.append(fmax)
-        # print(fmax, fmin)
 
     for i in range(col):
         if((ftMax[i] - ftMin[i]) == 0):
             continue
         trainData[:, i] = (trainData[:, i] - ftMin[i]) / (ftMax[i] - ftMin[i])
-        valData[:, i] = (valData[:, i] - ftMin[i]) / (ftMax[i] - ftMin[i])
-        testData[:, i] = (testData[:, i] - ftMin[i]) / (ftMax[i] - ftMin[i])
+        if (valData is not None):
+            valData[:, i] = (valData[:, i] - ftMin[i]) / (ftMax[i] - ftMin[i])
+        if (testData is not None):
+            testData[:, i] = (testData[:, i] - ftMin[i]) / (ftMax[i] - ftMin[i])
+        # print(trainData[:, i])
+        # print(ftMax[i], ftMin[i])
 
     return trainData, valData, testData, ftMin, ftMax
 
