@@ -43,6 +43,7 @@ MAX_PREDICTION_WINDOW_HOURS = None
 MODEL_SLIDING_WINDOW_LEN = None
 BUFFER_HOURS = None
 SAVED_MODEL_LOCATION = None
+TOP_N_FEATURES = 0
 ############################# MACRO END #########################################
 
 def runSecondTier(configFileName, cefType, loadFromSavedModel):
@@ -53,6 +54,7 @@ def runSecondTier(configFileName, cefType, loadFromSavedModel):
     global BUFFER_HOURS
     global DEPENDENT_VARIABLE_COL
     global SAVED_MODEL_LOCATION
+    global TOP_N_FEATURES
 
     secondTierConfig = {}
 
@@ -73,10 +75,10 @@ def runSecondTier(configFileName, cefType, loadFromSavedModel):
     regionList = secondTierConfig["REGION"]
     if (loadFromSavedModel is True):
         NUMBER_OF_EXPERIMENTS = 1
-        if (cefType == "-l"):
-            SAVED_MODEL_LOCATION = secondTierConfig["LIFECYCLE_SAVED_MODEL_LOCATION"]
-        else:
-            SAVED_MODEL_LOCATION = secondTierConfig["DIRECT_SAVED_MODEL_LOCATION"]
+    if (cefType == "-l"):
+        SAVED_MODEL_LOCATION = secondTierConfig["LIFECYCLE_SAVED_MODEL_LOCATION"]
+    else:
+        SAVED_MODEL_LOCATION = secondTierConfig["DIRECT_SAVED_MODEL_LOCATION"]
     writeCIForecastsToFile = secondTierConfig["WRITE_CI_FORECASTS_TO_FILE"]
 
     for region in regionList:
@@ -88,9 +90,9 @@ def runSecondTier(configFileName, cefType, loadFromSavedModel):
             inFileName = regionConfig["LIFECYCLE_CEF_IN_FILE_NAME"]
             outFileNamePrefix = regionConfig["LIFECYCLE_CEF_OUT_FILE_NAME_PREFIX"]
         forecastInFileName = regionConfig["FORECAST_IN_FILE_NAME"]
-        numHistoricalAndDateTimeFeatures = regionConfig["NUM_FEATURES"]
+        numHistoricalAndDateTimeFeatures = secondTierConfig["NUM_FEATURES"]
         numForecastFeatures = regionConfig["NUM_FORECAST_FEATURES"]
-        startCol = regionConfig["START_COL"]
+        startCol = secondTierConfig["START_COL"]
 
         print("Initializing...")
         dataset, forecastDataset, dateTime = initialize(inFileName, forecastInFileName, startCol)
@@ -149,6 +151,18 @@ def runSecondTier(configFileName, cefType, loadFromSavedModel):
         print(wTrainData.shape, wValData.shape, wTestData.shape)
         print("***** Data scaling done *****")
 
+        print("Saving min & max values for each column in file...")
+        with open(SAVED_MODEL_LOCATION+region+"/"+region+"_min_max_values.txt", "w") as f:
+            f.writelines(str(ftMin))
+            f.write("\n")
+            f.writelines(str(ftMax))
+            f.write("\n")
+            f.writelines(str(wFtMin))
+            f.write("\n")
+            f.writelines(str(wFtMax))
+            f.write("\n")
+        print("Min-max values saved")
+
         ######################## START #####################
         bestRMSE, bestMAPE = [], []
         predictedData = None
@@ -176,12 +190,12 @@ def runSecondTier(configFileName, cefType, loadFromSavedModel):
 
             # print("**** Important features based on valData:")
             # topNFeatures = findImportantFeatures(bestModel, valData, featureList, testDates)
-            # print("**** Important features based on testData:")
-            # modTestData = manipulateTestDataShape(testData, MODEL_SLIDING_WINDOW_LEN, PREDICTION_WINDOW_HOURS, False)
-            # modTestData = np.reshape(modTestData, (modTestData.shape[0]*modTestData.shape[1], modTestData.shape[2]))
-            # print(modTestData.shape, wTestData.shape)
-            # modTestData = np.append(modTestData, wTestData, axis=1)
-            # print("modtestdata shape: ", modTestData.shape)
+            print("**** Important features based on testData:")
+            modTestData = manipulateTestDataShape(testData, MODEL_SLIDING_WINDOW_LEN, PREDICTION_WINDOW_HOURS, False)
+            modTestData = np.reshape(modTestData, (modTestData.shape[0]*modTestData.shape[1], modTestData.shape[2]))
+            print(modTestData.shape, wTestData.shape)
+            modTestData = np.append(modTestData, wTestData, axis=1)
+            print("modtestdata shape: ", modTestData.shape)
             # topNFeatures = findImportantFeatures(bestModel, modTestData, featureList, testDates)
 
             print("[BESTMODEL] Overall RMSE score: ", rmseScore)
@@ -191,6 +205,7 @@ def runSecondTier(configFileName, cefType, loadFromSavedModel):
             bestMAPE.append(mapeScore)
             print("Overall Mean MAPE: ", mapeScore)
             print("Daywise statistics...")
+            mapeByDay = []
             for i in range(0, PREDICTION_WINDOW_HOURS//24):
                 print("Prediction day ", i+1, "(", (i*24), " - ", (i+1)*24, " hrs)")
                 print("Mean MAPE: ", np.mean(regionDailyMape[region][:, i]))
@@ -198,7 +213,18 @@ def runSecondTier(configFileName, cefType, loadFromSavedModel):
                 print("90th percentile MAPE: ", np.percentile(regionDailyMape[region][:, i], 90))
                 print("95th percentile MAPE: ", np.percentile(regionDailyMape[region][:, i], 95))
                 print("99th percentile MAPE: ", np.percentile(regionDailyMape[region][:, i], 99))
-            
+                mapeByDay.append([i+1, np.mean(regionDailyMape[region][:, i]), np.percentile(regionDailyMape[region][:, i], 50),
+                                    np.percentile(regionDailyMape[region][:, i], 90), 
+                                    np.percentile(regionDailyMape[region][:, i], 95),
+                                    np.percentile(regionDailyMape[region][:, i], 99)])
+
+            print("Saving MAPE values by day in file...")
+            with open("../v2.2/"+region+"/"+region+"_MAPE_iter"+str(exptNum)+".txt", "w") as f:
+                for item in mapeByDay:
+                    f.writelines(str(item))
+                    f.write("\n")
+            print("MAPE values by day saved")
+
             data = []
             for i in range(len(unscaledTestData)):
                 row = []
@@ -227,18 +253,20 @@ def initialize(inFileName, forecastInFileName, startCol):
     # load the new file
     dataset = pd.read_csv(inFileName, header=0, infer_datetime_format=True, 
                             parse_dates=['UTC time'], index_col=['UTC time'])    
-    # dataset = dataset[:8784]
+    dataset = dataset[8760:-72]
     print(dataset.head())
     print(dataset.columns)
     dateTime = dataset.index.values
 
     print(forecastInFileName)
+    # forecastDataset = pd.read_csv(forecastInFileName, header=0, infer_datetime_format=True, 
+    #                         parse_dates=['UTC time'], index_col=['UTC time']) # old data files
     forecastDataset = pd.read_csv(forecastInFileName, header=0, infer_datetime_format=True, 
-                            parse_dates=['UTC time'], index_col=['UTC time'])    
-    # dataset = dataset[:8784]
-    print(forecastDataset.head())
-    print(forecastDataset.columns)
-
+                            parse_dates=['datetime'], index_col=['datetime']) # new data files in v2.2
+    # print(dataset.head(2))
+    # print(dataset.tail(2))
+    # print(forecastDataset.head())
+    # print(forecastDataset.columns)
     for i in range(startCol, len(dataset.columns.values)):
         col = dataset.columns.values[i]
         dataset[col] = dataset[col].astype(np.float64)
@@ -347,15 +375,15 @@ def trainModel(trainX, trainY, valX, valY, hyperParams, iteration, region, loadF
 
     # define parameters
     print("Training...")
-    verbose = 0
+    verbose = 2
     hist = None
     bestModel = None
     n_timesteps, n_features, n_outputs = trainX.shape[1], trainX.shape[2], trainY.shape[1]
     print("Timesteps: ", n_timesteps, "No. of features: ", n_features, "No. of outputs: ", n_outputs)
 
     if (loadFromSavedModel is True):
-        print("-s parameter specified. Loading model from ", SAVED_MODEL_LOCATION+region+".h5")
-        bestModel = load_model(SAVED_MODEL_LOCATION+"/"+region+".h5")
+        print("-s parameter specified. Loading model from ", SAVED_MODEL_LOCATION+region+"/"+region+".h5")
+        bestModel = load_model(SAVED_MODEL_LOCATION+region+"/"+region+".h5")
         return bestModel, n_features
 
     epochs = hyperParams["epoch"]    
@@ -390,14 +418,15 @@ def trainModel(trainX, trainY, valX, valY, hyperParams, iteration, region, loadF
     model.compile(loss=lossFunc, optimizer=opt, metrics=['mean_absolute_error'])
     # simple early stopping
     es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=10)
-    mc = ModelCheckpoint(region+"_best_model_iter"+str(iteration)+".h5", monitor='val_loss', mode='min', verbose=1, save_best_only=True)
+    mc = ModelCheckpoint(SAVED_MODEL_LOCATION+region+"/"+region+".h5", monitor='val_loss', mode='min', verbose=1, save_best_only=True)
     rlr = ReduceLROnPlateau(monitor="val_loss", mode="min", factor=0.1, patience=6, verbose=1, min_lr=minLearningRate)
 
 # fit network
     hist = model.fit(trainX, trainY, epochs=epochs, batch_size=batchSize[0], verbose=verbose,
                         validation_data=(valX, valY), callbacks=[rlr, es, mc])
 
-    bestModel = load_model(region+"_best_model_iter"+str(iteration)+".h5")
+    # bestModel = load_model(region+"_best_model_iter"+str(iteration)+".h5")
+    bestModel = load_model(SAVED_MODEL_LOCATION+region+"/"+region+".h5")
 # showModelSummary(hist, model)
 # print("Loss history: ", hist.history)
     # showModelSummary(hist, bestModel, "CNN")
