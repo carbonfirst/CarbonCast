@@ -1,7 +1,7 @@
 {
     "GENERAL_INFO": {
         "APP_NAME": "CarbonCast",
-        "VERSION": "v2.0",
+        "VERSION": "v3.0",
         "CONFIGURATION_TIER": "Tier-2",
         "YEAR": 2022,
         "AUTHOR": "Diptyaroop Maji",
@@ -14,10 +14,27 @@
     "REGION_WITH_INCONSISTENT_DATA": ["BANC", "FPC", "GRID", "PSEI", "WALC"], // TODO: check these later
     "REGION_WITH_SINGLE_SOURCE": ["GCPD", "SCL", "TPWR"], // TODO: check these later
 
-    "REGIONS_COMLETED_AFTER_ONE_PASS": [],
-    "REGION": ["AECI", "AZPS", "BPAT", "CISO", "DUK", "EPE", "ERCO", "FPL", "IPCO", 
+    "ORIGINAL_REGIONS": ["AECI", "AZPS", "BPAT", "CISO", "DUK", "EPE", "ERCO", "FPL", "IPCO", 
                 "ISNE", "LDWP", "MISO", "NEVP", "NWMT", "NYIS", "PACE", "PACW", "PJM", 
                 "PSCO", "SC", "SCEG", "SOCO", "SPA", "SRP", "SWPP", "TIDC", "TVA", "WACM"],
+
+    "REGIONS_COMPLETED_LIFECYCLE": ["AECI", "AZPS", "BPAT", "CISO", "DUK", "EPE", "ERCO", "FPL", "ISNE", "MISO", "NEVP", 
+                                "NWMT", "NYIS", "PACE", "PJM", "SC", "SCEG", "SOCO", 
+                                "TIDC", "TVA", "WACM"],
+
+    "REGIONS_COMPLETED_DIRECT": ["AECI", "AZPS", "CISO", "DUK", "EPE", "ERCO", "FPL", "ISNE", "LDWP", "MISO", "NEVP", 
+                                "NWMT", "NYIS", "PACE", "PJM", "SC", "SCEG", "SOCO", "SRP",
+                                "TIDC", "TVA", "WACM"],
+
+    "REGION_DIRECT": ["BPAT", "IPCO", 
+                "PACW", 
+                "PSCO", "SPA", "SWPP"],
+
+    "REGION_LIFECYCLE": ["IPCO", "LDWP", "PACW", 
+                "PSCO", "SPA", "SRP", "SWPP"],
+
+    "TMP_REGION": ["CISO"],
+
     "NUM_TEST_DAYS": 181, //last 6 months of 2022
     "NUM_VAL_DAYS": 181, // first 6 months of 2022, make it 184 if OUT_WINDOW_LEN is 24
     "MODEL_SLIDING_WINDOW_LEN": 24, 
@@ -56,9 +73,9 @@
     // US regions
 
     "AECI": {
-        "LIFECYCLE_CEF_IN_FILE_NAME": "../v2.2/AECI/AECI_lifecycle_emissions.csv",
-        "DIRECT_CEF_IN_FILE_NAME": "../v2.2/AECI/AECI_direct_emissions.csv",
-        "FORECAST_IN_FILE_NAME": "../v2.2/AECI/AECI_96hr_forecasts_DA.csv",
+        "LIFECYCLE_CEF_IN_FILE_NAME": "../data/AECI/AECI_lifecycle_emissions.csv",
+        "DIRECT_CEF_IN_FILE_NAME": "../data/AECI/AECI_direct_emissions.csv",
+        "FORECAST_IN_FILE_NAME": "../data/AECI/AECI_96hr_forecasts_DA.csv",
         "LIFECYCLE_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/AECI/AECI_lifecycle_96hr_CI_forecasts",
         "DIRECT_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/AECI/AECI_direct_96hr_CI_forecasts",
         "NUM_FORECAST_FEATURES": 8
@@ -66,243 +83,245 @@
     },
 
     "AZPS": {
-        "LIFECYCLE_CEF_IN_FILE_NAME": "../v2.2/AZPS/AZPS_lifecycle_emissions.csv",
-        "DIRECT_CEF_IN_FILE_NAME": "../v2.2/AZPS/AZPS_direct_emissions.csv",
-        "FORECAST_IN_FILE_NAME": "../v2.2/AZPS/AZPS_96hr_forecasts_DA.csv",
+        "LIFECYCLE_CEF_IN_FILE_NAME": "../data/AZPS/AZPS_lifecycle_emissions.csv",
+        "DIRECT_CEF_IN_FILE_NAME": "../data/AZPS/AZPS_direct_emissions.csv",
+        "FORECAST_IN_FILE_NAME": "../data/AZPS/AZPS_96hr_forecasts_DA.csv",
         "LIFECYCLE_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/AZPS/AZPS_lifecycle_96hr_CI_forecasts",
         "DIRECT_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/AZPS/AZPS_direct_96hr_CI_forecasts",
         "NUM_FORECAST_FEATURES": 13
     },
 
     "BPAT": {
-        "LIFECYCLE_CEF_IN_FILE_NAME": "../v2.2/BPAT/BPAT_lifecycle_emissions.csv",
-        "DIRECT_CEF_IN_FILE_NAME": "../v2.2/BPAT/BPAT_direct_emissions.csv",
-        "FORECAST_IN_FILE_NAME": "../v2.2/BPAT/BPAT_96hr_forecasts_DA.csv",
+        "LIFECYCLE_CEF_IN_FILE_NAME": "../data/BPAT/BPAT_lifecycle_emissions.csv",
+        "DIRECT_CEF_IN_FILE_NAME": "../data/BPAT/BPAT_direct_emissions.csv",
+        "FORECAST_IN_FILE_NAME": "../data/BPAT/BPAT_96hr_forecasts_DA.csv",
         "LIFECYCLE_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/BPAT/BPAT_lifecycle_96hr_CI_forecasts",
         "DIRECT_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/BPAT/BPAT_direct_96hr_CI_forecasts",
         "NUM_FORECAST_FEATURES": 11
     },
 
     "CISO": {
-        "LIFECYCLE_CEF_IN_FILE_NAME": "../v2.2/CISO/CISO_lifecycle_emissions.csv",
-        "DIRECT_CEF_IN_FILE_NAME": "../v2.2/CISO/CISO_direct_emissions.csv",
-        "FORECAST_IN_FILE_NAME": "../v2.2/CISO/CISO_96hr_forecasts_DA.csv",
+        "LIFECYCLE_CEF_IN_FILE_NAME": "../data/CISO/CISO_lifecycle_emissions.csv",
+        "DIRECT_CEF_IN_FILE_NAME": "../data/CISO/CISO_direct_emissions.csv",
+        "FORECAST_IN_FILE_NAME": "../data/CISO/CISO_96hr_forecasts_DA.csv",
         "LIFECYCLE_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/CISO/CISO_lifecycle_96hr_CI_forecasts",
         "DIRECT_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/CISO/CISO_direct_96hr_CI_forecasts",
         "NUM_FORECAST_FEATURES": 12
+        // "NUM_SPECIALIZED_FORECAST_FEATURES": 8, // weather + subset of source production forecasts
+        // "SPECIALIZED_FORECASTS": ["NAT_GAS", "SOLAR", "WIND"]
     },
 
     "DUK": {
-        "LIFECYCLE_CEF_IN_FILE_NAME": "../v2.2/DUK/DUK_lifecycle_emissions.csv",
-        "DIRECT_CEF_IN_FILE_NAME": "../v2.2/DUK/DUK_direct_emissions.csv",
-        "FORECAST_IN_FILE_NAME": "../v2.2/DUK/DUK_96hr_forecasts_DA.csv",
+        "LIFECYCLE_CEF_IN_FILE_NAME": "../data/DUK/DUK_lifecycle_emissions.csv",
+        "DIRECT_CEF_IN_FILE_NAME": "../data/DUK/DUK_direct_emissions.csv",
+        "FORECAST_IN_FILE_NAME": "../data/DUK/DUK_96hr_forecasts_DA.csv",
         "LIFECYCLE_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/DUK/DUK_lifecycle_96hr_CI_forecasts",
         "DIRECT_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/DUK/DUK_direct_96hr_CI_forecasts",
         "NUM_FORECAST_FEATURES": 11
     },
 
     "EPE": {
-        "LIFECYCLE_CEF_IN_FILE_NAME": "../v2.2/EPE/EPE_lifecycle_emissions.csv",
-        "DIRECT_CEF_IN_FILE_NAME": "../v2.2/EPE/EPE_direct_emissions.csv",
-        "FORECAST_IN_FILE_NAME": "../v2.2/EPE/EPE_96hr_forecasts_DA.csv",
+        "LIFECYCLE_CEF_IN_FILE_NAME": "../data/EPE/EPE_lifecycle_emissions.csv",
+        "DIRECT_CEF_IN_FILE_NAME": "../data/EPE/EPE_direct_emissions.csv",
+        "FORECAST_IN_FILE_NAME": "../data/EPE/EPE_96hr_forecasts_DA.csv",
         "LIFECYCLE_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/EPE/EPE_lifecycle_96hr_CI_forecasts",
         "DIRECT_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/EPE/EPE_direct_96hr_CI_forecasts",
         "NUM_FORECAST_FEATURES": 7
     },
 
     "ERCO": {
-        "LIFECYCLE_CEF_IN_FILE_NAME": "../v2.2/ERCO/ERCO_lifecycle_emissions.csv",
-        "DIRECT_CEF_IN_FILE_NAME": "../v2.2/ERCO/ERCO_direct_emissions.csv",
-        "FORECAST_IN_FILE_NAME": "../v2.2/ERCO/ERCO_96hr_forecasts_DA.csv",
+        "LIFECYCLE_CEF_IN_FILE_NAME": "../data/ERCO/ERCO_lifecycle_emissions.csv",
+        "DIRECT_CEF_IN_FILE_NAME": "../data/ERCO/ERCO_direct_emissions.csv",
+        "FORECAST_IN_FILE_NAME": "../data/ERCO/ERCO_96hr_forecasts_DA.csv",
         "LIFECYCLE_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/ERCO/ERCO_lifecycle_96hr_CI_forecasts",
         "DIRECT_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/ERCO/ERCO_direct_96hr_CI_forecasts",
         "NUM_FORECAST_FEATURES": 12
     },
 
     "FPL": {
-        "LIFECYCLE_CEF_IN_FILE_NAME": "../v2.2/FPL/FPL_lifecycle_emissions.csv",
-        "DIRECT_CEF_IN_FILE_NAME": "../v2.2/FPL/FPL_direct_emissions.csv",
-        "FORECAST_IN_FILE_NAME": "../v2.2/FPL/FPL_96hr_forecasts_DA.csv",
+        "LIFECYCLE_CEF_IN_FILE_NAME": "../data/FPL/FPL_lifecycle_emissions.csv",
+        "DIRECT_CEF_IN_FILE_NAME": "../data/FPL/FPL_direct_emissions.csv",
+        "FORECAST_IN_FILE_NAME": "../data/FPL/FPL_96hr_forecasts_DA.csv",
         "LIFECYCLE_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/FPL/FPL_lifecycle_96hr_CI_forecasts",
         "DIRECT_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/FPL/FPL_direct_96hr_CI_forecasts",
         "NUM_FORECAST_FEATURES": 9
     },
 
     "IPCO": {
-        "LIFECYCLE_CEF_IN_FILE_NAME": "../v2.2/IPCO/IPCO_lifecycle_emissions.csv",
-        "DIRECT_CEF_IN_FILE_NAME": "../v2.2/IPCO/IPCO_direct_emissions.csv",
-        "FORECAST_IN_FILE_NAME": "../v2.2/IPCO/IPCO_96hr_forecasts_DA.csv",
+        "LIFECYCLE_CEF_IN_FILE_NAME": "../data/IPCO/IPCO_lifecycle_emissions.csv",
+        "DIRECT_CEF_IN_FILE_NAME": "../data/IPCO/IPCO_direct_emissions.csv",
+        "FORECAST_IN_FILE_NAME": "../data/IPCO/IPCO_96hr_forecasts_DA.csv",
         "LIFECYCLE_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/IPCO/IPCO_lifecycle_96hr_CI_forecasts",
         "DIRECT_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/IPCO/IPCO_direct_96hr_CI_forecasts",
         "NUM_FORECAST_FEATURES": 11
     },
 
     "ISNE": {
-        "LIFECYCLE_CEF_IN_FILE_NAME": "../v2.2/ISNE/ISNE_lifecycle_emissions.csv",
-        "DIRECT_CEF_IN_FILE_NAME": "../v2.2/ISNE/ISNE_direct_emissions.csv",
-        "FORECAST_IN_FILE_NAME": "../v2.2/ISNE/ISNE_96hr_forecasts_DA.csv",
+        "LIFECYCLE_CEF_IN_FILE_NAME": "../data/ISNE/ISNE_lifecycle_emissions.csv",
+        "DIRECT_CEF_IN_FILE_NAME": "../data/ISNE/ISNE_direct_emissions.csv",
+        "FORECAST_IN_FILE_NAME": "../data/ISNE/ISNE_96hr_forecasts_DA.csv",
         "LIFECYCLE_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/ISNE/ISNE_lifecycle_96hr_CI_forecasts",
         "DIRECT_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/ISNE/ISNE_direct_96hr_CI_forecasts",
         "NUM_FORECAST_FEATURES": 13
     },
 
     "LDWP": {
-        "LIFECYCLE_CEF_IN_FILE_NAME": "../v2.2/LDWP/LDWP_lifecycle_emissions.csv",
-        "DIRECT_CEF_IN_FILE_NAME": "../v2.2/LDWP/LDWP_direct_emissions.csv",
-        "FORECAST_IN_FILE_NAME": "../v2.2/LDWP/LDWP_96hr_forecasts_DA.csv",
+        "LIFECYCLE_CEF_IN_FILE_NAME": "../data/LDWP/LDWP_lifecycle_emissions.csv",
+        "DIRECT_CEF_IN_FILE_NAME": "../data/LDWP/LDWP_direct_emissions.csv",
+        "FORECAST_IN_FILE_NAME": "../data/LDWP/LDWP_96hr_forecasts_DA.csv",
         "LIFECYCLE_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/LDWP/LDWP_lifecycle_96hr_CI_forecasts",
         "DIRECT_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/LDWP/LDWP_direct_96hr_CI_forecasts",
         "NUM_FORECAST_FEATURES": 11
     },
 
     "MISO": {
-        "LIFECYCLE_CEF_IN_FILE_NAME": "../v2.2/MISO/MISO_lifecycle_emissions.csv",
-        "DIRECT_CEF_IN_FILE_NAME": "../v2.2/MISO/MISO_direct_emissions.csv",
-        "FORECAST_IN_FILE_NAME": "../v2.2/MISO/MISO_96hr_forecasts_DA.csv",
+        "LIFECYCLE_CEF_IN_FILE_NAME": "../data/MISO/MISO_lifecycle_emissions.csv",
+        "DIRECT_CEF_IN_FILE_NAME": "../data/MISO/MISO_direct_emissions.csv",
+        "FORECAST_IN_FILE_NAME": "../data/MISO/MISO_96hr_forecasts_DA.csv",
         "LIFECYCLE_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/MISO/MISO_lifecycle_96hr_CI_forecasts",
         "DIRECT_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/MISO/MISO_direct_96hr_CI_forecasts",
         "NUM_FORECAST_FEATURES": 12
     },
 
     "NEVP": {
-        "LIFECYCLE_CEF_IN_FILE_NAME": "../v2.2/NEVP/NEVP_lifecycle_emissions.csv",
-        "DIRECT_CEF_IN_FILE_NAME": "../v2.2/NEVP/NEVP_direct_emissions.csv",
-        "FORECAST_IN_FILE_NAME": "../v2.2/NEVP/NEVP_96hr_forecasts_DA.csv",
+        "LIFECYCLE_CEF_IN_FILE_NAME": "../data/NEVP/NEVP_lifecycle_emissions.csv",
+        "DIRECT_CEF_IN_FILE_NAME": "../data/NEVP/NEVP_direct_emissions.csv",
+        "FORECAST_IN_FILE_NAME": "../data/NEVP/NEVP_96hr_forecasts_DA.csv",
         "LIFECYCLE_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/NEVP/NEVP_lifecycle_96hr_CI_forecasts",
         "DIRECT_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/NEVP/NEVP_direct_96hr_CI_forecasts",
         "NUM_FORECAST_FEATURES": 13
     },
 
     "NWMT": {
-        "LIFECYCLE_CEF_IN_FILE_NAME": "../v2.2/NWMT/NWMT_lifecycle_emissions.csv",
-        "DIRECT_CEF_IN_FILE_NAME": "../v2.2/NWMT/NWMT_direct_emissions.csv",
-        "FORECAST_IN_FILE_NAME": "../v2.2/NWMT/NWMT_96hr_forecasts_DA.csv",
+        "LIFECYCLE_CEF_IN_FILE_NAME": "../data/NWMT/NWMT_lifecycle_emissions.csv",
+        "DIRECT_CEF_IN_FILE_NAME": "../data/NWMT/NWMT_direct_emissions.csv",
+        "FORECAST_IN_FILE_NAME": "../data/NWMT/NWMT_96hr_forecasts_DA.csv",
         "LIFECYCLE_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/NWMT/NWMT_lifecycle_96hr_CI_forecasts",
         "DIRECT_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/NWMT/NWMT_direct_96hr_CI_forecasts",
         "NUM_FORECAST_FEATURES": 11
     },
 
     "NYIS": {
-        "LIFECYCLE_CEF_IN_FILE_NAME": "../v2.2/NYIS/NYIS_lifecycle_emissions.csv",
-        "DIRECT_CEF_IN_FILE_NAME": "../v2.2/NYIS/NYIS_direct_emissions.csv",
-        "FORECAST_IN_FILE_NAME": "../v2.2/NYIS/NYIS_96hr_forecasts_DA.csv",
+        "LIFECYCLE_CEF_IN_FILE_NAME": "../data/NYIS/NYIS_lifecycle_emissions.csv",
+        "DIRECT_CEF_IN_FILE_NAME": "../data/NYIS/NYIS_direct_emissions.csv",
+        "FORECAST_IN_FILE_NAME": "../data/NYIS/NYIS_96hr_forecasts_DA.csv",
         "LIFECYCLE_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/NYIS/NYIS_lifecycle_96hr_CI_forecasts",
         "DIRECT_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/NYIS/NYIS_direct_96hr_CI_forecasts",
         "NUM_FORECAST_FEATURES": 11
     },
 
     "PACE": {
-        "LIFECYCLE_CEF_IN_FILE_NAME": "../v2.2/PACE/PACE_lifecycle_emissions.csv",
-        "DIRECT_CEF_IN_FILE_NAME": "../v2.2/PACE/PACE_direct_emissions.csv",
-        "FORECAST_IN_FILE_NAME": "../v2.2/PACE/PACE_96hr_forecasts_DA.csv",
+        "LIFECYCLE_CEF_IN_FILE_NAME": "../data/PACE/PACE_lifecycle_emissions.csv",
+        "DIRECT_CEF_IN_FILE_NAME": "../data/PACE/PACE_direct_emissions.csv",
+        "FORECAST_IN_FILE_NAME": "../data/PACE/PACE_96hr_forecasts_DA.csv",
         "LIFECYCLE_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/PACE/PACE_lifecycle_96hr_CI_forecasts",
         "DIRECT_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/PACE/PACE_direct_96hr_CI_forecasts",
         "NUM_FORECAST_FEATURES": 11
     },
 
     "PACW": {
-        "LIFECYCLE_CEF_IN_FILE_NAME": "../v2.2/PACW/PACW_lifecycle_emissions.csv",
-        "DIRECT_CEF_IN_FILE_NAME": "../v2.2/PACW/PACW_direct_emissions.csv",
-        "FORECAST_IN_FILE_NAME": "../v2.2/PACW/PACW_96hr_forecasts_DA.csv",
+        "LIFECYCLE_CEF_IN_FILE_NAME": "../data/PACW/PACW_lifecycle_emissions.csv",
+        "DIRECT_CEF_IN_FILE_NAME": "../data/PACW/PACW_direct_emissions.csv",
+        "FORECAST_IN_FILE_NAME": "../data/PACW/PACW_96hr_forecasts_DA.csv",
         "LIFECYCLE_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/PACW/PACW_lifecycle_96hr_CI_forecasts",
         "DIRECT_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/PACW/PACW_direct_96hr_CI_forecasts",
         "NUM_FORECAST_FEATURES": 11
     },
 
     "PJM": {
-        "LIFECYCLE_CEF_IN_FILE_NAME": "../v2.2/PJM/PJM_lifecycle_emissions.csv",
-        "DIRECT_CEF_IN_FILE_NAME": "../v2.2/PJM/PJM_direct_emissions.csv",
-        "FORECAST_IN_FILE_NAME": "../v2.2/PJM/PJM_96hr_forecasts_DA.csv",
+        "LIFECYCLE_CEF_IN_FILE_NAME": "../data/PJM/PJM_lifecycle_emissions.csv",
+        "DIRECT_CEF_IN_FILE_NAME": "../data/PJM/PJM_direct_emissions.csv",
+        "FORECAST_IN_FILE_NAME": "../data/PJM/PJM_96hr_forecasts_DA.csv",
         "LIFECYCLE_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/PJM/PJM_lifecycle_96hr_CI_forecasts",
         "DIRECT_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/PJM/PJM_direct_96hr_CI_forecasts",
         "NUM_FORECAST_FEATURES": 13 
     },
 
     "PSCO": {
-        "LIFECYCLE_CEF_IN_FILE_NAME": "../v2.2/PSCO/PSCO_lifecycle_emissions.csv",
-        "DIRECT_CEF_IN_FILE_NAME": "../v2.2/PSCO/PSCO_direct_emissions.csv",
-        "FORECAST_IN_FILE_NAME": "../v2.2/PSCO/PSCO_96hr_forecasts_DA.csv",
+        "LIFECYCLE_CEF_IN_FILE_NAME": "../data/PSCO/PSCO_lifecycle_emissions.csv",
+        "DIRECT_CEF_IN_FILE_NAME": "../data/PSCO/PSCO_direct_emissions.csv",
+        "FORECAST_IN_FILE_NAME": "../data/PSCO/PSCO_96hr_forecasts_DA.csv",
         "LIFECYCLE_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/PSCO/PSCO_lifecycle_96hr_CI_forecasts",
         "DIRECT_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/PSCO/PSCO_direct_96hr_CI_forecasts",
         "NUM_FORECAST_FEATURES": 11
     },
 
     "SC": {
-        "LIFECYCLE_CEF_IN_FILE_NAME": "../v2.2/SC/SC_lifecycle_emissions.csv",
-        "DIRECT_CEF_IN_FILE_NAME": "../v2.2/SC/SC_direct_emissions.csv",
-        "FORECAST_IN_FILE_NAME": "../v2.2/SC/SC_96hr_forecasts_DA.csv",
+        "LIFECYCLE_CEF_IN_FILE_NAME": "../data/SC/SC_lifecycle_emissions.csv",
+        "DIRECT_CEF_IN_FILE_NAME": "../data/SC/SC_direct_emissions.csv",
+        "FORECAST_IN_FILE_NAME": "../data/SC/SC_96hr_forecasts_DA.csv",
         "LIFECYCLE_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/SC/SC_lifecycle_96hr_CI_forecasts",
         "DIRECT_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/SC/SC_direct_96hr_CI_forecasts",
         "NUM_FORECAST_FEATURES": 11
     },
 
     "SCEG": {
-        "LIFECYCLE_CEF_IN_FILE_NAME": "../v2.2/SCEG/SCEG_lifecycle_emissions.csv",
-        "DIRECT_CEF_IN_FILE_NAME": "../v2.2/SCEG/SCEG_direct_emissions.csv",
-        "FORECAST_IN_FILE_NAME": "../v2.2/SCEG/SCEG_96hr_forecasts_DA.csv",
+        "LIFECYCLE_CEF_IN_FILE_NAME": "../data/SCEG/SCEG_lifecycle_emissions.csv",
+        "DIRECT_CEF_IN_FILE_NAME": "../data/SCEG/SCEG_direct_emissions.csv",
+        "FORECAST_IN_FILE_NAME": "../data/SCEG/SCEG_96hr_forecasts_DA.csv",
         "LIFECYCLE_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/SCEG/SCEG_lifecycle_96hr_CI_forecasts",
         "DIRECT_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/SCEG/SCEG_direct_96hr_CI_forecasts",
         "NUM_FORECAST_FEATURES": 11
     },
 
     "SOCO": {
-        "LIFECYCLE_CEF_IN_FILE_NAME": "../v2.2/SOCO/SOCO_lifecycle_emissions.csv",
-        "DIRECT_CEF_IN_FILE_NAME": "../v2.2/SOCO/SOCO_direct_emissions.csv",
-        "FORECAST_IN_FILE_NAME": "../v2.2/SOCO/SOCO_96hr_forecasts_DA.csv",
+        "LIFECYCLE_CEF_IN_FILE_NAME": "../data/SOCO/SOCO_lifecycle_emissions.csv",
+        "DIRECT_CEF_IN_FILE_NAME": "../data/SOCO/SOCO_direct_emissions.csv",
+        "FORECAST_IN_FILE_NAME": "../data/SOCO/SOCO_96hr_forecasts_DA.csv",
         "LIFECYCLE_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/SOCO/SOCO_lifecycle_96hr_CI_forecasts",
         "DIRECT_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/SOCO/SOCO_direct_96hr_CI_forecasts",
         "NUM_FORECAST_FEATURES": 13
     },
 
     "SPA": {
-        "LIFECYCLE_CEF_IN_FILE_NAME": "../v2.2/SPA/SPA_lifecycle_emissions.csv",
-        "DIRECT_CEF_IN_FILE_NAME": "../v2.2/SPA/SPA_direct_emissions.csv",
-        "FORECAST_IN_FILE_NAME": "../v2.2/SPA/SPA_96hr_forecasts_DA.csv",
+        "LIFECYCLE_CEF_IN_FILE_NAME": "../data/SPA/SPA_lifecycle_emissions.csv",
+        "DIRECT_CEF_IN_FILE_NAME": "../data/SPA/SPA_direct_emissions.csv",
+        "FORECAST_IN_FILE_NAME": "../data/SPA/SPA_96hr_forecasts_DA.csv",
         "LIFECYCLE_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/SPA/SPA_lifecycle_96hr_CI_forecasts",
         "DIRECT_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/SPA/SPA_direct_96hr_CI_forecasts",
         "NUM_FORECAST_FEATURES": 7
     },
 
     "SRP": {
-        "LIFECYCLE_CEF_IN_FILE_NAME": "../v2.2/SRP/SRP_lifecycle_emissions.csv",
-        "DIRECT_CEF_IN_FILE_NAME": "../v2.2/SRP/SRP_direct_emissions.csv",
-        "FORECAST_IN_FILE_NAME": "../v2.2/SRP/SRP_96hr_forecasts_DA.csv",
+        "LIFECYCLE_CEF_IN_FILE_NAME": "../data/SRP/SRP_lifecycle_emissions.csv",
+        "DIRECT_CEF_IN_FILE_NAME": "../data/SRP/SRP_direct_emissions.csv",
+        "FORECAST_IN_FILE_NAME": "../data/SRP/SRP_96hr_forecasts_DA.csv",
         "LIFECYCLE_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/SRP/SRP_lifecycle_96hr_CI_forecasts",
         "DIRECT_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/SRP/SRP_direct_96hr_CI_forecasts",
         "NUM_FORECAST_FEATURES": 13
     },
 
     "SWPP": {
-        "LIFECYCLE_CEF_IN_FILE_NAME": "../v2.2/SWPP/SWPP_lifecycle_emissions.csv",
-        "DIRECT_CEF_IN_FILE_NAME": "../v2.2/SWPP/SWPP_direct_emissions.csv",
-        "FORECAST_IN_FILE_NAME": "../v2.2/SWPP/SWPP_96hr_forecasts_DA.csv",
+        "LIFECYCLE_CEF_IN_FILE_NAME": "../data/SWPP/SWPP_lifecycle_emissions.csv",
+        "DIRECT_CEF_IN_FILE_NAME": "../data/SWPP/SWPP_direct_emissions.csv",
+        "FORECAST_IN_FILE_NAME": "../data/SWPP/SWPP_96hr_forecasts_DA.csv",
         "LIFECYCLE_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/SWPP/SWPP_lifecycle_96hr_CI_forecasts",
         "DIRECT_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/SWPP/SWPP_direct_96hr_CI_forecasts",
         "NUM_FORECAST_FEATURES": 13
     },
 
     "TIDC": {
-        "LIFECYCLE_CEF_IN_FILE_NAME": "../v2.2/TIDC/TIDC_lifecycle_emissions.csv",
-        "DIRECT_CEF_IN_FILE_NAME": "../v2.2/TIDC/TIDC_direct_emissions.csv",
-        "FORECAST_IN_FILE_NAME": "../v2.2/TIDC/TIDC_96hr_forecasts_DA.csv",
+        "LIFECYCLE_CEF_IN_FILE_NAME": "../data/TIDC/TIDC_lifecycle_emissions.csv",
+        "DIRECT_CEF_IN_FILE_NAME": "../data/TIDC/TIDC_direct_emissions.csv",
+        "FORECAST_IN_FILE_NAME": "../data/TIDC/TIDC_96hr_forecasts_DA.csv",
         "LIFECYCLE_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/TIDC/TIDC_lifecycle_96hr_CI_forecasts",
         "DIRECT_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/TIDC/TIDC_direct_96hr_CI_forecasts",
         "NUM_FORECAST_FEATURES": 7
     },
 
     "TVA": {
-        "LIFECYCLE_CEF_IN_FILE_NAME": "../v2.2/TVA/TVA_lifecycle_emissions.csv",
-        "DIRECT_CEF_IN_FILE_NAME": "../v2.2/TVA/TVA_direct_emissions.csv",
-        "FORECAST_IN_FILE_NAME": "../v2.2/TVA/TVA_96hr_forecasts_DA.csv",
+        "LIFECYCLE_CEF_IN_FILE_NAME": "../data/TVA/TVA_lifecycle_emissions.csv",
+        "DIRECT_CEF_IN_FILE_NAME": "../data/TVA/TVA_direct_emissions.csv",
+        "FORECAST_IN_FILE_NAME": "../data/TVA/TVA_96hr_forecasts_DA.csv",
         "LIFECYCLE_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/TVA/TVA_lifecycle_96hr_CI_forecasts",
         "DIRECT_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/TVA/TVA_direct_96hr_CI_forecasts",
         "NUM_FORECAST_FEATURES": 13
     },
 
     "WACM": {
-        "LIFECYCLE_CEF_IN_FILE_NAME": "../v2.2/WACM/WACM_lifecycle_emissions.csv",
-        "DIRECT_CEF_IN_FILE_NAME": "../v2.2/WACM/WACM_direct_emissions.csv",
-        "FORECAST_IN_FILE_NAME": "../v2.2/WACM/WACM_96hr_forecasts_DA.csv",
+        "LIFECYCLE_CEF_IN_FILE_NAME": "../data/WACM/WACM_lifecycle_emissions.csv",
+        "DIRECT_CEF_IN_FILE_NAME": "../data/WACM/WACM_direct_emissions.csv",
+        "FORECAST_IN_FILE_NAME": "../data/WACM/WACM_96hr_forecasts_DA.csv",
         "LIFECYCLE_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/WACM/WACM_lifecycle_96hr_CI_forecasts",
         "DIRECT_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/WACM/WACM_direct_96hr_CI_forecasts",
         "NUM_FORECAST_FEATURES": 13
@@ -311,45 +330,45 @@
     // EU regions
 
     "SE": {
-        "LIFECYCLE_CEF_IN_FILE_NAME": "../v2.2/SE/SE_lifecycle_emissions.csv",
-        "DIRECT_CEF_IN_FILE_NAME": "../v2.2/SE/SE_direct_emissions.csv",
-        "FORECAST_IN_FILE_NAME": "../v2.2/SE/SE_96hr_forecasts_DA.csv",
+        "LIFECYCLE_CEF_IN_FILE_NAME": "../data/SE/SE_lifecycle_emissions.csv",
+        "DIRECT_CEF_IN_FILE_NAME": "../data/SE/SE_direct_emissions.csv",
+        "FORECAST_IN_FILE_NAME": "../data/SE/SE_96hr_forecasts_DA.csv",
         "LIFECYCLE_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/SE/SE_lifecycle_96hr_CI_forecasts",
         "DIRECT_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/SE/SE_direct_96hr_CI_forecasts",
         "NUM_FORECAST_FEATURES": 9
     },
 
     "DE": {
-        "LIFECYCLE_CEF_IN_FILE_NAME": "../v2.2/DE/DE_lifecycle_emissions.csv",
-        "DIRECT_CEF_IN_FILE_NAME": "../v2.2/DE/DE_direct_emissions.csv",
-        "FORECAST_IN_FILE_NAME": "../v2.2/DE/DE_96hr_forecasts_DA.csv",
+        "LIFECYCLE_CEF_IN_FILE_NAME": "../data/DE/DE_lifecycle_emissions.csv",
+        "DIRECT_CEF_IN_FILE_NAME": "../data/DE/DE_direct_emissions.csv",
+        "FORECAST_IN_FILE_NAME": "../data/DE/DE_96hr_forecasts_DA.csv",
         "LIFECYCLE_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/DE/DE_lifecycle_96hr_CI_forecasts",
         "DIRECT_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/DE/DE_direct_96hr_CI_forecasts",
         "NUM_FORECAST_FEATURES": 15
     },
 
     "ES": {
-        "LIFECYCLE_CEF_IN_FILE_NAME": "../v2.2/ES/ES_lifecycle_emissions.csv",
-        "DIRECT_CEF_IN_FILE_NAME": "../v2.2/ES/ES_direct_emissions.csv",
-        "FORECAST_IN_FILE_NAME": "../v2.2/ES/ES_96hr_forecasts_DA.csv",
+        "LIFECYCLE_CEF_IN_FILE_NAME": "../data/ES/ES_lifecycle_emissions.csv",
+        "DIRECT_CEF_IN_FILE_NAME": "../data/ES/ES_direct_emissions.csv",
+        "FORECAST_IN_FILE_NAME": "../data/ES/ES_96hr_forecasts_DA.csv",
         "LIFECYCLE_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/ES/ES_lifecycle_96hr_CI_forecasts",
         "DIRECT_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/ES/ES_direct_96hr_CI_forecasts",
         "NUM_FORECAST_FEATURES": 14
     },
 
     "PL": {
-        "LIFECYCLE_CEF_IN_FILE_NAME": "../v2.2/PL/PL_lifecycle_emissions.csv",
-        "DIRECT_CEF_IN_FILE_NAME": "../v2.2/PL/PL_direct_emissions.csv",
-        "FORECAST_IN_FILE_NAME": "../v2.2/PL/PL_96hr_forecasts_DA.csv",
+        "LIFECYCLE_CEF_IN_FILE_NAME": "../data/PL/PL_lifecycle_emissions.csv",
+        "DIRECT_CEF_IN_FILE_NAME": "../data/PL/PL_direct_emissions.csv",
+        "FORECAST_IN_FILE_NAME": "../data/PL/PL_96hr_forecasts_DA.csv",
         "LIFECYCLE_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/PL/PL_lifecycle_96hr_CI_forecasts",
         "DIRECT_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/PL/PL_direct_96hr_CI_forecasts",
         "NUM_FORECAST_FEATURES": 12
     },
 
     "NL": {
-        "LIFECYCLE_CEF_IN_FILE_NAME": "../v2.2/NL/NL_lifecycle_emissions.csv",
-        "DIRECT_CEF_IN_FILE_NAME": "../v2.2/NL/NL_direct_emissions.csv",
-        "FORECAST_IN_FILE_NAME": "../v2.2/NL/NL_96hr_forecasts_DA.csv",
+        "LIFECYCLE_CEF_IN_FILE_NAME": "../data/NL/NL_lifecycle_emissions.csv",
+        "DIRECT_CEF_IN_FILE_NAME": "../data/NL/NL_direct_emissions.csv",
+        "FORECAST_IN_FILE_NAME": "../data/NL/NL_96hr_forecasts_DA.csv",
         "LIFECYCLE_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/NL/NL_lifecycle_96hr_CI_forecasts",
         "DIRECT_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/NL/NL_direct_96hr_CI_forecasts",
         "NUM_FORECAST_FEATURES": 12
@@ -358,9 +377,9 @@
     // AUS regions
 
     "AUS_QLD": {
-        "LIFECYCLE_CEF_IN_FILE_NAME": "../v2.2/AUS_QLD/AUS_QLD_lifecycle_emissions.csv",
-        "DIRECT_CEF_IN_FILE_NAME": "../v2.2/AUS_QLD/AUS_QLD_direct_emissions.csv",
-        "FORECAST_IN_FILE_NAME": "../v2.2/AUS_QLD/AUS_QLD_96hr_forecasts_DA.csv",
+        "LIFECYCLE_CEF_IN_FILE_NAME": "../data/AUS_QLD/AUS_QLD_lifecycle_emissions.csv",
+        "DIRECT_CEF_IN_FILE_NAME": "../data/AUS_QLD/AUS_QLD_direct_emissions.csv",
+        "FORECAST_IN_FILE_NAME": "../data/AUS_QLD/AUS_QLD_96hr_forecasts_DA.csv",
         "LIFECYCLE_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/AUS_QLD/AUS_QLD_lifecycle_96hr_CI_forecasts",
         "DIRECT_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/AUS_QLD/AUS_QLD_direct_96hr_CI_forecasts",
         "NUM_FORECAST_FEATURES": 12

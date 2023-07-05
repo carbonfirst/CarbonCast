@@ -72,7 +72,7 @@ def runSecondTier(configFileName, cefType, loadFromSavedModel):
     NUMBER_OF_EXPERIMENTS = secondTierConfig["NUMBER_OF_EXPERIMENTS_PER_REGION"]
     BUFFER_HOURS = PREDICTION_WINDOW_HOURS - 24
 
-    regionList = secondTierConfig["REGION"]
+    regionList = secondTierConfig["REGION_DIRECT"]
     if (loadFromSavedModel is True):
         NUMBER_OF_EXPERIMENTS = 1
     if (cefType == "-l"):
@@ -96,6 +96,14 @@ def runSecondTier(configFileName, cefType, loadFromSavedModel):
 
         print("Initializing...")
         dataset, forecastDataset, dateTime = initialize(inFileName, forecastInFileName, startCol)
+        specializedForecasts = None
+        if ("NUM_SPECIALIZED_FORECAST_FEATURES" in regionConfig): # weather + subset of source production forecasts
+            numForecastFeatures = regionConfig["NUM_SPECIALIZED_FORECAST_FEATURES"]
+            specializedForecasts = regionConfig["SPECIALIZED_FORECASTS"]
+            modifiedForecastDataset = forecastDataset.iloc[:, :5].copy()
+            for source in specializedForecasts:
+                modifiedForecastDataset["avg_"+source.lower()+"_production_forecast"] = forecastDataset["avg_"+source.lower()+"_production_forecast"]
+            forecastDataset = modifiedForecastDataset
         print("***** Initialization done *****")
 
         # split into train and test
@@ -219,7 +227,7 @@ def runSecondTier(configFileName, cefType, loadFromSavedModel):
                                     np.percentile(regionDailyMape[region][:, i], 99)])
 
             print("Saving MAPE values by day in file...")
-            with open("../v2.2/"+region+"/"+region+"_MAPE_iter"+str(exptNum)+".txt", "w") as f:
+            with open("../data/"+region+"/"+region+"_MAPE_iter"+str(exptNum)+".txt", "w") as f:
                 for item in mapeByDay:
                     f.writelines(str(item))
                     f.write("\n")
@@ -247,6 +255,96 @@ def runSecondTier(configFileName, cefType, loadFromSavedModel):
         
     return
 
+def runSecondTierInRealTime(configFileName, regionList, cefType, startDate, electricityDataDate, 
+                               realTimeFileDir, realTimeWeatherFileDir,
+                               realTimeForeCastFileName):
+    global TRAINING_WINDOW_HOURS
+    global PREDICTION_WINDOW_HOURS
+    global MAX_PREDICTION_WINDOW_HOURS
+    global MODEL_SLIDING_WINDOW_LEN
+    global DEPENDENT_VARIABLE_COL
+    global SAVED_MODEL_LOCATION
+    global TOP_N_FEATURES
+
+    secondTierConfig = {}
+
+    with open(configFileName, "r") as configFile:
+        secondTierConfig = json.load(configFile)
+        # print(secondTierConfig)
+
+    TRAINING_WINDOW_HOURS = secondTierConfig["TRAINING_WINDOW_HOURS"]
+    MODEL_SLIDING_WINDOW_LEN = secondTierConfig["MODEL_SLIDING_WINDOW_LEN"]
+    PREDICTION_WINDOW_HOURS = secondTierConfig["PREDICTION_WINDOW_HOURS"]
+    MAX_PREDICTION_WINDOW_HOURS = secondTierConfig["MAX_PREDICTION_WINDOW_HOURS"]
+    TOP_N_FEATURES = secondTierConfig["TOP_N_FEATURES"]
+
+    if (cefType == "-l"):
+        SAVED_MODEL_LOCATION = secondTierConfig["LIFECYCLE_SAVED_MODEL_LOCATION"]
+    else:
+        SAVED_MODEL_LOCATION = secondTierConfig["DIRECT_SAVED_MODEL_LOCATION"]
+    writeCIForecastsToFile = secondTierConfig["WRITE_CI_FORECASTS_TO_FILE"]
+
+    for region in regionList:
+        print("CarbonCast: CNN-LSTM model for region:", region)
+        if (cefType == "-l"):
+            print("Lifecycle CEF")
+        else:
+            print("Direct CEF")
+        regionConfig = secondTierConfig[region]
+        inFileName = realTimeFileDir+region+"/"+region+"_"+str(electricityDataDate)+"_direct_emissions.csv"
+        outFileName = realTimeFileDir+region+"/"+region+"_direct_CI_forecasts_"+str(startDate)+".csv"
+        if (cefType == "-l"):
+            inFileName = realTimeFileDir+region+"/"+region+"_"+str(electricityDataDate)+"_lifecycle_emissions.csv"
+            outFileName = realTimeFileDir+region+"/"+region+"_lifecycle_CI_forecasts_"+str(startDate)+".csv"
+        forecastInFileName = realTimeForeCastFileName[region]
+        numHistoricalAndDateTimeFeatures = secondTierConfig["NUM_FEATURES"]
+        numForecastFeatures = regionConfig["NUM_FORECAST_FEATURES"]
+        startCol = secondTierConfig["START_COL"]
+
+        print("Initializing...")
+        print(inFileName, forecastInFileName)
+        dataset, testDates, forecastDataset = initializeInRealTime(inFileName, forecastInFileName, startCol)
+        print("***** Initialization done *****")
+
+        testData = np.array(dataset.values[:, startCol:startCol+1])
+        testData = fillMissingData(testData)
+        wTestData = np.array(forecastDataset.values[:, 0:numHistoricalAndDateTimeFeatures+numForecastFeatures-1])
+        wTestData = fillMissingData(wTestData)
+        print("Total no. of features = ", numHistoricalAndDateTimeFeatures+numForecastFeatures)
+        print(testData.shape, wTestData.shape)
+
+        print("Scaling data...")
+        minMaxFeatureFileName = SAVED_MODEL_LOCATION+region+"/"+region+"_min_max_values.txt"
+        ftMin, ftMax, wFtMin, wFtMax = common.getMinMaxFeatureValues(minMaxFeatureFileName, areForecastsFeatures=True)
+        testData = common.scaleTestDataWithTrainingValues(testData, ftMin, ftMax)
+        wTestData= common.scaleTestDataWithTrainingValues(wTestData, wFtMin, wFtMax)
+        
+        # unscaledTrainCarbonIntensity = np.zeros(trainData.shape[0])
+        print("***** Data scaling done *****")
+
+        ######################## START #####################
+        savedModelName = SAVED_MODEL_LOCATION+region+"/"+region+".h5"
+        model = load_model(savedModelName)
+        # model.summary()
+
+        history = testData[-TRAINING_WINDOW_HOURS:, :]
+        weatherData = wTestData[-PREDICTION_WINDOW_HOURS:, :]
+        history = history.tolist()
+        predictedData = getCIForecastsInRealTime(model, history, testData, 
+                                    numHistoricalAndDateTimeFeatures+numForecastFeatures, 
+                                    wTestData, weatherData)
+        print("***** Forecast done *****")
+        ######################## END #####################
+        
+        print("####################", region, " done ####################\n\n")
+
+    predictedData = predictedData.astype(np.float64)
+    predicted = np.reshape(predictedData, predictedData.shape[0]*predictedData.shape[1])
+    unscaledPredictedData = common.inverseDataScaling(predicted, ftMax[DEPENDENT_VARIABLE_COL], 
+                                                      ftMin[DEPENDENT_VARIABLE_COL])
+
+    writeRealTimeCIForecastsToFile(testDates, unscaledPredictedData, outFileName)
+    return outFileName
 
 def initialize(inFileName, forecastInFileName, startCol):
     print(inFileName)
@@ -262,11 +360,7 @@ def initialize(inFileName, forecastInFileName, startCol):
     # forecastDataset = pd.read_csv(forecastInFileName, header=0, infer_datetime_format=True, 
     #                         parse_dates=['UTC time'], index_col=['UTC time']) # old data files
     forecastDataset = pd.read_csv(forecastInFileName, header=0, infer_datetime_format=True, 
-                            parse_dates=['datetime'], index_col=['datetime']) # new data files in v2.2
-    # print(dataset.head(2))
-    # print(dataset.tail(2))
-    # print(forecastDataset.head())
-    # print(forecastDataset.columns)
+                            parse_dates=['datetime'], index_col=['datetime']) # new data files in data
     for i in range(startCol, len(dataset.columns.values)):
         col = dataset.columns.values[i]
         dataset[col] = dataset[col].astype(np.float64)
@@ -278,6 +372,28 @@ def initialize(inFileName, forecastInFileName, startCol):
     print("Features related to date & time added")
 
     return dataset, forecastDataset, dateTime
+
+def initializeInRealTime(inFileName, forecastInFileName, startCol):
+    # load the new file
+    dataset = pd.read_csv(inFileName, header=0, infer_datetime_format=True, 
+                            parse_dates=['UTC time'], index_col=['UTC time'])
+
+    forecastDataset = pd.read_csv(forecastInFileName, header=0, infer_datetime_format=True, 
+                            parse_dates=['datetime'], index_col=['datetime'])
+    forecastDateTime = forecastDataset.index.values
+    
+    print("\nAdding features related to date & time...")
+    # Adding in weather dataset, as we need for 96 hours
+    modifiedForecastDataset = common.addDateTimeFeatures(forecastDataset, forecastDateTime, -1)
+    forecastDataset = modifiedForecastDataset
+    print(forecastDataset.head())
+    print("Features related to date & time added")
+    
+    for i in range(startCol, len(dataset.columns.values)):
+        col = dataset.columns.values[i]
+        dataset[col] = dataset[col].astype(np.float64)
+
+    return dataset, forecastDateTime, forecastDataset
 
 # Date time feature engineering
 def addDateTimeFeatures(dataset, dateTime, startCol):
@@ -427,8 +543,6 @@ def trainModel(trainX, trainY, valX, valY, hyperParams, iteration, region, loadF
 
     # bestModel = load_model(region+"_best_model_iter"+str(iteration)+".h5")
     bestModel = load_model(SAVED_MODEL_LOCATION+region+"/"+region+".h5")
-# showModelSummary(hist, model)
-# print("Loss history: ", hist.history)
     # showModelSummary(hist, bestModel, "CNN")
     # print("Training the best model...")
     # hist = bestModel.fit(trainX, trainY, epochs=100, batch_size=trainParameters['batchsize'], verbose=verbose)
@@ -492,6 +606,35 @@ def getDayAheadForecasts(model, history, testData,
     predictedData = np.array(predictions, dtype=np.float64)
     return predictedData
 
+def getCIForecastsInRealTime(model, history, testData, numFeatures, 
+                   wTestData = None, weatherData = None):
+    # walk-forward validation over each day
+    print("Testing...")
+    predictions = list()
+    weatherIdx = 0
+    for i in range(0, ((len(testData)//24))):
+        dayAheadPredictions = list()
+        tempHistory = history.copy()
+        currentDayHours = i* MODEL_SLIDING_WINDOW_LEN
+        for j in range(0, MAX_PREDICTION_WINDOW_HOURS, 24):
+            if (j >= PREDICTION_WINDOW_HOURS):
+                continue
+            yhat_sequence = getForecastsInRealTime(model, tempHistory, 
+                                         numFeatures, weatherData[j:j+24])
+            dayAheadPredictions.extend(yhat_sequence)
+            # add current prediction to history for predicting the next day
+            for k in range(24):
+                tempHistory[k] = yhat_sequence[k]
+        # get real observation and add to history for predicting the next day
+        
+        history.extend(testData[currentDayHours:currentDayHours+MODEL_SLIDING_WINDOW_LEN, :].tolist())
+        predictions.append(dayAheadPredictions)
+        weatherData = wTestData[weatherIdx:weatherIdx+MAX_PREDICTION_WINDOW_HOURS, :]
+        weatherIdx += MAX_PREDICTION_WINDOW_HOURS
+    # evaluate predictions days for each day
+    predictedData = np.array(predictions, dtype=np.float64)
+    return predictedData
+
 def getForecasts(model, history, trainWindowHours, numFeatures, weatherData):
     # flatten data
     data = np.array(history, dtype=np.float64)
@@ -500,11 +643,24 @@ def getForecasts(model, history, trainWindowHours, numFeatures, weatherData):
     input_x = np.append(input_x, weatherData, axis=1)
     # reshape into [1, n_input, num_features]
     input_x = input_x.reshape((1, len(input_x), numFeatures))
-    # print("ip_x shape: ", input_x.shape)
     yhat = model.predict(input_x, verbose=0)
     # we only want the vector forecast
     yhat = yhat[0]
     return yhat, input_x
+
+def getForecastsInRealTime(model, history, numFeatures, weatherData):
+    # flatten data
+    data = np.array(history, dtype=np.float64)
+    data = np.reshape(data, (data.shape[0], 1))
+    # retrieve last observations for input data
+    input_x = data[-TRAINING_WINDOW_HOURS:]
+    input_x = np.append(input_x, weatherData, axis=1)
+    # reshape into [1, n_input, num_features]
+    input_x = input_x.reshape((1, len(input_x), numFeatures))
+    yhat = model.predict(input_x, verbose=0)
+    # we only want the vector forecast
+    yhat = yhat[0]
+    return yhat
 
 def featureImportance(seq, model, features, testDates):
     # print(seq.shape)
@@ -702,6 +858,23 @@ def getUnscaledForecastsAndForecastAccuracy(testData, testDates, predictedData, 
                                 unscaledTestData, unscaledPredictedData, testDates)   
    
     return unscaledTestData, unscaledPredictedData, formattedTestDates, rmseScore, mapeScore, dailyMapeScore
+
+def writeRealTimeCIForecastsToFile(formattedTestDates, unscaledPredictedData, outFileName):
+    data = []
+    for i in range(len(unscaledPredictedData)):
+        row = []
+        row.append(str(formattedTestDates[i]))
+        row.append(str(unscaledPredictedData[i]))
+        data.append(row)
+    writeMode = "w"
+    print("Writing to ", outFileName, "...")
+    fields = ["UTC time", "forecasted_avg_carbon_intensity"]
+    
+    with open(outFileName, writeMode) as csvfile: 
+        csvwriter = csv.writer(csvfile)   
+        csvwriter.writerow(fields) 
+        csvwriter.writerows(data)
+    return
 
 if __name__ == "__main__":
     print("CarbonCast second tier. Refer github repo for regions & sources.")

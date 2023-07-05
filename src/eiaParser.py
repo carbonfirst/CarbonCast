@@ -120,10 +120,8 @@ def parseEIAProductionDataBySourceType(data, startDate, electricitySources, numS
     dataset = pd.DataFrame(electricityProductionData, columns=datasetColumns)
     return dataset
 
-def getELectricityProductionDataFromEIA(balAuth, startDate, numDays):
+def getELectricityProductionDataFromEIA(balAuth, startDate, numDays, DAY_JUMP):
     # DM: For DAY_JUMP > 1, there is a bug while filling missing hours
-    DAY_JUMP = 8
-    filedir = os.path.dirname(__file__)
     fullDataset = pd.DataFrame()
     startDateObj = datetime.strptime(startDate, "%Y-%m-%d")
     electricitySources = set()
@@ -148,9 +146,7 @@ def getELectricityProductionDataFromEIA(balAuth, startDate, numDays):
         startDate = startDateObj.strftime("%Y-%m-%d")
         # print(fullDataset.tail(2))
 
-    csv_path = os.path.normpath(os.path.join(filedir, f"./eiaData/{balAuth}.csv"))
-    with open(csv_path, 'w') as f:
-        fullDataset.to_csv(f, index=False)
+    return fullDataset
 
 def concatDataset():
     for balAuth in EIA_BAL_AUTH_LIST:
@@ -160,17 +156,9 @@ def concatDataset():
         fullDataset.to_csv("./eiaData/"+balAuth+".csv")
     return
 
-def cleanElectricityProductionDataFromEIA(balAuth):
-    dataset = pd.read_csv("./eiaData/"+balAuth+".csv", header=0, 
-                            parse_dates=["UTC time"], index_col=["UTC time"],
-                            )
-    # dataset = dataset.iloc[:, 1:]
+def cleanElectricityProductionDataFromEIA(dataset, balAuth):
     dataset = dataset.astype(np.float64)
-
     dataset[dataset<0] = 0
-    # dataset.fillna(0)
-
-
     for i in range(len(dataset)):
         for j in range(len(dataset.columns)):
             if (pd.isna(dataset.iloc[i,j]) is True or dataset.iloc[i,j] == np.nan):
@@ -193,19 +181,17 @@ def cleanElectricityProductionDataFromEIA(balAuth):
                     numerator += nextDay
                     denominator+=1
                 dataset.iloc[i, j] = (numerator/denominator) if denominator>0 else 0
-                print(balAuth, dataset.index.values[i], prevHour, prevDay, nextHour, nextDay, dataset.iloc[i, j])
+                # print(balAuth, dataset.index.values[i], prevHour, prevDay, nextHour, nextDay, dataset.iloc[i, j])
                 # filling missing values by taking average of prevHour, prevDay same hour, 
                 # nextHour & nextDay same hour
 
     print(balAuth)
     print(dataset.head())
-    dataset.to_csv("./eiaData/"+balAuth+"_clean.csv")
-    return
+    return dataset
 
-def adjustColumns(balAuth):
+def adjustColumns(dataset, balAuth):
     sources = ["coal", "nat_gas", "nuclear", "oil", "hydro", "solar", "wind", "other"]
     modifiedSources = []
-    dataset = pd.read_csv("./eiaData/"+balAuth+"_clean.csv", header=0, index_col=["UTC time"])
     print(dataset.shape)
     modifiedDataset = np.zeros(dataset.shape)
     idx = 0
@@ -217,8 +203,7 @@ def adjustColumns(balAuth):
             idx += 1
     modifiedDataset = pd.DataFrame(modifiedDataset, columns=modifiedSources, index=dataset.index)
     print(modifiedDataset.shape)
-    modifiedDataset.to_csv("./eiaData/"+balAuth+"_clean_mod.csv")
-    return
+    return modifiedDataset
 
 if __name__ == "__main__":
     if (len(sys.argv)!=3):
@@ -229,7 +214,23 @@ if __name__ == "__main__":
     numDays = int(sys.argv[2]) #368 #1096
 
     for balAuth in EIA_BAL_AUTH_LIST:
-        getELectricityProductionDataFromEIA(balAuth, startDate, numDays)
-        cleanElectricityProductionDataFromEIA(balAuth)
-        adjustColumns(balAuth)
+        # fetch electricity data
+        fullDataset = getELectricityProductionDataFromEIA(balAuth, startDate, numDays, DAY_JUMP=8)
+        # DM: For DAY_JUMP > 1, there is a bug while filling missing hours
+        filedir = os.path.dirname(__file__)
+        csv_path = os.path.normpath(os.path.join(filedir, f"./eiaData/{balAuth}.csv"))
+        with open(csv_path, 'w') as f:
+            fullDataset.to_csv(f, index=False)
+        
+        # clean electricity data
+        dataset = pd.read_csv("./eiaData/"+balAuth+".csv", header=0, 
+                            parse_dates=["UTC time"], index_col=["UTC time"])
+        cleanedDataset = cleanElectricityProductionDataFromEIA(dataset, balAuth)
+        cleanedDataset.to_csv("./eiaData/"+balAuth+"_clean.csv")
+
+        # adjust source columns
+        dataset = pd.read_csv("./eiaData/"+balAuth+"_clean.csv", header=0, index_col=["UTC time"])
+        modifiedDataset = adjustColumns(dataset, balAuth)
+        modifiedDataset.to_csv("./eiaData/"+balAuth+"_clean_mod.csv")
+
     # concatDataset()
