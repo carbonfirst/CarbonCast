@@ -4,7 +4,7 @@ CarbonCast: Multi-Day Forecasting of Grid Carbon Intensity
 <br>
 CarbonCast provides average carbon intensity forecasts up to 96 hours. This is an extension of [DACF](https://github.com/carbonfirst/DACF), which provides only day-ahead carbon intensity forecasts.
 
-Version: 2.1 <br>
+Version: 3.0 <br>
 Authors: Diptyaroop Maji, Prashant Shenoy, Ramesh K Sitaraman <br>
 Affiliation: University of Massachusetts, Amherst
 
@@ -21,26 +21,47 @@ If something is not working, please check whether some recent update has already
 In case something is not working in the latest version, or if there are any doubts/questions/suggestions, please feel free to reach us at dmaji at cs dot umass dot edu.
 
 ### 0.1 Current status:
-Code files: Up to date as of 03/11/2023. <br>
-Data files: Up to date as of 01/10/2023. <br>
+Code files: Up to date as of 07/05/2023. <br>
+Data files: Up to date as of 07/05/2023. <br>
+Saved ML models for US regions: Up to date as of 07/05/2023. Models trained on 2020-2021 data. <br>
 Latest stable commit: <br>
 
+### 0.2 Changes in v3.0:
+CarbonCast can fetch data & make predictions in real time for the US regions.
+
 ## 1. Regions covered 
-* US (US region data collected from [EIA](https://www.eia.gov/electricity/gridmonitor/dashboard/electric_overview/US48/US48)):
-    * California ([CISO](https://www.caiso.com/Pages/default.aspx))
-    * Florida ([FPL](https://www.fpl.com/))
-    * New England ([ISO-NE](https://www.iso-ne.com/). We refer the region as ISNE.)
-    * New York ([NYISO](https://www.nyiso.com/))
+EU & AUS regions are not updated yet. Only the US regions are up to date. <br>
+* US ISOs (US region data collected from [EIA](https://www.eia.gov/electricity/gridmonitor/dashboard/electric_overview/US48/US48)):
+    * Associated Electric Cooperative Incorporated ([AECI](https://www.aeci.org/))
+    * Arizona Public Service Balancing Area ([AZPS](https://www.caiso.com/Documents/Structuralcompetitivenessoftheenergyimbalancemarket-ArizonaPublicServiceBalancingArea-June122020.pdf))
+    * Bonneville Power Administration, Washington ([BPAT](https://www.bpa.gov/))
+    * California ISO ([CISO](https://www.caiso.com/Pages/default.aspx))
+    * Duke energy Carolinas ([DUK](https://www.duke-energy.com/home))
+    * El Paso Electric ([EPE](https://www.epelectric.com/))
+    * Electric Reliability Council of Texas ([ERCOT](https://www.ercot.com/). We refer the region as ERCO)
+    * Florida Power & Light ([FPL](https://www.fpl.com/))
+    * ISO New England ([ISO-NE](https://www.iso-ne.com/). We refer the region as ISNE.)
+    * Los Angeles Department of Water and Power ([LDWP](https://www.ladwp.com/ladwp/faces/ladwp;jsessionid=wQ1RklMdsvY8KnjMYXnhh1zlhtv1q0QNJmdt9LQnLnCfTCtv31Y9!41721507?_afrLoop=469146466465544&_afrWindowMode=0&_afrWindowId=null#%40%3F_afrWindowId%3Dnull%26_afrLoop%3D469146466465544%26_afrWindowMode%3D0%26_adf.ctrl-state%3D174kwhmfu1_4))
+    * Midcontinent Independent System Operator ([MISO](https://www.misoenergy.org/))
+    * Nevada Power Company ([NEVP](https://www.nvenergy.com/))
+    * NorthWestern Corporation ([NWMT](https://www.northwesternenergy.com/))
+    * New York ISO ([NYISO](https://www.nyiso.com/). We refer to it as NYIS)
+    * PacifiCorp East ([PACE](https://www.pacificorp.com/))
     * Pennsylvania-Jersey-Maryland Interconnection ([PJM](https://www.pjm.com/))
-    * Texas ([ERCOT](https://www.ercot.com/). We refer the region as ERCO)
-    * Washington ([BPAT](https://www.bpa.gov/))
-* Europe (European regions are monitored by [ENTSOE](https://transparency.entsoe.eu/)):
+    * South Carolina Public Service Authority ([SC](https://www.santeecooper.com/))
+    * Dominion Energy Inc, South Carolina ([SCEG](https://www.dominionenergy.com/south-carolina))
+    * Southern Company Services Inc. ([SOCO](https://www.southerncompany.com/about/our-companies.html))
+    * Salt River Project, Arizone ([SRP](https://www.srpnet.com/))
+    * Turlock Irrigation District ([TIDC](https://www.tid.org/))
+    * Tennessee Valley Authority [TVA](https://www.tva.com/))
+    * Restern Area Power Administration, Rocky ountain Region [WACM](https://www.wapa.gov/regions/RM/Pages/rm.aspx))
+* Europe regions (European regions are monitored by [ENTSOE](https://transparency.entsoe.eu/)):
     * Germany (DE)
     * Netherlands (NL)
     * Spain (ES)
     * Sweden (SE)
     * Poland (PL)
-* Australia (Data for Australian regions is available at [OpenNEM](https://opennem.org.au/energy/nem/?range=7d&interval=30m))
+* Australia regions (Data for Australian regions is available at [OpenNEM](https://opennem.org.au/energy/nem/?range=7d&interval=30m))
     * Queensland (AUS-QLD)
 <!-- * Canada
     * Ontario ([IESO](). We refer the region as CA_ON) -->
@@ -96,11 +117,18 @@ To run CarbonCast using the saved model for any region, run: <br>
 <b><-l/-d>:</b> <i>Lifecycle/Direct.</i> Relevant saved model for the specified region(s) will be loaded.<br>
 <b><-s>: </b> <i>Use saved model.</i> Parameter that tells CarbonCast to use saved models and not train a new model.
 
+## 5 Running CarbonCast in real time
+<b>To run CarbonCast in real time (with new data/for new regions etc.), first install the dependencies mentioned in Section 4.1.
+Then, follow the instructions specified [here](real_time/README.md).</b> <br>
 
-## 5 Running CarbonCast from scratch
+<b>We welcome any feedback and feature request to make this better. Please raise an issue inthe GitHub if you have any
+such request or if you found a bug.</b>
+
+
+## 6 Running CarbonCast from scratch
 To run CarbonCast from scratch (with new data/for new regions etc.), first install the dependencies mentioned in Section 4.1.
 
-### 5.1 Getting Weather data:
+### 6.1 Getting Weather data:
 The aggregated and cleaned weather forecasts that we have used for our regions are provided in ```data/```. If you need weather forecasts for other regions, or even for the same regions (e.g., if you want to use a different aggregation method or if you want to forecast for a different time period), the procedure is mentioned below.<br>
 * We fetch weather data from the [GFS weather forecast archive](https://rda.ucar.edu/datasets/ds084.1/). You will need to register 
 before you can get weather data. Once you have registered, do the following:
@@ -116,7 +144,7 @@ before you can get weather data. Once you have registered, do the following:
 You will need to modify the relevant fields in the above two files to successfully parse & clean the weather data. <br>
 If you are using any other weather aggregating method, please feel free to modify the above files as required.
 
-### 5.2 Getting source production forecasts:
+### 6.2 Getting source production forecasts:
 You will need to obtain, clean, & format the datasets before you can get source production forecasts. You may also need to modify the configuration file as required.<br>
 For getting source production forecasts in the first-tier, run the following file:<br>
 ```python3 firstTierForecasts.py <configFileName> ```<br>
@@ -126,7 +154,7 @@ For getting source production forecasts in the first-tier, run the following fil
 You can get source production forecasts of multiple regions together. Just add the new regions in the "REGION" parameter.
 <!-- A detailed description of how to configure is given in Section 3.5 -->
 
-### 5.3 Calculating carbon intensity (real-time/historical/from source production forecasts):
+### 6.3 Calculating carbon intensity (real-time/historical/from source production forecasts):
 For calculating real-time/historical carbon intensity from source data, or carbon intensity forecasts from the source production forecast data using the formula, run the following file: <br>
 ```python3 carbonIntensityCalculator.py <region> <-l/-d> <-f/-r> <num_sources>```<br>
 <b>Regions:</b> <i>CISO, PJM, ERCO, ISNE, NYISO, FPL, BPAT, SE, DE, ES, NL, PL, AUS_QLD</i> <br>
@@ -134,7 +162,7 @@ For calculating real-time/historical carbon intensity from source data, or carbo
 <b><-f/-r>:</b> <i>Forecast/Real-time (or, historical)</i> <br>
 <b>num_sources:</b> <i>No. of electricity producting sources in that region.</i> <br>
 
-### 5.4 Getting carbon intensity forecasts using CarbonCast:
+### 6.4 Getting carbon intensity forecasts using CarbonCast:
 For getting 96-hour average carbon intensity forecasts, run the following file: <br>
 ```python3 secondTierForecasts.py <configFileName> <-l/-d>```<br>
 <b>Configuration file name:</b> <i>secondTierConfig.json</i> <br>
@@ -146,12 +174,12 @@ You can get carbon intensity forecasts of multiple regions together. Just add th
 Change the firstTierConfig.json and secondTierConfig.json files for desired configurations. Below are the fields used in the file along with their meaning:<br>
 PREDICTION_WINDOW_HOURS: Prediction window in hours. (Default: 96) -->
 
-## 6. Developer mode
+## 7. Developer mode
 
 We welcome users to suggest modifications to improve CarbonCast and/or add new features or models to the existing codebase. Please feel free to contact us at dmaji at cs dot umass dot edu with suggestions (or even working patches!)
 <!-- Use the developer branch to make edits and submit a change. -->
 
-## 7. Citing CarbonCast
+## 8. Citing CarbonCast
 If you use CarbonCast, please consider citing our paper. The BibTex format is as follows: <br>
 &nbsp; &nbsp; &nbsp; &nbsp;@inproceedings{maji2022carboncast,<br>
 &nbsp; &nbsp; &nbsp; &nbsp;  title={CarbonCast: multi-day forecasting of grid carbon intensity},<br>
@@ -161,5 +189,5 @@ If you use CarbonCast, please consider citing our paper. The BibTex format is as
 &nbsp; &nbsp; &nbsp; &nbsp;  year={2022}<br>
 &nbsp; &nbsp; &nbsp; &nbsp;}<br>
 
-## 8. Acknowledgements
+## 9. Acknowledgements
 This work is part of the [CarbonFirst](http://carbonfirst.org/) project, supported by NSF grants 2105494, 2021693, and 2020888, and a grant from VMware.
