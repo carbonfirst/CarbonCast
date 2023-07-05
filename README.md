@@ -54,7 +54,7 @@ EU & AUS regions are not updated yet. Only the US regions are up to date. <br>
     * Salt River Project, Arizone ([SRP](https://www.srpnet.com/))
     * Turlock Irrigation District ([TIDC](https://www.tid.org/))
     * Tennessee Valley Authority [TVA](https://www.tva.com/))
-    * Restern Area Power Administration, Rocky ountain Region [WACM](https://www.wapa.gov/regions/RM/Pages/rm.aspx))
+    * Western Area Power Administration, Rocky ountain Region [WACM](https://www.wapa.gov/regions/RM/Pages/rm.aspx))
 * Europe regions (European regions are monitored by [ENTSOE](https://transparency.entsoe.eu/)):
     * Germany (DE)
     * Netherlands (NL)
