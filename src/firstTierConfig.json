@@ -126,7 +126,7 @@
         "PARTIAL_FORECAST_HOURS": 24
     },
 
-    "ERCOT": {
+    "ERCO": {
         "IN_FILE_NAME_PREFIX": "../data/ERCO/fuel_forecast/ERCO_",
         "WEATHER_FORECAST_IN_FILE_NAME": "../data/ERCO/ERCO_weather_forecast.csv",
         "OUT_FILE_NAME_PREFIX": "../data/ERCO/fuel_forecast/ERCO_ANN",
@@ -174,7 +174,7 @@
         "PARTIAL_FORECAST_HOURS": 24
     },
 
-    "NYISO": {
+    "NYIS": {
         "IN_FILE_NAME_PREFIX": "../data/NYIS/fuel_forecast/NYIS_",
         "WEATHER_FORECAST_IN_FILE_NAME": "../data/NYIS/NYIS_weather_forecast.csv",
         "OUT_FILE_NAME_PREFIX": "../data/NYIS/fuel_forecast/NYIS_ANN",

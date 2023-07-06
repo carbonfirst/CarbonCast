@@ -53,8 +53,8 @@ EU & AUS regions are not updated yet. Only the US regions are up to date. <br>
     * Southern Company Services Inc. ([SOCO](https://www.southerncompany.com/about/our-companies.html))
     * Salt River Project, Arizone ([SRP](https://www.srpnet.com/))
     * Turlock Irrigation District ([TIDC](https://www.tid.org/))
-    * Tennessee Valley Authority [TVA](https://www.tva.com/))
-    * Western Area Power Administration, Rocky ountain Region [WACM](https://www.wapa.gov/regions/RM/Pages/rm.aspx))
+    * Tennessee Valley Authority ([TVA](https://www.tva.com/))
+    * Western Area Power Administration, Rocky Mountain Region ([WACM](https://www.wapa.gov/regions/RM/Pages/rm.aspx))
 * Europe regions (European regions are monitored by [ENTSOE](https://transparency.entsoe.eu/)):
     * Germany (DE)
     * Netherlands (NL)

@@ -458,11 +458,12 @@ def fetchWeatherDataByRegion(weatherVariable, fcstCol, pid, isRealTime, startDat
 def writeWeatherValuesToFile(outFilePath, weatherValues, csvFields, weatherVariableFileName, isRealTime=False):
     for region in ISO_BOUNDING_BOX.keys():
         writeMode = "a"
+        regionOutFilePath = ""
         if (isRealTime is True):
-            outFilePath = outFilePath + region + "/weather_data/"
+            regionOutFilePath = outFilePath + region + "/weather_data/"
             writeMode = "w"
-            print(outFilePath+region+"_"+weatherVariableFileName)
-        with open(outFilePath+region+"_"+weatherVariableFileName, writeMode) as regioncsvfile:
+            print(regionOutFilePath+region+"_"+weatherVariableFileName)
+        with open(regionOutFilePath+region+"_"+weatherVariableFileName, writeMode) as regioncsvfile:
             csvwriter = csv.writer(regioncsvfile)
             csvwriter.writerow(csvFields)
             csvwriter.writerows(weatherValues[region])

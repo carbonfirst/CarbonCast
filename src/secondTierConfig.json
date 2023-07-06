@@ -18,8 +18,8 @@
                 "ISNE", "LDWP", "MISO", "NEVP", "NWMT", "NYIS", "PACE", "PACW", "PJM", 
                 "PSCO", "SC", "SCEG", "SOCO", "SPA", "SRP", "SWPP", "TIDC", "TVA", "WACM"],
 
-    "REGIONS_COMPLETED_LIFECYCLE": ["AECI", "AZPS", "BPAT", "CISO", "DUK", "EPE", "ERCO", "FPL", "ISNE", "MISO", "NEVP", 
-                                "NWMT", "NYIS", "PACE", "PJM", "SC", "SCEG", "SOCO", 
+    "REGIONS_COMPLETED_LIFECYCLE": ["AECI", "AZPS", "BPAT", "CISO", "DUK", "EPE", "ERCO", "FPL", "ISNE", "LDWP", "MISO", "NEVP", 
+                                "NWMT", "NYIS", "PACE", "PJM", "SC", "SCEG", "SOCO", "SRP", 
                                 "TIDC", "TVA", "WACM"],
 
     "REGIONS_COMPLETED_DIRECT": ["AECI", "AZPS", "CISO", "DUK", "EPE", "ERCO", "FPL", "ISNE", "LDWP", "MISO", "NEVP", 
@@ -30,8 +30,8 @@
                 "PACW", 
                 "PSCO", "SPA", "SWPP"],
 
-    "REGION_LIFECYCLE": ["IPCO", "LDWP", "PACW", 
-                "PSCO", "SPA", "SRP", "SWPP"],
+    "REGION_LIFECYCLE": ["IPCO", "PACW", 
+                "PSCO", "SPA", "SWPP"],
 
     "TMP_REGION": ["CISO"],
 

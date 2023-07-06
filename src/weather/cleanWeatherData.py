@@ -155,24 +155,24 @@ def calcluateWindSpeed(dataset):
 
 
 def startScript(regionList, fileDir, columnNames, isRealTime, startDate):
-    for iso in regionList:
-        IN_FILE_NAMES = [iso+"_WIND_SPEED.csv", iso+"_TEMP.csv", iso+"_DPT.csv", 
-                         iso+"_DSWRF.csv", iso+"_APCP.csv"]
+    for region in regionList:
+        IN_FILE_NAMES = [region+"_WIND_SPEED.csv", region+"_TEMP.csv", region+"_DPT.csv", 
+                         region+"_DSWRF.csv", region+"_APCP.csv"]
         if (isRealTime is True):
-            fileDir = fileDir + iso + "/weather_data/"
-            IN_FILE_NAMES = [iso+"_WIND_SPEED_"+str(startDate)+".csv", 
-                             iso+"_TEMP_"+str(startDate)+".csv", 
-                             iso+"_DPT_"+str(startDate)+".csv", 
-                             iso+"_DSWRF_"+str(startDate)+".csv", 
-                             iso+"_APCP_"+str(startDate)+".csv"]
-        dataset, dateTime = readFile(fileDir+IN_FILE_NAMES[0])
+            regionFileDir = fileDir + region + "/weather_data/"
+            IN_FILE_NAMES = [region+"_WIND_SPEED_"+str(startDate)+".csv", 
+                             region+"_TEMP_"+str(startDate)+".csv", 
+                             region+"_DPT_"+str(startDate)+".csv", 
+                             region+"_DSWRF_"+str(startDate)+".csv", 
+                             region+"_APCP_"+str(startDate)+".csv"]
+        dataset, dateTime = readFile(regionFileDir+IN_FILE_NAMES[0])
         # writeLocalTimeToFile(dataset, dateTime, OUT_FILE_NAMES[i])
         hourlyDateTime = createHourlyTimeCol(dateTime)
         modifiedDataset = pd.DataFrame(index=hourlyDateTime, 
                 columns=columnNames)
         modifiedDataset.index.name = "datetime"
         for i in range(len(IN_FILE_NAMES)):
-            dataset, dateTime = readFile(fileDir+IN_FILE_NAMES[i])
+            dataset, dateTime = readFile(regionFileDir+IN_FILE_NAMES[i])
             colName = modifiedDataset.columns.values[i]
             modifiedDataset[colName].iloc[0] = 0
             if "dswrf" in colName:
@@ -189,9 +189,9 @@ def startScript(regionList, fileDir, columnNames, isRealTime, startDate):
                 modifiedDataset = createForecastColumns(dataset, modifiedDataset, colName)
             modifiedDataset[colName].iloc[0] = modifiedDataset[colName].iloc[1]
             
-        outFileName = fileDir+iso+"_aggregated_weather_data.csv"
+        outFileName = regionFileDir+region+"_aggregated_weather_data.csv"
         if (startDate is not None):
-            outFileName = fileDir+"/../"+iso+"_weather_forecast_"+str(startDate)+".csv"
+            outFileName = regionFileDir+"/../"+region+"_weather_forecast_"+str(startDate)+".csv"
         modifiedDataset.to_csv(outFileName)
     return
 

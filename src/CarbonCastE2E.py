@@ -34,11 +34,13 @@ import cisoSolarWindForecastParser as cisosolwndfcst
 REAL_TIME_FILE_DIR = "../real_time/"
 REAL_TIME_WEATHER_FILE_DIR = "../real_time/weather_data/"
 
+REGIONS_HAVING_ERRORS = ["SRP", "WACM"] # TODO: Need to check and fix this.
+
 US_REGIONS = ["AECI", "AZPS", "BPAT", "CISO", "DUK", "EPE", "ERCO", "FPL", 
                 "ISNE", "LDWP", "MISO", "NEVP", "NWMT", "NYIS", "PACE", "PJM", 
-                "SC", "SCEG", "SOCO", "SRP", "TIDC", "TVA", "WACM"] # add US regions here
+                "SC", "SCEG", "SOCO", "TIDC", "TVA"] # add US regions here
 
-US_REGIONS = ["CISO"]
+# US_REGIONS = ["CISO"]
 
 EU_REGIONS = [] # add EU regions here
 
