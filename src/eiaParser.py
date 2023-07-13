@@ -213,24 +213,29 @@ if __name__ == "__main__":
     startDate = sys.argv[1] # "2022-01-01" #"2019-01-01"
     numDays = int(sys.argv[2]) #368 #1096
 
+    print("entering for-loop")
+
     for balAuth in EIA_BAL_AUTH_LIST:
         # fetch electricity data
         fullDataset = getELectricityProductionDataFromEIA(balAuth, startDate, numDays, DAY_JUMP=8)
         # DM: For DAY_JUMP > 1, there is a bug while filling missing hours
-        filedir = os.path.dirname(__file__)
-        csv_path = os.path.normpath(os.path.join(filedir, f"./eiaData/{balAuth}.csv"))
+        parentdir = os.path.normpath(os.path.join(os.getcwd(), os.pardir)) # goes to CarbonCast folder
+        filedir = os.path.normpath(os.path.join(parentdir, f"./data/{balAuth}"))
+        csv_path = os.path.normpath(os.path.join(filedir, f"./{balAuth}.csv"))
         with open(csv_path, 'w') as f:
             fullDataset.to_csv(f, index=False)
         
         # clean electricity data
-        dataset = pd.read_csv("./eiaData/"+balAuth+".csv", header=0, 
+        dataset = pd.read_csv(csv_path, header=0, 
                             parse_dates=["UTC time"], index_col=["UTC time"])
         cleanedDataset = cleanElectricityProductionDataFromEIA(dataset, balAuth)
-        cleanedDataset.to_csv("./eiaData/"+balAuth+"_clean.csv")
+        cleanedDataset.to_csv(filedir+balAuth+"_clean.csv")
 
         # adjust source columns
-        dataset = pd.read_csv("./eiaData/"+balAuth+"_clean.csv", header=0, index_col=["UTC time"])
+        dataset = pd.read_csv(filedir+"/"+balAuth+"_clean.csv", header=0, index_col=["UTC time"])
         modifiedDataset = adjustColumns(dataset, balAuth)
-        modifiedDataset.to_csv("./eiaData/"+balAuth+"_clean_mod.csv")
+        modifiedDataset.to_csv(filedir+"/"+balAuth+"_clean_mod.csv")
+
+        print("reached the end of for-loop for " + balAuth)
 
     # concatDataset()

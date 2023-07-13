@@ -60,22 +60,16 @@ ENTSOE_BAL_AUTH_LIST = ["AL", "AT", "BE", "BG", "HR", "CZ", "DK", "DK-DK2", "EE"
 # get production data by source type from ENTSOE API
 def getProductionDataBySourceTypeDataFromENTSOE(ba, curDate, curEndDate):
     print(ba)
-    startDate = curDate+"T00"
-    endDate = curEndDate+"T23"
+
+    # necessary for client i think
+    startDate = pd.Timestamp(curDate, tz='UTC')
+    endDate = pd.Timestamp(curEndDate, tz='UTC')
+
     print(startDate, endDate)
 
     client = EntsoePandasClient(api_key=ENTSOE_API_KEY)
-
-    dataset = client.query_generation(countryCode, start=startTime,end=endTime, psr_type=None)
-    return dataset, startTime
-
-    print(resp.url)
-    if (resp.status_code != 200):
-        print("Error! Code: ", resp.status_code)
-        print("Error! Message: ", resp.text)
-        print("Error! Reason: ", resp.reason)
-    responseData = resp.json()["response"]["data"]
-    return responseData
+    dataset = client.query_generation(ba, start=startDate,end=endDate, psr_type=None)
+    return dataset, startDate
 
 # parse production data by source type from ENTSOE API
 def parseENTSOEProductionDataBySourceType(data, startDate, electricitySources, numSources):
@@ -85,6 +79,9 @@ def parseENTSOEProductionDataBySourceType(data, startDate, electricitySources, n
     # startDate = startDate + " 00:00"
     # electricityBySource.append(startDate)
     # dateObj = datetime.strptime(startDate, "%Y-%m-%d %H:%M")
+
+
+
     if (len(data) == 0):
         # empty data fetched from ENTSOE. For now, make everything Nan
         for hour in range(24):
@@ -125,7 +122,7 @@ def parseENTSOEProductionDataBySourceType(data, startDate, electricitySources, n
             electricityProductionData.append(hourlyElectricityData)
             # print(hourlyElectricityData)
             hourlyElectricityData = [curDate.split("T")[0]+" "+curHour.zfill(2)+":00"]
-            electricityBySource[EIA_SOURCE_MAP[electricitySourceData["fueltype"]]]= electricitySourceData["value"]
+            electricityBySource[ENTSOE_SOURCE_MAP[electricitySourceData["fueltype"]]]= electricitySourceData["value"]
     for source in electricitySources:
         hourlyElectricityData.append(electricityBySource[source])
     electricityProductionData.append(hourlyElectricityData)
@@ -145,30 +142,42 @@ def parseENTSOEProductionDataBySourceType(data, startDate, electricitySources, n
     dataset = pd.DataFrame(electricityProductionData, columns=datasetColumns)
     return dataset
 
-def getELectricityProductionDataFromENTSOE(balAuth, startDate, numDays, DAY_JUMP):
-    # DM: For DAY_JUMP > 1, there is a bug while filling missing hours
-    fullDataset = pd.DataFrame()
-    startDateObj = datetime.strptime(startDate, "%Y-%m-%d")
-    electricitySources = set()
-    numSources = 0
-    for days in range(0, numDays, DAY_JUMP):
+def getElectricityProductionDataFromENTSOE(balAuth, startDate, numDays, DAY_JUMP):
+    
+    fullDataset = pd.DataFrame() # where to save the whole dataset
+    startDateObj = datetime.strptime(startDate, "%Y-%m-%d") # input date converted to yyyy-mm-dd format
+    electricitySources = set() # for the loop
+    numSources = 0 # for the loop
+
+    print("start date:", startDate)
+
+
+    for days in range(0, numDays, DAY_JUMP): # DAY_JUMP: # days of data got each time
+
         endDateObj = startDateObj + timedelta(days=DAY_JUMP-1)
         endDate = endDateObj.strftime("%Y-%m-%d")
-        data = getProductionDataBySourceTypeDataFromEIA(balAuth, startDate, endDate)
+        data = getProductionDataBySourceTypeDataFromENTSOE(balAuth, startDate, endDate)
+                
+        # if 1st day, add source to the list of sources & adjust number; FIX
         if (days == 0): # assuming all data is correctly available for the first day at least
             for electricitySourceData in data:
-                electricitySources.add(EIA_SOURCE_MAP[electricitySourceData["fueltype"]])
+                electricitySources.add(ENTSOE_SOURCE_MAP[ENTSOE_SOURCES[colVal]])
                 numSources = len(electricitySources)
-        dataset = parseEIAProductionDataBySourceType(data, startDate, electricitySources, numSources)
+        
+        dataset = parseENTSOEProductionDataBySourceType(data, startDate, electricitySources, numSources)
         print(dataset)
+
         if (days == 0):
             fullDataset = dataset.copy()
         else:
             if (days%60 == 0):
                 time.sleep(1)
             fullDataset = pd.concat([fullDataset, dataset])
+
+        # startDate incremented    
         startDateObj = startDateObj + timedelta(days=DAY_JUMP)
         startDate = startDateObj.strftime("%Y-%m-%d")
+
         # print(fullDataset.tail(2))
 
     return fullDataset
@@ -240,22 +249,26 @@ if __name__ == "__main__":
 
     for balAuth in ENTSOE_BAL_AUTH_LIST:
         # fetch electricity data
-        fullDataset = getELectricityProductionDataFromENTSOE(balAuth, startDate, numDays, DAY_JUMP=8)
+        fullDataset = getElectricityProductionDataFromENTSOE(balAuth, startDate, numDays, DAY_JUMP=8)
         # DM: For DAY_JUMP > 1, there is a bug while filling missing hours
-        filedir = os.path.dirname(__file__)
-        csv_path = os.path.normpath(os.path.join(filedir, f"./entsoeData/{balAuth}.csv"))
-        with open(csv_path, 'w') as f:
+
+        # figure out how to save folders in data folder from src codes
+        parentdir = os.path.normpath(os.path.join(os.getcwd(), os.pardir)) # goes to CarbonCast folder
+        filedir = os.path.normpath(os.path.join(parentdir, f"./data/CHAE_DATA/{balAuth}"))
+        
+        csv_path = os.path.normpath(os.path.join(filedir, f"./{balAuth}.csv"))
+        with open(csv_path, 'w') as f: # open as f means opens as file
             fullDataset.to_csv(f, index=False)
         
         # clean electricity data
-        dataset = pd.read_csv("./eiaData/"+balAuth+".csv", header=0, 
+        dataset = pd.read_csv(csv_path, header=0, 
                             parse_dates=["UTC time"], index_col=["UTC time"])
-        cleanedDataset = cleanElectricityProductionDataFromEIA(dataset, balAuth)
-        cleanedDataset.to_csv("./eiaData/"+balAuth+"_clean.csv")
+        cleanedDataset = cleanElectricityProductionDataFromENTSOE(dataset, balAuth)
+        cleanedDataset.to_csv(os.path.normpath(os.path.join(filedir, f"{balAuth}_clean.csv"))) # see if string suffices
 
         # adjust source columns
-        dataset = pd.read_csv("./eiaData/"+balAuth+"_clean.csv", header=0, index_col=["UTC time"])
+        dataset = pd.read_csv(filedir+f"/{balAuth}_clean.csv", header=0, index_col=["UTC time"])
         modifiedDataset = adjustColumns(dataset, balAuth)
-        modifiedDataset.to_csv("./eiaData/"+balAuth+"_clean_mod.csv")
+        modifiedDataset.to_csv(filedir+f"./{balAuth}_clean_mod.csv")
 
     # concatDataset()
