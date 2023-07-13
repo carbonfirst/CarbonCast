@@ -63,16 +63,14 @@ def getProductionDataBySourceTypeDataFromENTSOE(ba, curDate, curEndDate):
     print(ba)
 
     # necessary for client i think
-    # startDate = pd.Timestamp(curDate, tz='UTC').strftime("%Y-%m-%d")+"T00"
-    # endDate = pd.Timestamp(curEndDate, tz='UTC').strftime("%Y-%m-%d")+"T23"
     startDate = pd.Timestamp(curDate, tz='UTC')
-    endDate = pd.Timestamp(curEndDate, tz='UTC')
+    endDate = pd.Timestamp(curEndDate, tz='UTC') + pd.Timedelta(hours=23)
 
     print(startDate, endDate)
 
     client = EntsoePandasClient(api_key=ENTSOE_API_KEY)
-    dataset = client.query_generation('SE', start=startDate,end=endDate, psr_type=None) # fix back to ba later
-    print("dataset", dataset, dataset.columns)
+    dataset = client.query_generation('SE', start=startDate, end=endDate, psr_type=None) # fix back to ba later
+
     return dataset
 
 # parse production data by source type from ENTSOE API
@@ -176,10 +174,11 @@ def getElectricityProductionDataFromENTSOE(balAuth, startDate, numDays, DAY_JUMP
     print("start date:", startDate)
 
     for days in range(0, numDays, DAY_JUMP): # DAY_JUMP: # days of data got each time
-
+        print("inside for-loop")
         endDateObj = startDateObj + timedelta(days=DAY_JUMP-1)
         endDate = endDateObj.strftime("%Y-%m-%d")
         data = getProductionDataBySourceTypeDataFromENTSOE(balAuth, startDate, endDate)
+        print("returned from getProductionData")
         # building the list of sources; names synced with those in eiaParser
         if (numSources <= 10): # only run the for-loop if there might be new sources added to the list
             for i in range(len(data.columns.values)):
