@@ -53,9 +53,9 @@ ENTSOE_SOURCE_MAP = {
     "UNK": "unknown",
     }
 
-ENTSOE_BAL_AUTH_LIST = ["AL", "AT", "BE", "BG", "HR", "CZ", "DK", "DK-DK2", "EE", "FI", 
-                        "FR", "DE", "GB", "GR", "HU", "IE", "IT", "LV", "LT", "NL",
-                        "PL", "PT", "RO", "RS", "SK", "SI", "ES", "SE", "CH"]  
+ENTSOE_BAL_AUTH_LIST = ['AL', 'AT', 'BE', 'BG', 'HR', 'CZ', 'DK', 'DK-DK2', 'EE', 'FI', 
+                        'FR', 'DE', 'GB', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'NL',
+                        'PL', 'PT', 'RO', 'RS', 'SK', 'SI', 'ES', 'SE', 'CH']  
 
 # get production data by source type from ENTSOE API
 def getProductionDataBySourceTypeDataFromENTSOE(ba, curDate, curEndDate):
@@ -68,18 +68,21 @@ def getProductionDataBySourceTypeDataFromENTSOE(ba, curDate, curEndDate):
     print(startDate, endDate)
 
     client = EntsoePandasClient(api_key=ENTSOE_API_KEY)
-    dataset = client.query_generation(ba, start=startDate,end=endDate, psr_type=None)
-    return dataset, startDate
+    dataset = client.query_generation('DE', start=startDate,end=endDate, psr_type=None) # fix back to ba later
+
+    print("dataset printed below")
+    print(dataset)
+
+    return dataset
 
 # parse production data by source type from ENTSOE API
-def parseENTSOEProductionDataBySourceType(data, startDate, electricitySources, numSources):
+def parseENTSOEProductionDataBySourceType(data, startDate, electricitySources, numSources):   
     electricityBySource = {}
     hourlyElectricityData = []
     electricityProductionData = []
     # startDate = startDate + " 00:00"
     # electricityBySource.append(startDate)
     # dateObj = datetime.strptime(startDate, "%Y-%m-%d %H:%M")
-
 
 
     if (len(data) == 0):
@@ -96,17 +99,22 @@ def parseENTSOEProductionDataBySourceType(data, startDate, electricitySources, n
         # print(electricityProductionData)
         dataset = pd.DataFrame(electricityProductionData, columns=datasetColumns)
         return dataset
-    curDate = data[0]["period"]
+
+    curDate = data.index[0].astimezone(tz='UTC')
+    #curDate = curTime.strftime("%Y-%m-%d") # above used to be curTime
 
     # checking if time starts from 00:00
-    curHour = curDate.split("T")[1]
-    for hour in range(int(curHour)):
-        hourlyElectricityData = [curDate.split("T")[0]+" "+str(hour).zfill(2)+":00"]
+    #curHour = curTime.strftime("%H:%M")
+    curHour = curDate.hour
+    for hour in range(int(curHour)): 
+        hourlyElectricityData = [curDate]
         for j in range(numSources):
             hourlyElectricityData.append(np.nan)
         electricityProductionData.append(hourlyElectricityData)
     hourlyElectricityData = []
-    hourlyElectricityData.append(curDate.split("T")[0]+" "+curHour.zfill(2)+":00")
+    hourlyElectricityData.append(curDate)
+
+    # good/debugged here and up
 
     for electricitySourceData in data:
         if (electricitySourceData["period"] == curDate):
@@ -151,20 +159,28 @@ def getElectricityProductionDataFromENTSOE(balAuth, startDate, numDays, DAY_JUMP
 
     print("start date:", startDate)
 
-
     for days in range(0, numDays, DAY_JUMP): # DAY_JUMP: # days of data got each time
 
         endDateObj = startDateObj + timedelta(days=DAY_JUMP-1)
         endDate = endDateObj.strftime("%Y-%m-%d")
         data = getProductionDataBySourceTypeDataFromENTSOE(balAuth, startDate, endDate)
-                
-        # if 1st day, add source to the list of sources & adjust number; FIX
-        if (days == 0): # assuming all data is correctly available for the first day at least
-            for electricitySourceData in data:
-                electricitySources.add(ENTSOE_SOURCE_MAP[ENTSOE_SOURCES[colVal]])
-                numSources = len(electricitySources)
+        
+        # building the list of sources; names synced with those in eiaParser
+        if (numSources >= 10): # only run the for-loop if there might be new sources added to the list
+            for i in range(len(data.columns.values)):
+                colVal = data.columns.values[i]
+                if (type(colVal) is tuple):
+                    colVal = colVal[0]
+                sourceKey = ENTSOE_SOURCES[colVal]
+                if (sourceKey == "STOR"):
+                    continue # Ignoring storage for now
+                source = ENTSOE_SOURCE_MAP[sourceKey]
+                electricitySources.add(source)
+            numSources = len(electricitySources)
+            sources = list(electricitySources)
         
         dataset = parseENTSOEProductionDataBySourceType(data, startDate, electricitySources, numSources)
+        print("printing dataset below")
         print(dataset)
 
         if (days == 0):
@@ -179,10 +195,10 @@ def getElectricityProductionDataFromENTSOE(balAuth, startDate, numDays, DAY_JUMP
         startDate = startDateObj.strftime("%Y-%m-%d")
 
         # print(fullDataset.tail(2))
-
     return fullDataset
 
 def concatDataset():
+    # fix directories later when in use
     for balAuth in ENTSOE_BAL_AUTH_LIST:
         d1 = pd.read_csv("./eiaData/2019-2021/"+balAuth+".csv", header=0)
         d2 = pd.read_csv("./eiaData/2022/"+balAuth+".csv", header=0)
@@ -249,10 +265,14 @@ if __name__ == "__main__":
 
     for balAuth in ENTSOE_BAL_AUTH_LIST:
         # fetch electricity data
+        print("start of for-loop for " + balAuth)
         fullDataset = getElectricityProductionDataFromENTSOE(balAuth, startDate, numDays, DAY_JUMP=8)
+        print(fullDataset)
         # DM: For DAY_JUMP > 1, there is a bug while filling missing hours
 
-        # figure out how to save folders in data folder from src codes
+
+
+        # saving files from src folder (should work)
         parentdir = os.path.normpath(os.path.join(os.getcwd(), os.pardir)) # goes to CarbonCast folder
         filedir = os.path.normpath(os.path.join(parentdir, f"./data/CHAE_DATA/{balAuth}"))
         
@@ -264,11 +284,13 @@ if __name__ == "__main__":
         dataset = pd.read_csv(csv_path, header=0, 
                             parse_dates=["UTC time"], index_col=["UTC time"])
         cleanedDataset = cleanElectricityProductionDataFromENTSOE(dataset, balAuth)
-        cleanedDataset.to_csv(os.path.normpath(os.path.join(filedir, f"{balAuth}_clean.csv"))) # see if string suffices
+        cleanedDataset.to_csv(filedir+f"/{balAuth}_clean.csv") # see if string suffices
 
         # adjust source columns
         dataset = pd.read_csv(filedir+f"/{balAuth}_clean.csv", header=0, index_col=["UTC time"])
         modifiedDataset = adjustColumns(dataset, balAuth)
-        modifiedDataset.to_csv(filedir+f"./{balAuth}_clean_mod.csv")
+        modifiedDataset.to_csv(filedir+f"/{balAuth}_clean_mod.csv")
+
+        print("reached the end of for-loop for " + balAuth)
 
     # concatDataset()
