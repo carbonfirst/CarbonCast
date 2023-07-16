@@ -1,4 +1,4 @@
-# initially copied from eiaParser.py in v3.0 branch then tweaked
+# script copied from eiaParser.py in v3.0 branch then modified
 import os
 import requests
 import pandas as pd
@@ -53,23 +53,25 @@ ENTSOE_SOURCE_MAP = {
     "UNK": "unknown",
     }
 
-# ENTSOE_BAL_AUTH_LIST = ['AL', 'AT', 'BE', 'BG', 'HR', 'CZ', 'DK', 'DK-DK2', 'EE', 'FI', 
-#                         'FR', 'DE', 'GB', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'NL',
-#                         'PL', 'PT', 'RO', 'RS', 'SK', 'SI', 'ES', 'SE', 'CH'] 
-ENTSOE_BAL_AUTH_LIST = ['SE']
+ENTSOE_BAL_AUTH_LIST = ['AL', 'AT', 'BE', 'BG', 'HR', 'CZ', 'DK', 'DK-DK2', 'EE', 'FI', 
+                         'FR', 'DE', 'GB', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'NL',
+                         'PL', 'PT', 'RO', 'RS', 'SK', 'SI', 'ES', 'SE', 'CH'] 
+# ENTSOE_BAL_AUTH_LIST = ['SE'] # working with 1hr intervals
+# ENTSOE_BAL_AUTH_LIST = ['DE'] # working with a country of 15-min interval data
 
 # get production data by source type from ENTSOE API
 def getProductionDataBySourceTypeDataFromENTSOE(ba, curDate, curEndDate):
     print(ba)
 
-    # necessary for client i think
     startDate = pd.Timestamp(curDate, tz='UTC')
-    endDate = pd.Timestamp(curEndDate, tz='UTC') + pd.Timedelta(hours=23)
+    endDate = pd.Timestamp(curEndDate, tz='UTC') + pd.Timedelta(hours=23, minutes=45) # FIX; appropriate end time
 
     print(startDate, endDate)
 
     client = EntsoePandasClient(api_key=ENTSOE_API_KEY)
-    dataset = client.query_generation('SE', start=startDate, end=endDate, psr_type=None) # fix back to ba later
+    dataset = client.query_generation(ba, start=startDate, end=endDate, psr_type=None)
+
+    print("dataset: ", dataset)
 
     return dataset
 
@@ -111,7 +113,15 @@ def parseENTSOEProductionDataBySourceType(data, startDate, electricitySources, n
     hourlyElectricityData = []
     hourlyElectricityData.append(curDate)
 
-    # iterate through each row; DEBUG & account for 15-min data
+    # include a function adding up 15-min interval data to an hour; assuming only 1hr & 15min intervals in data
+    if (data.index[1].minute == 15):
+        data = adjust15MinIntervalData(data)
+    if (data.index[1].minute == 0):
+        print("hour interval")
+    else: # safety code for detecting intervals other than 1hr or 15min
+        print("some other interval other than ")
+        exit(0)
+
     for row in range(len(data)): 
         # iterate through each entry in the row
         for column in range(len(data.columns)):
@@ -132,7 +142,6 @@ def parseENTSOEProductionDataBySourceType(data, startDate, electricitySources, n
             else: # debug this else statement; entered when time ahead of curDate; new time/row
                 curDate = time
                 curHour = data.index[row].astimezone(tz='UTC').strftime("%H")
-                print(curHour)
                 for src in electricitySources:
                     if (src not in electricityBySource.keys()): # if was not already filled at the previous time
                         electricityBySource[src] = np.nan 
@@ -147,7 +156,6 @@ def parseENTSOEProductionDataBySourceType(data, startDate, electricitySources, n
     for source in electricitySources:
         hourlyElectricityData.append(electricityBySource[source])
     electricityProductionData.append(hourlyElectricityData)
-    print("electricityProductionData:", electricityProductionData)
     
     # checking if time ends at 23:00
     for hour in range(int(curHour)+1, 24):
@@ -174,11 +182,9 @@ def getElectricityProductionDataFromENTSOE(balAuth, startDate, numDays, DAY_JUMP
     print("start date:", startDate)
 
     for days in range(0, numDays, DAY_JUMP): # DAY_JUMP: # days of data got each time
-        print("inside for-loop")
         endDateObj = startDateObj + timedelta(days=DAY_JUMP-1)
         endDate = endDateObj.strftime("%Y-%m-%d")
         data = getProductionDataBySourceTypeDataFromENTSOE(balAuth, startDate, endDate)
-        print("returned from getProductionData")
         # building the list of sources; names synced with those in eiaParser
         if (numSources <= 10): # only run the for-loop if there might be new sources added to the list
             for i in range(len(data.columns.values)):
@@ -191,11 +197,11 @@ def getElectricityProductionDataFromENTSOE(balAuth, startDate, numDays, DAY_JUMP
                 source = ENTSOE_SOURCE_MAP[sourceKey]
                 electricitySources.add(source)
             numSources = len(electricitySources)
-        print(numSources)
+        # print(numSources)
 
         dataset = parseENTSOEProductionDataBySourceType(data, startDate, electricitySources, numSources)
-        print("printing dataset below")
-        print(dataset)
+        # print("printing dataset below")
+        # print(dataset)
 
         if (days == 0):
             fullDataset = dataset.copy()
@@ -208,8 +214,7 @@ def getElectricityProductionDataFromENTSOE(balAuth, startDate, numDays, DAY_JUMP
         startDateObj = startDateObj + timedelta(days=DAY_JUMP)
         startDate = startDateObj.strftime("%Y-%m-%d")
 
-        print(fullDataset.tail(2))
-    print("out of for loop")
+        # print(fullDataset.tail(2))
     return fullDataset
 
 def concatDataset():
@@ -222,18 +227,18 @@ def concatDataset():
     return
 
 def cleanElectricityProductionDataFromENTSOE(dataset, balAuth):
-    dataset = dataset.astype(np.float64)
-    dataset[dataset<0] = 0
+    dataset = dataset.astype(np.float64) # converting type of data to float64
+    dataset[dataset<0] = 0 # converting negative numbers to 0; not sure why necessary
     for i in range(len(dataset)):
-        for j in range(len(dataset.columns)):
-            if (pd.isna(dataset.iloc[i,j]) is True or dataset.iloc[i,j] == np.nan):
-                prevHour = dataset.iloc[i-1, j] if (i-1)>=0 else np.nan
+        for j in range(len(dataset.columns)): # for each entry
+            if (pd.isna(dataset.iloc[i,j]) is True or dataset.iloc[i,j] == np.nan): # if values missing
+                prevHour = dataset.iloc[i-1, j] if (i-1)>=0 else np.nan # get values from previous & next hour/day
                 prevDay = dataset.iloc[i-24, j] if (i-24)>=0 else np.nan
                 nextHour = dataset.iloc[i+1, j] if (i+1)<len(dataset) else np.nan
                 nextDay = dataset.iloc[i+24, j] if (i+24)<len(dataset) else np.nan
                 numerator = 0
                 denominator = 0
-                if (pd.isna(prevHour) is False):
+                if (pd.isna(prevHour) is False): # fill the dates with close hours/days (taking average)
                     numerator += prevHour
                     denominator+=1
                 if (pd.isna(prevDay) is False):
@@ -245,32 +250,50 @@ def cleanElectricityProductionDataFromENTSOE(dataset, balAuth):
                 if (pd.isna(nextDay) is False):
                     numerator += nextDay
                     denominator+=1
-                dataset.iloc[i, j] = (numerator/denominator) if denominator>0 else 0
+                dataset.iloc[i, j] = (numerator/denominator) if denominator>0 else 0 # if no data found, just set to 0
                 # print(balAuth, dataset.index.values[i], prevHour, prevDay, nextHour, nextDay, dataset.iloc[i, j])
                 # filling missing values by taking average of prevHour, prevDay same hour, 
                 # nextHour & nextDay same hour
 
-    print(balAuth)
-    print(dataset.head())
+    # print(balAuth)
+    # print(dataset.head())
     return dataset
 
 def adjustColumns(dataset, balAuth):
     sources = ["coal", "nat_gas", "nuclear", "oil", "hydro", "solar", "wind", "biomass", "geothermal", "unknown"]
     modifiedSources = []
     print(dataset.shape)
-    modifiedDataset = np.zeros(dataset.shape)
+    modifiedDataset = np.zeros(dataset.shape) # return a new array of the input shape
     idx = 0
     for source in sources:
-        print(source)
-        if (source in dataset.columns):
+        if (source in dataset.columns): # create columns for new dataset
             modifiedSources.append(source)
-            val = dataset[source].values
-            modifiedDataset[:, idx] = val
+            val = dataset[source].values # get all values from old dataset
+            modifiedDataset[:, idx] = val # all rows of 0th column (initially) iterated
             idx += 1
     print(modifiedSources)
     modifiedDataset = pd.DataFrame(modifiedDataset, columns=modifiedSources, index=dataset.index)
     print(modifiedDataset.shape)
     return modifiedDataset
+
+def adjust15MinIntervalData(data): # input = pandas dataframe
+    print("15-min interval method entered")
+    newDataframe = pd.DataFrame(columns=data.columns)
+    counter = 0
+    
+    for column in range(len(data.columns)):
+        modifiedValues = []
+        for row in range(0, len(data), 4): # take 4 rows at a time
+            newValue = data.iloc[row][column] + data.iloc[row+1][column] + data.iloc[row+2][column] + data.iloc[row+3][column]
+            modifiedValues.append(newValue)
+        newDataframe[data.columns.values[column]] = pd.Series(modifiedValues)
+
+    for row in range(0, len(data), 4):
+        newDataframe.rename(index={counter: data.index[row]}, inplace=True)
+        counter = counter + 1
+
+    return newDataframe
+
 
 if __name__ == "__main__":
     if (len(sys.argv)!=3):
@@ -282,16 +305,13 @@ if __name__ == "__main__":
 
     for balAuth in ENTSOE_BAL_AUTH_LIST:
         # fetch electricity data
-        print("start of for-loop for " + balAuth)
         fullDataset = getElectricityProductionDataFromENTSOE(balAuth, startDate, numDays, DAY_JUMP=1)
         # print(fullDataset)
         # DM: For DAY_JUMP > 1, there is a bug while filling missing hours
 
-
-
         # saving files from src folder (should work)
         parentdir = os.path.normpath(os.path.join(os.getcwd(), os.pardir)) # goes to CarbonCast folder
-        filedir = os.path.normpath(os.path.join(parentdir, f"./data/CHAE_DATA/{balAuth}"))
+        filedir = os.path.normpath(os.path.join(parentdir, f"./data/EU_DATA/{balAuth}"))
         
         csv_path = os.path.normpath(os.path.join(filedir, f"./{balAuth}.csv"))
         with open(csv_path, 'w') as f: # open as f means opens as file
