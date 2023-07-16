@@ -69,11 +69,16 @@ def getProductionDataBySourceTypeDataFromENTSOE(ba, curDate, curEndDate):
     print(startDate, endDate)
 
     client = EntsoePandasClient(api_key=ENTSOE_API_KEY)
-    dataset = client.query_generation(ba, start=startDate, end=endDate, psr_type=None)
 
-    print("dataset: ", dataset)
-
-    return dataset
+    try:
+        dataset = client.query_generation(ba, start=startDate, end=endDate, psr_type=None)
+        empty = False
+    except: # try to do only NoMatchingDataError
+        # fillEmptyData(startDate, pd.Timestamp(curEndDate, tz='UTC'))
+        dataset = pd.DataFrame()
+        empty = True
+    print(dataset)
+    return dataset, empty
 
 # parse production data by source type from ENTSOE API
 def parseENTSOEProductionDataBySourceType(data, startDate, electricitySources, numSources):   
@@ -115,11 +120,13 @@ def parseENTSOEProductionDataBySourceType(data, startDate, electricitySources, n
 
     # include a function adding up 15-min interval data to an hour; assuming only 1hr & 15min intervals in data
     if (data.index[1].minute == 15):
-        data = adjust15MinIntervalData(data)
-    if (data.index[1].minute == 0):
+        data = adjustMinIntervalData(data, interval=15)
+    elif (data.index[1].minute == 30):
+        data = adjustMinIntervalData(data, interval=30)
+    elif (data.index[1].minute == 0):
         print("hour interval")
     else: # safety code for detecting intervals other than 1hr or 15min
-        print("some other interval other than ")
+        print("some other interval")
         exit(0)
 
     for row in range(len(data)): 
@@ -170,6 +177,7 @@ def parseENTSOEProductionDataBySourceType(data, startDate, electricitySources, n
 
     # print(electricityProductionData)
     dataset = pd.DataFrame(electricityProductionData, columns=datasetColumns)
+
     return dataset
 
 def getElectricityProductionDataFromENTSOE(balAuth, startDate, numDays, DAY_JUMP):
@@ -184,9 +192,12 @@ def getElectricityProductionDataFromENTSOE(balAuth, startDate, numDays, DAY_JUMP
     for days in range(0, numDays, DAY_JUMP): # DAY_JUMP: # days of data got each time
         endDateObj = startDateObj + timedelta(days=DAY_JUMP-1)
         endDate = endDateObj.strftime("%Y-%m-%d")
-        data = getProductionDataBySourceTypeDataFromENTSOE(balAuth, startDate, endDate)
+        data, empty = getProductionDataBySourceTypeDataFromENTSOE(balAuth, startDate, endDate)
         # building the list of sources; names synced with those in eiaParser
-        if (numSources <= 10): # only run the for-loop if there might be new sources added to the list
+        if (empty):
+            numSources = 10
+            electricitySources = ["coal", "nat_gas", "nuclear", "oil", "hydro", "solar", "wind", "biomass", "geothermal", "unknown"]
+        elif (numSources <= 10): # only run the for-loop if there might be new sources added to the list
             for i in range(len(data.columns.values)):
                 colVal = data.columns.values[i]
                 if (type(colVal) is tuple):
@@ -276,24 +287,51 @@ def adjustColumns(dataset, balAuth):
     print(modifiedDataset.shape)
     return modifiedDataset
 
-def adjust15MinIntervalData(data): # input = pandas dataframe
-    print("15-min interval method entered")
+def adjustMinIntervalData(data, interval): # input = pandas dataframe
     newDataframe = pd.DataFrame(columns=data.columns)
     counter = 0
-    
-    for column in range(len(data.columns)):
-        modifiedValues = []
-        for row in range(0, len(data), 4): # take 4 rows at a time
-            newValue = data.iloc[row][column] + data.iloc[row+1][column] + data.iloc[row+2][column] + data.iloc[row+3][column]
-            modifiedValues.append(newValue)
-        newDataframe[data.columns.values[column]] = pd.Series(modifiedValues)
 
-    for row in range(0, len(data), 4):
-        newDataframe.rename(index={counter: data.index[row]}, inplace=True)
-        counter = counter + 1
+    if (interval == 15):
+        for column in range(len(data.columns)):
+            modifiedValues = []
+            for row in range(0, len(data), 4): # take 4 rows at a time
+                newValue = data.iloc[row][column] + data.iloc[row+1][column] + data.iloc[row+2][column] + data.iloc[row+3][column]
+                modifiedValues.append(newValue)
+            newDataframe[data.columns.values[column]] = pd.Series(modifiedValues)
+        for row in range(0, len(data), 4):
+            newDataframe.rename(index={counter: data.index[row]}, inplace=True)
+            counter = counter + 1
+
+    elif (interval == 30):
+        for column in range(len(data.columns)):
+            modifiedValues = []
+            for row in range(0, len(data), 2): # take 4 rows at a time
+                newValue = data.iloc[row][column] + data.iloc[row+1][column]
+                modifiedValues.append(newValue)
+            newDataframe[data.columns.values[column]] = pd.Series(modifiedValues)
+        for row in range(0, len(data), 2):
+                newDataframe.rename(index={counter: data.index[row]}, inplace=True)
+                counter = counter + 1
+        print("dataframe", newDataframe)
+
 
     return newDataframe
 
+# def fillEmptyData(startDate):
+
+#     # empty data fetched from ENTSOE. For now, make everything Nan
+#     for hour in range(24):
+#         hourlyElectricityData = [startDate+" "+str(hour).zfill(2)+":00"]
+#         for j in range(numSources):
+#             hourlyElectricityData.append(np.nan)
+#         electricityProductionData.append(hourlyElectricityData)
+#     datasetColumns = ["UTC time"]
+#     for source in electricitySources:
+#         datasetColumns.append(source)
+
+#     # print(electricityProductionData)
+#     dataset = pd.DataFrame(electricityProductionData, columns=datasetColumns)
+#     return dataset
 
 if __name__ == "__main__":
     if (len(sys.argv)!=3):
