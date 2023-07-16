@@ -53,11 +53,11 @@ ENTSOE_SOURCE_MAP = {
     "UNK": "unknown",
     }
 
-# ENTSOE_BAL_AUTH_LIST = ['AL', 'AT', 'BE', 'BG', 'HR', 'CZ', 'DK', 'DK-DK2', 'EE', 'FI', 
-#                          'FR', 'DE', 'GB', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'NL',
-#                          'PL', 'PT', 'RO', 'RS', 'SK', 'SI', 'ES', 'SE', 'CH'] 
+ENTSOE_BAL_AUTH_LIST = ['AL', 'AT', 'BE', 'BG', 'HR', 'CZ', 'DK', 'DK-DK2', 'EE', 'FI', 
+                         'FR', 'DE', 'GB', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'NL',
+                         'PL', 'PT', 'RO', 'RS', 'SK', 'SI', 'ES', 'SE', 'CH'] 
 # ENTSOE_BAL_AUTH_LIST = ['SE'] # working with 1hr intervals
-ENTSOE_BAL_AUTH_LIST = ['DE'] # working with a country of 15-min interval data
+# ENTSOE_BAL_AUTH_LIST = ['DE'] # working with a country of 15-min interval data
 
 # get production data by source type from ENTSOE API
 def getProductionDataBySourceTypeDataFromENTSOE(ba, curDate, curEndDate):
@@ -89,7 +89,6 @@ def parseENTSOEProductionDataBySourceType(data, startDate, electricitySources, n
     # electricityBySource.append(startDate)
     # dateObj = datetime.strptime(startDate, "%Y-%m-%d %H:%M")
 
-    print("data", data)
     if (len(data) == 0):
         # empty data fetched from ENTSOE. For now, make everything Nan
         for hour in range(24):
@@ -121,11 +120,13 @@ def parseENTSOEProductionDataBySourceType(data, startDate, electricitySources, n
 
     # include a function adding up 15-min interval data to an hour; assuming only 1hr & 15min intervals in data
     if (data.index[1].minute == 15):
+        print("15 minutes intervals")
         data = adjustMinIntervalData(data, interval=15)
     elif (data.index[1].minute == 30):
+        print("30 minutes intervals")
         data = adjustMinIntervalData(data, interval=30)
     elif (data.index[1].minute == 0):
-        print("hour interval")
+        print("hour intervals")
     else: # safety code for detecting intervals other than 1hr or 15min
         print("some other interval")
         exit(0)
@@ -178,7 +179,6 @@ def parseENTSOEProductionDataBySourceType(data, startDate, electricitySources, n
     # print(electricityProductionData)
     dataset = pd.DataFrame(electricityProductionData, columns=datasetColumns)
 
-    print("final!!", dataset)
     return dataset
 
 def getElectricityProductionDataFromENTSOE(balAuth, startDate, numDays, DAY_JUMP):
@@ -331,7 +331,6 @@ def adjustMinIntervalData(data, interval): # input = pandas dataframe
     with open(csv_path, 'w') as f: # open as f means opens as file
         newDataframe.to_csv(f, index=False)
 
-    print("new data", newDataframe)
     return newDataframe
 
 # def fillEmptyData(startDate):
@@ -360,7 +359,7 @@ if __name__ == "__main__":
 
     for balAuth in ENTSOE_BAL_AUTH_LIST:
         # fetch electricity data
-        fullDataset = getElectricityProductionDataFromENTSOE(balAuth, startDate, numDays, DAY_JUMP=1)
+        fullDataset = getElectricityProductionDataFromENTSOE(balAuth, startDate, numDays, DAY_JUMP=8)
         # print(fullDataset)
         # DM: For DAY_JUMP > 1, there is a bug while filling missing hours
 
@@ -383,6 +382,6 @@ if __name__ == "__main__":
         modifiedDataset = adjustColumns(dataset, balAuth)
         modifiedDataset.to_csv(filedir+f"/{balAuth}_clean_mod.csv")
 
-        print("reached the end of for-loop for " + balAuth)
+        print("reached the end for " + balAuth)
 
     # concatDataset()
