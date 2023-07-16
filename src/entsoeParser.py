@@ -179,7 +179,7 @@ def parseENTSOEProductionDataBySourceType(data, startDate, electricitySources, n
     # print(electricityProductionData)
     dataset = pd.DataFrame(electricityProductionData, columns=datasetColumns)
 
-    return dataset
+    return data, dataset
 
 def getElectricityProductionDataFromENTSOE(balAuth, startDate, numDays, DAY_JUMP):
     
@@ -195,14 +195,6 @@ def getElectricityProductionDataFromENTSOE(balAuth, startDate, numDays, DAY_JUMP
         endDate = endDateObj.strftime("%Y-%m-%d")
         data, empty = getProductionDataBySourceTypeDataFromENTSOE(balAuth, startDate, endDate)
         print("was the dataset empty?: ", empty)
-
-        # added for debuggin purposes
-        parentdir = os.path.normpath(os.path.join(os.getcwd(), os.pardir)) # goes to CarbonCast folder
-        filedir = os.path.normpath(os.path.join(parentdir, f"./data/EU_DATA/{balAuth}"))
-        
-        csv_path = os.path.normpath(os.path.join(filedir, f"./{balAuth}_raw_{empty}.csv"))
-        with open(csv_path, 'w') as f: # open as f means opens as file
-            data.to_csv(f, index=False)
 
         # building the list of sources; names synced with those in eiaParser
         if (empty):
@@ -221,23 +213,27 @@ def getElectricityProductionDataFromENTSOE(balAuth, startDate, numDays, DAY_JUMP
             numSources = len(electricitySources)
         # print(numSources)
 
-        dataset = parseENTSOEProductionDataBySourceType(data, startDate, electricitySources, numSources)
+        hourlyData, dataset = parseENTSOEProductionDataBySourceType(data, startDate, electricitySources, numSources)
         # print("printing dataset below")
         # print(dataset)
 
         if (days == 0):
             fullDataset = dataset.copy()
+            fullRawData = data.copy()
+            fullHourly = hourlyData.copy()
         else:
             if (days%60 == 0):
                 time.sleep(1)
             fullDataset = pd.concat([fullDataset, dataset])
+            fullRawData = pd.concat([fullRawData, data])
+            fullHourly = pd.concat([fullHourly, hourlyData])
 
         # startDate incremented    
         startDateObj = startDateObj + timedelta(days=DAY_JUMP)
         startDate = startDateObj.strftime("%Y-%m-%d")
 
         # print(fullDataset.tail(2))
-    return fullDataset
+    return fullRawData, fullHourly, fullDataset
 
 def concatDataset():
     # fix directories later when in use
@@ -300,36 +296,43 @@ def adjustColumns(dataset, balAuth):
 
 def adjustMinIntervalData(data, interval): # input = pandas dataframe
     newDataframe = pd.DataFrame(columns=data.columns)
-    counter = 0
+    newIndeces = []
 
-    if (interval == 15):
-        for column in range(len(data.columns)):
-            modifiedValues = []
-            for row in range(0, len(data), 4): # take 4 rows at a time
-                newValue = data.iloc[row][column] + data.iloc[row+1][column] + data.iloc[row+2][column] + data.iloc[row+3][column]
-                modifiedValues.append(newValue)
-            newDataframe[data.columns.values[column]] = pd.Series(modifiedValues)
-        for row in range(0, len(data), 4):
-            newDataframe.rename(index={counter: data.index[row]}, inplace=True)
-            counter = counter + 1
+    for column in range(len(data.columns)):
+        modifiedValues = [] # contains for each column
+        for row in range(0, len(data)):
+            if (data.index[row].minute == 0): # new hour started
+                if (row != 0):
+                    if (interval == 15 and i < 4): # add missing values (previous time block)
+                        newValue = (newValue / i) * 4
+                    elif (interval == 30 and i < 2):
+                        newValue = (newValue / i) * 2
+                    modifiedValues.append(newValue) # append old value for previous hour
+                if (column == 0):
+                    newIndeces.append(data.index[row])
+                newValue = data.iloc[row][column]
+                i = 1
+            else:
+                newValue = newValue + data.iloc[row][column]
+                i = i + 1
+        newDataframe[data.columns.values[column]] = pd.Series(modifiedValues)
 
-    elif (interval == 30):
-        for column in range(len(data.columns)):
-            modifiedValues = []
-            for row in range(0, len(data), 2): # take 4 rows at a time
-                newValue = data.iloc[row][column] + data.iloc[row+1][column]
-                modifiedValues.append(newValue)
-            newDataframe[data.columns.values[column]] = pd.Series(modifiedValues)
-        for row in range(0, len(data), 2):
-                newDataframe.rename(index={counter: data.index[row]}, inplace=True)
-                counter = counter + 1
+    counter = 0 # improve?
+    while (counter < len(newDataframe)):
+        newDataframe.rename(index={counter: newIndeces[counter]}, inplace=True)
+        counter = counter + 1
 
-    parentdir = os.path.normpath(os.path.join(os.getcwd(), os.pardir)) # goes to CarbonCast folder
-    filedir = os.path.normpath(os.path.join(parentdir, f"./data/EU_DATA/{balAuth}"))
-    
-    csv_path = os.path.normpath(os.path.join(filedir, f"./{balAuth}_hourly.csv"))
-    with open(csv_path, 'w') as f: # open as f means opens as file
-        newDataframe.to_csv(f, index=False)
+    # if (interval == 15):
+    #     for column in range(len(data.columns)):
+    #         modifiedValues = []
+    #         for row in range(0, len(data), 4): # take 4 rows at a time
+    #             # set a bunch of if statements for missing data
+    #             newValue = data.iloc[row][column] + data.iloc[row+1][column] + data.iloc[row+2][column] + data.iloc[row+3][column]
+    #             modifiedValues.append(newValue)
+    #         newDataframe[data.columns.values[column]] = pd.Series(modifiedValues)
+    #     for row in range(0, len(data), 4):
+    #         newDataframe.rename(index={counter: data.index[row]}, inplace=True)
+    #         counter = counter + 1
 
     return newDataframe
 
@@ -359,13 +362,21 @@ if __name__ == "__main__":
 
     for balAuth in ENTSOE_BAL_AUTH_LIST:
         # fetch electricity data
-        fullDataset = getElectricityProductionDataFromENTSOE(balAuth, startDate, numDays, DAY_JUMP=8)
+        rawData, hourlyData, fullDataset = getElectricityProductionDataFromENTSOE(balAuth, startDate, numDays, DAY_JUMP=8)
         # print(fullDataset)
         # DM: For DAY_JUMP > 1, there is a bug while filling missing hours
 
         # saving files from src folder (should work)
         parentdir = os.path.normpath(os.path.join(os.getcwd(), os.pardir)) # goes to CarbonCast folder
         filedir = os.path.normpath(os.path.join(parentdir, f"./data/EU_DATA/{balAuth}"))
+        
+        csv_path = os.path.normpath(os.path.join(filedir, f"./{balAuth}_raw.csv"))
+        with open(csv_path, 'w') as f: # open as f means opens as file
+            rawData.to_csv(f)
+    
+        csv_path = os.path.normpath(os.path.join(filedir, f"./{balAuth}_hourly.csv"))
+        with open(csv_path, 'w') as f: # open as f means opens as file
+            hourlyData.to_csv(f)
         
         csv_path = os.path.normpath(os.path.join(filedir, f"./{balAuth}.csv"))
         with open(csv_path, 'w') as f: # open as f means opens as file
