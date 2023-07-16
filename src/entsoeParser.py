@@ -58,6 +58,7 @@ ENTSOE_BAL_AUTH_LIST = ['AL', 'AT', 'BE', 'BG', 'HR', 'CZ', 'DK', 'DK-DK2', 'EE'
                          'PL', 'PT', 'RO', 'RS', 'SK', 'SI', 'ES', 'SE', 'CH'] 
 # ENTSOE_BAL_AUTH_LIST = ['SE'] # working with 1hr intervals
 # ENTSOE_BAL_AUTH_LIST = ['DE'] # working with a country of 15-min interval data
+# ENTSOE_BAL_AUTH_LIST = ['AL']
 
 # get production data by source type from ENTSOE API
 def getProductionDataBySourceTypeDataFromENTSOE(ba, curDate, curEndDate):
@@ -81,7 +82,7 @@ def getProductionDataBySourceTypeDataFromENTSOE(ba, curDate, curEndDate):
     return dataset, empty
 
 # parse production data by source type from ENTSOE API
-def parseENTSOEProductionDataBySourceType(data, startDate, electricitySources, numSources):   
+def parseENTSOEProductionDataBySourceType(data, startDate, electricitySources, numSources, numDays):   
     electricityBySource = {}
     hourlyElectricityData = []
     electricityProductionData = []
@@ -91,8 +92,10 @@ def parseENTSOEProductionDataBySourceType(data, startDate, electricitySources, n
 
     if (len(data) == 0):
         # empty data fetched from ENTSOE. For now, make everything Nan
-        for hour in range(24):
-            hourlyElectricityData = [startDate+" "+str(hour).zfill(2)+":00"]
+        for hour in range(24 * numDays): # figure out DAY_JUMP thing
+            tempHour = startDate + timedelta(hours=hour)
+            hourlyElectricityData = [tempHour.strftime("%Y/%m/%d %H:00")]
+            # hourlyElectricityData = [startDate+" "+str(hour).zfill(2)+":00"]
             for j in range(numSources):
                 hourlyElectricityData.append(np.nan)
             electricityProductionData.append(hourlyElectricityData)
@@ -102,7 +105,8 @@ def parseENTSOEProductionDataBySourceType(data, startDate, electricitySources, n
 
         # print(electricityProductionData)
         dataset = pd.DataFrame(electricityProductionData, columns=datasetColumns)
-        return dataset
+
+        return dataset, dataset
 
     curDate = data.index[0].astimezone(tz='UTC').strftime("%Y-%m-%d %H:%M")
     #curDate = curTime.strftime("%Y-%m-%d") # above used to be curTime
@@ -213,7 +217,7 @@ def getElectricityProductionDataFromENTSOE(balAuth, startDate, numDays, DAY_JUMP
             numSources = len(electricitySources)
         # print(numSources)
 
-        hourlyData, dataset = parseENTSOEProductionDataBySourceType(data, startDate, electricitySources, numSources)
+        hourlyData, dataset = parseENTSOEProductionDataBySourceType(data, startDateObj, electricitySources, numSources, DAY_JUMP)
         # print("printing dataset below")
         # print(dataset)
 
