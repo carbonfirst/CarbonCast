@@ -53,11 +53,11 @@ ENTSOE_SOURCE_MAP = {
     "UNK": "unknown",
     }
 
-ENTSOE_BAL_AUTH_LIST = ['AL', 'AT', 'BE', 'BG', 'HR', 'CZ', 'DK', 'DK-DK2', 'EE', 'FI', 
-                         'FR', 'DE', 'GB', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'NL',
-                         'PL', 'PT', 'RO', 'RS', 'SK', 'SI', 'ES', 'SE', 'CH'] 
+# ENTSOE_BAL_AUTH_LIST = ['AL', 'AT', 'BE', 'BG', 'HR', 'CZ', 'DK', 'DK-DK2', 'EE', 'FI', 
+#                          'FR', 'DE', 'GB', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'NL',
+#                          'PL', 'PT', 'RO', 'RS', 'SK', 'SI', 'ES', 'SE', 'CH'] 
 # ENTSOE_BAL_AUTH_LIST = ['SE'] # working with 1hr intervals
-# ENTSOE_BAL_AUTH_LIST = ['DE'] # working with a country of 15-min interval data
+ENTSOE_BAL_AUTH_LIST = ['DE'] # working with a country of 15-min interval data
 
 # get production data by source type from ENTSOE API
 def getProductionDataBySourceTypeDataFromENTSOE(ba, curDate, curEndDate):
@@ -77,6 +77,7 @@ def getProductionDataBySourceTypeDataFromENTSOE(ba, curDate, curEndDate):
         # fillEmptyData(startDate, pd.Timestamp(curEndDate, tz='UTC'))
         dataset = pd.DataFrame()
         empty = True
+
     return dataset, empty
 
 # parse production data by source type from ENTSOE API
@@ -88,6 +89,7 @@ def parseENTSOEProductionDataBySourceType(data, startDate, electricitySources, n
     # electricityBySource.append(startDate)
     # dateObj = datetime.strptime(startDate, "%Y-%m-%d %H:%M")
 
+    print("data", data)
     if (len(data) == 0):
         # empty data fetched from ENTSOE. For now, make everything Nan
         for hour in range(24):
@@ -127,12 +129,12 @@ def parseENTSOEProductionDataBySourceType(data, startDate, electricitySources, n
     else: # safety code for detecting intervals other than 1hr or 15min
         print("some other interval")
         exit(0)
-
-    for row in range(len(data)): 
+    # debug from here and on; for non-hourly intervals, there's an error
+    
+    for row in range(len(data)):
+        time = data.index[row].astimezone(tz='UTC').strftime("%Y-%m-%d %H:%M")
         # iterate through each entry in the row
         for column in range(len(data.columns)):
-            time = data.index[row].astimezone(tz='UTC').strftime("%Y-%m-%d %H:%M")
-
             # find which source
             colVal = data.columns[column]
             if (type(colVal) is tuple):
@@ -141,25 +143,24 @@ def parseENTSOEProductionDataBySourceType(data, startDate, electricitySources, n
             if (sourceKey == "STOR"):
                 continue # Ignoring storage for now
             source = ENTSOE_SOURCE_MAP[sourceKey]
-            # print("source: ", source)
+            if (source not in electricityBySource.keys()):
+                electricityBySource[source] = 0 
 
             if (time == curDate):
-                electricityBySource[source]= data.iloc[row][column]
-            else: # debug this else statement; entered when time ahead of curDate; new time/row
+                electricityBySource[source] = electricityBySource[source] + data.iloc[row][column]
+            else: # entered when time ahead of curDate; new time/row
                 curDate = time
                 curHour = data.index[row].astimezone(tz='UTC').strftime("%H")
                 for src in electricitySources:
                     if (src not in electricityBySource.keys()): # if was not already filled at the previous time
                         electricityBySource[src] = np.nan 
-                    hourlyElectricityData.append(electricityBySource[src]) # this line not working or
+                    hourlyElectricityData.append(electricityBySource[src]) 
                 electricityProductionData.append(hourlyElectricityData) # adding previous hour's data
-                # print(hourlyElectricityData)
                 hourlyElectricityData = [curDate] # adding the current time
-                electricityBySource[source]= data.iloc[row][column] # adding the current entry's value # this line not working
-            # print("electricityBySource for ", source, ": ", electricityBySource[source])
-            # print("electricityBySource: ", electricityBySource)
+                electricityBySource = {} # reset?
+                electricityBySource[source] = data.iloc[row][column]
 
-    for source in electricitySources:
+    for source in electricitySources: # for the last iteration of row
         hourlyElectricityData.append(electricityBySource[source])
     electricityProductionData.append(hourlyElectricityData)
     
@@ -177,6 +178,7 @@ def parseENTSOEProductionDataBySourceType(data, startDate, electricitySources, n
     # print(electricityProductionData)
     dataset = pd.DataFrame(electricityProductionData, columns=datasetColumns)
 
+    print("final!!", dataset)
     return dataset
 
 def getElectricityProductionDataFromENTSOE(balAuth, startDate, numDays, DAY_JUMP):
@@ -192,6 +194,16 @@ def getElectricityProductionDataFromENTSOE(balAuth, startDate, numDays, DAY_JUMP
         endDateObj = startDateObj + timedelta(days=DAY_JUMP-1)
         endDate = endDateObj.strftime("%Y-%m-%d")
         data, empty = getProductionDataBySourceTypeDataFromENTSOE(balAuth, startDate, endDate)
+        print("was the dataset empty?: ", empty)
+
+        # added for debuggin purposes
+        parentdir = os.path.normpath(os.path.join(os.getcwd(), os.pardir)) # goes to CarbonCast folder
+        filedir = os.path.normpath(os.path.join(parentdir, f"./data/EU_DATA/{balAuth}"))
+        
+        csv_path = os.path.normpath(os.path.join(filedir, f"./{balAuth}_raw_{empty}.csv"))
+        with open(csv_path, 'w') as f: # open as f means opens as file
+            data.to_csv(f, index=False)
+
         # building the list of sources; names synced with those in eiaParser
         if (empty):
             numSources = 10
@@ -312,6 +324,14 @@ def adjustMinIntervalData(data, interval): # input = pandas dataframe
                 newDataframe.rename(index={counter: data.index[row]}, inplace=True)
                 counter = counter + 1
 
+    parentdir = os.path.normpath(os.path.join(os.getcwd(), os.pardir)) # goes to CarbonCast folder
+    filedir = os.path.normpath(os.path.join(parentdir, f"./data/EU_DATA/{balAuth}"))
+    
+    csv_path = os.path.normpath(os.path.join(filedir, f"./{balAuth}_hourly.csv"))
+    with open(csv_path, 'w') as f: # open as f means opens as file
+        newDataframe.to_csv(f, index=False)
+
+    print("new data", newDataframe)
     return newDataframe
 
 # def fillEmptyData(startDate):
@@ -340,7 +360,7 @@ if __name__ == "__main__":
 
     for balAuth in ENTSOE_BAL_AUTH_LIST:
         # fetch electricity data
-        fullDataset = getElectricityProductionDataFromENTSOE(balAuth, startDate, numDays, DAY_JUMP=8)
+        fullDataset = getElectricityProductionDataFromENTSOE(balAuth, startDate, numDays, DAY_JUMP=1)
         # print(fullDataset)
         # DM: For DAY_JUMP > 1, there is a bug while filling missing hours
 
