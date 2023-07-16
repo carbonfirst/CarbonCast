@@ -77,7 +77,6 @@ def getProductionDataBySourceTypeDataFromENTSOE(ba, curDate, curEndDate):
         # fillEmptyData(startDate, pd.Timestamp(curEndDate, tz='UTC'))
         dataset = pd.DataFrame()
         empty = True
-    print(dataset)
     return dataset, empty
 
 # parse production data by source type from ENTSOE API
@@ -312,8 +311,6 @@ def adjustMinIntervalData(data, interval): # input = pandas dataframe
         for row in range(0, len(data), 2):
                 newDataframe.rename(index={counter: data.index[row]}, inplace=True)
                 counter = counter + 1
-        print("dataframe", newDataframe)
-
 
     return newDataframe
 
@@ -343,7 +340,7 @@ if __name__ == "__main__":
 
     for balAuth in ENTSOE_BAL_AUTH_LIST:
         # fetch electricity data
-        fullDataset = getElectricityProductionDataFromENTSOE(balAuth, startDate, numDays, DAY_JUMP=1)
+        fullDataset = getElectricityProductionDataFromENTSOE(balAuth, startDate, numDays, DAY_JUMP=8)
         # print(fullDataset)
         # DM: For DAY_JUMP > 1, there is a bug while filling missing hours
 
