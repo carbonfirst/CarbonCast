@@ -58,7 +58,6 @@ ENTSOE_BAL_AUTH_LIST = ['AL', 'AT', 'BE', 'BG', 'HR', 'CZ', 'DK', 'DK-DK2', 'EE'
                          'PL', 'PT', 'RO', 'RS', 'SK', 'SI', 'ES', 'SE', 'CH'] 
 # ENTSOE_BAL_AUTH_LIST = ['SE'] # working with 1hr intervals
 # ENTSOE_BAL_AUTH_LIST = ['DE'] # working with a country of 15-min interval data
-# ENTSOE_BAL_AUTH_LIST = ['AL']
 
 # get production data by source type from ENTSOE API
 def getProductionDataBySourceTypeDataFromENTSOE(ba, curDate, curEndDate):
@@ -304,7 +303,7 @@ def adjustMinIntervalData(data, interval): # input = pandas dataframe
 
     for column in range(len(data.columns)):
         modifiedValues = [] # contains for each column
-        for row in range(0, len(data)):
+        for row in range(len(data)):
             if (data.index[row].minute == 0): # new hour started
                 if (row != 0):
                     if (interval == 15 and i < 4): # add missing values (previous time block)
@@ -319,12 +318,21 @@ def adjustMinIntervalData(data, interval): # input = pandas dataframe
             else:
                 newValue = newValue + data.iloc[row][column]
                 i = i + 1
+
+        # for the last row
+        if (interval == 15 and i < 4): # add missing values (previous time block)
+            newValue = (newValue / i) * 4
+        elif (interval == 30 and i < 2):
+            newValue = (newValue / i) * 2
+        modifiedValues.append(newValue) # append old value for previous hour
+        if (column == 0):
+            newIndeces.append(data.index[row])
         newDataframe[data.columns.values[column]] = pd.Series(modifiedValues)
 
-    counter = 0 # improve?
-    while (counter < len(newDataframe)):
-        newDataframe.rename(index={counter: newIndeces[counter]}, inplace=True)
-        counter = counter + 1
+    for row in range(len(newDataframe)):
+        newDataframe.rename(index={row: newIndeces[row]}, inplace=True)
+
+    return newDataframe
 
     # if (interval == 15):
     #     for column in range(len(data.columns)):
@@ -337,8 +345,6 @@ def adjustMinIntervalData(data, interval): # input = pandas dataframe
     #     for row in range(0, len(data), 4):
     #         newDataframe.rename(index={counter: data.index[row]}, inplace=True)
     #         counter = counter + 1
-
-    return newDataframe
 
 # def fillEmptyData(startDate):
 
