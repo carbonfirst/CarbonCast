@@ -55,9 +55,11 @@ ENTSOE_SOURCE_MAP = {
 
 ENTSOE_BAL_AUTH_LIST = ['AL', 'AT', 'BE', 'BG', 'HR', 'CZ', 'DK', 'DK-DK2', 'EE', 'FI', 
                          'FR', 'DE', 'GB', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'NL',
-                         'PL', 'PT', 'RO', 'RS', 'SK', 'SI', 'ES', 'SE', 'CH'] 
+                        'PL', 'PT', 'RO', 'RS', 'SK', 'SI', 'ES', 'SE', 'CH'] 
 # ENTSOE_BAL_AUTH_LIST = ['SE'] # working with 1hr intervals
 # ENTSOE_BAL_AUTH_LIST = ['DE'] # working with a country of 15-min interval data
+# ENTSOE_BAL_AUTH_LIST = ['GB'] # valid data then no data
+INVALID_AUTH_LIST = []
 
 # get production data by source type from ENTSOE API
 def getProductionDataBySourceTypeDataFromENTSOE(ba, curDate, curEndDate):
@@ -168,12 +170,15 @@ def parseENTSOEProductionDataBySourceType(data, startDate, electricitySources, n
         hourlyElectricityData.append(electricityBySource[source])
     electricityProductionData.append(hourlyElectricityData)
     
-    # checking if time ends at 23:00
-    for hour in range(int(curHour)+1, 24):
-        hourlyElectricityData = [curDate]
-        for j in range(numSources):
-            hourlyElectricityData.append(np.nan)
-        electricityProductionData.append(hourlyElectricityData)
+    # filling in missing timestamps/indeces
+    if (len(electricityProductionData) < (24 * numDays)):
+        curDate = datetime.strptime(curDate, "%Y-%m-%d %H:%M")
+        for hour in range(len(electricityProductionData), (24 * numDays)):
+            curDate = curDate + timedelta(hours=1)
+            hourlyElectricityData = [curDate.strftime("%Y-%m-%d %H:%M")]
+            for source in range(numSources):
+                hourlyElectricityData.append(np.nan)
+            electricityProductionData.append(hourlyElectricityData)
 
     datasetColumns = ["UTC time"]
     for source in electricitySources:
