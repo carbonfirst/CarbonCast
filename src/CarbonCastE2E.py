@@ -159,6 +159,7 @@ def startScript(continent, baList, startDate):
     # forecast date is in the future, so real time electricity data needs to be from the previous date
     fetchElectricityData(continent, baList, electricityDataDate)
     fetchWeatherData(continent, baList, startDate)
+    solWindFcstDataset = None
     if ("CISO" in baList):
         print("Fetching solar wind forecasts")
         solWindFcstFileName, solWindFcstDataset = fetchSolarWindForecastsForCISO(REAL_TIME_FILE_DIR, startDate)
