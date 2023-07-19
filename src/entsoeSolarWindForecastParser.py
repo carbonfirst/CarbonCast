@@ -17,40 +17,15 @@ ENTSOE_API_KEY="c0b15cbf-634c-4884-b784-5b463182cc97"
 
 # Converting to common names as in eiaParser.py
 ENTSOE_SOURCES = {
-    "Biomass": "BIO",
-    "Fossil Brown coal/Lignite": "COAL",
-    "Fossil Coal-derived gas": "NG",
-    "Fossil Gas": "NG",
-    "Fossil Hard coal": "COAL",
-    "Fossil Oil": "OIL",
-    "Fossil Oil shale": "COAL",
-    "Fossil Peat": "COAL", # why is peat termed as coal by eMap?
-    "Geothermal": "GEO",
-    "Hydro Pumped Storage": "STOR",
-    "Hydro Run-of-river and poundage": "HYD",
-    "Hydro Water Reservoir": "HYD",
-    "Marine": "UNK",
-    "Nuclear": "NUC",
-    "Other renewable": "UNK",
     "Solar": "SOL",
-    "Waste": "BIO",
     "Wind Offshore": "WND",
-    "Wind Onshore": "WND",
-    "Other": "UNK",
+    "Wind Onshore": "WND"
 }
 
 # map ENTSOE fuel types to source types
 ENTSOE_SOURCE_MAP = {
-    "BIO": "biomass",
-    "COAL": "coal",
-    "NG": "nat_gas",
-    "GEO": "geothermal",
-    "HYD": "hydro",
-    "NUC": "nuclear",
-    "OIL": "oil",
     "SOL": "solar",
-    "WND": "wind",
-    "UNK": "unknown",
+    "WND": "wind"
     }
 
 ENTSOE_BAL_AUTH_LIST = ['AL', 'AT', 'BE', 'BG', 'HR', 'CZ', 'DK', 'DK-DK2', 'EE', 'FI', 
@@ -183,6 +158,8 @@ def getSolarWindForecastFromENTSOE(balAuth, startDate, numDays, DAY_JUMP):
     
     fullDataset = pd.DataFrame() # where to save the whole dataset
     startDateObj = datetime.strptime(startDate, "%Y-%m-%d") # input date converted to yyyy-mm-dd format
+    ForecastSources = set() # for the loop
+    numSources = 0 # for the loop
 
     print("start date:", startDate)
 
@@ -192,8 +169,18 @@ def getSolarWindForecastFromENTSOE(balAuth, startDate, numDays, DAY_JUMP):
         data, empty = getSolarWindForecastBySourceTypeFromENTSOE(balAuth, startDate, endDate)
         print("was the dataset empty?: ", empty)
 
-        numSources = 2
-        ForecastSources = ["solar", "wind"]
+        if (empty):
+            numSources = 2
+            ForecastSources = ["solar", "wind"]
+        elif (numSources <= 2): # only run the for-loop if there might be new sources added to the list
+            for i in range(len(data.columns.values)):
+                colVal = data.columns.values[i]
+                if (type(colVal) is tuple):
+                    colVal = colVal[0]
+                sourceKey = ENTSOE_SOURCES[colVal]
+                source = ENTSOE_SOURCE_MAP[sourceKey]
+                ForecastSources.add(source)
+            numSources = len(ForecastSources)
 
         hourlyData, dataset = parseENTSOESolarWindForecastBySourceType(data, startDateObj, ForecastSources, numSources, DAY_JUMP)
 
@@ -346,10 +333,10 @@ if __name__ == "__main__":
         cleanedDataset = cleanSolarWindForecastDataFromENTSOE(dataset, balAuth)
         cleanedDataset.to_csv(filedir+f"/{balAuth}_SW_clean.csv") # see if string suffices
 
-        # adjust source columns; not necessary for this data (solar and wind forecasts)
-        # dataset = pd.read_csv(filedir+f"/{balAuth}_SW_clean.csv", header=0, index_col=["UTC time"])
-        # modifiedDataset = adjustColumns(dataset, balAuth)
-        # modifiedDataset.to_csv(filedir+f"/{balAuth}_SW_clean_mod.csv")
+        # adjust source columns
+        dataset = pd.read_csv(filedir+f"/{balAuth}_SW_clean.csv", header=0, index_col=["UTC time"])
+        modifiedDataset = adjustColumns(dataset, balAuth)
+        modifiedDataset.to_csv(filedir+f"/{balAuth}_SW_clean_mod.csv")
 
         print("reached the end for " + balAuth)
 
