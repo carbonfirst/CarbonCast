@@ -53,13 +53,13 @@ ENTSOE_SOURCE_MAP = {
     "UNK": "unknown",
     }
 
-ENTSOE_BAL_AUTH_LIST = ['AT', 'BE', 'BG', 'HR', 'CZ', 'DK', 'EE', 'FI', 
+ENTSOE_BAL_AUTH_LIST = ['AL', 'AT', 'BE', 'BG', 'HR', 'CZ', 'DK', 'DK-DK2', 'EE', 'FI', 
                          'FR', 'DE', 'GB', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'NL',
                         'PL', 'PT', 'RO', 'RS', 'SK', 'SI', 'ES', 'SE', 'CH']
 INVALID_AUTH_LIST = ['AL', 'DK-DK2']
 
-# get production data by source type from ENTSOE API
-def getProductionDataBySourceTypeDataFromENTSOE(ba, curDate, curEndDate):
+# get forecast data by source type from ENTSOE API
+def getSolarWindForecastBySourceTypeFromENTSOE(ba, curDate, curEndDate):
     print(ba)
 
     startDate = pd.Timestamp(curDate, tz='UTC')
@@ -71,8 +71,6 @@ def getProductionDataBySourceTypeDataFromENTSOE(ba, curDate, curEndDate):
 
     try:
         dataset = client.query_wind_and_solar_forecast(ba, start=startDate, end=endDate, psr_type=None)
-        print(dataset)
-        exit(0)
         empty = False
     except: # try to do only NoMatchingDataError
         # fillEmptyData(startDate, pd.Timestamp(curEndDate, tz='UTC'))
@@ -81,30 +79,26 @@ def getProductionDataBySourceTypeDataFromENTSOE(ba, curDate, curEndDate):
 
     return dataset, empty
 
-# parse production data by source type from ENTSOE API
-def parseENTSOEProductionDataBySourceType(data, startDate, electricitySources, numSources, numDays):   
-    electricityBySource = {}
-    hourlyElectricityData = []
-    electricityProductionData = []
-    # startDate = startDate + " 00:00"
-    # electricityBySource.append(startDate)
-    # dateObj = datetime.strptime(startDate, "%Y-%m-%d %H:%M")
+# parse forecast data by source type from ENTSOE API
+def parseENTSOESolarWindForecastBySourceType(data, startDate, ForecastSources, numSources, numDays):   
+    solarWindForecastBySource = {}
+    hourlyForecastData = []
+    solarWindForecastData = []
 
     if (len(data) == 0):
         # empty data fetched from ENTSOE. For now, make everything Nan
         for hour in range(24 * numDays): # figure out DAY_JUMP thing
             tempHour = startDate + timedelta(hours=hour)
-            hourlyElectricityData = [tempHour.strftime("%Y/%m/%d %H:00")]
-            # hourlyElectricityData = [startDate+" "+str(hour).zfill(2)+":00"]
+            hourlyForecastData = [tempHour.strftime("%Y/%m/%d %H:00")]
             for j in range(numSources):
-                hourlyElectricityData.append(np.nan)
-            electricityProductionData.append(hourlyElectricityData)
+                hourlyForecastData.append(np.nan)
+            solarWindForecastData.append(hourlyForecastData)
         datasetColumns = ["UTC time"]
-        for source in electricitySources:
+        for source in ForecastSources:
             datasetColumns.append(source)
 
-        # print(electricityProductionData)
-        dataset = pd.DataFrame(electricityProductionData, columns=datasetColumns)
+        # print(solarWindForecastData)
+        dataset = pd.DataFrame(solarWindForecastData, columns=datasetColumns)
 
         return dataset, dataset
 
@@ -112,15 +106,14 @@ def parseENTSOEProductionDataBySourceType(data, startDate, electricitySources, n
     #curDate = curTime.strftime("%Y-%m-%d") # above used to be curTime
 
     # checking if time starts from 00:00
-    #curHour = curTime.strftime("%H:%M")
     curHour = data.index[0].astimezone(tz='UTC').hour
     for hour in range(int(curHour)): 
-        hourlyElectricityData = [curDate]
+        hourlyForecastData = [curDate.split(" ")[0]+" "+str(hour).zfill(2)+":00"]
         for j in range(numSources):
-            hourlyElectricityData.append(np.nan)
-        electricityProductionData.append(hourlyElectricityData)
-    hourlyElectricityData = []
-    hourlyElectricityData.append(curDate)
+            hourlyForecastData.append(np.nan)
+        solarWindForecastData.append(hourlyForecastData)
+    hourlyForecastData = []
+    hourlyForecastData.append(curDate)
 
     # include a function adding up 15-min interval data to an hour; assuming only 1hr & 15min intervals in data
     if (data.index[1].minute == 15):
@@ -145,84 +138,64 @@ def parseENTSOEProductionDataBySourceType(data, startDate, electricitySources, n
             if (type(colVal) is tuple):
                 colVal = colVal[0]
             sourceKey = ENTSOE_SOURCES[colVal]
-            if (sourceKey == "STOR"):
-                continue # Ignoring storage for now
             source = ENTSOE_SOURCE_MAP[sourceKey]
-            if (source not in electricityBySource.keys()):
-                electricityBySource[source] = 0 
+            if (source not in solarWindForecastBySource.keys()):
+                solarWindForecastBySource[source] = 0 
 
             if (time == curDate):
-                electricityBySource[source] = electricityBySource[source] + data.iloc[row][column]
+                solarWindForecastBySource[source] = solarWindForecastBySource[source] + data.iloc[row][column]
             else: # entered when time ahead of curDate; new time/row
                 curDate = time
-                curHour = data.index[row].astimezone(tz='UTC').strftime("%H")
-                for src in electricitySources:
-                    if (src not in electricityBySource.keys()): # if was not already filled at the previous time
-                        electricityBySource[src] = np.nan 
-                    hourlyElectricityData.append(electricityBySource[src]) 
-                electricityProductionData.append(hourlyElectricityData) # adding previous hour's data
-                hourlyElectricityData = [curDate] # adding the current time
-                electricityBySource = {} # reset?
-                electricityBySource[source] = data.iloc[row][column]
+                for src in ForecastSources:
+                    if (src not in solarWindForecastBySource.keys()): # if was not already filled at the previous time
+                        solarWindForecastBySource[src] = np.nan 
+                    hourlyForecastData.append(solarWindForecastBySource[src]) 
+                solarWindForecastData.append(hourlyForecastData) # adding previous hour's data
+                hourlyForecastData = [curDate] # adding the current time
+                solarWindForecastBySource = {} # reset?
+                solarWindForecastBySource[source] = data.iloc[row][column]
 
-    for source in electricitySources: # for the last iteration of row
-        hourlyElectricityData.append(electricityBySource[source])
-    electricityProductionData.append(hourlyElectricityData)
+    for source in ForecastSources: # for the last iteration of row
+        if (source not in solarWindForecastBySource.keys()): # if was not already filled at the previous time
+            solarWindForecastBySource[source] = np.nan
+        hourlyForecastData.append(solarWindForecastBySource[source])
+    solarWindForecastData.append(hourlyForecastData)
     
     # filling in missing timestamps/indeces
-    if (len(electricityProductionData) < (24 * numDays)):
+    if (len(solarWindForecastData) < (24 * numDays)):
         curDate = datetime.strptime(curDate, "%Y-%m-%d %H:%M")
-        for hour in range(len(electricityProductionData), (24 * numDays)):
+        for hour in range(len(solarWindForecastData), (24 * numDays)):
             curDate = curDate + timedelta(hours=1)
-            hourlyElectricityData = [curDate.strftime("%Y-%m-%d %H:%M")]
+            hourlyForecastData = [curDate.strftime("%Y-%m-%d %H:%M")]
             for source in range(numSources):
-                hourlyElectricityData.append(np.nan)
-            electricityProductionData.append(hourlyElectricityData)
+                hourlyForecastData.append(np.nan)
+            solarWindForecastData.append(hourlyForecastData)
 
     datasetColumns = ["UTC time"]
-    for source in electricitySources:
+    for source in ForecastSources:
         datasetColumns.append(source)
 
-    # print(electricityProductionData)
-    dataset = pd.DataFrame(electricityProductionData, columns=datasetColumns)
+    dataset = pd.DataFrame(solarWindForecastData, columns=datasetColumns)
 
     return data, dataset
 
-def getElectricityProductionDataFromENTSOE(balAuth, startDate, numDays, DAY_JUMP):
+def getSolarWindForecastFromENTSOE(balAuth, startDate, numDays, DAY_JUMP):
     
     fullDataset = pd.DataFrame() # where to save the whole dataset
     startDateObj = datetime.strptime(startDate, "%Y-%m-%d") # input date converted to yyyy-mm-dd format
-    electricitySources = set() # for the loop
-    numSources = 0 # for the loop
 
     print("start date:", startDate)
 
     for days in range(0, numDays, DAY_JUMP): # DAY_JUMP: # days of data got each time
         endDateObj = startDateObj + timedelta(days=DAY_JUMP-1)
         endDate = endDateObj.strftime("%Y-%m-%d")
-        data, empty = getProductionDataBySourceTypeDataFromENTSOE(balAuth, startDate, endDate)
+        data, empty = getSolarWindForecastBySourceTypeFromENTSOE(balAuth, startDate, endDate)
         print("was the dataset empty?: ", empty)
 
-        # building the list of sources; names synced with those in eiaParser
-        if (empty):
-            numSources = 10
-            electricitySources = ["coal", "nat_gas", "nuclear", "oil", "hydro", "solar", "wind", "biomass", "geothermal", "unknown"]
-        elif (numSources <= 10): # only run the for-loop if there might be new sources added to the list
-            for i in range(len(data.columns.values)):
-                colVal = data.columns.values[i]
-                if (type(colVal) is tuple):
-                    colVal = colVal[0]
-                sourceKey = ENTSOE_SOURCES[colVal]
-                if (sourceKey == "STOR"):
-                    continue # Ignoring storage for now
-                source = ENTSOE_SOURCE_MAP[sourceKey]
-                electricitySources.add(source)
-            numSources = len(electricitySources)
-        # print(numSources)
+        numSources = 2
+        ForecastSources = ["solar", "wind"]
 
-        hourlyData, dataset = parseENTSOEProductionDataBySourceType(data, startDateObj, electricitySources, numSources, DAY_JUMP)
-        # print("printing dataset below")
-        # print(dataset)
+        hourlyData, dataset = parseENTSOESolarWindForecastBySourceType(data, startDateObj, ForecastSources, numSources, DAY_JUMP)
 
         if (days == 0):
             fullDataset = dataset.copy()
@@ -242,16 +215,16 @@ def getElectricityProductionDataFromENTSOE(balAuth, startDate, numDays, DAY_JUMP
         # print(fullDataset.tail(2))
     return fullRawData, fullHourly, fullDataset
 
-def concatDataset():
-    # fix directories later when in use
-    for balAuth in ENTSOE_BAL_AUTH_LIST:
-        d1 = pd.read_csv("./eiaData/2019-2021/"+balAuth+".csv", header=0)
-        d2 = pd.read_csv("./eiaData/2022/"+balAuth+".csv", header=0)
-        fullDataset = pd.concat([d1, d2])
-        fullDataset.to_csv("./eiaData/"+balAuth+".csv")
-    return
+# def concatDataset():
+#     # fix directories later when in use
+#     for balAuth in ENTSOE_BAL_AUTH_LIST:
+#         d1 = pd.read_csv("./eiaData/2019-2021/"+balAuth+".csv", header=0)
+#         d2 = pd.read_csv("./eiaData/2022/"+balAuth+".csv", header=0)
+#         fullDataset = pd.concat([d1, d2])
+#         fullDataset.to_csv("./eiaData/"+balAuth+".csv")
+#     return
 
-def cleanElectricityProductionDataFromENTSOE(dataset, balAuth):
+def cleanSolarWindForecastDataFromENTSOE(dataset, balAuth):
     dataset = dataset.astype(np.float64) # converting type of data to float64
     dataset[dataset<0] = 0 # converting negative numbers to 0; not sure why necessary
     for i in range(len(dataset)):
@@ -285,7 +258,7 @@ def cleanElectricityProductionDataFromENTSOE(dataset, balAuth):
     return dataset
 
 def adjustColumns(dataset, balAuth):
-    sources = ["coal", "nat_gas", "nuclear", "oil", "hydro", "solar", "wind", "biomass", "geothermal", "unknown"]
+    sources = ["solar", "wind"]
     modifiedSources = []
     print(dataset.shape)
     modifiedDataset = np.zeros(dataset.shape) # return a new array of the input shape
@@ -347,14 +320,13 @@ if __name__ == "__main__":
     numDays = int(sys.argv[2]) #368 #1096
 
     for balAuth in ENTSOE_BAL_AUTH_LIST:
-        # fetch electricity data
-        rawData, hourlyData, fullDataset = getElectricityProductionDataFromENTSOE(balAuth, startDate, numDays, DAY_JUMP=8)
-        # print(fullDataset)
+        # fetch forecast data
+        rawData, hourlyData, fullDataset = getSolarWindForecastFromENTSOE(balAuth, startDate, numDays, DAY_JUMP=8)
         # DM: For DAY_JUMP > 1, there is a bug while filling missing hours
 
         # saving files from src folder (should work)
         parentdir = os.path.normpath(os.path.join(os.getcwd(), os.pardir)) # goes to CarbonCast folder
-        filedir = os.path.normpath(os.path.join(parentdir, f"./data/EU_DATA/SolarAndWind/{balAuth}"))
+        filedir = os.path.normpath(os.path.join(parentdir, f"./data/EU_DATA/SolarWind/{balAuth}"))
         
         csv_path = os.path.normpath(os.path.join(filedir, f"./{balAuth}_SW_raw.csv"))
         with open(csv_path, 'w') as f: # open as f means opens as file
@@ -368,16 +340,16 @@ if __name__ == "__main__":
         with open(csv_path, 'w') as f: # open as f means opens as file
             fullDataset.to_csv(f, index=False)
         
-        # clean electricity data
+        # clean forecast data
         dataset = pd.read_csv(csv_path, header=0, 
                             parse_dates=["UTC time"], index_col=["UTC time"])
-        cleanedDataset = cleanElectricityProductionDataFromENTSOE(dataset, balAuth)
+        cleanedDataset = cleanSolarWindForecastDataFromENTSOE(dataset, balAuth)
         cleanedDataset.to_csv(filedir+f"/{balAuth}_SW_clean.csv") # see if string suffices
 
-        # adjust source columns
-        dataset = pd.read_csv(filedir+f"/{balAuth}_clean.csv", header=0, index_col=["UTC time"])
-        modifiedDataset = adjustColumns(dataset, balAuth)
-        modifiedDataset.to_csv(filedir+f"/{balAuth}_SW_clean_mod.csv")
+        # adjust source columns; not necessary for this data (solar and wind forecasts)
+        # dataset = pd.read_csv(filedir+f"/{balAuth}_SW_clean.csv", header=0, index_col=["UTC time"])
+        # modifiedDataset = adjustColumns(dataset, balAuth)
+        # modifiedDataset.to_csv(filedir+f"/{balAuth}_SW_clean_mod.csv")
 
         print("reached the end for " + balAuth)
 
