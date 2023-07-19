@@ -1,4 +1,4 @@
-# script copied from eiaParser.py in v3.0 branch then modified
+# script copied from entsoeParser.py in chae_reu branch then modified
 import os
 import requests
 import pandas as pd
@@ -53,14 +53,9 @@ ENTSOE_SOURCE_MAP = {
     "UNK": "unknown",
     }
 
-# ENTSOE_BAL_AUTH_LIST = ['AT'] 
 ENTSOE_BAL_AUTH_LIST = ['AT', 'BE', 'BG', 'HR', 'CZ', 'DK', 'EE', 'FI', 
                          'FR', 'DE', 'GB', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'NL',
-                        'PL', 'PT', 'RO', 'RS', 'SK', 'SI', 'ES', 'SE', 'CH'] 
-# ENTSOE_BAL_AUTH_LIST = ['SE'] # working with 1hr intervals
-# ENTSOE_BAL_AUTH_LIST = ['DE'] # working with a country of 15-min interval data
-# ENTSOE_BAL_AUTH_LIST = ['GB'] # valid data then no data
-PROBLEM_RUNNING_LIST = ['BE'] 
+                        'PL', 'PT', 'RO', 'RS', 'SK', 'SI', 'ES', 'SE', 'CH']
 INVALID_AUTH_LIST = ['AL', 'DK-DK2']
 
 # get production data by source type from ENTSOE API
@@ -75,7 +70,9 @@ def getProductionDataBySourceTypeDataFromENTSOE(ba, curDate, curEndDate):
     client = EntsoePandasClient(api_key=ENTSOE_API_KEY)
 
     try:
-        dataset = client.query_generation(ba, start=startDate, end=endDate, psr_type=None)
+        dataset = client.query_wind_and_solar_forecast(ba, start=startDate, end=endDate, psr_type=None)
+        print(dataset)
+        exit(0)
         empty = False
     except: # try to do only NoMatchingDataError
         # fillEmptyData(startDate, pd.Timestamp(curEndDate, tz='UTC'))
@@ -341,37 +338,9 @@ def adjustMinIntervalData(data, interval): # input = pandas dataframe
 
     return newDataframe
 
-    # if (interval == 15):
-    #     for column in range(len(data.columns)):
-    #         modifiedValues = []
-    #         for row in range(0, len(data), 4): # take 4 rows at a time
-    #             # set a bunch of if statements for missing data
-    #             newValue = data.iloc[row][column] + data.iloc[row+1][column] + data.iloc[row+2][column] + data.iloc[row+3][column]
-    #             modifiedValues.append(newValue)
-    #         newDataframe[data.columns.values[column]] = pd.Series(modifiedValues)
-    #     for row in range(0, len(data), 4):
-    #         newDataframe.rename(index={counter: data.index[row]}, inplace=True)
-    #         counter = counter + 1
-
-# def fillEmptyData(startDate):
-
-#     # empty data fetched from ENTSOE. For now, make everything Nan
-#     for hour in range(24):
-#         hourlyElectricityData = [startDate+" "+str(hour).zfill(2)+":00"]
-#         for j in range(numSources):
-#             hourlyElectricityData.append(np.nan)
-#         electricityProductionData.append(hourlyElectricityData)
-#     datasetColumns = ["UTC time"]
-#     for source in electricitySources:
-#         datasetColumns.append(source)
-
-#     # print(electricityProductionData)
-#     dataset = pd.DataFrame(electricityProductionData, columns=datasetColumns)
-#     return dataset
-
 if __name__ == "__main__":
     if (len(sys.argv)!=3):
-        print("Usage: python3 entsoeParser.py <yyyy-mm-dd> <# days to fetch data for>")
+        print("Usage: python3 entsoeSolarWindForecastParser.py <yyyy-mm-dd> <# days to fetch data for>")
         exit(0)
 
     startDate = sys.argv[1] # "2022-01-01" #"2019-01-01"
@@ -385,17 +354,17 @@ if __name__ == "__main__":
 
         # saving files from src folder (should work)
         parentdir = os.path.normpath(os.path.join(os.getcwd(), os.pardir)) # goes to CarbonCast folder
-        filedir = os.path.normpath(os.path.join(parentdir, f"./data/EU_DATA/Electricity/{balAuth}"))
+        filedir = os.path.normpath(os.path.join(parentdir, f"./data/EU_DATA/SolarAndWind/{balAuth}"))
         
-        csv_path = os.path.normpath(os.path.join(filedir, f"./{balAuth}_raw.csv"))
+        csv_path = os.path.normpath(os.path.join(filedir, f"./{balAuth}_SW_raw.csv"))
         with open(csv_path, 'w') as f: # open as f means opens as file
             rawData.to_csv(f)
     
-        csv_path = os.path.normpath(os.path.join(filedir, f"./{balAuth}_hourly.csv"))
+        csv_path = os.path.normpath(os.path.join(filedir, f"./{balAuth}_SW_hourly.csv"))
         with open(csv_path, 'w') as f: # open as f means opens as file
             hourlyData.to_csv(f)
         
-        csv_path = os.path.normpath(os.path.join(filedir, f"./{balAuth}.csv"))
+        csv_path = os.path.normpath(os.path.join(filedir, f"./{balAuth}_SW.csv"))
         with open(csv_path, 'w') as f: # open as f means opens as file
             fullDataset.to_csv(f, index=False)
         
@@ -403,12 +372,12 @@ if __name__ == "__main__":
         dataset = pd.read_csv(csv_path, header=0, 
                             parse_dates=["UTC time"], index_col=["UTC time"])
         cleanedDataset = cleanElectricityProductionDataFromENTSOE(dataset, balAuth)
-        cleanedDataset.to_csv(filedir+f"/{balAuth}_clean.csv") # see if string suffices
+        cleanedDataset.to_csv(filedir+f"/{balAuth}_SW_clean.csv") # see if string suffices
 
         # adjust source columns
         dataset = pd.read_csv(filedir+f"/{balAuth}_clean.csv", header=0, index_col=["UTC time"])
         modifiedDataset = adjustColumns(dataset, balAuth)
-        modifiedDataset.to_csv(filedir+f"/{balAuth}_clean_mod.csv")
+        modifiedDataset.to_csv(filedir+f"/{balAuth}_SW_clean_mod.csv")
 
         print("reached the end for " + balAuth)
 
