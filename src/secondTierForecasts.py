@@ -335,16 +335,17 @@ def runSecondTierInRealTime(configFileName, regionList, cefType, startDate, elec
                                     wTestData, weatherData)
         print("***** Forecast done *****")
         ######################## END #####################
+
+        predictedData = predictedData.astype(np.float64)
+        predicted = np.reshape(predictedData, predictedData.shape[0]*predictedData.shape[1])
+        unscaledPredictedData = common.inverseDataScaling(predicted, ftMax[DEPENDENT_VARIABLE_COL], 
+                                                        ftMin[DEPENDENT_VARIABLE_COL])
+
+        writeRealTimeCIForecastsToFile(testDates, unscaledPredictedData, outFileName)
         
         print("####################", region, " done ####################\n\n")
 
-    predictedData = predictedData.astype(np.float64)
-    predicted = np.reshape(predictedData, predictedData.shape[0]*predictedData.shape[1])
-    unscaledPredictedData = common.inverseDataScaling(predicted, ftMax[DEPENDENT_VARIABLE_COL], 
-                                                      ftMin[DEPENDENT_VARIABLE_COL])
-
-    writeRealTimeCIForecastsToFile(testDates, unscaledPredictedData, outFileName)
-    return outFileName
+    return
 
 def initialize(inFileName, forecastInFileName, startCol):
     print(inFileName)

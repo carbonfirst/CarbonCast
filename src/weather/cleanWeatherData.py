@@ -11,14 +11,16 @@ import pytz as pytz
 import os
 import sys
 
-ISO_LIST = ["CISO", "PJM", "ERCO", "ISNE", "MISO", "SWPP", "SOCO", "BPAT", "FPL", "NYIS", "BANC", "LDWP", 
-                     "TIDC", "DUK", "SC", "SCEG", "SPA", "FPC", "AECI",
-                     "GRID", "IPCO", "NEVP", "NWMT", "PACE", "PACW", "PSCO", "PSEI", 
-                     "WACM", "AZPS", "EPE", "SRP", "WALC", "TVA"]
-ISO = "AUS_SA"
+# ISO_LIST = ["CISO", "PJM", "ERCO", "ISNE", "MISO", "SWPP", "SOCO", "BPAT", "FPL", "NYIS", "BANC", "LDWP", 
+#                      "TIDC", "DUK", "SC", "SCEG", "SPA", "FPC", "AECI",
+#                      "GRID", "IPCO", "NEVP", "NWMT", "PACE", "PACW", "PSCO", "PSEI", 
+#                      "WACM", "AZPS", "EPE", "SRP", "WALC", "TVA"]
 
-# FILE_DIR = "../final_weather_data/"+ISO+"/" #/2019_weather_data
-FILE_DIR = "./total_aggregated_weather_data/"
+ISO_LIST = ["AL", "AT", "BE", "BG", "HR", "CZ", "DK", "EE", "FI", "FR", "DE", "GB", "GR", "HU", "IE",
+    "IT", "LV", "LT", "NL", "PL", "PT", "RO", "RS", "SK", "SI", "ES", "SE", "CH"]
+
+
+FILE_DIR = "./EU_total_aggregated_weather_data/"
 COLUMN_NAME = ["forecast_avg_wind_speed_wMean", "forecast_avg_temperature_wMean", "forecast_avg_dewpoint_wMean", 
                 "forecast_avg_dswrf_wMean", "forecast_avg_precipitation_wMean"]
 
@@ -158,6 +160,7 @@ def startScript(regionList, fileDir, columnNames, isRealTime, startDate):
     for region in regionList:
         IN_FILE_NAMES = [region+"_WIND_SPEED.csv", region+"_TEMP.csv", region+"_DPT.csv", 
                          region+"_DSWRF.csv", region+"_APCP.csv"]
+        regionFileDir = fileDir
         if (isRealTime is True):
             regionFileDir = fileDir + region + "/weather_data/"
             IN_FILE_NAMES = [region+"_WIND_SPEED_"+str(startDate)+".csv", 
@@ -195,17 +198,16 @@ def startScript(regionList, fileDir, columnNames, isRealTime, startDate):
         modifiedDataset.to_csv(outFileName)
     return
 
-def aggregateWeatherDataAcrossYears(years):
-    inFileDir = ""
-    outFileDir = "./total_aggregated_weather_data/"
+def aggregateWeatherDataAcrossYears(inFileDir, outFileDir, years):
+    
     dataset = [None]*len(years)
     weatherVariables = ["apcp", "dpt", "dswrf", "temp", "wind_speed"]
 
     for region in ISO_LIST:
         for wv in weatherVariables:
             for i in range(len(years)):
-                inFileDir = "./aggregate_weather_data_"+str(years[i])+"/"
-                inFileName = inFileDir+region+"_"+wv+".csv"
+                
+                inFileName = inFileDir+str(years[i])+"/"+region+"_"+wv.upper()+".csv"
                 outFileName = outFileDir+region+"_"+wv.upper()+".csv"
                 print(inFileName)  
                 if (not os.path.exists(inFileName)):
@@ -237,7 +239,9 @@ if __name__ == "__main__":
     startScript(ISO_LIST, FILE_DIR, COLUMN_NAME, isRealTime=False, startDate=None)
 
     # years = [2019, 2020, 2021, 2022]
-    # aggregateWeatherDataAcrossYears(years)
+    # inFileDir = "EU_"
+    # outFileDir = "./EU_total_aggregated_weather_data/"
+    # aggregateWeatherDataAcrossYears(inFileDir, outFileDir, years)
 
     # for region in ISO_LIST:
         # inFileDir = "../../data/"+region

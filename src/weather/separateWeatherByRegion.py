@@ -11,10 +11,10 @@ import threading
 import sys
 import os
 
-FILE_DIR = ["../../data/2019_weather/ugrd_vgrd/",
-            "../../data/2019_weather/tmp_dpt/",
-            "../../data/2019_weather/dswrf/",
-            "../../data/2019_weather/apcp/"]
+FILE_DIR = ["../../data_old_v2.1/EU_weather/2022_weather/ugrd_vgrd/",
+            "../../data_old_v2.1/EU_weather/2022_weather/tmp_dpt/",
+            "../../data_old_v2.1/EU_weather/2022_weather/dswrf/",
+            "../../data_old_v2.1/EU_weather/2022_weather/apcp/"]
 
 # OUT_FILE_NAME_LIST = ["../extn/"+ISO+"/weather_data/"+ISO+"_AVG_WIND_SPEED.csv",
 #                     "../extn/"+ISO+"/weather_data/"+ISO+"_AVG_TEMP.csv",
@@ -36,7 +36,7 @@ FCST_AVG_ACC = ["003", "006", "009", "012", "015", "018", "021", "024",
                 "027", "030", "033", "036", "039", "042", "045", "048",
                 "051", "054", "057", "060", "063", "066", "069", "072",
                 "075", "078", "081", "084", "087", "090", "093", "096"]
-YEARS = [2019]
+YEARS = [2022]
 HEADER = ["startDate", "endDate", "param", "level", "longitude", "latitude", "value"]
 CSV_FILE_FIELDS_FCST = ["datetime", "param", "level", "latitude", "longitude", "Analysis", "3 hr fcst", 
         "6 hr fcst", "9 hr fcst", "12 hr fcst", "15 hr fcst", "18 hr fcst",
@@ -81,6 +81,7 @@ ISO_WITH_INCONSISTENT_DATA = {
 }
 
 ISO_BOUNDING_BOX = {
+# US regions
     "CISO": (-124.75, 32, -113.5, 42), # wlon, slat, elon, nlat
     "PJM": (-91, 34.25, -73.5, 43),
     "ERCO": (-104.5, 25.25, -93.25, 36.5),
@@ -116,10 +117,50 @@ ISO_BOUNDING_BOX = {
     "EPE":  (-108.75, 26.75, -98.25, 34.00),    
     "SRP":  (-113.75, 32.00, -110.50, 34.50),    
     "WALC": (-124.25, 30.75, -105.00, 44.00),
-    "TVA":  (-90.75, 31.75, -81.25, 38.00)
+    "TVA":  (-90.75, 31.75, -81.25, 38.00),
+
+# EU regions
+
+    "AL": (19.25, 39.50, 21.00, 42.75), # wlon, slat, elon, nlat
+    "AT": (9.50, 46.50, 17.00 , 49.00),
+    "BE": (2.50, 49.50, 6.25 , 51.50),
+    "BG": (22.25, 41.25, 28.50, 44.25),
+    "HR": (13.75, 42.50, 19.50, 46.50),
+    "CZ": (12.25, 48.50, 18.75, 51.00),
+    "DK": (7.50, 54.50, 13.25, 57.75),
+    # Denmark zone 2: DK-DK2:  7.25, 54.75, 11.25, 57.75}
+    "EE": (23.25, 57.50, 28.25, 59.50),
+    "FI": (20.50, 59.75, 31.50, 70.00),
+    "FR": (-5.25, 42.25, 8.25, 51.25),
+    "DE": (5.75, 47.25, 15.00, 55.25),
+    "GB": (-8.25, 49.75, 2.25, 61.00),
+    "GR": (20.25, 35.00, 26.50, 41.75),
+    "HU": (16.25, 45.75, 22.75, 48.50),
+    "IE": (-10.00, 51.75, -6.00, 55.25),
+    "IT": (6.75, 36.50, 18.50, 47.00),
+    "LV": (21.00, 55.50, 28.25, 58.00),
+    "LT": ( 21.00, 54.00, 26.50, 56.25),
+    "NL": ( 3.25, 50.75, 7.00, 53.50),
+    "PL": ( 14.00, 49.00, 24.00, 54.75),
+    "PT": ( -10.00, 36.50, -5.75, 42.75),
+    "RO": ( 20.25, 43.75, 29.50, 48.25),
+    "RS": ( 18.75, 42.25, 23.00, 46.25),
+    "SK": ( 16.75, 47.75, 22.50, 49.50),
+    "SI": ( 13.75 , 45.50, 16.50 , 46.75),
+    "ES": ( -9.25, 36.00, 3.50, 43.75),
+    "SE": (11.25, 55.25, 21.25, 69.00),
+    "CH": (6.00, 45.75, 10.50, 47.75)
 }
 
+US_REGION_LIST = ["AECI", "AZPS", "BPAT", "CISO", "DUK", "EPE", "ERCO", "FPL", 
+                "ISNE", "LDWP", "MISO", "NEVP", "NWMT", "NYIS", "PACE", "PJM", 
+                "SC", "SCEG", "SOCO", "TIDC", "TVA"] # add US regions here
+EU_REGION_LIST = ["AL", "AT", "BE", "BG", "HR", "CZ", "DK", "EE", "FI", "FR", "DE", 
+                  "GB", "GR", "HU", "IE", "IT", "LV", "LT", "NL", "PL", "PT", "RO", 
+                  "RS", "SK", "SI", "ES", "SE", "CH"] # add EU regions here
+
 US_VAR_SEPARATOR =  24780 # 24308 --> for 2022 as different data boundaries, 24780 is for 2019-2021
+EU_VAR_SEPARATOR =  23547
 
 '''
 This file uses the code from https://towardsdatascience.com/the-correct-way-to-average-the-globe-92ceecd172b7 
@@ -206,7 +247,7 @@ def area_grid(lat, lon):
     # print("Area shape: ", area.shape, type(area))
     return area
 
-def getFileList(yearList = [2019], fileDir = None, fcstCol = FCST):
+def getFileList(yearList = [2022], fileDir = None, fcstCol = FCST):
     fileList = []
     prevFile = None
     for year in yearList:
@@ -268,7 +309,7 @@ def getFileListForDate(startDate = None, fileDir = None, fcstCol = FCST):
             prevFile = fileName # assuming the first file to be searched is always present
     return fileList
 
-def fetchWeatherDataByRegion(weatherVariable, fcstCol, pid, isRealTime, startDate):
+def fetchWeatherDataByRegion(weatherVariable, fcstCol, pid, isRealTime, startDate, varSeparator):
     if (isRealTime is False):
         fileList = getFileList(YEARS, weatherVariable, fcstCol)
     else:
@@ -309,8 +350,8 @@ def fetchWeatherDataByRegion(weatherVariable, fcstCol, pid, isRealTime, startDat
                         names=HEADER) #, header=0,  parse_dates=['UTC time'], index_col=['UTC time'])    
                 # print(dataset.head(2))
                 if ("ugrd_vgrd" in weatherVariable or "tmp_dpt" in weatherVariable):
-                    vdataset = dataset[US_VAR_SEPARATOR:]
-                    udataset = dataset[:US_VAR_SEPARATOR]
+                    vdataset = dataset[varSeparator:]
+                    udataset = dataset[:varSeparator]
                     # print(udataset.tail(2))
                     # print(vdataset.head(2))
                     for line in range(len(udataset)):
@@ -346,7 +387,6 @@ def fetchWeatherDataByRegion(weatherVariable, fcstCol, pid, isRealTime, startDat
                                                          vdataset["longitude"].iloc[line], vdataset["latitude"].iloc[line], 
                                                          vdataset["value"].iloc[line]])
                     # now we have region-wise datasets for this timestamp
-                    
                     vdataset = None
                     udataset = None
                     for region in ISO_BOUNDING_BOX.keys():
@@ -389,7 +429,7 @@ def fetchWeatherDataByRegion(weatherVariable, fcstCol, pid, isRealTime, startDat
                             dptrow[region].append(weighted_mean)
                 else: # dswrf or apcp
                     if (isRealTime is True and "apcp" in weatherVariable): # TODO: [DM] Check why APCP is downloaded twice
-                        dataset = dataset[US_VAR_SEPARATOR:]
+                        dataset = dataset[varSeparator:]
                     for line in range(len(dataset)):
                         lon = float(dataset["longitude"].values[line])
                         lat = float(dataset["latitude"].values[line])
@@ -463,12 +503,14 @@ def writeWeatherValuesToFile(outFilePath, weatherValues, csvFields, weatherVaria
             regionOutFilePath = outFilePath + region + "/weather_data/"
             writeMode = "w"
             print(regionOutFilePath+region+"_"+weatherVariableFileName)
+        else:
+            regionOutFilePath = outFilePath
         with open(regionOutFilePath+region+"_"+weatherVariableFileName, writeMode) as regioncsvfile:
             csvwriter = csv.writer(regioncsvfile)
             csvwriter.writerow(csvFields)
             csvwriter.writerows(weatherValues[region])
 
-def startScript(regionList, index, pid, inFilePath, outFilePath, isRealTime, startDate):
+def startScript(continent, regionList, index, pid, inFilePath, outFilePath, isRealTime, startDate):
     global FCST
     global CSV_FILE_FIELDS_FCST
     global CSV_FILE_FIELDS_AVG
@@ -486,29 +528,35 @@ def startScript(regionList, index, pid, inFilePath, outFilePath, isRealTime, sta
     # print("CPU affinity mask is modified for process id % s" % pid)
     # affinity = os.sched_getaffinity(0)
     # print("Now, process is eligible to run on:", affinity) 
+
+    tmpIsoBoundingBox = {}
+    for region in regionList:
+        tmpIsoBoundingBox[region] = ISO_BOUNDING_BOX[region]
+    ISO_BOUNDING_BOX = tmpIsoBoundingBox
     
     if (isRealTime is True):
         CSV_FILE_FIELDS_FCST = CSV_FILE_FIELDS_FCST_RT
         CSV_FILE_FIELDS_AVG = CSV_FILE_FIELDS_AVG_RT
         CSV_FILE_FIELDS_ACC = CSV_FILE_FIELDS_ACC_RT
         FCST = FCST_RT
-        tmpIsoBoundingBox = {}
-        for region in regionList:
-            tmpIsoBoundingBox[region] = ISO_BOUNDING_BOX[region]
-        ISO_BOUNDING_BOX = tmpIsoBoundingBox
         if (startDate is not None):
             for i in range(len(weatherVariable)):
                 weatherVariable[i] = weatherVariable[i]+"_"+str(startDate)
 
+    varSeparator = US_VAR_SEPARATOR
+    if (continent == "EU"):
+        varSeparator = EU_VAR_SEPARATOR
+
+
     if ("ugrd_vgrd" in inFilePath[index]):
-        windSpeed, nop = fetchWeatherDataByRegion(inFilePath[index], FCST, pid, isRealTime, startDate)
+        windSpeed, nop = fetchWeatherDataByRegion(inFilePath[index], FCST, pid, isRealTime, startDate, varSeparator)
         writeWeatherValuesToFile(outFilePath, windSpeed, CSV_FILE_FIELDS_FCST, weatherVariable[0]+".csv", isRealTime)
     elif ("tmp_dpt" in inFilePath[index]):
-        temperature, dewpoint = fetchWeatherDataByRegion(inFilePath[index], FCST, pid, isRealTime, startDate)
+        temperature, dewpoint = fetchWeatherDataByRegion(inFilePath[index], FCST, pid, isRealTime, startDate, varSeparator)
         writeWeatherValuesToFile(outFilePath, temperature, CSV_FILE_FIELDS_FCST, weatherVariable[1]+".csv", isRealTime)
         writeWeatherValuesToFile(outFilePath, dewpoint, CSV_FILE_FIELDS_FCST, weatherVariable[2]+".csv", isRealTime)
     else:
-        weatherValues, nop = fetchWeatherDataByRegion(inFilePath[index], FCST_AVG_ACC, pid, isRealTime, startDate)
+        weatherValues, nop = fetchWeatherDataByRegion(inFilePath[index], FCST_AVG_ACC, pid, isRealTime, startDate, varSeparator)
         if ("dswrf" in inFilePath[index]):
             writeWeatherValuesToFile(outFilePath, weatherValues, CSV_FILE_FIELDS_AVG, weatherVariable[3]+".csv", isRealTime)
         else:
@@ -521,7 +569,11 @@ def startScript(regionList, index, pid, inFilePath, outFilePath, isRealTime, sta
 if __name__ == "__main__":
     print("Separating whole US data by CarbonCast regions...")
     index = int(sys.argv[1])
+    continent = "EU"
+    regionList = US_REGION_LIST
     # index: 0 = wind, 1 = tmp/dpt, 2 = dswrf, 3 = apcp
     inFilePath = FILE_DIR
-    outFilePath = "./aggregate_weather_data_2019/"
-    startScript(index, os.getpid(), inFilePath, outFilePath, isRealTime=False, startDate=None)
+    outFilePath = "./EU_2022/"
+    if (continent == "EU"):
+        regionList = EU_REGION_LIST
+    startScript(continent, regionList, index, os.getpid(), inFilePath, outFilePath, isRealTime=False, startDate=None)

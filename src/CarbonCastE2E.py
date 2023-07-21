@@ -98,16 +98,16 @@ def fetchWeatherData(continent, baList, startDate):
         REAL_TIME_WEATHER_FILE_DIR+"dswrf/",
         REAL_TIME_WEATHER_FILE_DIR+"apcp/"]
     outFilePath = REAL_TIME_FILE_DIR
-    separateWeatherByRegion.startScript(regionList=baList, index=0, pid=os.getpid(), 
+    separateWeatherByRegion.startScript(continent=continent, regionList=baList, index=0, pid=os.getpid(), 
                                         inFilePath=inFilePath, outFilePath=outFilePath, 
                                         isRealTime=True, startDate=startDate) # index 0 is wind
-    separateWeatherByRegion.startScript(regionList=baList, index=1, pid=os.getpid(), 
+    separateWeatherByRegion.startScript(continent=continent, regionList=baList, index=1, pid=os.getpid(), 
                                         inFilePath=inFilePath, outFilePath=outFilePath, 
                                         isRealTime=True, startDate=startDate) # index 1 is tmp/dpt
-    separateWeatherByRegion.startScript(regionList=baList, index=2, pid=os.getpid(), 
+    separateWeatherByRegion.startScript(continent=continent, regionList=baList, index=2, pid=os.getpid(), 
                                         inFilePath=inFilePath, outFilePath=outFilePath, 
                                         isRealTime=True, startDate=startDate) # index 2 is dswrf
-    separateWeatherByRegion.startScript(regionList=baList, index=3, pid=os.getpid(), 
+    separateWeatherByRegion.startScript(continent=continent, regionList=baList, index=3, pid=os.getpid(), 
                                         inFilePath=inFilePath, outFilePath=outFilePath, 
                                         isRealTime=True, startDate=startDate) # index 3 is apcp
 
@@ -137,20 +137,19 @@ def generateSourceProductionForecasts(baList, startDate, electricityDataDate, so
 
 def generateCIForecasts(baList, startDate, electricityDataDate, aggregatedForecastFileName):
     # generate lifecycle & direct CI forecasts & write them to respective files
-    lifecycleCIForecastFile =  stf.runSecondTierInRealTime(configFileName="secondTierConfig.json", 
-                                                           regionList=baList, cefType="-l", startDate=startDate,
-                                                           electricityDataDate=electricityDataDate,
-                                                           realTimeFileDir=REAL_TIME_FILE_DIR, 
-                                                           realTimeWeatherFileDir=REAL_TIME_FILE_DIR,
-                                                           realTimeForeCastFileName = aggregatedForecastFileName)
-    directCIForecastFile =  stf.runSecondTierInRealTime(configFileName="secondTierConfig.json", 
-                                                           regionList=baList, cefType="-d", startDate=startDate,
-                                                           electricityDataDate=electricityDataDate,                                                           
-                                                           realTimeFileDir=REAL_TIME_FILE_DIR, 
-                                                           realTimeWeatherFileDir=REAL_TIME_FILE_DIR,
-                                                           realTimeForeCastFileName = aggregatedForecastFileName)
-    directCIForecastFile = None
-    return lifecycleCIForecastFile, directCIForecastFile
+    stf.runSecondTierInRealTime(configFileName="secondTierConfig.json", 
+                                regionList=baList, cefType="-l", startDate=startDate,
+                                electricityDataDate=electricityDataDate,
+                                realTimeFileDir=REAL_TIME_FILE_DIR, 
+                                realTimeWeatherFileDir=REAL_TIME_FILE_DIR,
+                                realTimeForeCastFileName = aggregatedForecastFileName)
+    stf.runSecondTierInRealTime(configFileName="secondTierConfig.json", 
+                                regionList=baList, cefType="-d", startDate=startDate,
+                                electricityDataDate=electricityDataDate,                                                           
+                                realTimeFileDir=REAL_TIME_FILE_DIR, 
+                                realTimeWeatherFileDir=REAL_TIME_FILE_DIR,
+                                realTimeForeCastFileName = aggregatedForecastFileName)
+    return
 
 def startScript(continent, baList, startDate):
     startDateObj = datetime.strptime(startDate, "%Y-%m-%d")
@@ -165,8 +164,7 @@ def startScript(continent, baList, startDate):
         solWindFcstFileName, solWindFcstDataset = fetchSolarWindForecastsForCISO(REAL_TIME_FILE_DIR, startDate)
     aggregatedForecastFileNames = generateSourceProductionForecasts(baList, startDate, 
                                                                     electricityDataDate, solWindFcstDataset) # first tier
-    lifecycleCIForecastFile, directCIForecastFile = generateCIForecasts(baList, startDate, 
-                                                                        electricityDataDate, aggregatedForecastFileNames) # second tier
+    generateCIForecasts(baList, startDate, electricityDataDate, aggregatedForecastFileNames) # second tier
     return
 
 
