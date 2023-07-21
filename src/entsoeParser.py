@@ -190,8 +190,6 @@ def parseENTSOEProductionDataBySourceType(data, startDate, electricitySources, n
     for source in electricitySources:
         datasetColumns.append(source)
     dataset = pd.DataFrame(electricityProductionData, columns=datasetColumns)
-    print(dataset)
-    exit(0)
     return dataset
 
 def getElectricityProductionDataFromENTSOE(balAuth, startDate, numDays, DAY_JUMP):
