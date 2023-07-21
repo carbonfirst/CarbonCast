@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 import time
 import sys
 import numpy as np
+import pytz
 
 # public key for ENTSOE API
 ENTSOE_API_KEY="c0b15cbf-634c-4884-b784-5b463182cc97"
@@ -38,7 +39,7 @@ def getSolarWindForecastBySourceTypeFromENTSOE(ba, curDate, curEndDate):
     print(ba)
 
     startDate = pd.Timestamp(curDate, tz='UTC')
-    endDate = pd.Timestamp(curEndDate, tz='UTC') + pd.Timedelta(hours=23, minutes=45) # FIX; appropriate end time
+    endDate = pd.Timestamp(curEndDate, tz='UTC') + pd.Timedelta(hours=23, minutes=45)
 
     print(startDate, endDate)
 
@@ -47,8 +48,7 @@ def getSolarWindForecastBySourceTypeFromENTSOE(ba, curDate, curEndDate):
     try:
         dataset = client.query_wind_and_solar_forecast(ba, start=startDate, end=endDate, psr_type=None)
         empty = False
-    except: # try to do only NoMatchingDataError
-        # fillEmptyData(startDate, pd.Timestamp(curEndDate, tz='UTC'))
+    except:
         dataset = pd.DataFrame()
         empty = True
 
@@ -62,9 +62,9 @@ def parseENTSOESolarWindForecastBySourceType(data, startDate, ForecastSources, n
 
     if (len(data) == 0):
         # empty data fetched from ENTSOE. For now, make everything Nan
-        for hour in range(24 * numDays): # figure out DAY_JUMP thing
+        for hour in range(24 * numDays):
             tempHour = startDate + timedelta(hours=hour)
-            hourlyForecastData = [tempHour.strftime("%Y/%m/%d %H:00")]
+            hourlyForecastData = [tempHour.strftime("%Y-%m-%d %H:00")]
             for j in range(numSources):
                 hourlyForecastData.append(np.nan)
             solarWindForecastData.append(hourlyForecastData)
@@ -72,41 +72,28 @@ def parseENTSOESolarWindForecastBySourceType(data, startDate, ForecastSources, n
         for source in ForecastSources:
             datasetColumns.append(source)
 
-        # print(solarWindForecastData)
         dataset = pd.DataFrame(solarWindForecastData, columns=datasetColumns)
-
         return dataset, dataset
+    
+    # accounting for possibility of <1hr intervals
+    data = adjustMinIntervalData(data)
 
-    curDate = data.index[0].astimezone(tz='UTC').strftime("%Y-%m-%d %H:%M")
-    #curDate = curTime.strftime("%Y-%m-%d") # above used to be curTime
-
+    curDate = data.index[0].astimezone(tz='UTC')
+    curHour = data.index[0].astimezone(tz='UTC').to_pydatetime()
+    hourDiff = (curHour - pytz.utc.localize(startDate)).total_seconds()/3600
     # checking if time starts from 00:00
-    curHour = data.index[0].astimezone(tz='UTC').hour
-    for hour in range(int(curHour)): 
-        hourlyForecastData = [curDate.split(" ")[0]+" "+str(hour).zfill(2)+":00"]
+    for hour in range(int(hourDiff)): 
+        tempHour = startDate + timedelta(hours=hour)
+        hourlyForecastData = [tempHour.strftime("%Y-%m-%d %H:00")]
         for j in range(numSources):
             hourlyForecastData.append(np.nan)
         solarWindForecastData.append(hourlyForecastData)
     hourlyForecastData = []
-    hourlyForecastData.append(curDate)
-
-    # include a function adding up 15-min interval data to an hour; assuming only 1hr & 15min intervals in data
-    if (data.index[1].minute == 15):
-        print("15 minutes intervals")
-        data = adjustMinIntervalData(data, interval=15)
-    elif (data.index[1].minute == 30):
-        print("30 minutes intervals")
-        data = adjustMinIntervalData(data, interval=30)
-    elif (data.index[1].minute == 0):
-        print("hour intervals")
-    else: # safety code for detecting intervals other than 1hr or 15min
-        print("some other interval")
-        exit(0)
-    # debug from here and on; for non-hourly intervals, there's an error
+    hourlyForecastData.append(curDate.strftime("%Y-%m-%d %H:%M"))
     
+    # going through each entry
     for row in range(len(data)):
-        time = data.index[row].astimezone(tz='UTC').strftime("%Y-%m-%d %H:%M")
-        # iterate through each entry in the row
+        time = data.index[row].astimezone(tz='UTC')
         for column in range(len(data.columns)):
             # find which source
             colVal = data.columns[column]
@@ -120,16 +107,30 @@ def parseENTSOESolarWindForecastBySourceType(data, startDate, ForecastSources, n
             if (time == curDate):
                 solarWindForecastBySource[source] = solarWindForecastBySource[source] + data.iloc[row][column]
             else: # entered when time ahead of curDate; new time/row
-                curDate = time
+                hourDiff = (time - curDate).total_seconds()/3600
+                # append last row's data
                 for src in ForecastSources:
-                    if (src not in solarWindForecastBySource.keys()): # if was not already filled at the previous time
+                    if (src not in solarWindForecastBySource.keys()):
                         solarWindForecastBySource[src] = np.nan 
                     hourlyForecastData.append(solarWindForecastBySource[src]) 
-                solarWindForecastData.append(hourlyForecastData) # adding previous hour's data
-                hourlyForecastData = [curDate] # adding the current time
-                solarWindForecastBySource = {} # reset?
+                solarWindForecastData.append(hourlyForecastData)
+                # if missing hours between curDate & time (more than an hour gap)
+                if (hourDiff > 0):
+                    for hour in range(1, int(hourDiff)): 
+                        tempHour = curDate + timedelta(hours=hour)
+                        hourlyForecastData = [tempHour.strftime("%Y-%m-%d %H:00")]
+                        for j in range(numSources):
+                            hourlyForecastData.append(np.nan)
+                        solarWindForecastData.append(hourlyForecastData)
+                elif (hourDiff < 0):
+                    print("less than 1hr gap; shouldn't happen")
+                    print(hourDiff, curDate, time)
+                    exit(0)
+                # preparing for new/current time/row
+                curDate = time
+                hourlyForecastData = [curDate.strftime("%Y-%m-%d %H:%M")]
+                solarWindForecastBySource = {}
                 solarWindForecastBySource[source] = data.iloc[row][column]
-
     for source in ForecastSources: # for the last iteration of row
         if (source not in solarWindForecastBySource.keys()): # if was not already filled at the previous time
             solarWindForecastBySource[source] = np.nan
@@ -138,30 +139,28 @@ def parseENTSOESolarWindForecastBySourceType(data, startDate, ForecastSources, n
     
     # filling in missing timestamps/indeces
     if (len(solarWindForecastData) < (24 * numDays)):
-        curDate = datetime.strptime(curDate, "%Y-%m-%d %H:%M")
         for hour in range(len(solarWindForecastData), (24 * numDays)):
             curDate = curDate + timedelta(hours=1)
             hourlyForecastData = [curDate.strftime("%Y-%m-%d %H:%M")]
             for source in range(numSources):
                 hourlyForecastData.append(np.nan)
             solarWindForecastData.append(hourlyForecastData)
+    elif (len(solarWindForecastData) > (24 * numDays)):
+        print("something is wrong... why extra dates?")
+        print(solarWindForecastData)
+        exit(0)
 
     datasetColumns = ["UTC time"]
     for source in ForecastSources:
         datasetColumns.append(source)
-
     dataset = pd.DataFrame(solarWindForecastData, columns=datasetColumns)
-
-    return data, dataset
+    return dataset
 
 def getSolarWindForecastFromENTSOE(balAuth, startDate, numDays, DAY_JUMP):
-    
-    fullDataset = pd.DataFrame() # where to save the whole dataset
-    startDateObj = datetime.strptime(startDate, "%Y-%m-%d") # input date converted to yyyy-mm-dd format
-    ForecastSources = set() # for the loop
-    numSources = 0 # for the loop
-
-    print("start date:", startDate)
+    fullDataset = pd.DataFrame() 
+    startDateObj = datetime.strptime(startDate, "%Y-%m-%d")
+    ForecastSources = set()
+    numSources = 0
 
     for days in range(0, numDays, DAY_JUMP): # DAY_JUMP: # days of data got each time
         endDateObj = startDateObj + timedelta(days=DAY_JUMP-1)
@@ -181,26 +180,21 @@ def getSolarWindForecastFromENTSOE(balAuth, startDate, numDays, DAY_JUMP):
                 source = ENTSOE_SOURCE_MAP[sourceKey]
                 ForecastSources.add(source)
             numSources = len(ForecastSources)
-
-        hourlyData, dataset = parseENTSOESolarWindForecastBySourceType(data, startDateObj, ForecastSources, numSources, DAY_JUMP)
+        dataset = parseENTSOESolarWindForecastBySourceType(data, startDateObj, ForecastSources, numSources, DAY_JUMP)
 
         if (days == 0):
             fullDataset = dataset.copy()
-            fullRawData = data.copy()
-            fullHourly = hourlyData.copy()
         else:
             if (days%60 == 0):
                 time.sleep(1)
             fullDataset = pd.concat([fullDataset, dataset])
-            fullRawData = pd.concat([fullRawData, data])
-            fullHourly = pd.concat([fullHourly, hourlyData])
 
         # startDate incremented    
         startDateObj = startDateObj + timedelta(days=DAY_JUMP)
         startDate = startDateObj.strftime("%Y-%m-%d")
 
         # print(fullDataset.tail(2))
-    return fullRawData, fullHourly, fullDataset
+    return fullDataset
 
 # def concatDataset():
 #     # fix directories later when in use
@@ -212,18 +206,18 @@ def getSolarWindForecastFromENTSOE(balAuth, startDate, numDays, DAY_JUMP):
 #     return
 
 def cleanSolarWindForecastDataFromENTSOE(dataset, balAuth):
-    dataset = dataset.astype(np.float64) # converting type of data to float64
-    dataset[dataset<0] = 0 # converting negative numbers to 0; not sure why necessary
+    dataset = dataset.astype(np.float64)
+    dataset[dataset<0] = 0
     for i in range(len(dataset)):
-        for j in range(len(dataset.columns)): # for each entry
-            if (pd.isna(dataset.iloc[i,j]) is True or dataset.iloc[i,j] == np.nan): # if values missing
-                prevHour = dataset.iloc[i-1, j] if (i-1)>=0 else np.nan # get values from previous & next hour/day
+        for j in range(len(dataset.columns)):
+            if (pd.isna(dataset.iloc[i,j]) is True or dataset.iloc[i,j] == np.nan):
+                prevHour = dataset.iloc[i-1, j] if (i-1)>=0 else np.nan 
                 prevDay = dataset.iloc[i-24, j] if (i-24)>=0 else np.nan
                 nextHour = dataset.iloc[i+1, j] if (i+1)<len(dataset) else np.nan
                 nextDay = dataset.iloc[i+24, j] if (i+24)<len(dataset) else np.nan
                 numerator = 0
                 denominator = 0
-                if (pd.isna(prevHour) is False): # fill the dates with close hours/days (taking average)
+                if (pd.isna(prevHour) is False):
                     numerator += prevHour
                     denominator+=1
                 if (pd.isna(prevDay) is False):
@@ -235,7 +229,7 @@ def cleanSolarWindForecastDataFromENTSOE(dataset, balAuth):
                 if (pd.isna(nextDay) is False):
                     numerator += nextDay
                     denominator+=1
-                dataset.iloc[i, j] = (numerator/denominator) if denominator>0 else 0 # if no data found, just set to 0
+                dataset.iloc[i, j] = (numerator/denominator) if denominator>0 else 0 
                 # print(balAuth, dataset.index.values[i], prevHour, prevDay, nextHour, nextDay, dataset.iloc[i, j])
                 # filling missing values by taking average of prevHour, prevDay same hour, 
                 # nextHour & nextDay same hour
@@ -248,25 +242,25 @@ def adjustColumns(dataset, balAuth):
     sources = ["solar", "wind"]
     modifiedSources = []
     print(dataset.shape)
-    modifiedDataset = np.zeros(dataset.shape) # return a new array of the input shape
+    modifiedDataset = np.zeros(dataset.shape)
     idx = 0
     for source in sources:
-        if (source in dataset.columns): # create columns for new dataset
+        if (source in dataset.columns):
             modifiedSources.append(source)
-            val = dataset[source].values # get all values from old dataset
-            modifiedDataset[:, idx] = val # all rows of 0th column (initially) iterated
+            val = dataset[source].values 
+            modifiedDataset[:, idx] = val
             idx += 1
     print(modifiedSources)
     modifiedDataset = pd.DataFrame(modifiedDataset, columns=modifiedSources, index=dataset.index)
     print(modifiedDataset.shape)
     return modifiedDataset
 
-def adjustMinIntervalData(data, interval): # input = pandas dataframe
+def adjustMinIntervalData(data): # input = pandas dataframe
     newDataframe = pd.DataFrame(columns=data.columns)
     newIndeces = []
 
     for column in range(len(data.columns)):
-        modifiedValues = [] # contains for each column
+        modifiedValues = []
         for row in range(len(data)):
             if (data.index[row].minute == 0): # new hour started
                 if (row != 0):
@@ -277,25 +271,30 @@ def adjustMinIntervalData(data, interval): # input = pandas dataframe
                     modifiedValues.append(newValue) # append old value for previous hour
                 if (column == 0):
                     newIndeces.append(data.index[row])
+                interval = 0
                 newValue = data.iloc[row][column]
                 i = 1
             else:
                 newValue = newValue + data.iloc[row][column]
+                if (i == 1):
+                    interval = data.index[row].minute - data.index[row - 1].minute
+                elif (interval != (data.index[row].minute - data.index[row - 1].minute)):
+                    print("safety measure: there's diff. intervals within an hour range")
+                    exit(0)
                 i = i + 1
-
         # for the last row
-        if (interval == 15 and i < 4): # add missing values (previous time block)
+        if (interval == 15 and i < 4):
             newValue = (newValue / i) * 4
         elif (interval == 30 and i < 2):
             newValue = (newValue / i) * 2
-        modifiedValues.append(newValue) # append old value for previous hour
+        modifiedValues.append(newValue)
         if (column == 0):
             newIndeces.append(data.index[row])
         newDataframe[data.columns.values[column]] = pd.Series(modifiedValues)
 
+    # create & return modified dataframe
     for row in range(len(newDataframe)):
         newDataframe.rename(index={row: newIndeces[row]}, inplace=True)
-
     return newDataframe
 
 if __name__ == "__main__":
@@ -308,30 +307,22 @@ if __name__ == "__main__":
 
     for balAuth in ENTSOE_BAL_AUTH_LIST:
         # fetch forecast data
-        rawData, hourlyData, fullDataset = getSolarWindForecastFromENTSOE(balAuth, startDate, numDays, DAY_JUMP=8)
+        fullDataset = getSolarWindForecastFromENTSOE(balAuth, startDate, numDays, DAY_JUMP=8)
         # DM: For DAY_JUMP > 1, there is a bug while filling missing hours
 
-        # saving files from src folder (should work)
+        # saving files from src folder
         parentdir = os.path.normpath(os.path.join(os.getcwd(), os.pardir)) # goes to CarbonCast folder
         filedir = os.path.normpath(os.path.join(parentdir, f"./data/EU_DATA/SolarWind/{balAuth}"))
         
-        csv_path = os.path.normpath(os.path.join(filedir, f"./{balAuth}_SW_raw.csv"))
-        with open(csv_path, 'w') as f: # open as f means opens as file
-            rawData.to_csv(f)
-    
-        csv_path = os.path.normpath(os.path.join(filedir, f"./{balAuth}_SW_hourly.csv"))
-        with open(csv_path, 'w') as f: # open as f means opens as file
-            hourlyData.to_csv(f)
-        
         csv_path = os.path.normpath(os.path.join(filedir, f"./{balAuth}_SW.csv"))
-        with open(csv_path, 'w') as f: # open as f means opens as file
+        with open(csv_path, 'w') as f:
             fullDataset.to_csv(f, index=False)
-        
+
         # clean forecast data
         dataset = pd.read_csv(csv_path, header=0, 
                             parse_dates=["UTC time"], index_col=["UTC time"])
         cleanedDataset = cleanSolarWindForecastDataFromENTSOE(dataset, balAuth)
-        cleanedDataset.to_csv(filedir+f"/{balAuth}_SW_clean.csv") # see if string suffices
+        cleanedDataset.to_csv(filedir+f"/{balAuth}_SW_clean.csv")
 
         # adjust source columns
         dataset = pd.read_csv(filedir+f"/{balAuth}_SW_clean.csv", header=0, index_col=["UTC time"])
