@@ -57,7 +57,6 @@ ENTSOE_SOURCE_MAP = {
 ENTSOE_BAL_AUTH_LIST = ['AT', 'BE', 'BG', 'HR', 'CZ', 'DK', 'EE', 'FI', 
                          'FR', 'DE', 'GB', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'NL',
                         'PL', 'PT', 'RO', 'RS', 'SK', 'SI', 'ES', 'SE', 'CH']
-
 INVALID_AUTH_LIST = ['AL', 'DK-DK2']
 
 # get production data by source type from ENTSOE API
@@ -87,7 +86,6 @@ def parseENTSOEProductionDataBySourceType(data, startDate, electricitySources, n
 
     if (len(data) == 0):
         # empty data fetched from ENTSOE. For now, make everything Nan
-        print("the data's length is 0; should be empty dataset")
         for hour in range(24 * numDays):
             tempHour = startDate + timedelta(hours=hour)
             hourlyElectricityData = [tempHour.strftime("%Y-%m-%d %H:00")]
@@ -100,19 +98,9 @@ def parseENTSOEProductionDataBySourceType(data, startDate, electricitySources, n
 
         dataset = pd.DataFrame(electricityProductionData, columns=datasetColumns)
         return dataset
-    
-    # adding up <1hr intervals together
-    if (data.index[1].minute == 15):
-        print("15 minutes intervals")
-        data = adjustMinIntervalData(data, interval=15)
-    elif (data.index[1].minute == 30):
-        print("30 minutes intervals")
-        data = adjustMinIntervalData(data, interval=30)
-    elif (data.index[1].minute == 0):
-        print("hour intervals")
-    else:
-        print("some other interval exists")
-        exit(0)
+  
+    # accounting for possibility of <1hr intervals
+    data = adjustMinIntervalData(data)
 
     curDate = data.index[0].astimezone(tz='UTC')
     curHour = data.index[0].astimezone(tz='UTC').to_pydatetime()
@@ -184,6 +172,10 @@ def parseENTSOEProductionDataBySourceType(data, startDate, electricitySources, n
             for source in range(numSources):
                 hourlyElectricityData.append(np.nan)
             electricityProductionData.append(hourlyElectricityData)
+    elif (len(electricityProductionData) > (24 * numDays)):
+        print("something is wrong... why extra dates?")
+        print(electricityProductionData)
+        exit(0)
 
     # creating & returning dataset
     datasetColumns = ["UTC time"]
@@ -197,8 +189,6 @@ def getElectricityProductionDataFromENTSOE(balAuth, startDate, numDays, DAY_JUMP
     startDateObj = datetime.strptime(startDate, "%Y-%m-%d")
     electricitySources = set()
     numSources = 0
-
-    print("start date:", startDate)
 
     for days in range(0, numDays, DAY_JUMP): # DAY_JUMP: # days of data got each time
         endDateObj = startDateObj + timedelta(days=DAY_JUMP-1)
@@ -296,7 +286,7 @@ def adjustColumns(dataset, balAuth):
     print(modifiedDataset.shape)
     return modifiedDataset
 
-def adjustMinIntervalData(data, interval): # input = pandas dataframe
+def adjustMinIntervalData(data): # input = pandas dataframe
     newDataframe = pd.DataFrame(columns=data.columns)
     newIndeces = []
 
@@ -312,12 +302,17 @@ def adjustMinIntervalData(data, interval): # input = pandas dataframe
                     modifiedValues.append(newValue) # append old value for previous hour
                 if (column == 0):
                     newIndeces.append(data.index[row])
+                interval = 0
                 newValue = data.iloc[row][column]
                 i = 1
             else:
                 newValue = newValue + data.iloc[row][column]
+                if (i == 1):
+                    interval = data.index[row].minute - data.index[row - 1].minute
+                elif (interval != (data.index[row].minute - data.index[row - 1].minute)):
+                    print("safety measure: there's diff. intervals within an hour range")
+                    exit(0)
                 i = i + 1
-
         # for the last row
         if (interval == 15 and i < 4):
             newValue = (newValue / i) * 4
