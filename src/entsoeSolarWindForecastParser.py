@@ -89,7 +89,7 @@ def parseENTSOESolarWindForecastBySourceType(data, startDate, ForecastSources, n
             hourlyForecastData.append(np.nan)
         solarWindForecastData.append(hourlyForecastData)
     hourlyForecastData = []
-    hourlyForecastData.append(curDate.strftime("%Y-%m-%d %H:%M"))
+    hourlyForecastData.append(curDate.strftime("%Y-%m-%d %H:00"))
     
     # going through each entry
     for row in range(len(data)):
@@ -128,7 +128,7 @@ def parseENTSOESolarWindForecastBySourceType(data, startDate, ForecastSources, n
                     exit(0)
                 # preparing for new/current time/row
                 curDate = time
-                hourlyForecastData = [curDate.strftime("%Y-%m-%d %H:%M")]
+                hourlyForecastData = [curDate.strftime("%Y-%m-%d %H:00")]
                 solarWindForecastBySource = {}
                 solarWindForecastBySource[source] = data.iloc[row][column]
     for source in ForecastSources: # for the last iteration of row
@@ -141,7 +141,7 @@ def parseENTSOESolarWindForecastBySourceType(data, startDate, ForecastSources, n
     if (len(solarWindForecastData) < (24 * numDays)):
         for hour in range(len(solarWindForecastData), (24 * numDays)):
             curDate = curDate + timedelta(hours=1)
-            hourlyForecastData = [curDate.strftime("%Y-%m-%d %H:%M")]
+            hourlyForecastData = [curDate.strftime("%Y-%m-%d %H:00")]
             for source in range(numSources):
                 hourlyForecastData.append(np.nan)
             solarWindForecastData.append(hourlyForecastData)
@@ -262,9 +262,9 @@ def adjustMinIntervalData(data): # input = pandas dataframe
     for column in range(len(data.columns)):
         modifiedValues = []
         for row in range(len(data)):
-            if (data.index[row].minute == 0): # new hour started
+            if (row == 0 or (data.index[row].hour != data.index[row - 1].hour)): # new hour started
                 if (row != 0):
-                    if (interval == 15 and i < 4): # add missing values (previous time block)
+                    if ((interval == 15 or interval == 45) and i < 4): # add missing values (previous time block)
                         newValue = (newValue / i) * 4
                     elif (interval == 30 and i < 2):
                         newValue = (newValue / i) * 2
@@ -278,9 +278,6 @@ def adjustMinIntervalData(data): # input = pandas dataframe
                 newValue = newValue + data.iloc[row][column]
                 if (i == 1):
                     interval = data.index[row].minute - data.index[row - 1].minute
-                elif (interval != (data.index[row].minute - data.index[row - 1].minute)):
-                    print("safety measure: there's diff. intervals within an hour range")
-                    exit(0)
                 i = i + 1
         # for the last row
         if (interval == 15 and i < 4):
