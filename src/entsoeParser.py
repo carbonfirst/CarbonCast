@@ -295,7 +295,7 @@ def adjustMinIntervalData(data): # input = pandas dataframe
         for row in range(len(data)):
             if (row == 0 or (data.index[row].hour != data.index[row - 1].hour)): # new hour started
                 if (row != 0):
-                    if (interval == 15 and i < 4): # add missing values (previous time block)
+                    if ((interval == 15 or interval == 45) and i < 4): # add missing values (previous time block)
                         newValue = (newValue / i) * 4
                     elif (interval == 30 and i < 2):
                         newValue = (newValue / i) * 2
@@ -309,10 +309,6 @@ def adjustMinIntervalData(data): # input = pandas dataframe
                 newValue = newValue + data.iloc[row][column]
                 if (i == 1):
                     interval = data.index[row].minute - data.index[row - 1].minute
-                elif (interval != (data.index[row].minute - data.index[row - 1].minute)):
-                    print("safety measure: there's diff. intervals within an hour range")
-                    print(data.index.values)
-                    exit(0)
                 i = i + 1
         # for the last row
         if (interval == 15 and i < 4):
