@@ -73,7 +73,7 @@ def parseENTSOESolarWindForecastBySourceType(data, startDate, ForecastSources, n
             datasetColumns.append(source)
 
         dataset = pd.DataFrame(solarWindForecastData, columns=datasetColumns)
-        return dataset, dataset
+        return dataset
     
     # accounting for possibility of <1hr intervals
     data = adjustMinIntervalData(data)
