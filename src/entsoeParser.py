@@ -113,7 +113,7 @@ def parseENTSOEProductionDataBySourceType(data, startDate, electricitySources, n
             hourlyElectricityData.append(np.nan)
         electricityProductionData.append(hourlyElectricityData)
     hourlyElectricityData = []
-    hourlyElectricityData.append(curDate.strftime("%Y-%m-%d %H:%M"))
+    hourlyElectricityData.append(curDate.strftime("%Y-%m-%d %H:00"))
     
     # going through each entry
     for row in range(len(data)):
@@ -155,7 +155,7 @@ def parseENTSOEProductionDataBySourceType(data, startDate, electricitySources, n
                     exit(0)
                 # preparing for new/current time/row
                 curDate = time
-                hourlyElectricityData = [curDate.strftime("%Y-%m-%d %H:%M")]
+                hourlyElectricityData = [curDate.strftime("%Y-%m-%d %H:00")]
                 electricityBySource = {}
                 electricityBySource[source] = data.iloc[row][column]
     for source in electricitySources: # for the last iteration of row
@@ -168,7 +168,7 @@ def parseENTSOEProductionDataBySourceType(data, startDate, electricitySources, n
     if (len(electricityProductionData) < (24 * numDays)):
         for hour in range(len(electricityProductionData), (24 * numDays)):
             curDate = curDate + timedelta(hours=1)
-            hourlyElectricityData = [curDate.strftime("%Y-%m-%d %H:%M")]
+            hourlyElectricityData = [curDate.strftime("%Y-%m-%d %H:00")]
             for source in range(numSources):
                 hourlyElectricityData.append(np.nan)
             electricityProductionData.append(hourlyElectricityData)
@@ -293,7 +293,7 @@ def adjustMinIntervalData(data): # input = pandas dataframe
     for column in range(len(data.columns)):
         modifiedValues = []
         for row in range(len(data)):
-            if (data.index[row].minute == 0): # new hour started
+            if (row == 0 or (data.index[row].hour != data.index[row - 1].hour)): # new hour started
                 if (row != 0):
                     if (interval == 15 and i < 4): # add missing values (previous time block)
                         newValue = (newValue / i) * 4
@@ -311,6 +311,7 @@ def adjustMinIntervalData(data): # input = pandas dataframe
                     interval = data.index[row].minute - data.index[row - 1].minute
                 elif (interval != (data.index[row].minute - data.index[row - 1].minute)):
                     print("safety measure: there's diff. intervals within an hour range")
+                    print(data.index.values)
                     exit(0)
                 i = i + 1
         # for the last row
