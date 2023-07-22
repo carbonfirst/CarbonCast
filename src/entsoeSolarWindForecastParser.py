@@ -170,7 +170,7 @@ def getSolarWindForecastFromENTSOE(balAuth, startDate, numDays, DAY_JUMP):
 
         if (empty):
             numSources = 2
-            ForecastSources = ["solar", "wind"]
+            ForecastSources = {"solar", "wind"}
         elif (numSources <= 2): # only run the for-loop if there might be new sources added to the list
             for i in range(len(data.columns.values)):
                 colVal = data.columns.values[i]
