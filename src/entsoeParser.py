@@ -340,7 +340,7 @@ if __name__ == "__main__":
 
         # saving files from src folder (should work)
         parentdir = os.path.normpath(os.path.join(os.getcwd(), os.pardir)) # goes to CarbonCast folder
-        filedir = os.path.normpath(os.path.join(parentdir, f"./data/EU_DATA/Electricity/{balAuth}"))
+        filedir = os.path.normpath(os.path.join(parentdir, f"./data/EU_DATA/{balAuth}/ENTSOE"))
         
         csv_path = os.path.normpath(os.path.join(filedir, f"./{balAuth}.csv"))
         with open(csv_path, 'w') as f: # open as f means opens as file
