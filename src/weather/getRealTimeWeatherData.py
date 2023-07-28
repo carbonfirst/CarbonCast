@@ -32,8 +32,12 @@ def submitDataRequest(param, level, continent, year, month, day):
         request_url = buildUrl(date, param, level, continent, t)
         response = requests.get(request_url)
 
-        with open(os.path.normpath(os.path.join(filedir, f"../../real_time/weather_data/{param.lower().replace('/', '_')}/gfs.t00z.pgrb2.0p25.{year}{month}{day}.f00{t}.grib2")), 'wb+') as f:
-            f.write(response.content)
+        if (continent == "US"):
+            with open(os.path.normpath(os.path.join(filedir, f"../../real_time/weather_data/{param.lower().replace('/', '_')}/gfs.t00z.pgrb2.0p25.{year}{month}{day}.f00{t}.grib2")), 'wb+') as f:
+                f.write(response.content)
+        elif (continent == "EU"):
+            with open(os.path.normpath(os.path.join(filedir, f"../../real_time/EU_DATA/weather_data/{param.lower().replace('/', '_')}/gfs.t00z.pgrb2.0p25.{year}{month}{day}.f00{t}.grib2")), 'wb+') as f:
+                f.write(response.content)
         # print(f"Downloaded file: gfs.t00z.pgrb2.0p25.{year}{month}{day}.f00{t}.grib2")
         time.sleep(1)
 

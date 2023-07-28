@@ -17,7 +17,7 @@
     // "REGION": ["AECI", "AZPS", "BPAT", "CISO", "DUK", "EPE", "ERCOT", "FPL", "IPCO", 
     //             "ISNE", "LDWP", "MISO", "NEVP", "NWMT", "NYISO", "PACE", "PACW", "PJM", 
     //             "PSCO", "SC", "SCEG", "SOCO", "SPA", "SRP", "SWPP", "TIDC", "TVA", "WACM"],
-    "REGION": ["CISO"],
+    "REGION": ["DK"],
     "NUM_VAL_DAYS": 30, // 1 month
     "MODEL_SLIDING_WINDOW_LEN": 24, 
     "TRAINING_WINDOW_HOURS": 24, 

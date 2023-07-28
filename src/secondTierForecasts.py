@@ -72,7 +72,7 @@ def runSecondTier(configFileName, cefType, loadFromSavedModel):
     NUMBER_OF_EXPERIMENTS = secondTierConfig["NUMBER_OF_EXPERIMENTS_PER_REGION"]
     BUFFER_HOURS = PREDICTION_WINDOW_HOURS - 24
 
-    regionList = secondTierConfig["REGION_DIRECT"]
+    regionList = secondTierConfig["TMP_REGION"]
     if (loadFromSavedModel is True):
         NUMBER_OF_EXPERIMENTS = 1
     if (cefType == "-l"):
@@ -227,7 +227,7 @@ def runSecondTier(configFileName, cefType, loadFromSavedModel):
                                     np.percentile(regionDailyMape[region][:, i], 99)])
 
             print("Saving MAPE values by day in file...")
-            with open("../data/"+region+"/"+region+"_MAPE_iter"+str(exptNum)+".txt", "w") as f:
+            with open("../data/EU_DATA/"+region+"/"+region+"_MAPE_iter"+str(exptNum)+".txt", "w") as f:
                 for item in mapeByDay:
                     f.writelines(str(item))
                     f.write("\n")

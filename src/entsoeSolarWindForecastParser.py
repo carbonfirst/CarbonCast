@@ -8,6 +8,7 @@ import time
 import sys
 import numpy as np
 import pytz
+import subprocess
 
 # public key for ENTSOE API
 ENTSOE_API_KEY="c0b15cbf-634c-4884-b784-5b463182cc97"
@@ -241,18 +242,18 @@ def cleanSolarWindForecastDataFromENTSOE(dataset, balAuth):
 def adjustColumns(dataset, balAuth):
     sources = ["solar", "wind"]
     modifiedSources = []
-    print(dataset.shape)
+    print("dataset shape", dataset.shape)
     modifiedDataset = np.zeros(dataset.shape)
     idx = 0
     for source in sources:
         if (source in dataset.columns):
-            modifiedSources.append(source)
+            modifiedSources.append("avg_" + source + "_production_forecast")
             val = dataset[source].values 
             modifiedDataset[:, idx] = val
             idx += 1
     print(modifiedSources)
     modifiedDataset = pd.DataFrame(modifiedDataset, columns=modifiedSources, index=dataset.index)
-    print(modifiedDataset.shape)
+    print("modified dataset shape", modifiedDataset.shape)
     return modifiedDataset
 
 def adjustMinIntervalData(data): # input = pandas dataframe
@@ -294,6 +295,46 @@ def adjustMinIntervalData(data): # input = pandas dataframe
         newDataframe.rename(index={row: newIndeces[row]}, inplace=True)
     return newDataframe
 
+def startScript(balAuthList, startDate, numDays, dayJump, outputFileDir, isRealTime=False):
+    modifiedDataset = {}
+    for balAuth in balAuthList:
+        # fetch forecast data
+        fullDataset = getSolarWindForecastFromENTSOE(balAuth, startDate, numDays, DAY_JUMP=dayJump)
+        # DM: For DAY_JUMP > 1, there is a bug while filling missing hours
+
+        # saving files from src folder
+        parentdir = os.path.normpath(os.path.join(os.getcwd(), os.pardir)) # goes to CarbonCast folder
+        filedir = os.path.normpath(os.path.join(parentdir, outputFileDir))
+
+        if (isRealTime is True):
+            filedir = os.path.normpath(os.path.join(os.getcwd(),outputFileDir))
+        
+        # csv_path = os.path.normpath(os.path.join(filedir, f"./{balAuth}_solar_wind_forecasts_raw.csv"))
+        csv_path = filedir+"/"+balAuth+"/solar_wind_forecasts/"+balAuth+"_solar_wind_forecasts_raw.csv"
+        with open(csv_path, 'w') as f:
+            fullDataset.to_csv(f, index=False)
+        print("Written raw csv data to file")
+
+        # clean forecast data
+        dataset = pd.read_csv(csv_path, header=0, 
+                            parse_dates=["UTC time"], index_col=["UTC time"])
+        cleanedDataset = cleanSolarWindForecastDataFromENTSOE(dataset, balAuth)
+        partial_clean_csv_path = filedir+"/"+balAuth+"/solar_wind_forecasts/"+balAuth+"_solar_wind_forecasts_partial_clean.csv"
+        cleanedDataset.to_csv(partial_clean_csv_path)
+        print("Written partial cleaned csv data to file")
+
+        # adjust source columns
+        dataset = pd.read_csv(partial_clean_csv_path, header=0, index_col=["UTC time"])
+        modifiedDataset[balAuth] = adjustColumns(dataset, balAuth)
+        clean_csv_path = filedir+"/"+balAuth+"/solar_wind_forecasts/"+balAuth+"_solar_wind_forecasts.csv"
+        modifiedDataset[balAuth].to_csv(clean_csv_path)
+
+        val = subprocess.call("rm "+csv_path, shell=True)
+        val = subprocess.call("rm "+partial_clean_csv_path, shell=True)
+
+        print("reached the end for " + balAuth)
+    return modifiedDataset
+
 if __name__ == "__main__":
     if (len(sys.argv)!=3):
         print("Usage: python3 entsoeSolarWindForecastParser.py <yyyy-mm-dd> <# days to fetch data for>")
@@ -302,30 +343,9 @@ if __name__ == "__main__":
     startDate = sys.argv[1] # "2022-01-01" #"2019-01-01"
     numDays = int(sys.argv[2]) #368 #1096
 
-    for balAuth in ENTSOE_BAL_AUTH_LIST:
-        # fetch forecast data
-        fullDataset = getSolarWindForecastFromENTSOE(balAuth, startDate, numDays, DAY_JUMP=8)
-        # DM: For DAY_JUMP > 1, there is a bug while filling missing hours
+    startScript(ENTSOE_BAL_AUTH_LIST, startDate, numDays, dayJump=1, 
+                outputFileDir="./data/EU_DATA/{balAuth}/ENTSOE", isRealTime=False)
 
-        # saving files from src folder
-        parentdir = os.path.normpath(os.path.join(os.getcwd(), os.pardir)) # goes to CarbonCast folder
-        filedir = os.path.normpath(os.path.join(parentdir, f"./data/EU_DATA/{balAuth}/ENTSOE"))
-        
-        csv_path = os.path.normpath(os.path.join(filedir, f"./{balAuth}_SW.csv"))
-        with open(csv_path, 'w') as f:
-            fullDataset.to_csv(f, index=False)
-
-        # clean forecast data
-        dataset = pd.read_csv(csv_path, header=0, 
-                            parse_dates=["UTC time"], index_col=["UTC time"])
-        cleanedDataset = cleanSolarWindForecastDataFromENTSOE(dataset, balAuth)
-        cleanedDataset.to_csv(filedir+f"/{balAuth}_SW_clean.csv")
-
-        # adjust source columns
-        dataset = pd.read_csv(filedir+f"/{balAuth}_SW_clean.csv", header=0, index_col=["UTC time"])
-        modifiedDataset = adjustColumns(dataset, balAuth)
-        modifiedDataset.to_csv(filedir+f"/{balAuth}_SW_clean_mod.csv")
-
-        print("reached the end for " + balAuth)
+    
 
     # concatDataset()

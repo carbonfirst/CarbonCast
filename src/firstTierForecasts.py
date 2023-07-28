@@ -271,7 +271,7 @@ def runFirstTierInRealTime(configFileName, regionList, startDate, electricityDat
         for source in sourceList:
             sourceCol = sourceColList[sourceIdx]
             # partialSourceProductionForecastAvailable = regionConfig["PARTIAL_FORECAST_AVAILABILITY_LIST"][sourceIdx] # TODO: [DM] For now, reading from config file. Change it later based on real time availability
-            partialSourceProductionForecastAvailable = True if solWindFcstData is not None else False # partial forecasts only for SOLAR and WIND
+            partialSourceProductionForecastAvailable = True if solWindFcstData[region] is not None else False # partial forecasts only for SOLAR and WIND
             print(inFileName)
             print(weatherForecastInFileName)
             isRenewableSource = False
@@ -309,7 +309,7 @@ def runFirstTierInRealTime(configFileName, regionList, startDate, electricityDat
             wTestData= common.scaleTestDataWithTrainingValues(wTestData, wFtMin, wFtMax)
             if (partialSourceProductionForecastAvailable and (source == "SOLAR" or source == "WIND")):
                 print("Partial forecast available for source: ", source)
-                dataset["avg_"+source.lower()+"_production_forecast"] = solWindFcstData["avg_"+source.lower()+"_production_forecast"].values
+                dataset["avg_"+source.lower()+"_production_forecast"] = solWindFcstData[region]["avg_"+source.lower()+"_production_forecast"].values
                 partialSourceProductionForecast = dataset["avg_"+source.lower()+"_production_forecast"].iloc[-24:].values
                 partialSourceProductionForecast = common.scaleColumn(partialSourceProductionForecast, 
                         ftMin[DEPENDENT_VARIABLE_COL], ftMax[DEPENDENT_VARIABLE_COL])

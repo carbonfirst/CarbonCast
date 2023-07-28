@@ -33,7 +33,7 @@
     "REGION_LIFECYCLE": ["IPCO", "PACW", 
                 "PSCO", "SPA", "SWPP"],
 
-    "TMP_REGION": ["CISO"],
+    "TMP_REGION": ["DK"],
 
     "NUM_TEST_DAYS": 181, //last 6 months of 2022
     "NUM_VAL_DAYS": 181, // first 6 months of 2022, make it 184 if OUT_WINDOW_LEN is 24

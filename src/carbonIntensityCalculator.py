@@ -269,9 +269,10 @@ def runProgram(region, isLifecycle, isForecast, realTimeInFileName, realTimeOutF
     return
 
 def adjustColumns(region):
-    sources = ["coal", "nat_gas", "nuclear", "oil", "hydro", "solar", "wind", "other"]
+    # sources = ["coal", "nat_gas", "nuclear", "oil", "hydro", "solar", "wind", "other"]
+    sources = ["coal", "nat_gas", "nuclear", "oil", "hydro", "solar", "wind", "biomass", "geothermal", "unknown"] # for ENTSOE
     modifiedSources = []
-    dataset = pd.read_csv("../data/"+region+"/fuel_forecast/"+region+"_clean.csv", header=0, index_col=["UTC time"])
+    dataset = pd.read_csv("../data/EU_DATA/"+region+"/fuel_forecast/"+region+"_clean.csv", header=0, index_col=["UTC time"])
     print(dataset.shape)
     modifiedDataset = np.zeros(dataset.shape)
     idx = 0
@@ -283,7 +284,7 @@ def adjustColumns(region):
             idx += 1
     modifiedDataset = pd.DataFrame(modifiedDataset, columns=modifiedSources, index=dataset.index)
     print(modifiedDataset.shape)
-    modifiedDataset.to_csv("../data/"+region+"/fuel_forecast/"+region+"_clean_mod.csv")
+    modifiedDataset.to_csv("../data/EU_DATA/"+region+"/fuel_forecast/"+region+"_clean_mod.csv")
     return
 
 
@@ -298,10 +299,14 @@ if __name__ == "__main__":
 
     region = sys.argv[1]
 
-    ISO_LIST = ["AECI", "AZPS", "BPAT", "CISO", "DUK", "EPE", "ERCO", "FPC", 
-                "FPL", "GRID", "IPCO", "ISNE", "LDWP", "MISO", "NEVP", "NWMT", "NYIS", 
-                "PACE", "PACW", "PJM", "PSCO", "PSEI", "SC", "SCEG", "SOCO", "SPA", "SRP", 
-                "SWPP", "TIDC", "TVA", "WACM", "WALC"]
+    ISO_LIST = ["DK"]
+    # ISO_LIST = ["AECI", "AZPS", "BPAT", "CISO", "DUK", "EPE", "ERCO", "FPC", 
+    #             "FPL", "GRID", "IPCO", "ISNE", "LDWP", "MISO", "NEVP", "NWMT", "NYIS", 
+    #             "PACE", "PACW", "PJM", "PSCO", "PSEI", "SC", "SCEG", "SOCO", "SPA", "SRP", 
+    #             "SWPP", "TIDC", "TVA", "WACM", "WALC"]
+    ENTSOE_LIST = ['AL', 'AT', 'BE', 'BG', 'HR', 'CZ', 'DK', 'DK-DK2', 'EE', 'FI', 
+                         'FR', 'DE', 'GB', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'NL',
+                        'PL', 'PT', 'RO', 'RS', 'SK', 'SI', 'ES', 'SE', 'CH'] # for ENTSOE
 
     isForecast = False
     isLifecycle = False
@@ -322,24 +327,24 @@ if __name__ == "__main__":
 
         if (isLifecycle is True):
             if (isForecast is True):
-                REAL_TIME_SRC_IN_FILE_NAME = "../data/"+region+"/"+region+"_carbon_lifecycle_"+TEST_PERIOD+".csv"
-                CARBON_FROM_SRC_FORECASTS_OUT_FILE_NAME = "../data/"+region+"/"+region+"_carbon_from_src_prod_forecasts_lifecycle_"+TEST_PERIOD+".csv"
-                FORECAST_SRC_IN_FILE_NAME = "../data/"+region+"/"+region+"_96hr_source_prod_forecasts_DA_"+TEST_PERIOD+".csv"
+                REAL_TIME_SRC_IN_FILE_NAME = "../data/EU_DATA/"+region+"/"+region+"_carbon_lifecycle_"+TEST_PERIOD+".csv"
+                CARBON_FROM_SRC_FORECASTS_OUT_FILE_NAME = "../data/EU_DATA/"+region+"/"+region+"_carbon_from_src_prod_forecasts_lifecycle_"+TEST_PERIOD+".csv"
+                FORECAST_SRC_IN_FILE_NAME = "../data/EU_DATA/"+region+"/"+region+"_96hr_source_prod_forecasts_DA_"+TEST_PERIOD+".csv"
             else:
                 # REAL_TIME_SRC_IN_FILE_NAME = "../data/"+region+"/"+region+".csv"
                 # CARBON_FROM_REAL_TIME_SRC_OUT_FILE_NAME = "../data/"+region+"/"+region+"_lifecycle_emissions.csv"
-                REAL_TIME_SRC_IN_FILE_NAME = "../data/"+region+"/"+region+"_clean.csv"
-                CARBON_FROM_REAL_TIME_SRC_OUT_FILE_NAME = "../data/"+region+"/"+region+"_lifecycle_emissions.csv"
+                REAL_TIME_SRC_IN_FILE_NAME = "../data/EU_DATA/"+region+"/"+region+"_clean.csv"
+                CARBON_FROM_REAL_TIME_SRC_OUT_FILE_NAME = "../data/EU_DATA/"+region+"/"+region+"_lifecycle_emissions.csv"
         else:
             if (isForecast is True):
-                REAL_TIME_SRC_IN_FILE_NAME = "../data/"+region+"/"+region+"_carbon_direct_"+TEST_PERIOD+".csv"
-                CARBON_FROM_SRC_FORECASTS_OUT_FILE_NAME = "../data/"+region+"/"+region+"_carbon_from_src_prod_forecasts_direct_"+TEST_PERIOD+".csv"
-                FORECAST_SRC_IN_FILE_NAME = "../data/"+region+"/"+region+"_96hr_source_prod_forecasts_DA_"+TEST_PERIOD+".csv"
+                REAL_TIME_SRC_IN_FILE_NAME = "../data/EU_DATA/"+region+"/"+region+"_carbon_direct_"+TEST_PERIOD+".csv"
+                CARBON_FROM_SRC_FORECASTS_OUT_FILE_NAME = "../data/EU_DATA/"+region+"/"+region+"_carbon_from_src_prod_forecasts_direct_"+TEST_PERIOD+".csv"
+                FORECAST_SRC_IN_FILE_NAME = "../data/EU_DATA/"+region+"/"+region+"_96hr_source_prod_forecasts_DA_"+TEST_PERIOD+".csv"
             else:
                 # REAL_TIME_SRC_IN_FILE_NAME = "../data/"+region+"/"+region+".csv"
                 # CARBON_FROM_REAL_TIME_SRC_OUT_FILE_NAME = "../data/"+region+"/"+region+"_direct_emissions.csv"
-                REAL_TIME_SRC_IN_FILE_NAME = "../data/"+region+"/"+region+"_clean.csv"
-                CARBON_FROM_REAL_TIME_SRC_OUT_FILE_NAME = "../data/"+region+"/"+region+"_direct_emissions.csv"
+                REAL_TIME_SRC_IN_FILE_NAME = "../data/EU_DATA/"+region+"/"+region+"_clean.csv"
+                CARBON_FROM_REAL_TIME_SRC_OUT_FILE_NAME = "../data/EU_DATA/"+region+"/"+region+"_direct_emissions.csv"
 
         runProgram(region, isLifecycle, isForecast, REAL_TIME_SRC_IN_FILE_NAME, CARBON_FROM_REAL_TIME_SRC_OUT_FILE_NAME, 
                    FORECAST_SRC_IN_FILE_NAME, CARBON_FROM_SRC_FORECASTS_OUT_FILE_NAME)

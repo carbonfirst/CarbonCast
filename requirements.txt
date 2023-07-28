@@ -9,3 +9,5 @@ matplotlib==3.5.3
 json5==0.9.10
 seaborn==0.11.2
 statsmodels==0.13.2
+entsoe-py==0.5.10
+xarray==23.7.0
