@@ -4,12 +4,12 @@ from datetime import datetime, timedelta
 import numpy as np
 import sys
 
-# ENTSOE_BAL_AUTH_LIST = ['AT', 'BE', 'BG', 'HR', 'CZ', 'DK', 'EE', 'FI', 
-#                          'FR', 'DE', 'GB', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'NL',
-#                         'PL', 'PT', 'RO', 'RS', 'SK', 'SI', 'ES', 'SE', 'CH']
-ENTSOE_BAL_AUTH_LIST = ['AT', 'BE', 'BG', 'HR', 'CZ', 'EE', 'FI', 
-                         'GB', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'NL',
-                        'PL', 'PT', 'RS', 'SK', 'SI', 'ES', 'SE', 'CH']
+ENTSOE_BAL_AUTH_LIST = ['AT', 'BE', 'BG', 'HR', 'CZ', 'DK', 'EE', 'FI', 
+                         'FR', 'DE', 'GB', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'NL',
+                        'PL', 'PT', 'RO', 'RS', 'SK', 'SI', 'ES', 'SE', 'CH']
+# ENTSOE_BAL_AUTH_LIST = ['AT', 'BE', 'BG', 'HR', 'CZ', 'EE', 'FI', 
+#                          'GB', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'NL',
+#                         'PL', 'PT', 'RS', 'SK', 'SI', 'ES', 'SE', 'CH']
 # ENTSOE_BAL_AUTH_LIST = ['HR'] # ['DK', 'DE', 'FR', 'RO']
 INVALID_AUTH_LIST = ['AL', 'DK-DK2']
 
@@ -39,6 +39,22 @@ def getRawDataframe(ba):
 
     return rawProductionData, rawForecastData
 
+def startTimeChecker(ba, rawProdData, rawFcstData):
+    if (rawProdData is not None and not ("2019-01-01 00:00:00+00:00" == rawProdData.index[0])):
+        print(f"{ba}'s production data does not start on 2019-01-01 00:00") # could be changed to take in the start date later
+        print("Production data starts on "+ rawProdData.index[0])
+    if (rawFcstData is not None and not ("2019-01-01 00:00:00+00:00" == rawFcstData.index[0])):
+        print(f"{ba}'s forecast data does not start on 2019-01-01 00:00") # could be changed to take in the start date later
+        print("Forecast data starts on "+ rawFcstData.index[0])
+
+    if (rawProdData is not None and not (("2019-01-01 00:15:00+00:00" == rawProdData.index[1]) or ("2019-01-01 00:30:00+00:00" == rawProdData.index[1])
+        or ("2019-01-01 01:00:00+00:00" == rawProdData.index[1]))):
+        print(f"{ba} has missing data after 2019-01-01 00:00. Next time stamp: ", rawProdData.index[1])
+    if (rawFcstData is not None and not (("2019-01-01 00:15:00+00:00" == rawFcstData.index[1]) or ("2019-01-01 00:30:00+00:00" == rawFcstData.index[1])
+        or ("2019-01-01 01:00:00+00:00" == rawFcstData.index[1]))):
+        print(f"{ba} has missing data after 2019-01-01 00:00. Next time stamp: ", rawFcstData.index[1])
+
+
 # find parts of the dataset where the time interval changes/is irregular
 def findChangingTimeIntervals(rawProdData, rawFcstData):  
     if (rawProdData is not None):
@@ -52,9 +68,9 @@ def findChangingTimeIntervals(rawProdData, rawFcstData):
                         - datetime.strptime(curTime, "%Y-%m-%d %H:%M:00+00:00"))
             if (row == 0): # Assume 1st time block has data normal & time interval doesn't change; to check later manually
                 prodInterval = timeDiff
-            if (prodInterval > timedelta(hours=1)): # if data missing (more than 1hr), set interval to an hour
-                prodInterval == timedelta(hours=1)
-                # exit()
+                if (prodInterval > timedelta(hours=1)): # if data missing (more than 1hr), set interval to an hour
+                    prodInterval == timedelta(hours=1)
+                    exit()
             
             # add if statement for when it goes from 1hr to less
             if (prodInterval == timedelta(hours=1) and timeDiff < timedelta(hours=1)): # changing interval to 1hr to smaller
@@ -63,6 +79,7 @@ def findChangingTimeIntervals(rawProdData, rawFcstData):
             elif (timeDiff > timedelta(hours=1) or prodInterval != timeDiff): # would catch any interval not equal to prodInterval
                 newDFRow = {"Interval": prodInterval.seconds/60, "UTC Time": curTime, "Next Time": nextTime, "Time Difference": timeDiff}
                 prodDF.loc[len(prodDF)] = newDFRow
+                # manually look through to see if <1hr interval changes to 1hr or 15min to 30min
     else:
         prodDF = None
  
@@ -77,9 +94,9 @@ def findChangingTimeIntervals(rawProdData, rawFcstData):
                         - datetime.strptime(curTime, "%Y-%m-%d %H:%M:00+00:00"))
             if (row == 0):
                 fcstInterval = timeDiff
-            if (fcstInterval > timedelta(hours=1)): # if data missing (more than 1hr), set interval to an hour
-                fcstInterval == timedelta(hours=1)
-                # exit()
+                if (fcstInterval > timedelta(hours=1)): # if data missing (more than 1hr), set interval to an hour
+                    fcstInterval == timedelta(hours=1)
+                    exit()
 
             #interval variance
             if (fcstInterval == timedelta(hours=1) and timeDiff < timedelta(hours=1)): # changing interval to 1hr to smaller
@@ -119,6 +136,7 @@ def calculateMissingTime(prodDF, fcstDF):
 if __name__ == "__main__":
     for balAuth in ENTSOE_BAL_AUTH_LIST:
         rawProductionData, rawForecastData = getRawDataframe(balAuth)
+        startTimeChecker(balAuth, rawProductionData, rawForecastData)
         prodDF, fcstDF = findChangingTimeIntervals(rawProductionData, rawForecastData)
 
         if (prodDF is None):
@@ -144,8 +162,3 @@ if __name__ == "__main__":
                 fcstDF.to_csv(f, index=False)
 
         calculateMissingTime(prodDF, fcstDF)
-        
-        
-        
-        
-        
