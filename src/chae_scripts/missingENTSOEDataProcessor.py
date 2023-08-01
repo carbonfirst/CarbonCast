@@ -7,10 +7,10 @@ import sys
 # ENTSOE_BAL_AUTH_LIST = ['AT', 'BE', 'BG', 'HR', 'CZ', 'DK', 'EE', 'FI', 
 #                          'FR', 'DE', 'GB', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'NL',
 #                         'PL', 'PT', 'RO', 'RS', 'SK', 'SI', 'ES', 'SE', 'CH']
-# ENTSOE_BAL_AUTH_LIST = ['AT', 'BE', 'BG', 'HR', 'CZ', 'EE', 'FI', 
-#                          'GB', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'NL',
-#                         'PL', 'PT', 'RS', 'SK', 'SI', 'ES', 'SE', 'CH']
-ENTSOE_BAL_AUTH_LIST = ['DK', 'DE', 'FR', 'RO'] # ['DK', 'DE', 'FR', 'RO']
+ENTSOE_BAL_AUTH_LIST = ['AT', 'BE', 'BG', 'HR', 'CZ', 'EE', 'FI', 
+                         'GB', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'NL',
+                        'PL', 'PT', 'RS', 'SK', 'SI', 'ES', 'SE', 'CH']
+# ENTSOE_BAL_AUTH_LIST = ['HR'] # ['DK', 'DE', 'FR', 'RO']
 INVALID_AUTH_LIST = ['AL', 'DK-DK2']
 
 AUTH_INTERVALS = {'DK': 60, 'DE': 15, 'FR': 60, 'RO': 60 and 15, 'GB': 30} # for reference
@@ -28,16 +28,20 @@ def getRawDataframe(ba):
     rawFcstDir = os.path.abspath(os.path.join(__file__, 
                                         f"../../../data/EU_DATA/{ba}/ENTSOE/{ba}_raw_forecast.csv"))
     
-    rawProductionData = pd.read_csv(rawProdDir, header=0, index_col=["UTC Time"])
-    rawForecastData = pd.read_csv(rawFcstDir, header=0, index_col=["UTC Time"])
+    try:
+        rawProductionData = pd.read_csv(rawProdDir, header=0, index_col=["UTC Time"])
+    except:
+        rawProductionData = None
+    try:
+        rawForecastData = pd.read_csv(rawFcstDir, header=0, index_col=["UTC Time"])
+    except:
+        rawForecastData = None
 
     return rawProductionData, rawForecastData
 
 # find parts of the dataset where the time interval changes/is irregular
 def findChangingTimeIntervals(rawProdData, rawFcstData):  
-    if (rawProdData.empty):
-        prodDF = None
-    else:
+    if (rawProdData is not None):
         # create a new dataframe to keep missing/changing time/rows of production data
         prodDF = pd.DataFrame(columns=["Interval", "UTC Time", "Next Time", "Time Difference"])
         prodInterval = 0
@@ -59,10 +63,10 @@ def findChangingTimeIntervals(rawProdData, rawFcstData):
             elif (timeDiff > timedelta(hours=1) or prodInterval != timeDiff): # would catch any interval not equal to prodInterval
                 newDFRow = {"Interval": prodInterval.seconds/60, "UTC Time": curTime, "Next Time": nextTime, "Time Difference": timeDiff}
                 prodDF.loc[len(prodDF)] = newDFRow
- 
-    if (rawFcstData.empty):
-        fcstDF = None
     else:
+        prodDF = None
+ 
+    if (rawFcstData is not None):
         # do the same for forecast data
         fcstDF = pd.DataFrame(columns=["Interval", "UTC Time", "Next Time", "Time Difference"])
         fcstInterval = 0
@@ -84,11 +88,15 @@ def findChangingTimeIntervals(rawProdData, rawFcstData):
             elif (timeDiff > timedelta(hours=1) or fcstInterval != timeDiff): # would catch any interval not equal to fcstInterval
                 newDFRow = {"Interval": fcstInterval.seconds/60, "UTC Time": curTime, "Next Time": nextTime, "Time Difference": timeDiff}
                 fcstDF.loc[len(fcstDF)] = newDFRow
+    else:
+        fcstDF = None
 
     return prodDF, fcstDF
 
 
 def calculateMissingTime(prodDF, fcstDF):
+    TOTAL_MINS = 1464 * 24 * 60 # 1464 days b/w 2019-01-01 and 2023-01-03
+
     if (prodDF is not None):
         totalProdMissingMin = 0
         for row in range(len(prodDF.index)):
@@ -109,8 +117,6 @@ def calculateMissingTime(prodDF, fcstDF):
 
 
 if __name__ == "__main__":
-    TOTAL_MINS = 1464 * 24 * 60 # 1464 days b/w 2019-01-01 and 2023-01-03
-
     for balAuth in ENTSOE_BAL_AUTH_LIST:
         rawProductionData, rawForecastData = getRawDataframe(balAuth)
         prodDF, fcstDF = findChangingTimeIntervals(rawProductionData, rawForecastData)
