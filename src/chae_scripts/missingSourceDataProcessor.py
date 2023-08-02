@@ -181,5 +181,3 @@ if __name__ == "__main__":
                     f"../../../data/EU_DATA/{balAuth}/ENTSOE/{balAuth}_fcst_missing_source_data.csv"))
             with open(fcstDir, 'w') as f:
                 forecastDF.to_csv(f, index=False)
-
-        

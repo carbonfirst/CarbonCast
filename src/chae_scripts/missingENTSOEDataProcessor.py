@@ -13,8 +13,6 @@ ENTSOE_BAL_AUTH_LIST = ['AT', 'BE', 'BG', 'HR', 'CZ', 'DK', 'EE', 'FI',
 # ENTSOE_BAL_AUTH_LIST = ['DK', 'DE', 'FR', 'RO'] # ['DK', 'DE', 'FR', 'RO']
 INVALID_AUTH_LIST = ['AL', 'DK-DK2']
 
-AUTH_INTERVALS = {'DK': 60, 'DE': 15, 'FR': 60, 'RO': 60 and 15, 'GB': 30} # for reference
-
 # pd.set_option('display.max_columns', None)  # or 1000
 # pd.set_option('display.max_rows', None)  # or 1000
 # pd.set_option('display.max_colwidth', None)  # or 199
@@ -111,7 +109,7 @@ def findChangingTimeIntervals(rawProdData, rawFcstData):
     return prodDF, fcstDF
 
 
-def calculateMissingTime(prodDF, fcstDF, numProdSources, numFcstSources):
+def calculateMissingTime(prodDF, fcstDF):
     TOTAL_MINS = 1464 * 24 * 60 # 1464 days b/w 2019-01-01 and 2023-01-03
 
     if (prodDF is not None):
@@ -120,9 +118,13 @@ def calculateMissingTime(prodDF, fcstDF, numProdSources, numFcstSources):
             timeDiff = prodDF.loc[row, "Time Difference"]
             totalProdMissingMin = (totalProdMissingMin - prodDF.loc[row, "Interval"] 
                                 + timeDiff.seconds/60 + timeDiff.days*24*60)
+        prodMissingPercent = round((totalProdMissingMin/TOTAL_MINS)*100, 4)
         print("Production data has total " + str(totalProdMissingMin) + " missing minutes; " 
-                + str(round((totalProdMissingMin/TOTAL_MINS*numProdSources)*100, 4)) + 
-                " percent of the whole region data")
+                + str(prodMissingPercent) + " percent of the whole region data")
+        prodDF.loc[len(prodDF), "Interval"] = "Total Missing Minutes:"
+        prodDF.loc[len(prodDF)-1, "UTC Time"] = totalProdMissingMin
+        prodDF.loc[len(prodDF), "Interval"] = "Total Missing Percent"
+        prodDF.loc[len(prodDF)-1, "UTC Time"] = prodMissingPercent
     
     if (fcstDF is not None):
         totalFcstMissingMin = 0
@@ -130,11 +132,15 @@ def calculateMissingTime(prodDF, fcstDF, numProdSources, numFcstSources):
             timeDiff = fcstDF.loc[row, "Time Difference"]
             totalFcstMissingMin = (totalFcstMissingMin - fcstDF.loc[row, "Interval"] 
                                 + timeDiff.seconds/60 + timeDiff.days*24*60)
+        fcstMissingPercent = round((totalFcstMissingMin/TOTAL_MINS)*100, 4)
         print("Forecast data has total " + str(totalFcstMissingMin) + " missing minutes; " 
-                + str(round((totalFcstMissingMin/TOTAL_MINS)*100, 4)) + 
-                " percent of the whole region data")
+                + str(fcstMissingPercent) + " percent of the whole region data")
+        fcstDF.loc[len(fcstDF), "Interval"] = "Total Missing Minutes:"
+        fcstDF.loc[len(fcstDF)-1, "UTC Time"] = totalFcstMissingMin
+        fcstDF.loc[len(fcstDF), "Interval"] = "Total Missing Percent"
+        fcstDF.loc[len(fcstDF)-1, "UTC Time"] = fcstMissingPercent
         
-    return totalProdMissingMin, totalFcstMissingMin
+    return prodDF, fcstDF 
 
 
 if __name__ == "__main__":
@@ -142,29 +148,29 @@ if __name__ == "__main__":
         rawProductionData, rawForecastData = getRawDataframe(balAuth)
         # startTimeChecker(balAuth, rawProductionData, rawForecastData)
         prodDF, fcstDF = findChangingTimeIntervals(rawProductionData, rawForecastData)
+        
+        
+        prodDF, fcstDF = calculateMissingTime(prodDF, fcstDF)
+        print(prodDF, fcstDF)
 
-        # if (prodDF is None):
-        #     print("Original dataframe for " + balAuth + " production is empty\n")
-        # elif (prodDF.empty):
-        #     print("No abnormal interval for " + balAuth + " production data")
-        # else:
-        #     print("\nProduction data info:\n", prodDF)
-        #     prodDir = os.path.abspath(os.path.join(__file__, 
-        #             f"../../../data/EU_DATA/{balAuth}/ENTSOE/{balAuth}_prod_interval_changes.csv"))
-        #     with open(prodDir, 'w') as f:
-        #         prodDF.to_csv(f, index=False)
+        if (prodDF is None):
+            print("Original dataframe for " + balAuth + " production is empty\n")
+        elif (prodDF.empty):
+            print("No abnormal interval for " + balAuth + " production data")
+        else:
+            print("\nProduction data info:\n", prodDF)
+            prodDir = os.path.abspath(os.path.join(__file__, 
+                    f"../../../data/EU_DATA/{balAuth}/ENTSOE/{balAuth}_prod_interval_changes.csv"))
+            with open(prodDir, 'w') as f:
+                prodDF.to_csv(f, index=False)
 
-        # if (fcstDF is None):
-        #     print("Original dataframe for " + balAuth + " forecast is empty\n")
-        # elif (fcstDF.empty):
-        #     print("No abnormal interval for " + balAuth + " forecast data")
-        # else:
-        #     print("\nForecast data info:\n", fcstDF)
-        #     fcstDir = os.path.abspath(os.path.join(__file__, 
-        #             f"../../../data/EU_DATA/{balAuth}/ENTSOE/{balAuth}_fcst_interval_changes.csv"))
-        #     with open(fcstDir, 'w') as f:
-        #         fcstDF.to_csv(f, index=False)
-
-        totalProdMissingMin, totalFcstMissingMin = calculateMissingTime(prodDF, fcstDF, 
-                                        0 if prodDF is None else len(rawProductionData.columns),
-                                        0 if fcstDF is None else len(rawForecastData.columns)) # one column is for UTC Time
+        if (fcstDF is None):
+            print("Original dataframe for " + balAuth + " forecast is empty\n")
+        elif (fcstDF.empty):
+            print("No abnormal interval for " + balAuth + " forecast data")
+        else:
+            print("\nForecast data info:\n", fcstDF)
+            fcstDir = os.path.abspath(os.path.join(__file__, 
+                    f"../../../data/EU_DATA/{balAuth}/ENTSOE/{balAuth}_fcst_interval_changes.csv"))
+            with open(fcstDir, 'w') as f:
+                fcstDF.to_csv(f, index=False)
