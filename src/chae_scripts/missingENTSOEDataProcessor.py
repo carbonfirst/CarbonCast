@@ -123,7 +123,7 @@ def calculateMissingTime(prodDF, fcstDF):
                 + str(prodMissingPercent) + " percent of the whole region data")
         prodDF.loc[len(prodDF), "Interval"] = "Total Missing Minutes:"
         prodDF.loc[len(prodDF)-1, "UTC Time"] = totalProdMissingMin
-        prodDF.loc[len(prodDF), "Interval"] = "Total Missing Percent"
+        prodDF.loc[len(prodDF), "Interval"] = "Total Missing Percent:"
         prodDF.loc[len(prodDF)-1, "UTC Time"] = prodMissingPercent
     
     if (fcstDF is not None):
@@ -137,7 +137,7 @@ def calculateMissingTime(prodDF, fcstDF):
                 + str(fcstMissingPercent) + " percent of the whole region data")
         fcstDF.loc[len(fcstDF), "Interval"] = "Total Missing Minutes:"
         fcstDF.loc[len(fcstDF)-1, "UTC Time"] = totalFcstMissingMin
-        fcstDF.loc[len(fcstDF), "Interval"] = "Total Missing Percent"
+        fcstDF.loc[len(fcstDF), "Interval"] = "Total Missing Percent:"
         fcstDF.loc[len(fcstDF)-1, "UTC Time"] = fcstMissingPercent
         
     return prodDF, fcstDF 
