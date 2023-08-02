@@ -22,9 +22,9 @@ def getRawDataframe(ba):
     print("\nregion: ", ba)
 
     rawProdDir = os.path.abspath(os.path.join(__file__, 
-                                        f"../../../data/EU_DATA/{ba}/ENTSOE/{ba}_raw_production.csv"))
+                                        f"../../../data/EU_DATA/{ba}/chae_reu/{ba}_raw_production.csv"))
     rawFcstDir = os.path.abspath(os.path.join(__file__, 
-                                        f"../../../data/EU_DATA/{ba}/ENTSOE/{ba}_raw_forecast.csv"))
+                                        f"../../../data/EU_DATA/{ba}/chae_reu/{ba}_raw_forecast.csv"))
     
     try:
         rawProductionData = pd.read_csv(rawProdDir, header=0, index_col=["UTC Time"])

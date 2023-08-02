@@ -1,10 +1,10 @@
 import os
 import shutil
 
-ENTSOE_BAL_AUTH_LIST = ['AL']
-# ENTSOE_BAL_AUTH_LIST = ['AL', 'AT', 'BE', 'BG', 'HR', 'CZ', 'DK', 'DK-DK2', 'EE', 'FI', 
-#                          'FR', 'DE', 'GB', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'NL',
-#                         'PL', 'PT', 'RO', 'RS', 'SK', 'SI', 'ES', 'SE', 'CH']
+# ENTSOE_BAL_AUTH_LIST = ['BE']
+ENTSOE_BAL_AUTH_LIST = ['BG', 'HR', 'CZ', 'DK', 'DK-DK2', 'EE', 'FI', 
+                         'FR', 'DE', 'GB', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'NL',
+                        'PL', 'PT', 'RO', 'RS', 'SK', 'SI', 'ES', 'SE', 'CH']
 
 
 def runningCarbonCast(ba):
@@ -46,28 +46,53 @@ def createChaeREUFolder(ba):
 
     os.mkdir(newFolderDir)
     
-    prodfile1 = os.path.abspath(os.path.join(oldFolderDir, f"../{ba}_raw_production.csv"))
-    prodfile2 = os.path.abspath(os.path.join(oldFolderDir, f"../{ba}_prod_interval_changes.csv"))
-    prodfile3 = os.path.abspath(os.path.join(oldFolderDir, f"../{ba}_prod_missing_source_data.csv"))
+    prodfile1 = os.path.abspath(os.path.join(oldFolderDir, f"{ba}_raw_production.csv"))
+    prodfile2 = os.path.abspath(os.path.join(oldFolderDir, f"{ba}_prod_interval_changes.csv"))
+    prodfile3 = os.path.abspath(os.path.join(oldFolderDir, f"{ba}_prod_missing_source_data.csv"))
 
-    fcstfile1 = os.path.abspath(os.path.join(oldFolderDir, f"../{ba}_raw_forecast.csv"))
-    fcstfile2 = os.path.abspath(os.path.join(oldFolderDir, f"../{ba}_fcst_interval_changes.csv"))
-    fcstfile3 = os.path.abspath(os.path.join(oldFolderDir, f"../{ba}_fcst_missing_source_data.csv"))
+    fcstfile1 = os.path.abspath(os.path.join(oldFolderDir, f"{ba}_raw_forecast.csv"))
+    fcstfile2 = os.path.abspath(os.path.join(oldFolderDir, f"{ba}_fcst_interval_changes.csv"))
+    fcstfile3 = os.path.abspath(os.path.join(oldFolderDir, f"{ba}_fcst_missing_source_data.csv"))
 
-    newprodfile1 = os.path.abspath(os.path.join(newFolderDir, f"../{ba}_raw_production.csv"))
-    newprodfile2 = os.path.abspath(os.path.join(newFolderDir, f"../{ba}_prod_interval_changes.csv"))
-    newprodfile3 = os.path.abspath(os.path.join(newFolderDir, f"../{ba}_prod_missing_source_data.csv"))
+    newprodfile1 = os.path.abspath(os.path.join(newFolderDir, f"{ba}_raw_production.csv"))
+    newprodfile2 = os.path.abspath(os.path.join(newFolderDir, f"{ba}_prod_interval_changes.csv"))
+    newprodfile3 = os.path.abspath(os.path.join(newFolderDir, f"{ba}_prod_missing_source_data.csv"))
 
-    newfcstfile1 = os.path.abspath(os.path.join(newFolderDir, f"../{ba}_raw_forecast.csv"))
-    newfcstfile2 = os.path.abspath(os.path.join(newFolderDir, f"../{ba}_fcst_interval_changes.csv"))
-    newfcstfile3 = os.path.abspath(os.path.join(newFolderDir, f"../{ba}_fcst_missing_source_data.csv"))
+    newfcstfile1 = os.path.abspath(os.path.join(newFolderDir, f"{ba}_raw_forecast.csv"))
+    newfcstfile2 = os.path.abspath(os.path.join(newFolderDir, f"{ba}_fcst_interval_changes.csv"))
+    newfcstfile3 = os.path.abspath(os.path.join(newFolderDir, f"{ba}_fcst_missing_source_data.csv"))
 
-    os.rename(prodfile1, newprodfile1)
-    os.rename(prodfile2, newprodfile2)
-    os.rename(prodfile3, newprodfile3)
-    os.rename(fcstfile1, newfcstfile1)
-    os.rename(fcstfile2, newfcstfile2)
-    os.rename(fcstfile3, newfcstfile3)
+    # os.rename(prodfile1, newprodfile1)
+    # os.rename(prodfile2, newprodfile2)
+    # os.rename(prodfile3, newprodfile3)
+    # os.rename(fcstfile1, newfcstfile1)
+    # os.rename(fcstfile2, newfcstfile2)
+    # os.rename(fcstfile3, newfcstfile3)
+
+    try:
+        os.rename(prodfile1, newprodfile1)
+    except:
+        pass
+    try:
+        os.rename(prodfile2, newprodfile2)
+    except:
+        pass
+    try:
+        os.rename(prodfile3, newprodfile3)
+    except:
+        pass
+    try:
+        os.rename(fcstfile1, newfcstfile1)
+    except:
+        pass
+    try:
+        os.rename(fcstfile2, newfcstfile2)
+    except:
+        pass
+    try:
+        os.rename(fcstfile3, newfcstfile3)
+    except:
+        pass
 
 
 if __name__ == "__main__":

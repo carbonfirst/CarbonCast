@@ -54,9 +54,9 @@ AUTH_INTERVALS = {'AT': 15, 'BE': 60, 'BG': 60, 'HR': 60, 'CZ': 60, 'DK': 60, 'E
 def getRawDataframe(ba):
     print("\nregion: ", ba)
     rawProdDir = os.path.abspath(os.path.join(__file__, 
-                                        f"../../../data/EU_DATA/{ba}/ENTSOE/{ba}_raw_production.csv"))
+                                        f"../../../data/EU_DATA/{ba}/chae_reu/{ba}_raw_production.csv"))
     rawFcstDir = os.path.abspath(os.path.join(__file__, 
-                                        f"../../../data/EU_DATA/{ba}/ENTSOE/{ba}_raw_forecast.csv"))
+                                        f"../../../data/EU_DATA/{ba}/chae_reu/{ba}_raw_forecast.csv"))
     try:
         rawProductionData = pd.read_csv(rawProdDir, header=0, index_col=["UTC Time"])
     except:
@@ -236,11 +236,11 @@ if __name__ == "__main__":
             fcstMissingSourcesData = sourceOrganizer(balAuth, forecastDF, fcstMissingSourcesData) # concat
 
     prodDir = os.path.abspath(os.path.join(__file__, 
-            f"../../../data/EU_DATA/{balAuth}_prod_missing_sources_combined.csv"))
+            f"../../../data/EU_DATA/prod_missing_sources_combined.csv"))
     with open(prodDir, 'w') as f:
         prodMissingSourcesData.to_csv(f, index=False)
 
     fcstDir = os.path.abspath(os.path.join(__file__, 
-            f"../../../data/EU_DATA/{balAuth}_fcst_missing_sources_combined.csv"))
+            f"../../../data/EU_DATA/fcst_missing_sources_combined.csv"))
     with open(fcstDir, 'w') as f:
         fcstMissingSourcesData.to_csv(f, index=False)    
