@@ -11,7 +11,7 @@ ENTSOE_BAL_AUTH_LIST = ['AT', 'BE', 'BG', 'HR', 'CZ', 'DK', 'EE', 'FI',
 # ENTSOE_BAL_AUTH_LIST = ['AT', 'BE', 'BG', 'HR', 'CZ', 'EE', 'FI', 
 #                          'GB', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'NL',
 #                         'PL', 'PT', 'RS', 'SK', 'SI', 'ES', 'SE', 'CH']
-# ENTSOE_BAL_AUTH_LIST = ['FR'] # ['DK', 'DE', 'FR', 'RO']
+# ENTSOE_BAL_AUTH_LIST = ['DK'] # ['DK', 'DE', 'FR', 'RO']
 INVALID_AUTH_LIST = ['AL', 'DK-DK2']
 
 # Converting to common names as in eiaParser.py
@@ -188,9 +188,8 @@ def sourceOrganizer(ba, baData, dataset): # FIX: make sure it works for both pro
         source = ENTSOE_SOURCES[baData.columns[column]]
     
         newMinutesRow[source] += baData.iloc[len(baData)-2, column] 
-        # missing minutes percentage out of the whole data for the region
-        newPercentRow[source] += (baData.iloc[len(baData)-2, column] 
-                                  / ((len(baData.columns)-1) * TOTAL_MINS) * 100)
+        # missing minutes percentage out of the available source data
+        newPercentRow[source] += (baData.iloc[len(baData)-2, column] / TOTAL_MINS * 100)
 
     dataset = pd.concat([dataset, pd.DataFrame(newMinutesRow, index=[0])], axis=0, ignore_index=True)
     dataset = pd.concat([dataset, pd.DataFrame(newPercentRow, index=[0])], axis=0, ignore_index=True)
@@ -244,3 +243,6 @@ if __name__ == "__main__":
             f"../../../data/EU_DATA/fcst_missing_sources_combined.csv"))
     with open(fcstDir, 'w') as f:
         fcstMissingSourcesData.to_csv(f, index=False)    
+
+    print(prodMissingSourcesData)
+    print(fcstMissingSourcesData)
