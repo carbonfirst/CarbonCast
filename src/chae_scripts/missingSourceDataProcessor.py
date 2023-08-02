@@ -217,7 +217,7 @@ if __name__ == "__main__":
         else:
             # print("\nProduction data info for :\n", balAuth, productionDF)
             # prodDir = os.path.abspath(os.path.join(__file__, 
-            #         f"../../../data/EU_DATA/{balAuth}/ENTSOE/{balAuth}_prod_missing_source_data.csv"))
+            #         f"../../../data/EU_DATA/{balAuth}/chae_reu/{balAuth}_prod_missing_source_data.csv"))
             # with open(prodDir, 'w') as f:
             #     productionDF.to_csv(f, index=False)
             prodMissingSourcesData = sourceOrganizer(balAuth, productionDF, prodMissingSourcesData) # concat
@@ -230,7 +230,7 @@ if __name__ == "__main__":
         else:
             # print("\nForecast data info for :\n", balAuth, forecastDF)
             # fcstDir = os.path.abspath(os.path.join(__file__, 
-            #         f"../../../data/EU_DATA/{balAuth}/ENTSOE/{balAuth}_fcst_missing_source_data.csv"))
+            #         f"../../../data/EU_DATA/{balAuth}/chae_reu/{balAuth}_fcst_missing_source_data.csv"))
             # with open(fcstDir, 'w') as f:
             #     forecastDF.to_csv(f, index=False)
             fcstMissingSourcesData = sourceOrganizer(balAuth, forecastDF, fcstMissingSourcesData) # concat

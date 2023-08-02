@@ -174,7 +174,7 @@ if __name__ == "__main__":
         # fullForecastDataset = getElectricityForecastDataFromENTSOE(balAuth, startDate, numDays, DAY_JUMP=8)
 
         parentdir = os.path.normpath(os.path.join(os.getcwd(), os.pardir)) # goes to CarbonCast folder
-        filedir = os.path.normpath(os.path.join(parentdir, f"./data/EU_DATA/{balAuth}/ENTSOE"))
+        filedir = os.path.normpath(os.path.join(parentdir, f"./data/EU_DATA/{balAuth}/chae_reu"))
         
         csv_path = os.path.normpath(os.path.join(filedir, f"./{balAuth}_raw_production.csv"))
         with open(csv_path, 'w') as f: # open as f means opens as file

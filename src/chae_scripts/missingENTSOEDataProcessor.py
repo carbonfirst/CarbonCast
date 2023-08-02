@@ -160,7 +160,7 @@ if __name__ == "__main__":
         else:
             print("\nProduction data info:\n", prodDF)
             prodDir = os.path.abspath(os.path.join(__file__, 
-                    f"../../../data/EU_DATA/{balAuth}/ENTSOE/{balAuth}_prod_interval_changes.csv"))
+                    f"../../../data/EU_DATA/{balAuth}/chae_reu/{balAuth}_prod_interval_changes.csv"))
             with open(prodDir, 'w') as f:
                 prodDF.to_csv(f, index=False)
 
@@ -171,6 +171,6 @@ if __name__ == "__main__":
         else:
             print("\nForecast data info:\n", fcstDF)
             fcstDir = os.path.abspath(os.path.join(__file__, 
-                    f"../../../data/EU_DATA/{balAuth}/ENTSOE/{balAuth}_fcst_interval_changes.csv"))
+                    f"../../../data/EU_DATA/{balAuth}/chae_reu/{balAuth}_fcst_interval_changes.csv"))
             with open(fcstDir, 'w') as f:
                 fcstDF.to_csv(f, index=False)
