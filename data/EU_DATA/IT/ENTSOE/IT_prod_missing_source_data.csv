@@ -29805,3 +29805,5 @@ UTC Time,Biomass,Fossil Coal-derived gas,Fossil Gas,Fossil Hard coal,Fossil Oil,
 2022-05-26 19:00:00+00:00,False,False,False,False,False,False,False,False,False,False,False,False,True
 2022-05-26 20:00:00+00:00,False,False,False,False,False,False,False,False,False,False,False,False,True
 2022-05-26 21:00:00+00:00,False,False,False,False,False,False,False,False,False,False,False,False,True
+Total Missing Minutes,0,33120,0,0,1440,0,0,1440,7200,0,0,0,1788360
+Percentage per Source,0.0,1.571,0.0,0.0,0.0683,0.0,0.0,0.0683,0.3415,0.0,0.0,0.0,84.8304

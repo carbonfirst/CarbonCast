@@ -28,3 +28,5 @@ UTC Time,Biomass,Fossil Brown coal/Lignite,Fossil Gas,Fossil Oil,Hydro Run-of-ri
 2019-09-11 04:00:00+00:00,True,True,True,True,True,True,False,True,True
 2019-12-06 04:00:00+00:00,True,True,True,True,True,True,False,True,True
 2019-12-06 05:00:00+00:00,True,True,True,True,True,True,False,True,True
+Total Missing Minutes,1740,1740,1740,1740,1740,1740,0,1740,1740
+Percentage per Source,0.0825,0.0825,0.0825,0.0825,0.0825,0.0825,0.0,0.0825,0.0825

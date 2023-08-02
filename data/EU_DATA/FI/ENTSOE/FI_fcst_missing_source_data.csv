@@ -5326,3 +5326,5 @@ UTC Time,Wind Onshore,Solar
 2019-08-13 18:00:00+00:00,False,True
 2019-08-13 19:00:00+00:00,False,True
 2019-08-13 20:00:00+00:00,False,True
+Total Missing Minutes,0,319620
+Percentage per Source,0.0,15.1611

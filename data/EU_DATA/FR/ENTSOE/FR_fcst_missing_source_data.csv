@@ -233,3 +233,5 @@ UTC Time,Solar,Wind Onshore
 2022-11-12 13:00:00+00:00,False,True
 2022-11-12 14:00:00+00:00,False,True
 2022-11-12 15:00:00+00:00,False,True
+Total Missing Minutes,7800,6240
+Percentage per Source,0.37,0.296

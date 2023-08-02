@@ -11157,3 +11157,5 @@ UTC Time,Biomass,Fossil Brown coal/Lignite,Fossil Coal-derived gas,Fossil Gas,Fo
 2020-04-09 19:00:00+00:00,False,False,False,False,False,False,False,False,False,True
 2020-04-09 20:00:00+00:00,False,False,False,False,False,False,False,False,False,True
 2020-04-09 21:00:00+00:00,False,False,False,False,False,False,False,False,False,True
+Total Missing Minutes,0,0,0,0,0,0,0,0,0,669480
+Percentage per Source,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,31.7566

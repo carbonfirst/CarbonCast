@@ -53,3 +53,5 @@ UTC Time,Biomass,Fossil Gas,Fossil Hard coal,Fossil Oil,Hydro Run-of-river and p
 2021-02-08 09:00:00+00:00,True,True,True,True,True,True,True,False,False,False
 2021-02-27 21:00:00+00:00,True,True,True,True,True,True,True,False,False,False
 2021-05-24 12:30:00+00:00,True,True,True,True,True,True,True,False,False,False
+Total Missing Minutes,1620,1620,1620,1620,1620,1620,1620,0,0,0
+Percentage per Source,0.0768,0.0768,0.0768,0.0768,0.0768,0.0768,0.0768,0.0,0.0,0.0

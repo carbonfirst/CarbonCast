@@ -62,3 +62,5 @@ UTC Time,Biomass,Fossil Gas,Fossil Hard coal,Hydro Run-of-river and poundage,Nuc
 2019-05-18 18:30:00+00:00,False,False,False,False,False,False,False,True,False,False
 2019-10-27 00:15:00+00:00,False,False,False,False,False,False,False,True,False,False
 2019-10-27 00:45:00+00:00,False,False,False,False,False,False,False,True,False,False
+Total Missing Minutes,0,0,0,0,0,0,0,945,0,0
+Percentage per Source,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0448,0.0,0.0

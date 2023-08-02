@@ -33694,3 +33694,5 @@ UTC Time,Hydro Water Reservoir,Nuclear,Other,Wind Onshore,Fossil Gas,Marine,Sola
 2023-01-03 21:00:00+00:00,False,False,False,False,False,True,False
 2023-01-03 22:00:00+00:00,False,False,False,False,False,True,False
 2023-01-03 23:00:00+00:00,False,False,False,False,False,True,False
+Total Missing Minutes,0,0,0,0,1553700,2021700,1553700
+Percentage per Source,0.0,0.0,0.0,0.0,73.6993,95.8988,73.6993

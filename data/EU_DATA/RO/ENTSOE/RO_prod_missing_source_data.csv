@@ -1,2 +1,4 @@
 UTC Time,Biomass,Fossil Brown coal/Lignite,Fossil Gas,Fossil Hard coal,Hydro Run-of-river and poundage,Hydro Water Reservoir,Nuclear,Solar,Wind Onshore
 2019-02-09 23:00:00+00:00,True,False,True,False,True,True,True,True,True
+Total Missing Minutes,60,0,60,0,60,60,60,60,60
+Percentage per Source,0.0028,0.0,0.0028,0.0,0.0028,0.0028,0.0028,0.0028,0.0028

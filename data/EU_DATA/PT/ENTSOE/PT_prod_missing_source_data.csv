@@ -12405,3 +12405,5 @@ UTC Time,Biomass,Fossil Gas,Fossil Hard coal,Hydro Run-of-river and poundage,Hyd
 2020-05-31 19:00:00+00:00,False,False,False,False,False,False,False,False,True
 2020-05-31 20:00:00+00:00,False,False,False,False,False,False,False,False,True
 2020-05-31 21:00:00+00:00,False,False,False,False,False,False,False,False,True
+Total Missing Minutes,0,0,0,0,0,0,0,0,744360
+Percentage per Source,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,35.3085

@@ -95,3 +95,5 @@ UTC Time,Solar,Wind Onshore
 2019-02-25 22:15:00+00:00,False,True
 2019-02-25 22:30:00+00:00,False,True
 2019-02-25 22:45:00+00:00,False,True
+Total Missing Minutes,0,1440
+Percentage per Source,0.0,0.0683

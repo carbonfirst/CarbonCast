@@ -30491,3 +30491,5 @@ UTC Time,Biomass,Fossil Gas,Fossil Hard coal,Fossil Oil,Hydro Run-of-river and p
 2023-01-03 21:00:00+00:00,False,False,True,False,False,False,False,False,False,False,False
 2023-01-03 22:00:00+00:00,False,False,True,False,False,False,False,False,False,False,False
 2023-01-03 23:00:00+00:00,False,False,True,False,False,False,False,False,False,False,False
+Total Missing Minutes,0,0,1829520,0,0,0,0,0,0,0,0
+Percentage per Source,0.0,0.0,86.7828,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0

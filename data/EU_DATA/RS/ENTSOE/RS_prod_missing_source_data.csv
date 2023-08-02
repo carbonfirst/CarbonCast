@@ -28403,3 +28403,5 @@ UTC Time,Biomass,Fossil Brown coal/Lignite,Fossil Gas,Hydro Run-of-river and pou
 2022-12-20 20:00:00+00:00,False,False,False,False,False,False,True
 2022-12-20 21:00:00+00:00,False,False,False,False,False,False,True
 2022-12-20 22:00:00+00:00,False,False,False,False,False,False,True
+Total Missing Minutes,7200,0,0,0,0,7200,1698420
+Percentage per Source,0.3415,0.0,0.0,0.0,0.0,0.3415,80.5641

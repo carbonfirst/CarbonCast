@@ -20,3 +20,5 @@ UTC Time,Fossil Brown coal/Lignite,Fossil Gas,Fossil Oil,Hydro Water Reservoir,S
 2020-01-28 04:00:00+00:00,True,True,True,True,False,False
 2022-08-14 11:00:00+00:00,True,True,True,True,False,False
 2022-08-16 12:00:00+00:00,True,True,True,True,False,False
+Total Missing Minutes,180,180,180,180,1080,1080
+Percentage per Source,0.0085,0.0085,0.0085,0.0085,0.0512,0.0512

@@ -25558,3 +25558,5 @@ UTC Time,Wind Onshore,Solar
 2021-12-01 20:00:00+00:00,False,True
 2021-12-01 21:00:00+00:00,False,True
 2021-12-01 22:00:00+00:00,False,True
+Total Missing Minutes,0,1533540
+Percentage per Source,0.0,72.7431
