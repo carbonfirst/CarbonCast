@@ -45,7 +45,7 @@ def parseENTSOEProductionDataBySourceType(data):
             source = column
         if (source == "Hydro Pumped Storage"):
             continue # Ignoring storage for now
-        if (source in dataset.columns): # fix; find out how to keep nan values
+        if (source in dataset.columns):
             # dataset[source] = dataset[source].fillna(0) + data[column].fillna(0)
             for row in range(len(data.index)):
                 firstNaN = pd.isna(dataset[source].iloc[row])
@@ -83,7 +83,7 @@ def getElectricityProductionDataFromENTSOE(balAuth, startDate, numDays, DAY_JUMP
         else:
             if (days%60 == 0):
                 time.sleep(1)
-            fullDataset = pd.concat([fullDataset, dataset], sort=False) # if doesn't work for new columns, fix here
+            fullDataset = pd.concat([fullDataset, dataset], sort=False)
 
         # startDate incremented    
         startDateObj = startDateObj + timedelta(days=DAY_JUMP)
@@ -123,7 +123,7 @@ def parseENTSOEForecastDataBySourceType(data):
             source = column[0]
         else:
             source = column
-        if (source in dataset.columns): # fix; find out how to keep nan values
+        if (source in dataset.columns):
             print("there is a duplicate for source ", source)
             exit()
         dataset.insert(loc=len(dataset.columns), column=source, value=data[column], allow_duplicates=True)
@@ -152,7 +152,7 @@ def getElectricityForecastDataFromENTSOE(balAuth, startDate, numDays, DAY_JUMP):
         else:
             if (days%60 == 0):
                 time.sleep(1)
-            fullDataset = pd.concat([fullDataset, dataset], sort=False) # if doesn't work for new columns, fix here
+            fullDataset = pd.concat([fullDataset, dataset], sort=False) 
 
         # startDate incremented    
         startDateObj = startDateObj + timedelta(days=DAY_JUMP)

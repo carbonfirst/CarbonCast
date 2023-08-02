@@ -11,8 +11,32 @@ ENTSOE_BAL_AUTH_LIST = ['AT', 'BE', 'BG', 'HR', 'CZ', 'DK', 'EE', 'FI',
 # ENTSOE_BAL_AUTH_LIST = ['AT', 'BE', 'BG', 'HR', 'CZ', 'EE', 'FI', 
 #                          'GB', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'NL',
 #                         'PL', 'PT', 'RS', 'SK', 'SI', 'ES', 'SE', 'CH']
-# ENTSOE_BAL_AUTH_LIST = ['CZ'] # ['DK', 'DE', 'FR', 'RO']
+# ENTSOE_BAL_AUTH_LIST = ['FR'] # ['DK', 'DE', 'FR', 'RO']
 INVALID_AUTH_LIST = ['AL', 'DK-DK2']
+
+# Converting to common names as in eiaParser.py
+ENTSOE_SOURCES = {
+    "Biomass": "biomass",
+    "Fossil Brown coal/Lignite": "coal",
+    "Fossil Coal-derived gas": "nat_gas",
+    "Fossil Gas": "nat_gas",
+    "Fossil Hard coal": "coal",
+    "Fossil Oil": "oil",
+    "Fossil Oil shale": "coal",
+    "Fossil Peat": "coal", # why is peat termed as coal by eMap?
+    "Geothermal": "geothermal",
+    "Hydro Pumped Storage": "STOR",
+    "Hydro Run-of-river and poundage": "hydro",
+    "Hydro Water Reservoir": "hydro",
+    "Marine": "unknown",
+    "Nuclear": "nuclear",
+    "Other renewable": "unknown",
+    "Solar": "solar",
+    "Waste": "biomass",
+    "Wind Offshore": "wind",
+    "Wind Onshore": "wind",
+    "Other": "unknown",
+}
 
 
  # Regions with changing intervals have the initial intervals (ES, RO)
@@ -90,7 +114,6 @@ def findMissingSourceData(rawProdData, rawFcstData):
 
 # Find values equal to TRUE and append the number of rows
 def calculateMissingSourceData(ba, prodDF, fcstDF): # FIX: RO and ES to change intervals after the dates
-    TOTAL_MINS = 1464 * 24 * 60 # 1464 days b/w 2019-01-01 and 2023-01-03
     timeInterval = AUTH_INTERVALS[ba]
 
     ROIntervalChanged = False
@@ -150,8 +173,35 @@ def calculateMissingSourceData(ba, prodDF, fcstDF): # FIX: RO and ES to change i
 
     return prodDF, fcstDF
 
+def sourceOrganizer(ba, baData, dataset): # FIX: make sure it works for both production and forecast
+    newMinutesRow = {}
+    newPercentRow = {}
+    newMinutesRow["Region/Type"] = ba + " Total Missing Minutes:"
+    newPercentRow["Region/Type"] = ba + " Total Missing Percentage:"
+
+    for column in range(1, len(baData.columns)): # skip UTC Time
+        source = ENTSOE_SOURCES[baData.columns[column]]
+        newMinutesRow[source] = 0
+        newPercentRow[source] = 0
+
+    for column in range(1, len(baData.columns)):
+        source = ENTSOE_SOURCES[baData.columns[column]]
+    
+        newMinutesRow[source] += baData.iloc[len(baData)-2, column] 
+        # missing minutes percentage out of the whole data for the region
+        newPercentRow[source] += (baData.iloc[len(baData)-2, column] 
+                                  / ((len(baData.columns)-1) * TOTAL_MINS) * 100)
+
+    dataset = pd.concat([dataset, pd.DataFrame(newMinutesRow, index=[0])], axis=0, ignore_index=True)
+    dataset = pd.concat([dataset, pd.DataFrame(newPercentRow, index=[0])], axis=0, ignore_index=True)
+
+    return dataset
+
 
 if __name__ == "__main__":
+    TOTAL_MINS = 1464 * 24 * 60 # 1464 days b/w 2019-01-01 and 2023-01-03
+    prodMissingSourcesData = pd.DataFrame()
+    fcstMissingSourcesData = pd.DataFrame()
 
     for balAuth in ENTSOE_BAL_AUTH_LIST:
         rawProductionData, rawForecastData = getRawDataframe(balAuth)
@@ -165,19 +215,32 @@ if __name__ == "__main__":
         elif (productionDF.empty):
             print("No missing data for " + balAuth + " production data")
         else:
-            print("\nProduction data info for :\n", balAuth, productionDF)
-            prodDir = os.path.abspath(os.path.join(__file__, 
-                    f"../../../data/EU_DATA/{balAuth}/ENTSOE/{balAuth}_prod_missing_source_data.csv"))
-            with open(prodDir, 'w') as f:
-                productionDF.to_csv(f, index=False)
+            # print("\nProduction data info for :\n", balAuth, productionDF)
+            # prodDir = os.path.abspath(os.path.join(__file__, 
+            #         f"../../../data/EU_DATA/{balAuth}/ENTSOE/{balAuth}_prod_missing_source_data.csv"))
+            # with open(prodDir, 'w') as f:
+            #     productionDF.to_csv(f, index=False)
+            prodMissingSourcesData = sourceOrganizer(balAuth, productionDF, prodMissingSourcesData) # concat
+            
 
         if (forecastDF is None):
             print("Original dataframe for " + balAuth + " forecast is empty\n")
         elif (forecastDF.empty):
             print("No missing data for " + balAuth + " forecast data")
         else:
-            print("\nForecast data info for :\n", balAuth, forecastDF)
-            fcstDir = os.path.abspath(os.path.join(__file__, 
-                    f"../../../data/EU_DATA/{balAuth}/ENTSOE/{balAuth}_fcst_missing_source_data.csv"))
-            with open(fcstDir, 'w') as f:
-                forecastDF.to_csv(f, index=False)
+            # print("\nForecast data info for :\n", balAuth, forecastDF)
+            # fcstDir = os.path.abspath(os.path.join(__file__, 
+            #         f"../../../data/EU_DATA/{balAuth}/ENTSOE/{balAuth}_fcst_missing_source_data.csv"))
+            # with open(fcstDir, 'w') as f:
+            #     forecastDF.to_csv(f, index=False)
+            fcstMissingSourcesData = sourceOrganizer(balAuth, forecastDF, fcstMissingSourcesData) # concat
+
+    prodDir = os.path.abspath(os.path.join(__file__, 
+            f"../../../data/EU_DATA/{balAuth}_prod_missing_sources_combined.csv"))
+    with open(prodDir, 'w') as f:
+        prodMissingSourcesData.to_csv(f, index=False)
+
+    fcstDir = os.path.abspath(os.path.join(__file__, 
+            f"../../../data/EU_DATA/{balAuth}_fcst_missing_sources_combined.csv"))
+    with open(fcstDir, 'w') as f:
+        fcstMissingSourcesData.to_csv(f, index=False)    
