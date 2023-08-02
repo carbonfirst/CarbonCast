@@ -1,0 +1,16 @@
+UTC Time,Biomass,Fossil Coal-derived gas,Fossil Gas,Fossil Oil shale,Fossil Peat,Hydro Run-of-river and poundage,Other,Other renewable,Solar,Waste,Wind Onshore
+2019-02-13 01:00:00+00:00,False,False,False,False,False,False,False,False,True,False,True
+2019-02-14 01:00:00+00:00,False,False,False,False,False,False,False,False,True,False,True
+2020-03-29 02:00:00+00:00,True,True,True,True,True,True,True,True,False,True,True
+2020-03-29 03:00:00+00:00,True,True,True,True,True,True,True,True,False,True,True
+2020-03-29 04:00:00+00:00,True,True,True,True,True,True,True,True,False,True,True
+2020-11-12 14:00:00+00:00,False,False,False,False,False,False,False,False,False,False,True
+2020-12-08 20:00:00+00:00,True,True,True,True,True,True,True,True,False,True,True
+2021-09-14 11:00:00+00:00,True,True,True,True,True,True,True,True,False,True,True
+2021-09-15 23:00:00+00:00,True,True,True,True,True,True,True,True,False,True,True
+2021-09-16 00:00:00+00:00,True,True,True,True,True,True,True,True,False,True,True
+2021-09-30 11:00:00+00:00,True,True,True,True,True,True,True,True,False,True,True
+2022-03-21 11:00:00+00:00,True,True,True,True,True,True,True,True,False,True,False
+2022-04-12 11:00:00+00:00,True,True,True,True,True,True,True,True,False,True,False
+2022-06-02 19:00:00+00:00,True,True,True,True,True,True,True,True,False,True,False
+2022-06-15 11:00:00+00:00,True,True,True,True,True,True,True,True,False,True,False

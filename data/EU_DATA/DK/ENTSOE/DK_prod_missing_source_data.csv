@@ -1,0 +1,5 @@
+UTC Time,Biomass,Fossil Gas,Fossil Hard coal,Fossil Oil,Solar,Waste,Wind Offshore,Wind Onshore
+2020-09-09 15:00:00+00:00,True,True,False,True,True,False,True,False
+2022-02-10 08:00:00+00:00,True,True,True,True,False,True,False,False
+2022-07-05 07:00:00+00:00,True,True,True,True,False,True,False,False
+2022-07-22 12:00:00+00:00,False,True,False,False,False,False,False,False
