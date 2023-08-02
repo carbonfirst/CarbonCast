@@ -121,7 +121,8 @@ def calculateMissingTime(prodDF, fcstDF, numProdSources, numFcstSources):
             totalProdMissingMin = (totalProdMissingMin - prodDF.loc[row, "Interval"] 
                                 + timeDiff.seconds/60 + timeDiff.days*24*60)
         print("Production data has total " + str(totalProdMissingMin) + " missing minutes; " 
-                + str(round((totalProdMissingMin/TOTAL_MINS*numProdSources)*100, 4)) + " percent")
+                + str(round((totalProdMissingMin/TOTAL_MINS*numProdSources)*100, 4)) + 
+                " percent of the whole region data")
     
     if (fcstDF is not None):
         totalFcstMissingMin = 0
@@ -130,7 +131,8 @@ def calculateMissingTime(prodDF, fcstDF, numProdSources, numFcstSources):
             totalFcstMissingMin = (totalFcstMissingMin - fcstDF.loc[row, "Interval"] 
                                 + timeDiff.seconds/60 + timeDiff.days*24*60)
         print("Forecast data has total " + str(totalFcstMissingMin) + " missing minutes; " 
-                + str(round((totalFcstMissingMin/TOTAL_MINS*numFcstSources)*100, 4)) + " percent")
+                + str(round((totalFcstMissingMin/TOTAL_MINS)*100, 4)) + 
+                " percent of the whole region data")
         
     return totalProdMissingMin, totalFcstMissingMin
 
