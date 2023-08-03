@@ -34,10 +34,10 @@ ENTSOE_SOURCES = {
     "Other": "unknown"
 }
 
-# ENTSOE_BAL_AUTH_LIST = ['DK', 'RO']
-ENTSOE_BAL_AUTH_LIST = ['AT', 'BE', 'BG', 'HR', 'CZ', 'DK', 'EE', 'FI', 
-                         'FR', 'DE', 'GB', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'NL',
-                        'PL', 'PT', 'RO', 'RS', 'SK', 'SI', 'ES', 'SE', 'CH']
+ENTSOE_BAL_AUTH_LIST = ['DK', 'RO']
+# ENTSOE_BAL_AUTH_LIST = ['AT', 'BE', 'BG', 'HR', 'CZ', 'DK', 'EE', 'FI', 
+#                          'FR', 'DE', 'GB', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'NL',
+#                         'PL', 'PT', 'RO', 'RS', 'SK', 'SI', 'ES', 'SE', 'CH']
 
 
 def calculateMissingMinutes(ba, isProd, sourceDF, timeDF, missingData):
@@ -64,16 +64,16 @@ def calculateMissingMinutes(ba, isProd, sourceDF, timeDF, missingData):
             newRow[ENTSOE_SOURCES[column]] = missingRowMins
         for row in range(len(sourceDF)-2):
             if (ba == 'RO' and row < len(sourceDF)-2 and not ROIntervalChanged):
-                if (datetime.strptime(sourceDF.index[row], "%Y-%m-%d %H:%M:00+00:00")
+                if (datetime.strptime(sourceDF.index.values[row], "%Y-%m-%d %H:%M:00+00:00")
                     >= (datetime.strptime("2021-01-31 00:00:00+00:00", "%Y-%m-%d %H:%M:00+00:00"))):
                     timeInterval = 15
                     ROIntervalChanged = True
             elif (ba == 'ES' and row < len(sourceDF)-2 and not ESIntervalChanged):
-                if (isProd and (datetime.strptime(sourceDF.index(row), "%Y-%m-%d %H:%M:00+00:00")) 
+                if (isProd and (datetime.strptime(sourceDF.index.values[row], "%Y-%m-%d %H:%M:00+00:00")) 
                     >= (datetime.strptime("2022-05-23 00:00:00+00:00", "%Y-%m-%d %H:%M:00+00:00"))):
                     timeInterval = 15
                     ESIntervalChanged = True
-                elif (not isProd and (datetime.strptime(sourceDF.index(row), "%Y-%m-%d %H:%M:00+00:00") 
+                elif (not isProd and (datetime.strptime(sourceDF.index.values[row], "%Y-%m-%d %H:%M:00+00:00") 
                         >= datetime.strptime("2022-05-24 00:00:00+00:00", "%Y-%m-%d %H:%M:00+00:00"))):
                     timeInterval = 15
                     ESIntervalChanged = True
@@ -85,7 +85,8 @@ def calculateMissingMinutes(ba, isProd, sourceDF, timeDF, missingData):
                     newRow[source] += timeInterval
             newRow["Total"] += timeInterval
     
-    missingData = pd.concat([missingData, pd.DataFrame(newRow, index=[0]).fillna(0)], axis=0, ignore_index=True)
+    tempDF = pd.DataFrame(newRow, index=[0]).replace(np.nan, 0)
+    missingData = pd.concat([missingData, tempDF], axis=0, ignore_index=True)
     return missingData
 
 
@@ -117,7 +118,8 @@ def calculateMissingPercent(ba, sourceDF, timeDF, missingData):
             newRow[source] += (missingRowMins + newValue) / (TOTAL_MINS * numSources[source]) * 100
             newRow["Total"] += newValue / (TOTAL_MINS * len(sourceDF.columns)) * 100
 
-    missingData = pd.concat([missingData, pd.DataFrame(newRow, index=[0])], axis=0, ignore_index=True)
+    tempDF = pd.DataFrame(newRow, index=[0]).replace(np.nan, 0)
+    missingData = pd.concat([missingData, tempDF], axis=0, ignore_index=True)
     return missingData
 
 # used to be in main; moved outside for organization
