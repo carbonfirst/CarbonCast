@@ -2,13 +2,13 @@ import os
 import pandas as pd
 from datetime import datetime, timedelta
 import numpy as np
-import sys
 
-ENTSOE_BAL_AUTH_LIST = ['DK', 'RO']
-# ENTSOE_BAL_AUTH_LIST = ['AT', 'BE', 'BG', 'HR', 'CZ', 'DK', 'EE', 'FI', 
-#                          'FR', 'DE', 'GB', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'NL',
-#                         'PL', 'PT', 'RO', 'RS', 'SK', 'SI', 'ES', 'SE', 'CH']
 # ENTSOE_SOURCE_LIST = ["coal", "nat_gas", "nuclear", "oil", "hydro", "solar", "wind", "biomass", "geothermal", "unknown"]
+
+AUTH_INTERVALS = {'AT': 15, 'BE': 60, 'BG': 60, 'HR': 60, 'CZ': 60, 'DK': 60, 'EE': 60, 
+                  'FI': 60, 'FR': 60, 'DE': 15, 'GB': 30, 'GR': 60, 'HU': 15, 'IE': 60, 
+                  'IT': 60, 'LV': 60, 'LT': 60, 'NL': 15, 'PL': 60, 'PT': 60, 'RO': 60, 
+                  'RS': 60, 'SK': 60, 'SI': 60, 'ES': 60, 'SE': 60, 'CH': 60}
 
 # Converting to common names as in eiaParser.py
 ENTSOE_SOURCES = {
@@ -34,10 +34,59 @@ ENTSOE_SOURCES = {
     "Other": "unknown"
 }
 
+# ENTSOE_BAL_AUTH_LIST = ['DK', 'RO']
+ENTSOE_BAL_AUTH_LIST = ['AT', 'BE', 'BG', 'HR', 'CZ', 'DK', 'EE', 'FI', 
+                         'FR', 'DE', 'GB', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'NL',
+                        'PL', 'PT', 'RO', 'RS', 'SK', 'SI', 'ES', 'SE', 'CH']
 
-def calculateMissingData(ba, isMinute, sourceDF, timeDF, missingData):
+
+def calculateMissingMinutes(ba, isProd, sourceDF, timeDF, missingData):
+    newRow = {}
+    sourceMissing = {}
+    missingRowMins = int(float(timeDF.iloc[len(timeDF)-2, 0])) # minutes missing for all sources
+
+    timeInterval = AUTH_INTERVALS[ba]
+    if (ba == 'IE' and isProd):
+        timeInterval = 30
+    ROIntervalChanged = False
+    ESIntervalChanged = False
+    
+    for column in sourceDF.columns:
+        newRow[ENTSOE_SOURCES[column]] = missingRowMins
+    newRow["Region"] = ba
+    newRow["Total"] = missingRowMins
+
+    for row in range(len(sourceDF)-2):
+        if (ba == 'RO' and row < len(sourceDF)-2 and not ROIntervalChanged):
+            if (datetime.strptime(sourceDF.index[row], "%Y-%m-%d %H:%M:00+00:00")
+                >= (datetime.strptime("2021-01-31 00:00:00+00:00", "%Y-%m-%d %H:%M:00+00:00"))):
+                timeInterval = 15
+                ROIntervalChanged = True
+        elif (ba == 'ES' and row < len(sourceDF)-2 and not ESIntervalChanged):
+            if (isProd and (datetime.strptime(sourceDF.index(row), "%Y-%m-%d %H:%M:00+00:00")) 
+                >= (datetime.strptime("2022-05-23 00:00:00+00:00", "%Y-%m-%d %H:%M:00+00:00"))):
+                timeInterval = 15
+                ESIntervalChanged = True
+            elif (not isProd and (datetime.strptime(sourceDF.index(row), "%Y-%m-%d %H:%M:00+00:00") 
+                    >= datetime.strptime("2022-05-24 00:00:00+00:00", "%Y-%m-%d %H:%M:00+00:00"))):
+                timeInterval = 15
+                ESIntervalChanged = True
+        for column in range(len(sourceDF.columns)):
+            if (sourceDF.iloc[row, column] == 'True'):
+                sourceMissing[ENTSOE_SOURCES[sourceDF.columns[column]]] = True
+        for source in sourceMissing.keys():
+            if sourceMissing[source] is True:
+                newRow[source] += timeInterval
+        newRow["Total"] += timeInterval
+    
+    missingData = pd.concat([missingData, pd.DataFrame(newRow, index=[0])], axis=0, ignore_index=True)
+    return missingData
+
+
+def calculateMissingPercent(ba, sourceDF, timeDF, missingData):
     newRow = {}
     numSources = {}
+    missingRowMins = int(float(timeDF.iloc[len(timeDF)-2, 0])) # minutes missing for all sources
 
     # calculate total number of sub-sources
     for column in sourceDF.columns:
@@ -47,26 +96,14 @@ def calculateMissingData(ba, isMinute, sourceDF, timeDF, missingData):
             numSources[source] += 1
         except:
             numSources[source] = 1 
-
-    # pull total rows/time missing; total missing minutes in second to the last row index 1
-    # take the minute & recalculate percentage for sig figs loss
     newRow["Region"] = ba
-    missingRowMins = int(float(timeDF.iloc[len(timeDF)-2, 0]))
-    if isMinute:
-        newRow["Total"] = missingRowMins
-    else:
-        newRow["Total"] = missingRowMins / TOTAL_MINS
+    newRow["Total"] = missingRowMins / TOTAL_MINS * 100 # initializing
   
-    # add all source missing minutes; add to total
     for column in range(len(sourceDF.columns)):
         source = ENTSOE_SOURCES[sourceDF.columns[column]]
-        newValue = int(sourceDF.iloc[len(sourceDF)-2, column])
-        if isMinute:
-            newRow[source] += newValue
-            newRow["Total"] += newValue
-        else:
-            newRow[source] += newValue / (TOTAL_MINS * numSources[source]) * 100 # total missing minutes per source
-            newRow["Total"] += newValue / (TOTAL_MINS * len(sourceDF.columns)) * 100
+        newValue = int(sourceDF.iloc[len(sourceDF)-2, column]) # minutes missing for source
+        newRow[source] += (missingRowMins + newValue) / (TOTAL_MINS * numSources[source]) * 100
+        newRow["Total"] += newValue / (TOTAL_MINS * len(sourceDF.columns)) * 100
 
     missingData = pd.concat([missingData, pd.DataFrame(newRow, index=[0])], axis=0, ignore_index=True)
     return missingData
@@ -100,15 +137,11 @@ if __name__ == "__main__":
         fcstTimeDF = pd.read_csv(fcstTimeDir, header=0, index_col=["Interval"])
 
         # calculating percentage of missing forecast/production data
-        prodMinuteData = calculateMissingData(balAuth, True, prodSourceDF, prodTimeDF, prodMinuteData)
-        fcstMinuteData = calculateMissingData(balAuth, True, fcstSourceDF, fcstTimeDF, fcstMinuteData)
+        prodMinuteData = calculateMissingMinutes(balAuth, True, prodSourceDF, prodTimeDF, prodMinuteData)
+        fcstMinuteData = calculateMissingMinutes(balAuth, False, fcstSourceDF, fcstTimeDF, fcstMinuteData)
         
-        prodPercentData = calculateMissingData(balAuth, False, prodSourceDF, prodTimeDF, prodPercentData)
-        fcstPercentData = calculateMissingData(balAuth, False, fcstSourceDF, fcstTimeDF, fcstPercentData)
-
-    print(prodMinuteData, "\n", prodPercentData)
-    # print(fcstMinuteData, fcstPercentData)
-    exit()
+        prodPercentData = calculateMissingPercent(balAuth, prodSourceDF, prodTimeDF, prodPercentData)
+        fcstPercentData = calculateMissingPercent(balAuth, fcstSourceDF, fcstTimeDF, fcstPercentData)
 
 
     prodMinuteDir = os.path.abspath(os.path.join(__file__, f"../../../data/EU_DATA/prod_missing_minute.csv"))
