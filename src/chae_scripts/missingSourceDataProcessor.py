@@ -38,13 +38,13 @@ ENTSOE_SOURCES = {
     "Other": "unknown",
 }
 
-
  # Regions with changing intervals have the initial intervals (ES, RO)
  # IE has different interval (production 30min forecast 1hr)
 AUTH_INTERVALS = {'AT': 15, 'BE': 60, 'BG': 60, 'HR': 60, 'CZ': 60, 'DK': 60, 'EE': 60, 
                   'FI': 60, 'FR': 60, 'DE': 15, 'GB': 30, 'GR': 60, 'HU': 15, 'IE': 30, 
                   'IT': 60, 'LV': 60, 'LT': 60, 'NL': 15, 'PL': 60, 'PT': 60, 'RO': 60, 
                   'RS': 60, 'SK': 60, 'SI': 60, 'ES': 60, 'SE': 60, 'CH': 60}
+
 
 # pd.set_option('display.max_columns', None)  # or 1000
 # pd.set_option('display.max_rows', None)  # or 1000
@@ -141,7 +141,7 @@ def calculateMissingSourceData(ba, prodDF, fcstDF): # FIX: RO and ES to change i
         prodDF.loc[len(prodDF)-1, "UTC Time"] = "Percentage per Source"
         for source in prodDF.columns:
             if (source != "UTC Time"):
-                prodDF.loc[len(prodDF)-1, source] = round(((prodDF.loc[len(prodDF)-2, source])/TOTAL_MINS*100), 4) # out of all possible "source data"
+                prodDF.loc[len(prodDF)-1, source] = ((prodDF.loc[len(prodDF)-2, source])/TOTAL_MINS*100) # out of all possible "source data"
 
     if (ba == 'IE'):
         timeInterval = 60
@@ -169,33 +169,9 @@ def calculateMissingSourceData(ba, prodDF, fcstDF): # FIX: RO and ES to change i
         fcstDF.loc[len(fcstDF)-1, "UTC Time"] = "Percentage per Source"
         for source in fcstDF.columns:
             if (source != "UTC Time"):
-                fcstDF.loc[len(fcstDF)-1, source] = round(((fcstDF.loc[len(fcstDF)-2, source])/TOTAL_MINS*100), 4) # out of all possible "source data"
+                fcstDF.loc[len(fcstDF)-1, source] = ((fcstDF.loc[len(fcstDF)-2, source])/TOTAL_MINS*100) # out of all possible "source data"
 
     return prodDF, fcstDF
-
-def sourceOrganizer(ba, baData, dataset): # FIX: make sure it works for both production and forecast
-    newMinutesRow = {}
-    newPercentRow = {}
-    newMinutesRow["Region/Type"] = ba + " Total Missing Minutes:"
-    newPercentRow["Region/Type"] = ba + " Total Missing Percentage:"
-
-    for column in range(1, len(baData.columns)): # skip UTC Time
-        source = ENTSOE_SOURCES[baData.columns[column]]
-        newMinutesRow[source] = 0
-        newPercentRow[source] = 0
-
-    for column in range(1, len(baData.columns)):
-        source = ENTSOE_SOURCES[baData.columns[column]]
-    
-        newMinutesRow[source] += baData.iloc[len(baData)-2, column] 
-        # missing minutes percentage out of the whole data for the region
-        newPercentRow[source] += (baData.iloc[len(baData)-2, column] 
-                                  / ((len(baData.columns)-1) * TOTAL_MINS) * 100)
-
-    dataset = pd.concat([dataset, pd.DataFrame(newMinutesRow, index=[0])], axis=0, ignore_index=True)
-    dataset = pd.concat([dataset, pd.DataFrame(newPercentRow, index=[0])], axis=0, ignore_index=True)
-
-    return dataset
 
 
 if __name__ == "__main__":
@@ -215,12 +191,11 @@ if __name__ == "__main__":
         elif (productionDF.empty):
             print("No missing data for " + balAuth + " production data")
         else:
-            # print("\nProduction data info for :\n", balAuth, productionDF)
-            # prodDir = os.path.abspath(os.path.join(__file__, 
-            #         f"../../../data/EU_DATA/{balAuth}/chae_reu/{balAuth}_prod_missing_source_data.csv"))
-            # with open(prodDir, 'w') as f:
-            #     productionDF.to_csv(f, index=False)
-            prodMissingSourcesData = sourceOrganizer(balAuth, productionDF, prodMissingSourcesData) # concat
+            print("\nProduction data info for :\n", balAuth, productionDF)
+            prodDir = os.path.abspath(os.path.join(__file__, 
+                    f"../../../data/EU_DATA/{balAuth}/chae_reu/{balAuth}_prod_missing_source_data.csv"))
+            with open(prodDir, 'w') as f:
+                productionDF.to_csv(f, index=False)
             
 
         if (forecastDF is None):
@@ -228,19 +203,8 @@ if __name__ == "__main__":
         elif (forecastDF.empty):
             print("No missing data for " + balAuth + " forecast data")
         else:
-            # print("\nForecast data info for :\n", balAuth, forecastDF)
-            # fcstDir = os.path.abspath(os.path.join(__file__, 
-            #         f"../../../data/EU_DATA/{balAuth}/chae_reu/{balAuth}_fcst_missing_source_data.csv"))
-            # with open(fcstDir, 'w') as f:
-            #     forecastDF.to_csv(f, index=False)
-            fcstMissingSourcesData = sourceOrganizer(balAuth, forecastDF, fcstMissingSourcesData) # concat
-
-    prodDir = os.path.abspath(os.path.join(__file__, 
-            f"../../../data/EU_DATA/prod_missing_sources_combined.csv"))
-    with open(prodDir, 'w') as f:
-        prodMissingSourcesData.to_csv(f, index=False)
-
-    fcstDir = os.path.abspath(os.path.join(__file__, 
-            f"../../../data/EU_DATA/fcst_missing_sources_combined.csv"))
-    with open(fcstDir, 'w') as f:
-        fcstMissingSourcesData.to_csv(f, index=False)    
+            print("\nForecast data info for :\n", balAuth, forecastDF)
+            fcstDir = os.path.abspath(os.path.join(__file__, 
+                    f"../../../data/EU_DATA/{balAuth}/chae_reu/{balAuth}_fcst_missing_source_data.csv"))
+            with open(fcstDir, 'w') as f:
+                forecastDF.to_csv(f, index=False)
