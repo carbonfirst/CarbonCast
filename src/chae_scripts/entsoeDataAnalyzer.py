@@ -34,7 +34,7 @@ ENTSOE_SOURCES = {
     "Other": "unknown"
 }
 
-# ENTSOE_BAL_AUTH_LIST = ['DK', 'BE', 'GB']
+# ENTSOE_BAL_AUTH_LIST = ['DK']
 ENTSOE_BAL_AUTH_LIST = ['AT', 'BE', 'BG', 'HR', 'CZ', 'DK', 'EE', 'FI', 
                          'FR', 'DE', 'GB', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'NL',
                         'PL', 'PT', 'RO', 'RS', 'SK', 'SI', 'ES', 'SE', 'CH']
@@ -83,14 +83,18 @@ def calculateMissingMinutes(ba, isProd, sourceDF, timeDF, missingData):
 
             for column in range(len(sourceDF.columns)):
                 source = ENTSOE_SOURCES[sourceDF.columns[column]]
-                if (sourceDF.iloc[row, column] == 'True' and sourceMissing.get(source) == 'True'):
+                if (sourceDF.iloc[row, column] == 'True' 
+                    and (sourceMissing.get(source) == True or sourceMissing.get(source) == None)):
                     sourceMissing[source] = True
                 else:
                     sourceMissing[source] = False
-            for source in sourceMissing.keys():
+            srcmissing = False
+            for source in sourceMissing.keys():    
                 if sourceMissing[source] is True:
                     newRow[source] += timeInterval
-            newRow["Total"] += timeInterval
+                    srcmissing = True
+            if srcmissing is True:
+                newRow["Total"] += timeInterval
     
     tempDF = pd.DataFrame(newRow, index=[0])
     missingData = pd.concat([missingData, tempDF], axis=0, ignore_index=True)
@@ -133,20 +137,7 @@ def calculateMissingPercent(ba, sourceDF, timeDF, missingData):
     return missingData
 
 
-
 # def calculateMAPEofSolarWindForecast():
-
-
-
-
-
-
-
-
-
-
-
-
 
 # used to be in main; moved outside for organization
 def missingTimeCounterCaller():
