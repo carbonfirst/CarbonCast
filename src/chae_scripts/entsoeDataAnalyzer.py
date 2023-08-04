@@ -82,8 +82,11 @@ def calculateMissingMinutes(ba, isProd, sourceDF, timeDF, missingData):
                     ESIntervalChanged = True
 
             for column in range(len(sourceDF.columns)):
-                if (sourceDF.iloc[row, column] == 'True'):
-                    sourceMissing[ENTSOE_SOURCES[sourceDF.columns[column]]] = True
+                source = ENTSOE_SOURCES[sourceDF.columns[column]]
+                if (sourceDF.iloc[row, column] == 'True' and sourceMissing.get(source) == 'True'):
+                    sourceMissing[source] = True
+                else:
+                    sourceMissing[source] = False
             for source in sourceMissing.keys():
                 if sourceMissing[source] is True:
                     newRow[source] += timeInterval
@@ -129,6 +132,22 @@ def calculateMissingPercent(ba, sourceDF, timeDF, missingData):
     missingData = pd.concat([missingData, tempDF], axis=0, ignore_index=True)
     return missingData
 
+
+
+# def calculateMAPEofSolarWindForecast():
+
+
+
+
+
+
+
+
+
+
+
+
+
 # used to be in main; moved outside for organization
 def missingTimeCounterCaller():
     prodDataColumns = ["Region", "coal", "nat_gas", "nuclear", "oil", "hydro", "solar", "wind", "biomass", "geothermal", "unknown", "Total"]
@@ -168,25 +187,25 @@ def missingTimeCounterCaller():
         prodMinuteData = calculateMissingMinutes(balAuth, True, prodSourceDF, prodTimeDF, prodMinuteData)        
         fcstMinuteData = calculateMissingMinutes(balAuth, False, fcstSourceDF, fcstTimeDF, fcstMinuteData)
         
-        prodPercentData = calculateMissingPercent(balAuth, prodSourceDF, prodTimeDF, prodPercentData)
-        fcstPercentData = calculateMissingPercent(balAuth, fcstSourceDF, fcstTimeDF, fcstPercentData)
+        # prodPercentData = calculateMissingPercent(balAuth, prodSourceDF, prodTimeDF, prodPercentData)
+        # fcstPercentData = calculateMissingPercent(balAuth, fcstSourceDF, fcstTimeDF, fcstPercentData)
 
 
-    prodMinuteDir = os.path.abspath(os.path.join(__file__, f"../../../data/EU_DATA/prod_missing_minutes.csv"))
+    prodMinuteDir = os.path.abspath(os.path.join(__file__, f"../../../data/EU_DATA/prod_missing_min.csv"))
     with open(prodMinuteDir, 'w') as f:
         prodMinuteData.to_csv(f, index=False)
 
-    fcstMinuteDir = os.path.abspath(os.path.join(__file__, f"../../../data/EU_DATA/fcst_missing_minutes.csv"))
+    fcstMinuteDir = os.path.abspath(os.path.join(__file__, f"../../../data/EU_DATA/fcst_missing_min.csv"))
     with open(fcstMinuteDir, 'w') as f:
         fcstMinuteData.to_csv(f, index=False)    
 
-    prodPercentDir = os.path.abspath(os.path.join(__file__, f"../../../data/EU_DATA/prod_missing_percent.csv"))
-    with open(prodPercentDir, 'w') as f:
-        prodPercentData.to_csv(f, index=False)
+    # prodPercentDir = os.path.abspath(os.path.join(__file__, f"../../../data/EU_DATA/prod_missing_per.csv"))
+    # with open(prodPercentDir, 'w') as f:
+    #     prodPercentData.to_csv(f, index=False)
 
-    fcstPercentDir = os.path.abspath(os.path.join(__file__, f"../../../data/EU_DATA/fcst_missing_percent.csv"))
-    with open(fcstPercentDir, 'w') as f:
-        fcstPercentData.to_csv(f, index=False)  
+    # fcstPercentDir = os.path.abspath(os.path.join(__file__, f"../../../data/EU_DATA/fcst_missing_per.csv"))
+    # with open(fcstPercentDir, 'w') as f:
+    #     fcstPercentData.to_csv(f, index=False)  
 
 
 
