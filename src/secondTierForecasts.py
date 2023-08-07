@@ -257,7 +257,7 @@ def runSecondTier(configFileName, cefType, loadFromSavedModel):
 
 def runSecondTierInRealTime(configFileName, regionList, cefType, startDate, electricityDataDate, 
                                realTimeFileDir, realTimeWeatherFileDir,
-                               realTimeForeCastFileName):
+                               realTimeForeCastFileName, creationTimeInUTC, version):
     global TRAINING_WINDOW_HOURS
     global PREDICTION_WINDOW_HOURS
     global MAX_PREDICTION_WINDOW_HOURS
@@ -299,7 +299,7 @@ def runSecondTierInRealTime(configFileName, regionList, cefType, startDate, elec
         forecastInFileName = realTimeForeCastFileName[region]
         numHistoricalAndDateTimeFeatures = secondTierConfig["NUM_FEATURES"]
         numForecastFeatures = regionConfig["NUM_FORECAST_FEATURES"]
-        startCol = secondTierConfig["START_COL"]
+        startCol = secondTierConfig["START_COL"] + 2 # because we have added creation time & version for real-time 
 
         print("Initializing...")
         print(inFileName, forecastInFileName)
@@ -341,7 +341,7 @@ def runSecondTierInRealTime(configFileName, regionList, cefType, startDate, elec
         unscaledPredictedData = common.inverseDataScaling(predicted, ftMax[DEPENDENT_VARIABLE_COL], 
                                                         ftMin[DEPENDENT_VARIABLE_COL])
 
-        writeRealTimeCIForecastsToFile(testDates, unscaledPredictedData, outFileName)
+        writeRealTimeCIForecastsToFile(testDates, unscaledPredictedData, outFileName, creationTimeInUTC, version)
         
         print("####################", region, " done ####################\n\n")
 
@@ -385,6 +385,7 @@ def initializeInRealTime(inFileName, forecastInFileName, startCol):
     
     print("\nAdding features related to date & time...")
     # Adding in weather dataset, as we need for 96 hours
+    forecastDataset = forecastDataset.iloc[:, 2:] # because we have added creation time & version for real-time
     modifiedForecastDataset = common.addDateTimeFeatures(forecastDataset, forecastDateTime, -1)
     forecastDataset = modifiedForecastDataset
     print(forecastDataset.head())
@@ -860,16 +861,19 @@ def getUnscaledForecastsAndForecastAccuracy(testData, testDates, predictedData, 
    
     return unscaledTestData, unscaledPredictedData, formattedTestDates, rmseScore, mapeScore, dailyMapeScore
 
-def writeRealTimeCIForecastsToFile(formattedTestDates, unscaledPredictedData, outFileName):
+def writeRealTimeCIForecastsToFile(formattedTestDates, unscaledPredictedData, outFileName,
+                                   creationTimeInUTC, version):
     data = []
     for i in range(len(unscaledPredictedData)):
         row = []
         row.append(str(formattedTestDates[i]))
+        row.append(creationTimeInUTC)
+        row.append(version)
         row.append(str(unscaledPredictedData[i]))
         data.append(row)
     writeMode = "w"
     print("Writing to ", outFileName, "...")
-    fields = ["UTC time", "forecasted_avg_carbon_intensity"]
+    fields = ["UTC time", "creation_time (UTC)", "version", "forecasted_avg_carbon_intensity"]
     
     with open(outFileName, writeMode) as csvfile: 
         csvwriter = csv.writer(csvfile)   

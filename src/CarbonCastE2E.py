@@ -44,7 +44,7 @@ US_REGIONS = ["AECI", "AZPS", "BPAT", "CISO", "DUK", "EPE", "ERCO", "FPL",
 
 EU_REGIONS = [] # add EU regions here
 
-def fetchElectricityData(continent, baList, startDate):
+def fetchElectricityData(continent, baList, startDate, creationTimeInUTC, version):
     # TODO: Change this to be downloaded only for the specific region
     print(f"Downloading EIA data on {startDate} for all regions in {continent}")
     if (continent == "US"):
@@ -66,6 +66,8 @@ def fetchElectricityData(continent, baList, startDate):
             # adjust source columns
             cleanedDataset = pd.read_csv(csvFileClean, header=0, index_col=["UTC time"])
             modifiedDataset = eiaParser.adjustColumns(cleanedDataset, balAuth)
+            modifiedDataset.insert(0, "creation_time (UTC)", creationTimeInUTC)
+            modifiedDataset.insert(1, "version", version)
             modifiedDataset.to_csv(csvFile)
             val = subprocess.call("rm "+csvFileClean, shell=True)
         print("Download complete")
@@ -77,16 +79,16 @@ def fetchElectricityData(continent, baList, startDate):
             directOutFileName = REAL_TIME_FILE_DIR+balAuth+"/"+balAuth+"_"+str(startDate)+"_direct_emissions.csv"
             cicalc.runProgram(region=balAuth, isLifecycle=True, isForecast=False, realTimeInFileName=inFileName, 
                               realTimeOutFileName=lifecycleOutFileName, forecastInFileName=None, 
-                              forecastOutFileName=None)
+                              forecastOutFileName=None, creationTimeInUTC=creationTimeInUTC, version=version)
             cicalc.runProgram(region=balAuth, isLifecycle=False, isForecast=False, realTimeInFileName=inFileName, 
                               realTimeOutFileName=directOutFileName, forecastInFileName=None, 
-                              forecastOutFileName=None)
+                              forecastOutFileName=None, creationTimeInUTC=creationTimeInUTC, version=version)
             print(f"Generated lifecycle & direct emissions for {balAuth} on {startDate}")
     else:
         print("Continent (region) not covered by CarbonCast at this time.")
     return
 
-def fetchWeatherData(continent, baList, startDate):
+def fetchWeatherData(continent, baList, startDate, creationTimeInUTC, version):
     print(f"Downloading weather data for {continent} on {startDate}")
         
     # fetch weather forecasts
@@ -115,56 +117,66 @@ def fetchWeatherData(continent, baList, startDate):
     columnNames = ["forecast_avg_wind_speed_wMean", "forecast_avg_temperature_wMean", "forecast_avg_dewpoint_wMean", 
                     "forecast_avg_dswrf_wMean", "forecast_avg_precipitation_wMean"]
     cleanWeatherData.startScript(regionList=baList, fileDir=REAL_TIME_FILE_DIR, 
-                                    columnNames=columnNames, isRealTime=True, startDate=startDate)
+                                    columnNames=columnNames, isRealTime=True, startDate=startDate,
+                                    creationTimeInUTC=creationTimeInUTC, version=version)
     print("Generated weather forecasts")
     return
 
-def fetchSolarWindForecastsForCISO(filePath, startDate):
+def fetchSolarWindForecastsForCISO(filePath, startDate, creationTimeInUTC, version):
     startDateObj = datetime.strptime(startDate, "%Y-%m-%d")
     endDateObj = startDateObj + timedelta(days=1)
     endDate = endDateObj.strftime("%Y-%m-%d")
     solWindFcstFileName, solWindFcstDataset = cisosolwndfcst.startScript(FILE_PATH=filePath+"CISO/", 
                                                                          startDate=startDate, endDate=endDate,
-                                                                         dayJump=1)
+                                                                         dayJump=1, creationTimeInUTC=creationTimeInUTC,
+                                                                         version=version)
     return solWindFcstFileName, solWindFcstDataset
 
-def generateSourceProductionForecasts(baList, startDate, electricityDataDate, solWindFcstDataset):
+def generateSourceProductionForecasts(baList, startDate, electricityDataDate, solWindFcstDataset, 
+                                      creationTimeInUTC, version):
     # generate source production forecasts for each source & aggregate them in 1 file along with weather forecasts
     return ftf.runFirstTierInRealTime(configFileName="firstTierConfig.json", regionList=baList, startDate=startDate,
                                       electricityDataDate=electricityDataDate, solWindFcstData=solWindFcstDataset,
                                       realTimeFileDir=REAL_TIME_FILE_DIR, 
-                                      realTimeWeatherFileDir=REAL_TIME_FILE_DIR)
+                                      realTimeWeatherFileDir=REAL_TIME_FILE_DIR,
+                                      creationTimeInUTC=creationTimeInUTC, version=version)
 
-def generateCIForecasts(baList, startDate, electricityDataDate, aggregatedForecastFileName):
+def generateCIForecasts(baList, startDate, electricityDataDate, aggregatedForecastFileName, 
+                        creationTimeInUTC, version):
     # generate lifecycle & direct CI forecasts & write them to respective files
     stf.runSecondTierInRealTime(configFileName="secondTierConfig.json", 
                                 regionList=baList, cefType="-l", startDate=startDate,
                                 electricityDataDate=electricityDataDate,
                                 realTimeFileDir=REAL_TIME_FILE_DIR, 
                                 realTimeWeatherFileDir=REAL_TIME_FILE_DIR,
-                                realTimeForeCastFileName = aggregatedForecastFileName)
+                                realTimeForeCastFileName = aggregatedForecastFileName,
+                                creationTimeInUTC=creationTimeInUTC, version=version)
     stf.runSecondTierInRealTime(configFileName="secondTierConfig.json", 
                                 regionList=baList, cefType="-d", startDate=startDate,
                                 electricityDataDate=electricityDataDate,                                                           
                                 realTimeFileDir=REAL_TIME_FILE_DIR, 
                                 realTimeWeatherFileDir=REAL_TIME_FILE_DIR,
-                                realTimeForeCastFileName = aggregatedForecastFileName)
+                                realTimeForeCastFileName = aggregatedForecastFileName,
+                                creationTimeInUTC=creationTimeInUTC, version=version)
     return
 
-def startScript(continent, baList, startDate):
+def startScript(continent, baList, startDate, creationTimeInUTC, version):
     startDateObj = datetime.strptime(startDate, "%Y-%m-%d")
     electricityDataDateObj = startDateObj - timedelta(days=1)
     electricityDataDate = electricityDataDateObj.strftime("%Y-%m-%d")
     # forecast date is in the future, so real time electricity data needs to be from the previous date
-    fetchElectricityData(continent, baList, electricityDataDate)
-    fetchWeatherData(continent, baList, startDate)
+    fetchElectricityData(continent, baList, electricityDataDate, creationTimeInUTC, version)
+    fetchWeatherData(continent, baList, startDate, creationTimeInUTC, version)
     solWindFcstDataset = None
     if ("CISO" in baList):
         print("Fetching solar wind forecasts")
-        solWindFcstFileName, solWindFcstDataset = fetchSolarWindForecastsForCISO(REAL_TIME_FILE_DIR, startDate)
+        solWindFcstFileName, solWindFcstDataset = fetchSolarWindForecastsForCISO(REAL_TIME_FILE_DIR, startDate, 
+                                                                                 creationTimeInUTC, version)
     aggregatedForecastFileNames = generateSourceProductionForecasts(baList, startDate, 
-                                                                    electricityDataDate, solWindFcstDataset) # first tier
-    generateCIForecasts(baList, startDate, electricityDataDate, aggregatedForecastFileNames) # second tier
+                                                                    electricityDataDate, solWindFcstDataset, 
+                                                                    creationTimeInUTC, version) # first tier
+    generateCIForecasts(baList, startDate, electricityDataDate, aggregatedForecastFileNames, 
+                        creationTimeInUTC, version) # second tier
     return
 
 
@@ -174,6 +186,8 @@ if __name__ == "__main__":
     startDate = None
     continent = None
     startTime = datetime.now()
+    creationTimeInUTC = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+    version = "3.0"
     print("Usage: python3 CarbonCastE2E.py <continent> <starting forecast date in yyyy-mm-dd>")
     if (len(sys.argv) < 2):
         print("Must specify region. Exiting.")
@@ -191,7 +205,7 @@ if __name__ == "__main__":
         baList = US_REGIONS
 
     print(continent, baList, startDate)
-    startScript(continent, baList, startDate)
+    startScript(continent, baList, startDate, creationTimeInUTC, version)
     endTime = datetime.now()
     diffTime = (endTime - startTime).total_seconds()
     print("Total time taken for CarbonCast to run end to end = ", diffTime, " secs, = ", diffTime/60, " mins")

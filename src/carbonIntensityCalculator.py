@@ -18,7 +18,7 @@ import pandas as pd
 import pytz as pytz
 import tensorflow as tf
 
-CARBON_INTENSITY_COLUMN = 1 # column for real-time carbon intensity
+CARBON_INTENSITY_COLUMN = 3 # column for real-time carbon intensity
 SRC_START_COL = 1
 PREDICTION_WINDOW_HOURS = 96
 MODEL_SLIDING_WINDOW_LEN = 24
@@ -199,7 +199,7 @@ def getMape(dates, actual, forecast, predictionWindowHours):
     return dailyMapeScore, mapeScore, dailyRmseScore
 
 def runProgram(region, isLifecycle, isForecast, realTimeInFileName, realTimeOutFileName,
-               forecastInFileName, forecastOutFileName):
+               forecastInFileName, forecastOutFileName, creationTimeInUTC=None, version=None):
         
     dataset = initialize(realTimeInFileName)
     numSources = len(dataset.columns)-1 # excluding UTC time
@@ -342,5 +342,5 @@ if __name__ == "__main__":
                 CARBON_FROM_REAL_TIME_SRC_OUT_FILE_NAME = "../data/"+region+"/"+region+"_direct_emissions.csv"
 
         runProgram(region, isLifecycle, isForecast, REAL_TIME_SRC_IN_FILE_NAME, CARBON_FROM_REAL_TIME_SRC_OUT_FILE_NAME, 
-                   FORECAST_SRC_IN_FILE_NAME, CARBON_FROM_SRC_FORECASTS_OUT_FILE_NAME)
+                   FORECAST_SRC_IN_FILE_NAME, CARBON_FROM_SRC_FORECASTS_OUT_FILE_NAME, None, None)
         # print("Calculating carbon intensity for region: ", region, " done.")
