@@ -156,7 +156,7 @@ def calcluateWindSpeed(dataset):
     return dataset
 
 
-def startScript(regionList, fileDir, columnNames, isRealTime, startDate):
+def startScript(regionList, fileDir, columnNames, isRealTime, startDate, creationTimeInUTC=None, version=None):
     for region in regionList:
         IN_FILE_NAMES = [region+"_WIND_SPEED.csv", region+"_TEMP.csv", region+"_DPT.csv", 
                          region+"_DSWRF.csv", region+"_APCP.csv"]
@@ -195,6 +195,9 @@ def startScript(regionList, fileDir, columnNames, isRealTime, startDate):
         outFileName = regionFileDir+region+"_aggregated_weather_data.csv"
         if (startDate is not None):
             outFileName = regionFileDir+"/../"+region+"_weather_forecast_"+str(startDate)+".csv"
+        if (creationTimeInUTC is not None and version is not None):
+            modifiedDataset.insert(0, "creation_time (UTC)", creationTimeInUTC)
+            modifiedDataset.insert(1, "version", version)
         modifiedDataset.to_csv(outFileName)
     return
 
@@ -224,8 +227,8 @@ def aggregateWeatherDataAcrossYears(inFileDir, outFileDir, years):
 
 def moveForecastsAheadByADay(region, inFileDir, outFileDir):
     print(region)
-    inFileName = inFileDir+"/weather_data/"+region+"_aggregated_weather_data.csv"
-    outFileName = outFileDir+"/"+region+"_weather_forecast.csv"
+    inFileName = inFileDir+region+"_aggregated_weather_data.csv"
+    outFileName = outFileDir+region+"_weather_forecast.csv"
     dataset = pd.read_csv(inFileName, header=0, index_col=["datetime"])
     modifiedDataset = np.array(dataset.iloc[96:, :])
     zeroVal = np.zeros((96, len(dataset.columns)))
@@ -236,17 +239,19 @@ def moveForecastsAheadByADay(region, inFileDir, outFileDir):
     return
 
 if __name__ == "__main__":
-    startScript(ISO_LIST, FILE_DIR, COLUMN_NAME, isRealTime=False, startDate=None)
+    # startScript(ISO_LIST, FILE_DIR, COLUMN_NAME, isRealTime=False, startDate=None, creationTimeInUTC=None, version=None)
 
     # years = [2019, 2020, 2021, 2022]
     # inFileDir = "EU_"
     # outFileDir = "./EU_total_aggregated_weather_data/"
     # aggregateWeatherDataAcrossYears(inFileDir, outFileDir, years)
 
-    # for region in ISO_LIST:
+    for region in ISO_LIST:
         # inFileDir = "../../data/"+region
         # outFileDir = "../../data/"+region
-        # moveForecastsAheadByADay(region, inFileDir, outFileDir)
+        inFileDir = "./EU_total_aggregated_weather_data/"
+        outFileDir = "./EU_total_aggregated_weather_data/"
+        moveForecastsAheadByADay(region, inFileDir, outFileDir)
 
 
 

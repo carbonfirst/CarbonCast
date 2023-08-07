@@ -239,7 +239,7 @@ def runFirstTier(configFileName):
     return
 
 def runFirstTierInRealTime(configFileName, regionList, startDate, electricityDataDate, solWindFcstData,
-                           realTimeFileDir, realTimeWeatherFileDir):
+                           realTimeFileDir, realTimeWeatherFileDir, creationTimeInUTC, version):
     global TRAINING_WINDOW_HOURS
     global PREDICTION_WINDOW_HOURS
     global MODEL_SLIDING_WINDOW_LEN
@@ -269,8 +269,7 @@ def runFirstTierInRealTime(configFileName, regionList, startDate, electricityDat
         inFileName = realTimeFileDir+region+"/"+region+"_"+str(electricityDataDate)+".csv"
         outFileNamePrefix = realTimeFileDir+region+"/fuel_forecast/"+region+"_ANN"
         for source in sourceList:
-            sourceCol = sourceColList[sourceIdx]
-            # partialSourceProductionForecastAvailable = regionConfig["PARTIAL_FORECAST_AVAILABILITY_LIST"][sourceIdx] # TODO: [DM] For now, reading from config file. Change it later based on real time availability
+            sourceCol = sourceColList[sourceIdx]+2 # +2 because we have now added creation time & version for real-time files
             partialSourceProductionForecastAvailable = True if solWindFcstData is not None else False # partial forecasts only for SOLAR and WIND
             print(inFileName)
             print(weatherForecastInFileName)
@@ -336,7 +335,7 @@ def runFirstTierInRealTime(configFileName, regionList, startDate, electricityDat
                                                               ftMin[DEPENDENT_VARIABLE_COL])
             
             writeRealTimeSourceProductionForecastsToFile(testDates, unscaledPredictedData,
-                                                source, outFileName)
+                                                source, outFileName, creationTimeInUTC, version)
             
             ######################## END #####################
             sourceIdx += 1
@@ -428,6 +427,7 @@ def initializeInRealTime(inFileName, weatherForecastInFileName, startCol, isRene
                             parse_dates=['datetime'], index_col=['datetime'])
     weatherDateTime = weatherDataset.index.values
     # Adding in weather dataset, as we need for 96 hours
+    weatherDataset = weatherDataset.iloc[:, 2:] # this is because we have now added creation time & version
     modifiedWeatherDataset = common.addDateTimeFeatures(weatherDataset, weatherDateTime, -1)
     if (isRenewableSource is True):
         weatherDataset = modifiedWeatherDataset
@@ -708,15 +708,17 @@ def writeSourceProductionForecastsToFile(formattedTestDates, unscaledTestData, u
     return
 
 def writeRealTimeSourceProductionForecastsToFile(formattedTestDates, unscaledPredictedData,
-                                        source, outFileName):
+                                        source, outFileName, creationTimeInUTC, version):
     data = []
     for i in range(len(unscaledPredictedData)):
         row = []
         row.append(str(formattedTestDates[i]))
+        row.append(creationTimeInUTC)
+        row.append(version)
         row.append(str(unscaledPredictedData[i]))
         data.append(row)
     print("Writing to ", outFileName, "...")
-    fields = ["datetime", "avg_"+source.lower()+"_production_forecast"] # TODO:[DM] Change this & legacy code to UTC time later if required
+    fields = ["datetime", "creation_time (UTC)", "version", "avg_"+source.lower()+"_production_forecast"] # TODO:[DM] Change this & legacy code to UTC time later if required
     with open(outFileName, "w") as csvfile: 
         csvwriter = csv.writer(csvfile)   
         csvwriter.writerow(fields) 

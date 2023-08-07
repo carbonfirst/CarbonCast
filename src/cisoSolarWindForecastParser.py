@@ -50,23 +50,29 @@ def parseDataset(inFileName, dayJump=1):
 
     return dataset["INTERVALSTARTTIME_GMT"].values[:24*dayJump], solarProdcutionForecast, windProductionForecast
 
-def createCleanedForecastFile(rawFileName, cleanedFileName, dates, solarForecast, windForecast):
+def createCleanedForecastFile(rawFileName, cleanedFileName, dates, solarForecast, windForecast, 
+                              creationTimeInUTC, version):
     cleanDataset = pd.DataFrame(
         {"UTC time": dates,
          "avg_solar_production_forecast": solarForecast,
          "avg_wind_production_forecast": windForecast
         })
     cleanDataset.set_index("UTC time", inplace=True)
+    if (creationTimeInUTC is not None and version is not None):
+        cleanDataset.insert(0, "creation_time (UTC)", creationTimeInUTC)
+        cleanDataset.insert(1, "version", version)
     cleanDataset.to_csv(cleanedFileName)
     val = subprocess.call("rm "+rawFileName, shell=True)
     return cleanDataset
 
-def startScript(FILE_PATH, startDate, endDate, dayJump=1):
+def startScript(FILE_PATH, startDate, endDate, dayJump=1, creationTimeInUTC=None,
+                version=None):
     filename, status = getFileFromWeb(FILE_PATH, startDate, endDate)
     print(filename)
     dates, solarForecast, windForecast = parseDataset(filename, dayJump)
     cleanedFileName = FILE_PATH+"CISO_solar_wind_forecast_"+str(startDate)+".csv"
-    cleanDataset = createCleanedForecastFile(filename, cleanedFileName, dates, solarForecast, windForecast)
+    cleanDataset = createCleanedForecastFile(filename, cleanedFileName, dates, solarForecast, windForecast, 
+                                             creationTimeInUTC, version)
     print(cleanDataset.head())
     return cleanedFileName, cleanDataset
 
@@ -82,7 +88,8 @@ if __name__ == "__main__":
         print(startDate)
         endDateObj = startDateObj + timedelta(days=8)
         endDate = endDateObj.strftime("%Y-%m-%d")
-        outFileName, dataset = startScript(FILE_PATH, startDate, endDate, dayJump=dayJump)
+        outFileName, dataset = startScript(FILE_PATH, startDate, endDate, dayJump=dayJump, 
+                                           creationTimeInUTC=None, version=None)
         if (days == 0):
             fullDataset = dataset.copy()
         else:
