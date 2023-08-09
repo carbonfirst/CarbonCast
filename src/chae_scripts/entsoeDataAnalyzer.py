@@ -34,7 +34,7 @@ ENTSOE_SOURCES = {
     "Other": "unknown"
 }
 
-# ENTSOE_BAL_AUTH_LIST = ['DK']
+# ENTSOE_BAL_AUTH_LIST = ['AT', 'DK']
 ENTSOE_BAL_AUTH_LIST = ['AT', 'BE', 'BG', 'HR', 'CZ', 'DK', 'EE', 'FI', 
                          'FR', 'DE', 'GB', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'NL',
                         'PL', 'PT', 'RO', 'RS', 'SK', 'SI', 'ES', 'SE', 'CH']
@@ -101,37 +101,28 @@ def calculateMissingMinutes(ba, isProd, sourceDF, timeDF, missingData):
     return missingData
 
 
-def calculateMissingPercent(ba, sourceDF, timeDF, missingData):
+def calculateMissingPercent(rowNum, sourcesList, ba, sourceDF, timeDF, missingData):
     newRow = {}
-    numSources = {}
     if timeDF is None or timeDF.empty:
         missingRowMins = 0
     else:
         missingRowMins = int(float(timeDF.iloc[len(timeDF)-2, 0])) # minutes missing for all sources
 
     newRow["Region"] = ba
-    newRow["Total"] = missingRowMins / TOTAL_MINS * 100 # initializing
+    newRow["Total"] = 0
 
-    if sourceDF is None:
+    if len(sourcesList) == 0:
         print(ba, " has no missing source data")
-    elif sourceDF.empty:
-        for column in sourceDF.columns:
-            newRow[ENTSOE_SOURCES[column]] = 0
     else:
-        # calculate total number of sub-sources
-        for column in sourceDF.columns:
-            source = ENTSOE_SOURCES[column]
-            newRow[source] = 0
-            try:
-                numSources[source] += 1
-            except:
-                numSources[source] = 1 
-        for column in range(len(sourceDF.columns)):
-            source = ENTSOE_SOURCES[sourceDF.columns[column]]
-            newValue = int(sourceDF.iloc[len(sourceDF)-2, column]) # minutes missing for source
-            newRow[source] += (missingRowMins + newValue) / (TOTAL_MINS * numSources[source]) * 100
-            newRow["Total"] += newValue / (TOTAL_MINS * len(sourceDF.columns)) * 100
-
+    # calculate total number of sub-sources
+        row = sourceDF.loc[rowNum]
+        if len(sourcesList) != 0:
+            for column in range(1, len(sourceDF.columns) - 1):
+                newValue = row[sourceDF.columns[column]] # minutes missing for source
+                newRow[sourceDF.columns[column]] = (missingRowMins + newValue) / (TOTAL_MINS) * 100
+                if (not np.isnan(newValue)):
+                    newRow["Total"] += newValue / (TOTAL_MINS * len(sourcesList)) * 100
+        
     tempDF = pd.DataFrame(newRow, index=[0])
     missingData = pd.concat([missingData, tempDF], axis=0, ignore_index=True)
     return missingData
@@ -147,8 +138,9 @@ def missingTimeCounterCaller():
     fcstPercentData = pd.DataFrame(columns=fcstDataColumns)
     prodMinuteData = pd.DataFrame(columns=prodDataColumns)
     fcstMinuteData = pd.DataFrame(columns=fcstDataColumns)
-
+    rowNum = 0
     for balAuth in ENTSOE_BAL_AUTH_LIST:
+        
         print("Missing data for ", balAuth, " analyzing...")
 
         prodSourceDir = os.path.abspath(os.path.join(__file__, 
@@ -178,9 +170,27 @@ def missingTimeCounterCaller():
         prodMinuteData = calculateMissingMinutes(balAuth, True, prodSourceDF, prodTimeDF, prodMinuteData)        
         fcstMinuteData = calculateMissingMinutes(balAuth, False, fcstSourceDF, fcstTimeDF, fcstMinuteData)
         
-        # prodPercentData = calculateMissingPercent(balAuth, prodSourceDF, prodTimeDF, prodPercentData)
-        # fcstPercentData = calculateMissingPercent(balAuth, fcstSourceDF, fcstTimeDF, fcstPercentData)
+        prodSourcesList = []
+        try:
+            for column in range(1, len(prodSourceDF.columns)):
+                source = ENTSOE_SOURCES[prodSourceDF.columns[column]]
+                if source not in prodSourcesList:
+                    prodSourcesList.append(source)
+        except:
+            pass
 
+        fcstSourcesList = []
+        try:
+            for column in range(1, len(fcstSourceDF.columns)):
+                source = ENTSOE_SOURCES[fcstSourceDF.columns[column]]
+                if source not in fcstSourcesList:
+                    fcstSourcesList.append(source)
+        except:
+            pass
+            
+        prodPercentData = calculateMissingPercent(rowNum, prodSourcesList, balAuth, prodMinuteData, prodTimeDF, prodPercentData)
+        fcstPercentData = calculateMissingPercent(rowNum, fcstSourcesList, balAuth, fcstMinuteData, fcstTimeDF, fcstPercentData)
+        rowNum = rowNum + 1
 
     prodMinuteDir = os.path.abspath(os.path.join(__file__, f"../../../data/EU_DATA/prod_missing_min.csv"))
     with open(prodMinuteDir, 'w') as f:
@@ -190,13 +200,13 @@ def missingTimeCounterCaller():
     with open(fcstMinuteDir, 'w') as f:
         fcstMinuteData.to_csv(f, index=False)    
 
-    # prodPercentDir = os.path.abspath(os.path.join(__file__, f"../../../data/EU_DATA/prod_missing_per.csv"))
-    # with open(prodPercentDir, 'w') as f:
-    #     prodPercentData.to_csv(f, index=False)
+    prodPercentDir = os.path.abspath(os.path.join(__file__, f"../../../data/EU_DATA/prod_missing_per.csv"))
+    with open(prodPercentDir, 'w') as f:
+        prodPercentData.to_csv(f, index=False)
 
-    # fcstPercentDir = os.path.abspath(os.path.join(__file__, f"../../../data/EU_DATA/fcst_missing_per.csv"))
-    # with open(fcstPercentDir, 'w') as f:
-    #     fcstPercentData.to_csv(f, index=False)  
+    fcstPercentDir = os.path.abspath(os.path.join(__file__, f"../../../data/EU_DATA/fcst_missing_per.csv"))
+    with open(fcstPercentDir, 'w') as f:
+        fcstPercentData.to_csv(f, index=False)  
 
 
 
