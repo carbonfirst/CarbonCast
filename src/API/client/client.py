@@ -10,13 +10,12 @@ server_host = 'localhost'
 US_region_codes = ['AECI','AZPS', 'BPAT','CISO', 'DUK', 'EPE', 'ERCO', 'FPL', 
                 'ISNE', 'LDWP', 'MISO', 'NEVP', 'NWMT', 'NYIS', 'PACE', 'PJM', 
                 'SC', 'SCEG', 'SOCO', 'TIDC', 'TVA']
-#1
+1
 try:
     conn = http.client.HTTPConnection(server_host, 13000)
     req_data = {'regionCode':US_region_codes[randrange(len(US_region_codes))]}      
         
     url = "/CarbonIntensity?"+urllib.parse.urlencode(req_data)
-    # print(req_data)
        
     conn.request('GET', url)
     response = conn.getresponse()
@@ -41,7 +40,6 @@ try:
     req_data = {'regionCode':US_region_codes[randrange(len(US_region_codes))]}      
         
     url = "/EnergySources?"+urllib.parse.urlencode(req_data)
-    # print(req_data)
        
     conn.request('GET', url)
     response = conn.getresponse()
@@ -72,7 +70,6 @@ try:
                 }      
         
     url = "/CarbonIntensityHistory?"+urllib.parse.urlencode(req_data)
-    # print(req_data)
        
     conn.request('GET', url)
     response = conn.getresponse()
@@ -83,7 +80,6 @@ try:
             final_carbon_list = response_data["data"]
             for items in final_carbon_list:
                    print(items)
-        #     print(response_data)
 
     else:
              print(f"Error: server returned status code {response.status_code}")   
@@ -106,7 +102,6 @@ try:
                 }      
         
     url = "/EnergySourcesHistory?"+urllib.parse.urlencode(req_data)
-    # print(req_data)
        
     conn.request('GET', url)
     response = conn.getresponse()
@@ -117,7 +112,6 @@ try:
             final_carbon_list = response_data["data"]
             for items in final_carbon_list:
                    print(items)
-        #     print(response_data)
 
     else:
              print(f"Error: server returned status code {response.status_code}")   
@@ -127,7 +121,6 @@ except json.JSONDecodeError as e:
 
 except Exception as e:
         print(f'Error retrieving data from server: {e}')
-
 
 #6
 try:
@@ -141,7 +134,7 @@ try:
                 }      
         
     url = "/CarbonIntensityForecastsHistory?"+urllib.parse.urlencode(req_data)
-    # print(req_data)
+
        
     conn.request('GET', url)
     response = conn.getresponse()
@@ -152,7 +145,61 @@ try:
             final_carbon_list = response_data["data"]
             for items in final_carbon_list:
                    print(items)
-        #     print(response_data)
+
+    else:
+             print(f"Error: server returned status code {response.status_code}")   
+
+except json.JSONDecodeError as e:
+       print(f'Error decoding response content: {response_content}. Exception: {e}')
+
+except Exception as e:
+        print(f'Error retrieving data from server: {e}')
+
+#7
+try:
+    conn = http.client.HTTPConnection(server_host, 13000)
+
+    date_input = input("To get the real forecasted Energy Sources values, enter a date in yyyy-mm-dd format:")
+
+    req_data = {
+                'regionCode':US_region_codes[randrange(len(US_region_codes))], 
+                'date': date_input
+                }      
+        
+    url = "/EnergySourcesForecastsHistory?"+urllib.parse.urlencode(req_data)
+       
+    conn.request('GET', url)
+    response = conn.getresponse()
+
+    if response.status == 200:
+            response_content = response.read().decode('utf-8')
+            response_data = json.loads(response_content)
+            final_carbon_list = response_data["data"]
+            for items in final_carbon_list:
+                   print(items)
+
+    else:
+             print(f"Error: server returned status code {response.status_code}")   
+
+except json.JSONDecodeError as e:
+       print(f'Error decoding response content: {response_content}. Exception: {e}')
+
+except Exception as e:
+        print(f'Error retrieving data from server: {e}')
+
+#8
+try:
+    conn = http.client.HTTPConnection(server_host, 13000)
+        
+    url = "/SupportedRegions"
+       
+    conn.request('GET', url)
+    response = conn.getresponse()
+
+    if response.status == 200:
+            response_content = response.read().decode('utf-8')
+            response_data = json.loads(response_content)
+            print(response_data)
 
     else:
              print(f"Error: server returned status code {response.status_code}")   

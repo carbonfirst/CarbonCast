@@ -9,20 +9,16 @@ server_host = 'localhost'
 def get_latest_csv_file(region_code):
     os.chdir("../../../")
     path = os.chdir(os.path.join('real_time',region_code))
-    # print("Current working directory: {0}".format(os.getcwd()))
     file_list1= [file for file in os.listdir() if file.endswith("_lifecycle_emissions.csv")]
     file_list2= [file for file in os.listdir() if file.endswith("_direct_emissions.csv")]
-    # print(file_list)
     dates_list1 , dates_list2 = [] , []
     for filename in file_list1:
         d = filename.split('_')[1]
         dates_list1.append(d)
-    # print(dates_list)
     for filename in file_list2:
         c = filename.split('_')[1]
         dates_list2.append(c)
     latest_date1, latest_date2 = max(dates_list1), max(dates_list2)
-    # print(latest_date)
     csv_file1 = f'{region_code}_{latest_date1}_lifecycle_emissions.csv'
     csv_file2 = f'{region_code}_{latest_date2}_direct_emissions.csv'
     
@@ -37,7 +33,6 @@ def get_forecasts_csv_file(region_code, date):
         elif file.endswith(f"direct_CI_forecasts_{date}.csv"):
             csv_file_d = file
     return csv_file_l, csv_file_d
-
 
 def get_actual_value_file_by_date(region_code, date):
     os.chdir("../../../")
@@ -69,7 +64,6 @@ class RequestHandler(BaseHTTPRequestHandler):
                 for line in file:
                     pass
             values_csv2 = line.split(',')
-            # print(line)
             os.chdir("../../")
             os.chdir(os.path.join('src', 'API', 'server'))
             response_data= {
@@ -101,8 +95,6 @@ class RequestHandler(BaseHTTPRequestHandler):
 
                 for row in file:
                     line = row.strip().split(',')
-
-            # print(line)
             os.chdir("../../")
             os.chdir(os.path.join('src', 'API', 'server'))
             fields = [
@@ -121,8 +113,6 @@ class RequestHandler(BaseHTTPRequestHandler):
                 else:
                     response_data[field] = "0"
                     
-            # os.chdir("../../")
-            # os.chdir(os.path.join('src', 'API', 'server'))
             response = {
                 "data": response_data
             }
@@ -146,8 +136,6 @@ class RequestHandler(BaseHTTPRequestHandler):
             values_csv1 = [line.strip().split(',') for line in lines_csv1]
             values_csv2 = [line.strip().split(',') for line in lines_csv2]
 
-            # print(values_csv1)
-            # print(values_csv2)
             final_list =[]
             for i in range(1,len(values_csv1)):
                 temp_list= []
@@ -252,6 +240,62 @@ class RequestHandler(BaseHTTPRequestHandler):
             self.end_headers()                                
             self.wfile.write(json.dumps(response_data).encode())
 
+        #7
+        if parsed_path.path == '/EnergySourcesForecastsHistory':
+            region_code = query_params.get('regionCode', [''])[0]   
+            date = query_params.get('date', [''])[0]
+
+            os.chdir("../../../")
+            os.chdir(os.path.join('real_time',region_code))
+
+            energy_forecast_csv_file = f"{region_code}_{date}.csv"
+            with open(energy_forecast_csv_file) as file:
+                lines_csv = file.readlines()
+
+            filtered_energy_data_by_date_csv = [line.split(',') for line in lines_csv if line.startswith(date)]
+
+            os.chdir("../../")
+            os.chdir(os.path.join('src', 'API', 'server'))
+
+            fields = [
+                "UTC time", "creation_time (UTC)", "version","region_code", "coal", "nat_gas", "nuclear",
+                "oil", "hydro", "solar", "wind", "other"
+            ]
+            final_list = []
+
+            for i in range(1, len(filtered_energy_data_by_date_csv)):
+                temp_dict = {field: "0" for field in fields}
+                temp_dict["UTC time"] = filtered_energy_data_by_date_csv[i][1]
+                temp_dict["creation_time (UTC)"] = filtered_energy_data_by_date_csv[i][2]
+                temp_dict["version"] = filtered_energy_data_by_date_csv[i][3]
+                temp_dict["region_code"] = region_code
+
+                for field in fields[2:]:  
+                    if field in filtered_energy_data_by_date_csv[0]:
+                        index = filtered_energy_data_by_date_csv[0].index(field)
+                        temp_dict[field] = filtered_energy_data_by_date_csv[i][index]
+
+                final_list.append(temp_dict)
+            response_data = {
+                "data": final_list
+            }
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()                                
+            self.wfile.write(json.dumps(response_data).encode())
+
+        #8
+        if parsed_path.path == '/SupportedRegions':
+            os.chdir("../../../")
+            items = os.listdir("real_time")
+            supported_regions = [item for item in items if os.path.isdir(os.path.join("real_time", item)) and item != 'weather_data']
+            response_data = {
+                "data": supported_regions
+            }
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()                                
+            self.wfile.write(json.dumps(response_data).encode())
 
 
 def run():
