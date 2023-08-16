@@ -18,7 +18,7 @@ import pandas as pd
 import pytz as pytz
 import tensorflow as tf
 
-CARBON_INTENSITY_COLUMN = 1 # column for real-time carbon intensity
+CARBON_INTENSITY_COLUMN = 3 # column for real-time carbon intensity
 SRC_START_COL = 1
 PREDICTION_WINDOW_HOURS = 96
 MODEL_SLIDING_WINDOW_LEN = 24
@@ -55,8 +55,8 @@ def initialize(inFileName):
     print("FILE: ", inFileName)
     dataset = pd.read_csv(inFileName, header=0, infer_datetime_format=True, 
                             parse_dates=["UTC time"]) #, index_col=["Local time"]
-    print(dataset.head(2))
-    print(dataset.tail(2))
+    # print(dataset.head(2))
+    # print(dataset.tail(2))
     dataset.replace(np.nan, 0, inplace=True) # replace NaN with 0.0
     num = dataset._get_numeric_data()
     num[num<0] = 0
@@ -198,37 +198,17 @@ def getMape(dates, actual, forecast, predictionWindowHours):
     # return avgDailyMape, mapeScore
     return dailyMapeScore, mapeScore, dailyRmseScore
 
-def runProgram(region, isLifecycle, isForecast, numSources):
-    REAL_TIME_SRC_IN_FILE_NAME = None
-    CARBON_FROM_REAL_TIME_SRC_OUT_FILE_NAME = None
-    FORECAST_SRC_IN_FILE_NAME = None
-    CARBON_FROM_SRC_FORECASTS_OUT_FILE_NAME = None
-
-    if (isLifecycle is True):
-        if (isForecast is True):
-            REAL_TIME_SRC_IN_FILE_NAME = "../data/"+region+"/"+region+"_carbon_lifecycle_"+TEST_PERIOD+".csv"
-            CARBON_FROM_SRC_FORECASTS_OUT_FILE_NAME = "../data/"+region+"/"+region+"_carbon_from_src_prod_forecasts_lifecycle_"+TEST_PERIOD+".csv"
-            FORECAST_SRC_IN_FILE_NAME = "../data/"+region+"/"+region+"_96hr_source_prod_forecasts_DA_"+TEST_PERIOD+".csv"
-        else:
-            REAL_TIME_SRC_IN_FILE_NAME = "../data/"+region+"/"+region+".csv"
-            CARBON_FROM_REAL_TIME_SRC_OUT_FILE_NAME = "../data/"+region+"/"+region+"_lifecycle_emissions.csv"
-    else:
-        if (isForecast is True):
-            REAL_TIME_SRC_IN_FILE_NAME = "../data/"+region+"/"+region+"_carbon_direct_"+TEST_PERIOD+".csv"
-            CARBON_FROM_SRC_FORECASTS_OUT_FILE_NAME = "../data/"+region+"/"+region+"_carbon_from_src_prod_forecasts_direct_"+TEST_PERIOD+".csv"
-            FORECAST_SRC_IN_FILE_NAME = "../data/"+region+"/"+region+"_96hr_source_prod_forecasts_DA_"+TEST_PERIOD+".csv"
-        else:
-            REAL_TIME_SRC_IN_FILE_NAME = "../data/"+region+"/"+region+".csv"
-            CARBON_FROM_REAL_TIME_SRC_OUT_FILE_NAME = "../data/"+region+"/"+region+"_direct_emissions.csv"
-
-    
-    dataset = initialize(REAL_TIME_SRC_IN_FILE_NAME)
+def runProgram(region, isLifecycle, isForecast, realTimeInFileName, realTimeOutFileName,
+               forecastInFileName, forecastOutFileName, creationTimeInUTC=None, version=None):
+        
+    dataset = initialize(realTimeInFileName)
+    numSources = len(dataset.columns)-1 # excluding UTC time
     forecastDataset = None
     if (isForecast is True):
-        forecastDataset = initialize(FORECAST_SRC_IN_FILE_NAME)
+        forecastDataset = initialize(forecastInFileName)
 
     # Special case: SE unknown/other lifecycle CEF was 292.9 as per ElectricityMap
-    # TODO: In later verwsions, make this saem as CEFs of other regions for consistency.
+    # TODO: In later versions, make this same as CEFs of other regions for consistency.
     if (region == "SE"):
         forcast_carbonRateLifecycle["avg_unknown_production_forecast"] = 292.9
         forcast_carbonRateLifecycle["avg_other_production_forecast"] = 292.9
@@ -280,31 +260,87 @@ def runProgram(region, isLifecycle, isForecast, numSources):
         outputDataset["UTC time"] = forecastDataset["UTC time"].values
         outputDataset["actual_carbon_intensity_"+emissionFactorType] = actual
         outputDataset["forecasted_carbon_intensity_"+emissionFactorType] = forecast
-        # outputDataset.to_csv(CARBON_FROM_SRC_FORECASTS_OUT_FILE_NAME)
+        # outputDataset.to_csv(forecastOutFileName)
     else:
         print("Real time carbon intensities:")
-        # dataset.to_csv(CARBON_FROM_REAL_TIME_SRC_OUT_FILE_NAME)
+        # dataset.set_index("UTC time")
+        dataset.to_csv(realTimeOutFileName)
     
+    return
+
+def adjustColumns(region):
+    sources = ["coal", "nat_gas", "nuclear", "oil", "hydro", "solar", "wind", "other"]
+    modifiedSources = []
+    dataset = pd.read_csv("../data/"+region+"/fuel_forecast/"+region+"_clean.csv", header=0, index_col=["UTC time"])
+    print(dataset.shape)
+    modifiedDataset = np.zeros(dataset.shape)
+    idx = 0
+    for source in sources:
+        if (source in dataset.columns):
+            modifiedSources.append(source)
+            val = dataset[source].values
+            modifiedDataset[:, idx] = val
+            idx += 1
+    modifiedDataset = pd.DataFrame(modifiedDataset, columns=modifiedSources, index=dataset.index)
+    print(modifiedDataset.shape)
+    modifiedDataset.to_csv("../data/"+region+"/fuel_forecast/"+region+"_clean_mod.csv")
     return
 
 
 if __name__ == "__main__":
-    if (len(sys.argv) != 5):
-        print("Usage: python3 carbonIntensityCalculator.py <region> <-l/-d> <-f/-r> <num_sources>")
+    if (len(sys.argv) != 4):
+        print("Usage: python3 carbonIntensityCalculator.py <region> <-l/-d> <-f/-r>")
         print("Refer github repo for regions.")
         print("l - lifecycle, d - direct")
         print("f - forecast, r - real time")
-        print("num_sources - no. of sources producing electricity in the region")
         # print("carbon_intensity_col - column no. where carbon_intensity should be inserted")
         exit(0)
-    print("CarbonCast: Calculating carbon intensity for region: ", sys.argv[1])
+
     region = sys.argv[1]
+
+    ISO_LIST = ["AECI", "AZPS", "BPAT", "CISO", "DUK", "EPE", "ERCO", "FPC", 
+                "FPL", "GRID", "IPCO", "ISNE", "LDWP", "MISO", "NEVP", "NWMT", "NYIS", 
+                "PACE", "PACW", "PJM", "PSCO", "PSEI", "SC", "SCEG", "SOCO", "SPA", "SRP", 
+                "SWPP", "TIDC", "TVA", "WACM", "WALC"]
+
     isForecast = False
     isLifecycle = False
     if (sys.argv[2].lower() == "-l"):
         isLifecycle = True
     if (sys.argv[3].lower() == "-f"):
         isForecast = True
-    numSources = int(sys.argv[4])
-    runProgram(region, isLifecycle, isForecast, numSources)
-    print("Calculating carbon intensity for region: ", sys.argv[1], " done.")
+    for region in ISO_LIST:
+        # print(region)
+        # adjustColumns(region)
+        print("CarbonCast: Calculating carbon intensity for region: ", region)        
+        # numSources = int(sys.argv[4])
+
+        REAL_TIME_SRC_IN_FILE_NAME = None
+        CARBON_FROM_REAL_TIME_SRC_OUT_FILE_NAME = None
+        FORECAST_SRC_IN_FILE_NAME = None
+        CARBON_FROM_SRC_FORECASTS_OUT_FILE_NAME = None
+
+        if (isLifecycle is True):
+            if (isForecast is True):
+                REAL_TIME_SRC_IN_FILE_NAME = "../data/"+region+"/"+region+"_carbon_lifecycle_"+TEST_PERIOD+".csv"
+                CARBON_FROM_SRC_FORECASTS_OUT_FILE_NAME = "../data/"+region+"/"+region+"_carbon_from_src_prod_forecasts_lifecycle_"+TEST_PERIOD+".csv"
+                FORECAST_SRC_IN_FILE_NAME = "../data/"+region+"/"+region+"_96hr_source_prod_forecasts_DA_"+TEST_PERIOD+".csv"
+            else:
+                # REAL_TIME_SRC_IN_FILE_NAME = "../data/"+region+"/"+region+".csv"
+                # CARBON_FROM_REAL_TIME_SRC_OUT_FILE_NAME = "../data/"+region+"/"+region+"_lifecycle_emissions.csv"
+                REAL_TIME_SRC_IN_FILE_NAME = "../data/"+region+"/"+region+"_clean.csv"
+                CARBON_FROM_REAL_TIME_SRC_OUT_FILE_NAME = "../data/"+region+"/"+region+"_lifecycle_emissions.csv"
+        else:
+            if (isForecast is True):
+                REAL_TIME_SRC_IN_FILE_NAME = "../data/"+region+"/"+region+"_carbon_direct_"+TEST_PERIOD+".csv"
+                CARBON_FROM_SRC_FORECASTS_OUT_FILE_NAME = "../data/"+region+"/"+region+"_carbon_from_src_prod_forecasts_direct_"+TEST_PERIOD+".csv"
+                FORECAST_SRC_IN_FILE_NAME = "../data/"+region+"/"+region+"_96hr_source_prod_forecasts_DA_"+TEST_PERIOD+".csv"
+            else:
+                # REAL_TIME_SRC_IN_FILE_NAME = "../data/"+region+"/"+region+".csv"
+                # CARBON_FROM_REAL_TIME_SRC_OUT_FILE_NAME = "../data/"+region+"/"+region+"_direct_emissions.csv"
+                REAL_TIME_SRC_IN_FILE_NAME = "../data/"+region+"/"+region+"_clean.csv"
+                CARBON_FROM_REAL_TIME_SRC_OUT_FILE_NAME = "../data/"+region+"/"+region+"_direct_emissions.csv"
+
+        runProgram(region, isLifecycle, isForecast, REAL_TIME_SRC_IN_FILE_NAME, CARBON_FROM_REAL_TIME_SRC_OUT_FILE_NAME, 
+                   FORECAST_SRC_IN_FILE_NAME, CARBON_FROM_SRC_FORECASTS_OUT_FILE_NAME, None, None)
+        # print("Calculating carbon intensity for region: ", region, " done.")

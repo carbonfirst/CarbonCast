@@ -75,6 +75,7 @@ def showPlots():
 def scaleDataset(trainData, valData, testData):
     # Scaling columns to range (0, 1)
     row, col = trainData.shape[0], trainData.shape[1]
+    # print(row, col)
     ftMin, ftMax = [], []
     for i in range(col):
         fmax= trainData[0, i]
@@ -86,16 +87,31 @@ def scaleDataset(trainData, valData, testData):
                 fmin = trainData[j, i]
         ftMin.append(fmin)
         ftMax.append(fmax)
-        # print(fmax, fmin)
 
     for i in range(col):
         if((ftMax[i] - ftMin[i]) == 0):
             continue
         trainData[:, i] = (trainData[:, i] - ftMin[i]) / (ftMax[i] - ftMin[i])
-        valData[:, i] = (valData[:, i] - ftMin[i]) / (ftMax[i] - ftMin[i])
-        testData[:, i] = (testData[:, i] - ftMin[i]) / (ftMax[i] - ftMin[i])
+        if (valData is not None):
+            valData[:, i] = (valData[:, i] - ftMin[i]) / (ftMax[i] - ftMin[i])
+        if (testData is not None):
+            testData[:, i] = (testData[:, i] - ftMin[i]) / (ftMax[i] - ftMin[i])
+        # print(trainData[:, i])
+        # print(ftMax[i], ftMin[i])
 
     return trainData, valData, testData, ftMin, ftMax
+
+def scaleTestDataWithTrainingValues(data, ftMin, ftMax):
+    # Scaling columns to range (0, 1)
+    col = data.shape[1]
+    for i in range(col):
+        if((ftMax[i] - ftMin[i]) == 0):
+            continue
+        for j in range(len(data)):
+            # print(data[j, i], ftMin[i], ftMax[i])
+            data[j, i] = (data[j, i] - ftMin[i]) / (ftMax[i] - ftMin[i])
+        
+    return data
 
 def scaleColumn(data, ftMin, ftMax):
     # Scaling columns to range (0, 1)
@@ -114,6 +130,45 @@ def inverseScaleColumn(data, cmin, cmax):
         unscaledData[i] = round(max(data[i]*cdiff + cmin, 0), 5)
     return unscaledData
 
+def getMinMaxFeatureValues(minMaxFeatureFileName, areForecastsFeatures):
+    print("Min max feature file: ", minMaxFeatureFileName)
+    ftMin = []
+    ftMax = []
+    wftMin = []
+    wftMax = []
+    minValues = None
+    maxValues = None
+    wMinValues = None
+    wMaxValues = None
+    with open(minMaxFeatureFileName, "r") as f:
+        minValues = f.readline()
+        minValues = minValues[1:-2] # -2 because the line ends with ]\n
+        minValues = minValues.split(",")
+        maxValues = f.readline()
+        maxValues = maxValues[1:-2] # -2 because the line ends with ]\n
+        maxValues = maxValues.split(",")
+        if (areForecastsFeatures is True):
+            wMinValues = f.readline()
+            wMinValues = wMinValues[1:-2] # -2 because the line ends with ]\n
+            wMinValues = wMinValues.split(",")
+            wMaxValues = f.readline()
+            wMaxValues = wMaxValues[1:-2] # -2 because the line ends with ]\n
+            wMaxValues = wMaxValues.split(",")
+
+    ftMin.append(float(minValues[0].strip()))
+    ftMax.append(float(maxValues[0].strip()))
+
+    for i in range(1, len(minValues)):
+        wftMin.append(float(minValues[i].strip()))
+        wftMax.append(float(maxValues[i].strip()))
+
+    if (wMinValues is not None):
+        for i in range(len(wMinValues)):
+            wftMin.append(float(wMinValues[i].strip()))
+            wftMax.append(float(wMaxValues[i].strip()))
+
+    # print(ftMin, ftMax, wftMin, wftMax)
+    return ftMin, ftMax, wftMin, wftMax
 
 # Date time feature engineering
 def addDateTimeFeatures(dataset, dateTime, startCol):
@@ -148,7 +203,7 @@ def addDateTimeFeatures(dataset, dateTime, startCol):
             one +=1
         weekendList.append(isWeekend)        
     loc = startCol+1
-    print(zero, one)
+    # print(zero, one)
     # hour of day feature
     dataset.insert(loc=loc, column="hour_sin", value=hourSin)
     dataset.insert(loc=loc+1, column="hour_cos", value=hourCos)

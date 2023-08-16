@@ -1,3 +1,5 @@
+import sys
+sys.path.append("./RDA/rda-apps-clients/src/python/")
 import rdams_client as rc
 
 dsid = 'ds084.1'
