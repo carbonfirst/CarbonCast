@@ -20,7 +20,7 @@ def get_latest_csv_file(region_code):
     return csv_file1, csv_file2
 
 
-def get_forecasts_csv_file(region_code, date):
+def get_CI_forecasts_csv_file(region_code, date):
     os.chdir("../../")
     path = os.chdir(os.path.join('real_time',region_code))
     for file in os.listdir():
@@ -47,3 +47,11 @@ def get_actual_value_file_by_date(region_code, date):
             print(csv_file_b)
     print(csv_file_a, csv_file_b)
     return csv_file_a, csv_file_b
+
+def get_energy_forecasts_csv_file(region_code, date):
+    os.chdir("../../")
+    path = os.chdir(os.path.join('real_time',region_code))
+    for file in os.listdir():
+        if file.endswith(f"_96hr_forecasts_{date}.csv"):
+            e_forecast_csv_file = file
+    return e_forecast_csv_file
