@@ -5,12 +5,13 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import permissions
-# from .models import CarbonCast
-# from .serializers import CarbonCastSerializer
+from django.contrib.auth import authenticate,login
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.models import User
+from django.shortcuts import redirect, render
 from .helper import get_latest_csv_file, get_actual_value_file_by_date, get_CI_forecasts_csv_file, get_energy_forecasts_csv_file
 import os
 from datetime import datetime
-# import json
 
 #Defining a list of US region codes
 US_region_codes = ['AECI','AZPS', 'BPAT','CISO', 'DUK', 'EPE', 'ERCO', 'FPL', 
@@ -308,7 +309,7 @@ class EnergySourcesForecastsHistoryApiView(APIView):
 
 #8
 class SupportedRegionsApiView(APIView):
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
         items = os.listdir("../../real_time")
@@ -317,3 +318,50 @@ class SupportedRegionsApiView(APIView):
             "US_supported_regions": supported_regions
         }
         return Response(response, status=status.HTTP_200_OK)
+    
+    
+class SignUpAPIView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        username = request.data.get("username")
+        password = request.data.get("password")
+        user = User.objects.create_user(username=username, password=password)
+        user.save()
+        # user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            response = {
+                "logged_in": True
+            }
+            return Response(response, status=status.HTTP_200_OK)
+        else:
+            # Return an 'invalid login' error message.
+            print(username, password, user)
+            response = {
+                "logged_in": False
+            }
+            return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class SignInAPIView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        username = request.data.get("username")
+        password = request.data.get("password")
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            response = {
+                "logged_in": True
+            }
+            return Response(response, status=status.HTTP_200_OK)
+        else:
+            # Return an 'invalid login' error message.
+            print(username, password, user)
+            response = {
+                "logged_in": False
+            }
+            return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+     

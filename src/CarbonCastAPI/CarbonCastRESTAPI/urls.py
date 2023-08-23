@@ -8,7 +8,9 @@ from .views import (
     CarbonIntensityForecastsApiView,
     CarbonIntensityForecastsHistoryApiView,
     EnergySourcesForecastsHistoryApiView,
-    SupportedRegionsApiView
+    SupportedRegionsApiView,
+    SignUpAPIView,
+    SignInAPIView
 )
 
 urlpatterns = [
@@ -20,4 +22,6 @@ urlpatterns = [
     path('CarbonIntensityForecastsHistory', CarbonIntensityForecastsHistoryApiView.as_view()),
     path('EnergySourcesForecastsHistory', EnergySourcesForecastsHistoryApiView.as_view()),   
     path('SupportedRegions', SupportedRegionsApiView.as_view()),
+    path('SignUp', SignUpAPIView.as_view()),
+    path('SignIn', SignInAPIView.as_view()),
 ]
