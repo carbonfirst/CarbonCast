@@ -23,30 +23,40 @@ class CarbonIntensityApiView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
+
+        fields = [
+                 "UTC time", "creation_time (UTC)", "version", "region_code", "carbon_intensity_avg_lifecycle", 
+                 "carbon_intensity_avg_direct", "cabon_intensity_unit"
+                 ]
         
-        region_code = request.query_params.get('regionCode', '')
+        final_list=[]
+        
+        for region_code in US_region_codes:
+            csv_file1, csv_file2 = get_latest_csv_file(region_code)
+            print(csv_file1)
+            print(csv_file2)
+            with open(csv_file1) as file:
+                for line in file:
+                    pass
+            values_csv1 = line.split(',')
+            with open(csv_file2) as file:
+                for line in file:
+                    pass
+            values_csv2 = line.split(',')
 
-        csv_file1, csv_file2 = get_latest_csv_file(region_code)
-        with open(csv_file1) as file:
-            for line in file:
-                pass
-        values_csv1 = line.split(',')
-        with open(csv_file2) as file:
-            for line in file:
-                pass
-        values_csv2 = line.split(',')
-
-        response_data= {
-            "UTC time" : values_csv1[1],
-            "creation_time (UTC)": values_csv1[2],
-            "version": values_csv1[3],
-            "region_code": region_code,
-            "carbon_intensity_avg_lifecycle": float(values_csv1[4]),
-            "carbon_intensity_avg_direct": float(values_csv2[4]),
-            "carbon_intensity_unit": "gCO2eg/kWh"                 
-          }
+            temp_dict = {
+            fields[0]: values_csv1[1],
+            fields[1]: values_csv1[2],
+            fields[2]: values_csv1[3],
+            fields[3]: region_code,
+            fields[4]: float(values_csv1[4]),
+            fields[5]: float(values_csv2[4]),
+            fields[6]: "gCO2eg/kWh"
+            }
+            final_list.append(temp_dict)
+            
         response = {
-            "data": response_data
+            "data": final_list
         }
         return Response(response, status=status.HTTP_200_OK)
         
@@ -55,35 +65,37 @@ class EnergySourcesApiView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        
-        region_code = request.query_params.get('regionCode', '')
-
-        csv_file1, csv_fil2 = get_latest_csv_file(region_code)
-        with open(csv_file1) as file:
-            header = file.readline().strip()
-            columns = header.split(',')
-            for row in file:
-                line = row.strip().split(',')
 
         fields = [
-                 "UTC time", "creation_time (UTC)", "version", "region_code", "coal", "nat_gas", "nuclear",
-                 "oil", "hydro", "solar", "wind", "other"
-                 ]
-        response_data = {}
+                    "UTC time", "creation_time (UTC)", "version", "region_code", "coal", "nat_gas", "nuclear",
+                    "oil", "hydro", "solar", "wind", "other"
+                ]
 
-        for field in fields:
-            if field in columns:
-                index = columns.index(field)
-                value = line[index].strip() if index < len(line) else "0"
-                response_data[field] = value
-            elif field == "region_code":
-                response_data[field] = region_code
-            else:
-                response_data[field] = "0"
-                
-        response = {
-            "data": response_data
-        }
+        response = {"data": []}  
+
+        for region_code in US_region_codes:
+            csv_file1, csv_file2 = get_latest_csv_file(region_code)
+    
+            with open(csv_file1) as file:
+                header = file.readline().strip()
+                columns = header.split(',')        
+                for row in file:
+                    line = row.strip().split(',')
+            
+            response_data={}
+
+            for field in fields:
+                if field in columns:
+                    index = columns.index(field)
+                    value = line[index].strip() if index < len(line) else "0"
+                    response_data[field] = value
+                elif field == "region_code":
+                    response_data[field] = region_code
+                else:
+                    response_data[field] = "0"
+            
+            response["data"].append(response_data)  
+
         return Response(response, status=status.HTTP_200_OK)
         
 #3    
@@ -183,10 +195,10 @@ class CarbonIntensityForecastsApiView(APIView):
         final_interval = int(f[:-1])
         forecastPeriod = int(final_interval)
 
-        today_date = datetime.now().strftime('%Y-%m-%d')
-        # date = '2023-08-20'
+        # today_date = datetime.now().strftime('%Y-%m-%d')
+        date = '2023-08-20'
 
-        CI_lifecycle, CI_direct = get_CI_forecasts_csv_file(region_code, today_date)
+        CI_lifecycle, CI_direct = get_CI_forecasts_csv_file(region_code, date)
         with open(CI_lifecycle) as file:
             lines_CI_lifecycle = file.readlines()
 
