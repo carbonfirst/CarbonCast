@@ -5,7 +5,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import permissions
-from django.contrib.auth import authenticate,login
+from django.contrib.auth import authenticate,login, logout
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.shortcuts import redirect, render
@@ -20,8 +20,7 @@ US_region_codes = ['AECI','AZPS', 'BPAT','CISO', 'DUK', 'EPE', 'ERCO', 'FPL',
 
 # 1: 
 class CarbonIntensityApiView(APIView):
-    # add permission to check if user is authenticated: permissions.IsAuthenticated
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
         
@@ -53,8 +52,7 @@ class CarbonIntensityApiView(APIView):
         
 #2    
 class EnergySourcesApiView(APIView):
-    # add permission to check if user is authenticated: permissions.IsAuthenticated
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
         
@@ -90,7 +88,7 @@ class EnergySourcesApiView(APIView):
         
 #3    
 class CarbonIntensityHistoryApiView(APIView):
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
         
@@ -131,7 +129,7 @@ class CarbonIntensityHistoryApiView(APIView):
         
 #4    
 class EnergySourcesHistoryApiView(APIView):
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
         
@@ -176,7 +174,7 @@ class EnergySourcesHistoryApiView(APIView):
 
 #5
 class CarbonIntensityForecastsApiView(APIView):
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
         region_code = request.query_params.get('regionCode', '')  
@@ -223,7 +221,7 @@ class CarbonIntensityForecastsApiView(APIView):
 
 #6    
 class CarbonIntensityForecastsHistoryApiView(APIView):
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
         
@@ -262,7 +260,7 @@ class CarbonIntensityForecastsHistoryApiView(APIView):
 
 #7
 class EnergySourcesForecastsHistoryApiView(APIView):
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
         region_code = request.query_params.get('regionCode', '')   
@@ -364,4 +362,15 @@ class SignInAPIView(APIView):
                 "logged_in": False
             }
             return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-     
+
+
+class LogoutAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        logout(request)
+        response = {
+            "logged_out": True
+        }
+        return Response(response, status=status.HTTP_200_OK)
+        
