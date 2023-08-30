@@ -1,17 +1,19 @@
 from django.shortcuts import render
+import pyotp
 
 # Create your views here.
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework import permissions
+from rest_framework import permissions, authentication
 from django.contrib.auth import authenticate,login, logout
-from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.shortcuts import redirect, render
+
+from .models import UserModel
+from .serializers import UserSerializer
 from .helper import get_latest_csv_file, get_actual_value_file_by_date, get_CI_forecasts_csv_file, get_energy_forecasts_csv_file
 import os
-from datetime import datetime
 
 #Defining a list of US region codes
 US_region_codes = ['AECI','AZPS', 'BPAT','CISO', 'DUK', 'EPE', 'ERCO', 'FPL', 
@@ -20,6 +22,7 @@ US_region_codes = ['AECI','AZPS', 'BPAT','CISO', 'DUK', 'EPE', 'ERCO', 'FPL',
 
 # 1: 
 class CarbonIntensityApiView(APIView):
+    authentication_classes = [authentication.SessionAuthentication, authentication.BasicAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
@@ -62,6 +65,7 @@ class CarbonIntensityApiView(APIView):
         
 #2    
 class EnergySourcesApiView(APIView):
+    authentication_classes = [authentication.SessionAuthentication, authentication.BasicAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
@@ -100,6 +104,7 @@ class EnergySourcesApiView(APIView):
         
 #3    
 class CarbonIntensityHistoryApiView(APIView):
+    authentication_classes = [authentication.SessionAuthentication, authentication.BasicAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
@@ -141,6 +146,7 @@ class CarbonIntensityHistoryApiView(APIView):
         
 #4    
 class EnergySourcesHistoryApiView(APIView):
+    authentication_classes = [authentication.SessionAuthentication, authentication.BasicAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
@@ -186,6 +192,7 @@ class EnergySourcesHistoryApiView(APIView):
 
 #5
 class CarbonIntensityForecastsApiView(APIView):
+    authentication_classes = [authentication.SessionAuthentication, authentication.BasicAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
@@ -233,6 +240,7 @@ class CarbonIntensityForecastsApiView(APIView):
 
 #6    
 class CarbonIntensityForecastsHistoryApiView(APIView):
+    authentication_classes = [authentication.SessionAuthentication, authentication.BasicAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
@@ -272,6 +280,7 @@ class CarbonIntensityForecastsHistoryApiView(APIView):
 
 #7
 class EnergySourcesForecastsHistoryApiView(APIView):
+    authentication_classes = [authentication.SessionAuthentication, authentication.BasicAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
@@ -319,6 +328,7 @@ class EnergySourcesForecastsHistoryApiView(APIView):
 
 #8
 class SupportedRegionsApiView(APIView):
+    authentication_classes = [authentication.SessionAuthentication, authentication.BasicAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
@@ -329,52 +339,6 @@ class SupportedRegionsApiView(APIView):
         }
         return Response(response, status=status.HTTP_200_OK)
     
-    
-class SignUpAPIView(APIView):
-    permission_classes = [permissions.AllowAny]
-
-    def post(self, request, *args, **kwargs):
-        username = request.data.get("username")
-        password = request.data.get("password")
-        user = User.objects.create_user(username=username, password=password)
-        user.save()
-        # user = authenticate(request, username=username, password=password)
-        if user is not None:
-            login(request, user)
-            response = {
-                "logged_in": True
-            }
-            return Response(response, status=status.HTTP_200_OK)
-        else:
-            # Return an 'invalid login' error message.
-            print(username, password, user)
-            response = {
-                "logged_in": False
-            }
-            return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-class SignInAPIView(APIView):
-    permission_classes = [permissions.AllowAny]
-
-    def post(self, request, *args, **kwargs):
-        username = request.data.get("username")
-        password = request.data.get("password")
-        user = authenticate(request, username=username, password=password)
-        if user is not None:
-            login(request, user)
-            response = {
-                "logged_in": True
-            }
-            return Response(response, status=status.HTTP_200_OK)
-        else:
-            # Return an 'invalid login' error message.
-            print(username, password, user)
-            response = {
-                "logged_in": False
-            }
-            return Response(response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
 
 class LogoutAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -385,4 +349,90 @@ class LogoutAPIView(APIView):
             "logged_out": True
         }
         return Response(response, status=status.HTTP_200_OK)
+
+
+class SignUpApiView(APIView):
+    permission_classes = [permissions.AllowAny]
+    serializer_class = UserSerializer
+    queryset = UserModel.objects.all()
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
         
+        if serializer.is_valid():
+            try:
+                serializer.save()
+
+                otp_base32 = pyotp.random_base32()
+                email = request.data.get('email').lower()
+                password = request.data.get('password')
+                otp_auth_url = pyotp.totp.TOTP(otp_base32).provisioning_uri(
+                    name=email, issuer_name="carboncast.com")
+                user = authenticate(username=email, password=password)
+                user.otp_auth_url = otp_auth_url
+                user.otp_base32 = otp_base32
+                user.otp_verified = False
+                user.password_checked = True
+                user.save()
+
+                return Response({"status": "success", 'base32': otp_base32, "otpauth_url": otp_auth_url}, status=status.HTTP_201_CREATED)
+                
+            except:
+                return Response({"status": "fail", "message": "User with that email already exists"}, status=status.HTTP_409_CONFLICT)
+        else:
+            return Response({"status": "fail", "message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class SignInApiView(APIView):
+    permission_classes = [permissions.AllowAny]
+    serializer_class = UserSerializer
+    queryset = UserModel.objects.all()
+
+    def post(self, request):
+        data = request.data
+        email = data.get('email')
+        password = data.get('password')
+
+        user = authenticate(username=email.lower(), password=password)
+        print(user, email, password)
+        if user is None:
+            return Response({"status": "fail", "message": "Incorrect email or password"}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not user.check_password(password):
+            return Response({"status": "fail", "message": "Incorrect email or password"}, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = self.serializer_class(user)
+        user.otp_verified = False
+        user.password_checked = True
+        user.save()
+        return Response({"status": "success", "user": serializer.data})
+
+
+class VerifyOTP(APIView):
+    permission_classes = [permissions.AllowAny]
+    serializer_class = UserSerializer
+    queryset = UserModel.objects.all()
+
+    def post(self, request):
+        message = "Token is invalid or user doesn't exist"
+        data = request.data
+        user_id = data.get('user_id', None)
+        otp_token = data.get('token', None)
+        user = UserModel.objects.filter(id=user_id).first()
+        if user == None:
+            return Response({"status": "fail", "message": f"No user with Id: {user_id} found"}, status=status.HTTP_404_NOT_FOUND)
+
+        if not user.password_checked:
+            return Response({"status": "fail", "message": f"You need to login first"}, status=status.HTTP_403_FORBIDDEN)
+
+        totp = pyotp.TOTP(user.otp_base32)
+        if not totp.verify(otp_token):
+            return Response({"status": "fail", "message": message}, status=status.HTTP_400_BAD_REQUEST)
+        user.otp_enabled = True
+        user.otp_verified = True
+        user.save()
+        login(request, user)
+        
+        serializer = self.serializer_class(user)
+
+        return Response({'otp_verified': True, "user": serializer.data})

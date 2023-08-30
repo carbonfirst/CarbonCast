@@ -14,7 +14,7 @@ from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
+AUTH_USER_MODEL = 'CarbonCastRESTAPI.UserModel'
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'rest_framework.authtoken',
     'CarbonCastRESTAPI',
 ]
 
@@ -68,6 +69,16 @@ TEMPLATES = [
         },
     },
 ]
+
+
+REST_FRAMEWORK = {  
+    'DEFAULT_PERMISSION_CLASSES': [     
+        'rest_framework.permissions.IsAuthenticated', 
+    ], 
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+    ], 
+} 
 
 WSGI_APPLICATION = 'CarbonCastAPI.wsgi.application'
 
