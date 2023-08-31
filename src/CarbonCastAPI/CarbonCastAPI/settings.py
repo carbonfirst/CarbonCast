@@ -72,6 +72,9 @@ TEMPLATES = [
 
 
 REST_FRAMEWORK = {  
+    'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.URLPathVersioning',
+    'ALLOWED_VERSIONS': ['v1', 'v2'],
+    'DEFAULT_VERSION': 'v1',
     'DEFAULT_PERMISSION_CLASSES': [     
         'rest_framework.permissions.IsAuthenticated', 
     ], 

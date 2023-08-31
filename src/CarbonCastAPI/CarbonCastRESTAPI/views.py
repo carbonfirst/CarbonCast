@@ -332,11 +332,16 @@ class SupportedRegionsApiView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        items = os.listdir("../../real_time")
-        supported_regions = [item for item in items if os.path.isdir(os.path.join("../../real_time", item)) and item != 'weather_data']
-        response = {
-            "US_supported_regions": supported_regions
-        }
+        if request.version == 'v1':
+            items = os.listdir("../../real_time")
+            supported_regions = [item for item in items if os.path.isdir(os.path.join("../../real_time", item)) and item != 'weather_data']
+            response = {
+                "US_supported_regions": supported_regions
+            }
+        elif request.version == 'v2':
+            response = {
+                "message": "This is API version 2."
+            }
         return Response(response, status=status.HTTP_200_OK)
     
 

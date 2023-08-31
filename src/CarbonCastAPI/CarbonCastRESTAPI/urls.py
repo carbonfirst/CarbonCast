@@ -12,8 +12,6 @@ from .views import (
     SignUpApiView,
     SignInApiView,
     LogoutAPIView,
-    # RegisterView,
-    # LoginView,
     VerifyOTP
 )
 
@@ -29,8 +27,5 @@ urlpatterns = [
     path('SignUp', SignUpApiView.as_view()),
     path('SignIn', SignInApiView.as_view()),
     path('Logout', LogoutAPIView.as_view()),
-    # path('Register', RegisterView.as_view()),
-    # path('Login', LoginView.as_view()),
-    # path('GenerateOTP', GenerateOTP.as_view()),
     path('VerifyOTP', VerifyOTP.as_view()),
 ]
