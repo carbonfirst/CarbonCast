@@ -14,6 +14,7 @@ from .models import UserModel
 from .serializers import UserSerializer
 from .helper import get_latest_csv_file, get_actual_value_file_by_date, get_CI_forecasts_csv_file, get_energy_forecasts_csv_file
 import os
+from .consts import carbon_cast_version
 
 #Defining a list of US region codes
 US_region_codes = ['AECI','AZPS', 'BPAT','CISO', 'DUK', 'EPE', 'ERCO', 'FPL', 
@@ -59,7 +60,8 @@ class CarbonIntensityApiView(APIView):
             final_list.append(temp_dict)
             
         response = {
-            "data": final_list
+            "data": final_list,
+            "carbon_cast_version": carbon_cast_version
         }
         return Response(response, status=status.HTTP_200_OK)
         
@@ -75,7 +77,7 @@ class EnergySourcesApiView(APIView):
                     "oil", "hydro", "solar", "wind", "other"
                 ]
 
-        response = {"data": []}  
+        response = {"data": [], "carbon_cast_version": carbon_cast_version}  
 
         for region_code in US_region_codes:
             csv_file1, csv_file2 = get_latest_csv_file(region_code)
@@ -140,7 +142,8 @@ class CarbonIntensityHistoryApiView(APIView):
             temp_dict[field_names[6]] = "gCO2eg/kWh"
             final_list.append(temp_dict)
         response = {
-            "data": final_list
+            "data": final_list,
+            "carbon_cast_version": carbon_cast_version
         }
         return Response(response, status=status.HTTP_200_OK)
         
@@ -186,7 +189,8 @@ class EnergySourcesHistoryApiView(APIView):
 
 
         response = {
-            "data": final_list
+            "data": final_list,
+            "carbon_cast_version": carbon_cast_version
         }
         return Response(response, status=status.HTTP_200_OK)
 
@@ -233,7 +237,8 @@ class CarbonIntensityForecastsApiView(APIView):
             final_list.append(temp_dict)
 
         response = {
-            "data": final_list
+            "data": final_list,
+            "carbon_cast_version": carbon_cast_version
         }
         
         return Response(response, status=status.HTTP_200_OK)
@@ -274,7 +279,8 @@ class CarbonIntensityForecastsHistoryApiView(APIView):
             temp_dict[field_names[6]] = "gCO2eg/kWh"
             final_list.append(temp_dict)
         response = {
-            "data": final_list
+            "data": final_list,
+            "carbon_cast_version": carbon_cast_version
         }
         return Response(response, status=status.HTTP_200_OK)
 
@@ -322,25 +328,28 @@ class EnergySourcesForecastsHistoryApiView(APIView):
             final_list.append(temp_dict)
 
         response = {
-                "data": final_list
+                "data": final_list,
+                "carbon_cast_version": carbon_cast_version
             }
         return Response(response, status=status.HTTP_200_OK)
 
 #8
 class SupportedRegionsApiView(APIView):
-    authentication_classes = [authentication.SessionAuthentication, authentication.BasicAuthentication]
-    permission_classes = [permissions.IsAuthenticated]
+    # authentication_classes = [authentication.SessionAuthentication, authentication.BasicAuthentication]
+    permission_classes = [permissions.AllowAny]
 
     def get(self, request, *args, **kwargs):
         if request.version == 'v1':
             items = os.listdir("../../real_time")
             supported_regions = [item for item in items if os.path.isdir(os.path.join("../../real_time", item)) and item != 'weather_data']
             response = {
-                "US_supported_regions": supported_regions
+                "US_supported_regions": supported_regions,
+                "carbon_cast_version": carbon_cast_version
             }
         elif request.version == 'v2':
             response = {
-                "message": "This is API version 2."
+                "message": "This is API version 2.",
+                "carbon_cast_version": carbon_cast_version
             }
         return Response(response, status=status.HTTP_200_OK)
     
@@ -351,7 +360,8 @@ class LogoutAPIView(APIView):
     def post(self, request, *args, **kwargs):
         logout(request)
         response = {
-            "logged_out": True
+            "logged_out": True,
+            "carbon_cast_version": carbon_cast_version
         }
         return Response(response, status=status.HTTP_200_OK)
 
@@ -380,12 +390,12 @@ class SignUpApiView(APIView):
                 user.password_checked = True
                 user.save()
 
-                return Response({"status": "success", 'base32': otp_base32, "otpauth_url": otp_auth_url}, status=status.HTTP_201_CREATED)
+                return Response({"status": "success", 'base32': otp_base32, "otpauth_url": otp_auth_url, "carbon_cast_version": carbon_cast_version}, status=status.HTTP_201_CREATED)
                 
             except:
-                return Response({"status": "fail", "message": "User with that email already exists"}, status=status.HTTP_409_CONFLICT)
+                return Response({"status": "fail", "message": "User with that email already exists", "carbon_cast_version": carbon_cast_version}, status=status.HTTP_409_CONFLICT)
         else:
-            return Response({"status": "fail", "message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"status": "fail", "message": serializer.errors, "carbon_cast_version": carbon_cast_version}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class SignInApiView(APIView):
@@ -410,7 +420,7 @@ class SignInApiView(APIView):
         user.otp_verified = False
         user.password_checked = True
         user.save()
-        return Response({"status": "success", "user": serializer.data})
+        return Response({"status": "success", "user": serializer.data, "carbon_cast_version": carbon_cast_version})
 
 
 class VerifyOTP(APIView):
@@ -432,7 +442,7 @@ class VerifyOTP(APIView):
 
         totp = pyotp.TOTP(user.otp_base32)
         if not totp.verify(otp_token):
-            return Response({"status": "fail", "message": message}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"status": "fail", "message": message, "carbon_cast_version": carbon_cast_version}, status=status.HTTP_400_BAD_REQUEST)
         user.otp_enabled = True
         user.otp_verified = True
         user.save()
@@ -440,4 +450,4 @@ class VerifyOTP(APIView):
         
         serializer = self.serializer_class(user)
 
-        return Response({'otp_verified': True, "user": serializer.data})
+        return Response({'otp_verified': True, "user": serializer.data, "carbon_cast_version": carbon_cast_version})
