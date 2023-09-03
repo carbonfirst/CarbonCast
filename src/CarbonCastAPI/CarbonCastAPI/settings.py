@@ -14,7 +14,7 @@ from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
+AUTH_USER_MODEL = 'CarbonCastRESTAPI.UserModel'
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'rest_framework.authtoken',
     'CarbonCastRESTAPI',
 ]
 
@@ -69,6 +70,19 @@ TEMPLATES = [
     },
 ]
 
+
+REST_FRAMEWORK = {  
+    'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.URLPathVersioning',
+    'ALLOWED_VERSIONS': ['v1', 'v2'],
+    'DEFAULT_VERSION': 'v1',
+    'DEFAULT_PERMISSION_CLASSES': [     
+        'rest_framework.permissions.IsAuthenticated', 
+    ], 
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+    ], 
+} 
+
 WSGI_APPLICATION = 'CarbonCastAPI.wsgi.application'
 
 PASSWORD_HASHERS = [
@@ -88,6 +102,17 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
+
+REST_FRAMEWORK = {
+    'DEFAULT_THROTTLE_CLASSES': [
+        'CarbonCastRESTAPI.throttling.MyViewRateThrottle',
+        'rest_framework.throttling.UserRateThrottle'
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'default': '3/m',
+        'user': '5/day'
     }
 }
 
