@@ -21,5 +21,5 @@ from CarbonCastRESTAPI import urls as CarbonCastRESTAPI_urls
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api-auth/', include('rest_framework.urls')),
-    path('', include(CarbonCastRESTAPI_urls)),
+    path('<str:version>/', include(CarbonCastRESTAPI_urls)),
 ]

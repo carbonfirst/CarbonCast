@@ -9,9 +9,10 @@ from .views import (
     CarbonIntensityForecastsHistoryApiView,
     EnergySourcesForecastsHistoryApiView,
     SupportedRegionsApiView,
-    SignUpAPIView,
-    SignInAPIView,
-    LogoutAPIView
+    SignUpApiView,
+    SignInApiView,
+    LogoutAPIView,
+    VerifyOTP
 )
 
 urlpatterns = [
@@ -23,7 +24,8 @@ urlpatterns = [
     path('CarbonIntensityForecastsHistory', CarbonIntensityForecastsHistoryApiView.as_view()),
     path('EnergySourcesForecastsHistory', EnergySourcesForecastsHistoryApiView.as_view()),   
     path('SupportedRegions', SupportedRegionsApiView.as_view()),
-    path('SignUp', SignUpAPIView.as_view()),
-    path('SignIn', SignInAPIView.as_view()),
+    path('SignUp', SignUpApiView.as_view()),
+    path('SignIn', SignInApiView.as_view()),
     path('Logout', LogoutAPIView.as_view()),
+    path('VerifyOTP', VerifyOTP.as_view()),
 ]
