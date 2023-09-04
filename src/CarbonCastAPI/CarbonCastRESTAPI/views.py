@@ -16,9 +16,6 @@ from .models import UserModel
 from .serializers import UserSerializer
 from .helper import get_latest_csv_file, get_actual_value_file_by_date, get_CI_forecasts_csv_file, get_energy_forecasts_csv_file
 import os
-from datetime import datetime
-from django.conf import settings
-
 from .consts import carbon_cast_version
 
 #Defining a list of US region codes
@@ -119,7 +116,6 @@ class EnergySourcesApiView(APIView):
                     "oil", "hydro", "solar", "wind", "other"
                 ]
 
-            # response = {"data": []}  
             response = {"data": [], "carbon_cast_version": carbon_cast_version}  
 
             for region_code in regions:
