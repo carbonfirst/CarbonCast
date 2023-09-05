@@ -1,5 +1,6 @@
 from django.shortcuts import render
 import pyotp
+import qrcode
 
 # Create your views here.
 from rest_framework.views import APIView
@@ -335,8 +336,8 @@ class EnergySourcesForecastsHistoryApiView(APIView):
 
 #8
 class SupportedRegionsApiView(APIView):
-    # authentication_classes = [authentication.SessionAuthentication, authentication.BasicAuthentication]
-    permission_classes = [permissions.AllowAny]
+    authentication_classes = [authentication.SessionAuthentication, authentication.BasicAuthentication]
+    # permission_classes = [permissions.AllowAny]
 
     def get(self, request, *args, **kwargs):
         if request.version == 'v1':
@@ -390,12 +391,31 @@ class SignUpApiView(APIView):
                 user.password_checked = True
                 user.save()
 
-                return Response({"status": "success", 'base32': otp_base32, "otpauth_url": otp_auth_url, "carbon_cast_version": carbon_cast_version}, status=status.HTTP_201_CREATED)
+                return Response({
+                    "status": "success", 
+                    'base32': otp_base32, 
+                    "otpauth_url": otp_auth_url, 
+                    "carbon_cast_version": carbon_cast_version
+                    }, 
+                    status=status.HTTP_201_CREATED
+                )
                 
             except:
-                return Response({"status": "fail", "message": "User with that email already exists", "carbon_cast_version": carbon_cast_version}, status=status.HTTP_409_CONFLICT)
+                return Response({
+                    "status": "fail", 
+                    "message": "User with that email already exists", 
+                    "carbon_cast_version": carbon_cast_version
+                    }, 
+                    status=status.HTTP_409_CONFLICT
+                )
         else:
-            return Response({"status": "fail", "message": serializer.errors, "carbon_cast_version": carbon_cast_version}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({
+                "status": "fail", 
+                "message": serializer.errors, 
+                "carbon_cast_version": carbon_cast_version
+                }, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 
 class SignInApiView(APIView):
@@ -411,16 +431,33 @@ class SignInApiView(APIView):
         user = authenticate(username=email.lower(), password=password)
         print(user, email, password)
         if user is None:
-            return Response({"status": "fail", "message": "Incorrect email or password"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({
+                "status": "fail", 
+                "message": "Incorrect email or password"
+                }, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         if not user.check_password(password):
-            return Response({"status": "fail", "message": "Incorrect email or password"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({
+                "status": "fail", 
+                "message": "Incorrect email or password"
+                }, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         serializer = self.serializer_class(user)
         user.otp_verified = False
         user.password_checked = True
+        # Code for generating the QR code
+        # Should preferably be done on the frontend instead of sending image files over the network
+        qrcode.make(user.otp_auth_url).save("qr_auth.png")
         user.save()
-        return Response({"status": "success", "user": serializer.data, "carbon_cast_version": carbon_cast_version})
+        return Response({
+            "status": "success", 
+            "user": serializer.data, 
+            "carbon_cast_version": carbon_cast_version
+        })
 
 
 class VerifyOTP(APIView):
@@ -435,14 +472,30 @@ class VerifyOTP(APIView):
         otp_token = data.get('token', None)
         user = UserModel.objects.filter(id=user_id).first()
         if user == None:
-            return Response({"status": "fail", "message": f"No user with Id: {user_id} found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({
+                "status": "fail", 
+                "message": f"No user with Id: {user_id} found"
+                }, 
+                status=status.HTTP_404_NOT_FOUND
+            )
 
         if not user.password_checked:
-            return Response({"status": "fail", "message": f"You need to login first"}, status=status.HTTP_403_FORBIDDEN)
+            return Response({
+                "status": "fail", 
+                "message": f"You need to login first"
+                }, 
+                status=status.HTTP_403_FORBIDDEN
+            )
 
         totp = pyotp.TOTP(user.otp_base32)
         if not totp.verify(otp_token):
-            return Response({"status": "fail", "message": message, "carbon_cast_version": carbon_cast_version}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({
+                "status": "fail", 
+                "message": message, 
+                "carbon_cast_version": carbon_cast_version
+                }, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
         user.otp_enabled = True
         user.otp_verified = True
         user.save()
@@ -450,4 +503,8 @@ class VerifyOTP(APIView):
         
         serializer = self.serializer_class(user)
 
-        return Response({'otp_verified': True, "user": serializer.data, "carbon_cast_version": carbon_cast_version})
+        return Response({
+            'otp_verified': True, 
+            "user": serializer.data, 
+            "carbon_cast_version": carbon_cast_version
+        })
