@@ -376,21 +376,15 @@ class EnergySourcesForecastsHistoryApiView(APIView):
 #8
 class SupportedRegionsApiView(APIView):
     authentication_classes = [authentication.SessionAuthentication, authentication.BasicAuthentication]
-    # permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        if request.version == 'v1':
-            items = os.listdir("../../real_time")
-            supported_regions = [item for item in items if os.path.isdir(os.path.join("../../real_time", item)) and item != 'weather_data']
-            response = {
-                "US_supported_regions": supported_regions,
-                "carbon_cast_version": carbon_cast_version
-            }
-        elif request.version == 'v2':
-            response = {
-                "message": "This is API version 2.",
-                "carbon_cast_version": carbon_cast_version
-            }
+        items = os.listdir("../../real_time")
+        supported_regions = [item for item in items if os.path.isdir(os.path.join("../../real_time", item)) and item != 'weather_data']
+        response = {
+            "US_supported_regions": supported_regions,
+            "carbon_cast_version": carbon_cast_version
+        }
         return Response(response, status=status.HTTP_200_OK)
     
 
@@ -420,15 +414,20 @@ class SignUpApiView(APIView):
 
                 otp_base32 = pyotp.random_base32()
                 email = request.data.get('email').lower()
+                username = request.data.get('username')
                 password = request.data.get('password')
                 otp_auth_url = pyotp.totp.TOTP(otp_base32).provisioning_uri(
                     name=email, issuer_name="carboncast.com")
-                user = authenticate(username=email, password=password)
+                user = authenticate(username=username, password=password)
+                user.email = email
                 user.otp_auth_url = otp_auth_url
                 user.otp_base32 = otp_base32
                 user.otp_verified = False
                 user.password_checked = True
                 user.save()
+                # Code for generating the QR code
+                # Should preferably be done on the frontend instead of sending image files over the network
+                qrcode.make(user.otp_auth_url).save("qr_auth.png")
 
                 return Response({
                     "status": "success", 
@@ -465,10 +464,11 @@ class SignInApiView(APIView):
     def post(self, request):
         data = request.data
         email = data.get('email')
+        username = data.get('username')
         password = data.get('password')
 
-        user = authenticate(username=email.lower(), password=password)
-        print(user, email, password)
+        user = authenticate(username=username, password=password)
+        print(user, username, email, password)
         if user is None:
             return Response({
                 "status": "fail", 
@@ -507,13 +507,13 @@ class VerifyOTP(APIView):
     def post(self, request):
         message = "Token is invalid or user doesn't exist"
         data = request.data
-        user_id = data.get('user_id', None)
+        username = data.get('username', None)
         otp_token = data.get('token', None)
-        user = UserModel.objects.filter(id=user_id).first()
+        user = UserModel.objects.filter(username=username).first()
         if user == None:
             return Response({
                 "status": "fail", 
-                "message": f"No user with Id: {user_id} found"
+                "message": f"No user with username: {username} found"
                 }, 
                 status=status.HTTP_404_NOT_FOUND
             )
