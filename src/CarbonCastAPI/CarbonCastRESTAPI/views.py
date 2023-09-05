@@ -5,6 +5,8 @@ import qrcode
 # Create your views here.
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework import status, serializers
+from rest_framework import permissions
 from rest_framework import status
 from rest_framework import permissions, authentication
 from django.contrib.auth import authenticate,login, logout
@@ -28,36 +30,58 @@ class CarbonIntensityApiView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
+        # Define the serializer for validating query parameters
+        class QueryParamsSerializer(serializers.Serializer):
+            region_code = serializers.CharField(required=False)
 
-        fields = [
+        # Deserialize and validate query parameters
+        query_params_serializer = QueryParamsSerializer(data=request.query_params)
+        if query_params_serializer.is_valid():
+            region_code = query_params_serializer.validated_data.get('region_code')
+            
+            if region_code == 'all':
+                regions = US_region_codes
+            elif region_code in US_region_codes:
+                regions = [region_code]
+            else:
+                return Response({"error": "Invalid region code parameter"}, status=status.HTTP_400_BAD_REQUEST)
+            
+        
+            fields = [
                  "UTC time", "creation_time (UTC)", "version", "region_code", "carbon_intensity_avg_lifecycle", 
                  "carbon_intensity_avg_direct", "cabon_intensity_unit"
                  ]
         
-        final_list=[]
+            final_list=[]
         
-        for region_code in US_region_codes:
-            csv_file1, csv_file2 = get_latest_csv_file(region_code)
-            print(csv_file1)
-            print(csv_file2)
-            with open(csv_file1) as file:
-                for line in file:
-                    pass
-            values_csv1 = line.split(',')
-            with open(csv_file2) as file:
-                for line in file:
-                    pass
-            values_csv2 = line.split(',')
+            for region_code in regions:
+                csv_file1, csv_file2 = get_latest_csv_file(region_code)
+                print(csv_file1)
+                print(csv_file2)
+                with open(csv_file1) as file:
+                    for line in file:
+                        pass
+                values_csv1 = line.split(',')
+                with open(csv_file2) as file:
+                    for line in file:
+                        pass
+                values_csv2 = line.split(',')
 
-            temp_dict = {
-            fields[0]: values_csv1[1],
-            fields[1]: values_csv1[2],
-            fields[2]: values_csv1[3],
-            fields[3]: region_code,
-            fields[4]: float(values_csv1[4]),
-            fields[5]: float(values_csv2[4]),
-            fields[6]: "gCO2eg/kWh"
+                temp_dict = {
+                fields[0]: values_csv1[1],
+                fields[1]: values_csv1[2],
+                fields[2]: values_csv1[3],
+                fields[3]: region_code,
+                fields[4]: float(values_csv1[4]),
+                fields[5]: float(values_csv2[4]),
+                fields[6]: "gCO2eg/kWh"
+                }
+                final_list.append(temp_dict)
+                
+            response = {
+                "data": final_list
             }
+            return Response(response, status=status.HTTP_200_OK)
             final_list.append(temp_dict)
             
         response = {
@@ -72,39 +96,54 @@ class EnergySourcesApiView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
+        # Define the serializer for validating query parameters
+        class QueryParamsSerializer(serializers.Serializer):
+            region_code = serializers.CharField(required=False)
 
-        fields = [
+        # Deserialize and validate query parameters
+        query_params_serializer = QueryParamsSerializer(data=request.query_params)
+        if query_params_serializer.is_valid():
+            region_code = query_params_serializer.validated_data.get('region_code')
+            
+            if region_code == 'all':
+                regions = US_region_codes
+            elif region_code in US_region_codes:
+                regions = [region_code]
+            else:
+                return Response({"error": "Invalid region code parameter"}, status=status.HTTP_400_BAD_REQUEST)
+
+            fields = [
                     "UTC time", "creation_time (UTC)", "version", "region_code", "coal", "nat_gas", "nuclear",
                     "oil", "hydro", "solar", "wind", "other"
                 ]
 
-        response = {"data": [], "carbon_cast_version": carbon_cast_version}  
+            response = {"data": [], "carbon_cast_version": carbon_cast_version}  
 
-        for region_code in US_region_codes:
-            csv_file1, csv_file2 = get_latest_csv_file(region_code)
-    
-            with open(csv_file1) as file:
-                header = file.readline().strip()
-                columns = header.split(',')        
-                for row in file:
-                    line = row.strip().split(',')
-            
-            response_data={}
-
-            for field in fields:
-                if field in columns:
-                    index = columns.index(field)
-                    value = line[index].strip() if index < len(line) else "0"
-                    response_data[field] = value
-                elif field == "region_code":
-                    response_data[field] = region_code
-                else:
-                    response_data[field] = "0"
-            
-            response["data"].append(response_data)  
-
-        return Response(response, status=status.HTTP_200_OK)
+            for region_code in regions:
+                csv_file1, csv_file2 = get_latest_csv_file(region_code)
         
+                with open(csv_file1) as file:
+                    header = file.readline().strip()
+                    columns = header.split(',')        
+                    for row in file:
+                        line = row.strip().split(',')
+                
+                response_data={}
+
+                for field in fields:
+                    if field in columns:
+                        index = columns.index(field)
+                        value = line[index].strip() if index < len(line) else "0"
+                        response_data[field] = value
+                    elif field == "region_code":
+                        response_data[field] = region_code
+                    else:
+                        response_data[field] = "0"
+                
+                response["data"].append(response_data)  
+
+            return Response(response, status=status.HTTP_200_OK)
+            
 #3    
 class CarbonIntensityHistoryApiView(APIView):
     authentication_classes = [authentication.SessionAuthentication, authentication.BasicAuthentication]
