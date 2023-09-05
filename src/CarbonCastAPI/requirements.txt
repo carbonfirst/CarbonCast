@@ -1,0 +1,4 @@
+Django==4.2.4
+djangorestframework
+pyotp
+qrcode
