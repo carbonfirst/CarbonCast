@@ -2,6 +2,9 @@ import uuid
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
+class UserThrottleLimit(models.Model):
+    user = models.OneToOneField('UserModel', on_delete=models.CASCADE)
+    throttle_limit = models.PositiveIntegerField()
 
 class UserModel(AbstractUser):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -14,6 +17,8 @@ class UserModel(AbstractUser):
     otp_auth_url = models.CharField(max_length=255, null=True)
     password_checked = models.BooleanField(default=False)
     username = None
+
+    throttle_limit = models.OneToOneField(UserThrottleLimit, on_delete=models.CASCADE, null=True)  
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['password', 'name']
