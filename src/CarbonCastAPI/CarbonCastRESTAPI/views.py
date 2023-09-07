@@ -463,7 +463,7 @@ class SupportedRegionsApiView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        
+
         user = request.user
         print("User:",user)
         if not check_throttle_limit(user):
@@ -508,8 +508,8 @@ class SignUpApiView(APIView):
                 user = serializer.save()
 
                 # Retrieve the user throttle limit from settings
-                throttle_limit_str = settings.REST_FRAMEWORK['DEFAULT_THROTTLE_RATES']['user']
-                throttle_limit_value = int(throttle_limit_str.split('/')[0])
+                # throttle_limit_str = settings.REST_FRAMEWORK['DEFAULT_THROTTLE_RATES']['user']
+                throttle_limit_value = 5
 
                 # Create a UserThrottleLimit instance and set the throttle limit
                 throttle_limit = UserThrottleLimit(user=user, throttle_limit=throttle_limit_value)
