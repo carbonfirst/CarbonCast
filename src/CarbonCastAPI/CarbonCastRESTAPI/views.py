@@ -12,8 +12,8 @@ from rest_framework import permissions, authentication
 from django.contrib.auth import authenticate,login, logout
 from django.contrib.auth.models import User
 from django.shortcuts import redirect, render
-
-from .models import UserModel
+from django.conf import settings
+from .models import UserModel, UserThrottleLimit
 from .serializers import UserSerializer
 from .helper import get_latest_csv_file, get_actual_value_file_by_date, get_CI_forecasts_csv_file, get_energy_forecasts_csv_file
 import os
@@ -24,12 +24,38 @@ US_region_codes = ['AECI','AZPS', 'BPAT','CISO', 'DUK', 'EPE', 'ERCO', 'FPL',
                 'ISNE', 'LDWP', 'MISO', 'NEVP', 'NWMT', 'NYIS', 'PACE', 'PJM', 
                 'SC', 'SCEG', 'SOCO', 'TIDC', 'TVA']
 
+def check_throttle_limit(user):
+    try:
+        throttle_limit_obj = user.userthrottlelimit  # Access the related UserThrottleLimit object
+        throttle_limit = throttle_limit_obj.throttle_limit  # Access the throttle_limit field
+    except UserThrottleLimit.DoesNotExist:
+        throttle_limit = None
+    print(f"Throttle_limit:{throttle_limit_obj.throttle_limit}")
+
+    if throttle_limit is None or throttle_limit <= 0:
+        return False
+    else:
+        throttle_limit_obj.throttle_limit -= 1
+        throttle_limit_obj.save()
+        print(f"After saving, throttle_limit:{throttle_limit_obj.throttle_limit}")
+        return True
+
 # 1: 
 class CarbonIntensityApiView(APIView):
     authentication_classes = [authentication.SessionAuthentication, authentication.BasicAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
+
+        user = request.user
+        print("User:",user)
+        if not check_throttle_limit(user):
+            return Response({
+                "status": "fail",
+                "message": "Throttle limit reached",
+                "carbon_cast_version": carbon_cast_version
+            }, status=status.HTTP_429_TOO_MANY_REQUESTS, headers={'Retry-After': 86400})
+
         # Define the serializer for validating query parameters
         class QueryParamsSerializer(serializers.Serializer):
             region_code = serializers.CharField(required=False)
@@ -96,6 +122,16 @@ class EnergySourcesApiView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
+
+        user = request.user
+        print("User:",user)
+        if not check_throttle_limit(user):
+            return Response({
+                "status": "fail",
+                "message": "Throttle limit reached",
+                "carbon_cast_version": carbon_cast_version
+            }, status=status.HTTP_429_TOO_MANY_REQUESTS, headers={'Retry-After': 86400})
+
         # Define the serializer for validating query parameters
         class QueryParamsSerializer(serializers.Serializer):
             region_code = serializers.CharField(required=False)
@@ -151,6 +187,15 @@ class CarbonIntensityHistoryApiView(APIView):
 
     def get(self, request, *args, **kwargs):
         
+        user = request.user
+        print("User:",user)
+        if not check_throttle_limit(user):
+            return Response({
+                "status": "fail",
+                "message": "Throttle limit reached",
+                "carbon_cast_version": carbon_cast_version
+            }, status=status.HTTP_429_TOO_MANY_REQUESTS, headers={'Retry-After': 86400})
+
         region_code = request.query_params.get('regionCode', '')
         date = request.query_params.get('date', '')
         
@@ -194,6 +239,15 @@ class EnergySourcesHistoryApiView(APIView):
 
     def get(self, request, *args, **kwargs):
         
+        user = request.user
+        print("User:",user)
+        if not check_throttle_limit(user):
+            return Response({
+                "status": "fail",
+                "message": "Throttle limit reached",
+                "carbon_cast_version": carbon_cast_version
+            }, status=status.HTTP_429_TOO_MANY_REQUESTS, headers={'Retry-After': 86400})
+
         region_code = request.query_params.get('regionCode', '')
         date = request.query_params.get('date', '')
         
@@ -240,6 +294,16 @@ class CarbonIntensityForecastsApiView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
+
+        user = request.user
+        print("User:",user)
+        if not check_throttle_limit(user):
+            return Response({
+                "status": "fail",
+                "message": "Throttle limit reached",
+                "carbon_cast_version": carbon_cast_version
+            }, status=status.HTTP_429_TOO_MANY_REQUESTS, headers={'Retry-After': 86400})
+
         region_code = request.query_params.get('regionCode', '')  
         f = request.query_params.get('forecastPeriod', '24h')
 
@@ -289,6 +353,16 @@ class CarbonIntensityForecastsHistoryApiView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
+
+        user = request.user
+        print("User:",user)
+        if not check_throttle_limit(user):
+            return Response({
+                "status": "fail",
+                "message": "Throttle limit reached",
+                "carbon_cast_version": carbon_cast_version
+            }, status=status.HTTP_429_TOO_MANY_REQUESTS, headers={'Retry-After': 86400})
+
         
         region_code = request.query_params.get('regionCode', '')
         date = request.query_params.get('date', '')
@@ -330,6 +404,16 @@ class EnergySourcesForecastsHistoryApiView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
+
+        user = request.user
+        print("User:",user)
+        if not check_throttle_limit(user):
+            return Response({
+                "status": "fail",
+                "message": "Throttle limit reached",
+                "carbon_cast_version": carbon_cast_version
+            }, status=status.HTTP_429_TOO_MANY_REQUESTS, headers={'Retry-After': 86400})
+
         region_code = request.query_params.get('regionCode', '')   
         date = request.query_params.get('date', '')
         f = request.query_params.get('forecastPeriod', '24h')
@@ -379,6 +463,16 @@ class SupportedRegionsApiView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
+        
+        user = request.user
+        print("User:",user)
+        if not check_throttle_limit(user):
+            return Response({
+                "status": "fail",
+                "message": "Throttle limit reached",
+                "carbon_cast_version": carbon_cast_version
+            }, status=status.HTTP_429_TOO_MANY_REQUESTS, headers={'Retry-After': 86400})
+
         items = os.listdir("../../real_time")
         supported_regions = [item for item in items if os.path.isdir(os.path.join("../../real_time", item)) and item != 'weather_data']
         response = {
@@ -409,12 +503,28 @@ class SignUpApiView(APIView):
         serializer = self.serializer_class(data=request.data)
         
         if serializer.is_valid():
+            # serializer = self.serializer_class(data=request.data)
             try:
-                serializer.save()
+                user = serializer.save()
+
+                # Retrieve the user throttle limit from settings
+                throttle_limit_str = settings.REST_FRAMEWORK['DEFAULT_THROTTLE_RATES']['user']
+                throttle_limit_value = int(throttle_limit_str.split('/')[0])
+
+                # Create a UserThrottleLimit instance and set the throttle limit
+                throttle_limit = UserThrottleLimit(user=user, throttle_limit=throttle_limit_value)
+                throttle_limit.save()
+
+                username = request.data.get('username')
+                user.username = username
+                user.save()
+
+                print(f"Username: {user.username}")
+                print(f"Throttle Limit: {throttle_limit.throttle_limit}")
 
                 otp_base32 = pyotp.random_base32()
                 email = request.data.get('email').lower()
-                username = request.data.get('username')
+                # username = request.data.get('username')
                 password = request.data.get('password')
                 otp_auth_url = pyotp.totp.TOTP(otp_base32).provisioning_uri(
                     name=email, issuer_name="carboncast.com")
@@ -438,7 +548,8 @@ class SignUpApiView(APIView):
                     status=status.HTTP_201_CREATED
                 )
                 
-            except:
+            except Exception as e:
+                print(f"{e}")
                 return Response({
                     "status": "fail", 
                     "message": "User with that email already exists", 
