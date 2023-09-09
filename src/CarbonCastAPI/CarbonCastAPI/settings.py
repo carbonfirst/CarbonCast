@@ -114,6 +114,7 @@ REST_FRAMEWORK = {
     }
 }
 
+DEFAULT_THROTTLE_LIMIT = 5
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators

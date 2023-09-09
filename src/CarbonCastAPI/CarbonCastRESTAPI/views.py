@@ -484,6 +484,7 @@ class SupportedRegionsApiView(APIView):
 
 class LogoutAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+    throttle_classes = []
 
     def post(self, request, *args, **kwargs):
         logout(request)
@@ -498,6 +499,7 @@ class SignUpApiView(APIView):
     permission_classes = [permissions.AllowAny]
     serializer_class = UserSerializer
     queryset = UserModel.objects.all()
+    throttle_classes = []
 
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
@@ -506,12 +508,9 @@ class SignUpApiView(APIView):
             # serializer = self.serializer_class(data=request.data)
             try:
                 user = serializer.save()
+                
+                throttle_limit_value = settings.DEFAULT_THROTTLE_LIMIT
 
-                # Retrieve the user throttle limit from settings
-                # throttle_limit_str = settings.REST_FRAMEWORK['DEFAULT_THROTTLE_RATES']['user']
-                throttle_limit_value = 5
-
-                # Create a UserThrottleLimit instance and set the throttle limit
                 throttle_limit = UserThrottleLimit(user=user, throttle_limit=throttle_limit_value)
                 throttle_limit.save()
 
@@ -571,6 +570,7 @@ class SignInApiView(APIView):
     permission_classes = [permissions.AllowAny]
     serializer_class = UserSerializer
     queryset = UserModel.objects.all()
+    throttle_classes=[]
 
     def post(self, request):
         data = request.data
@@ -614,6 +614,7 @@ class VerifyOTP(APIView):
     permission_classes = [permissions.AllowAny]
     serializer_class = UserSerializer
     queryset = UserModel.objects.all()
+    throttle_classes=[]
 
     def post(self, request):
         message = "Token is invalid or user doesn't exist"
