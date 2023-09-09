@@ -1,6 +1,7 @@
 from django.shortcuts import render
 import pyotp
 import qrcode
+import base64
 
 # Create your views here.
 from rest_framework.views import APIView
@@ -533,15 +534,27 @@ class SignUpApiView(APIView):
                 user.otp_base32 = otp_base32
                 user.otp_verified = False
                 user.password_checked = True
+                
+                qrcode_filename = "qr_auth.png"
+                qrcode.make(user.otp_auth_url).save(qrcode_filename)
+                with open(qrcode_filename, "rb") as image_file:
+                    qrcode_image = base64.b64encode(image_file.read()).decode('utf-8')
+
+                user.otp_qrcode_image = qrcode_image
                 user.save()
-                # Code for generating the QR code
-                # Should preferably be done on the frontend instead of sending image files over the network
-                qrcode.make(user.otp_auth_url).save("qr_auth.png")
+
+                # code to unpack the image on the frontend
+                # from PIL import Image
+                # from io import BytesIO
+                # im = Image.open(BytesIO(base64.b64decode(qrcode_image.encode('utf-8'))))
+                # print(im)
+                # im.save('image1.png', 'PNG')
 
                 return Response({
                     "status": "success", 
                     'base32': otp_base32, 
                     "otpauth_url": otp_auth_url, 
+                    "otp_qrcode_image": qrcode_image,
                     "carbon_cast_version": carbon_cast_version
                     }, 
                     status=status.HTTP_201_CREATED
@@ -599,13 +612,17 @@ class SignInApiView(APIView):
         serializer = self.serializer_class(user)
         user.otp_verified = False
         user.password_checked = True
-        # Code for generating the QR code
-        # Should preferably be done on the frontend instead of sending image files over the network
-        qrcode.make(user.otp_auth_url).save("qr_auth.png")
-        user.save()
+        
+        qrcode_filename = "qr_auth.png"
+        qrcode.make(user.otp_auth_url).save(qrcode_filename)
+        with open(qrcode_filename, "rb") as image_file:
+            qrcode_image = base64.b64encode(image_file.read()).decode('utf-8')
+        user.otp_qrcode_image = qrcode_image
+
         return Response({
             "status": "success", 
             "user": serializer.data, 
+            "otp_qrcode_image": qrcode_image,
             "carbon_cast_version": carbon_cast_version
         })
 

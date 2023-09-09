@@ -6,7 +6,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserModel
         fields = ['id', 'username', 'name', 'password', 'email', 'otp_enabled',
-                  'otp_verified', 'otp_base32', 'otp_auth_url', 'password_checked']
+                  'otp_verified', 'otp_base32', 'otp_auth_url', 'otp_qrcode_image', 'password_checked']
 
         extra_kwargs = {
             'password': {'write_only': True}
