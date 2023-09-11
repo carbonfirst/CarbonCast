@@ -19,7 +19,7 @@ You can run the file in parallel with different indices.<br>
 ```python3 cleanWeatherData.py <continent>``` -- this file cleans the data and generates hourly files for the above specified weather variables.<br>
 <b>Continent:</b> <i>US -- All US regions. </i><br>
 You will need to modify the relevant fields in the above two files to successfully parse & clean the weather data. <br>
-<b>You will need to modify the FILE_DIR variable in ```cleanWeatherData.py``` (lines 21) with the correct paths for this to work.</b><br>
+<b>You will need to modify the FILE_DIR variable in ```cleanWeatherData.py``` (line 21) with the correct paths for this to work.</b><br>
 If you are using any other weather aggregating method, please feel free to modify the above files as required.
 
 [Back to the main Readme file](../../README.md)

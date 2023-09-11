@@ -101,7 +101,7 @@ We have provided the file ``` carbonIntensityCalculator.py ``` to calculate both
 ## 4. Running CarbonCast with existing datasets and models
 
 ### 4.1 Installing dependencies:
-CarbonCast is built on Python3. It uses Keras/Tensorflow for building the ML models, and grib2 for parsing weather forecasts. <br>
+CarbonCast is built on Python3. It uses Keras/Tensorflow for building the ML models, and wgrib2 for parsing weather forecasts. <br>
 * Required packages & libraries are specified in ```installDependencies.sh```.<br>
 * Required python modules are listed in ```requirements.txt```.<br>
 Run ```source installDependencies.sh``` for installing the dependecies.
@@ -139,7 +139,7 @@ You will need to obtain, clean, & format the datasets before you can get source 
 For getting source production forecasts in the first-tier, run the following file:<br>
 ```python3 firstTierForecasts.py <configFileName> ```<br>
 <b>Configuration file name:</b> <i>firstTierConfig.json</i> <br>
-<b>Regions:</b> <i>CISO, PJM, ERCO, ISNE, NYISO, FPL, BPAT, SE, DE, ES, NL, PL, AUS_QLD</i> <br>
+<b>Regions:</b> <i>Specified in Section 1.</i> <br>
 <b>Sources:</b> <i>coal, nat_gas, oil, solar, wind, hydro, unknown, geothermal, biomass, nuclear</i> <br>
 You can get source production forecasts of multiple regions together. Just add the new regions in the "REGION" parameter.
 <!-- A detailed description of how to configure is given in Section 3.5 -->
@@ -147,7 +147,7 @@ You can get source production forecasts of multiple regions together. Just add t
 ### 6.3 Calculating carbon intensity (real-time/historical/from source production forecasts):
 For calculating real-time/historical carbon intensity from source data, or carbon intensity forecasts from the source production forecast data using the formula, run the following file: <br>
 ```python3 carbonIntensityCalculator.py <region> <-l/-d> <-f/-r> <num_sources>```<br>
-<b>Regions:</b> <i>CISO, PJM, ERCO, ISNE, NYISO, FPL, BPAT, SE, DE, ES, NL, PL, AUS_QLD</i> <br>
+<b>Regions:</b> <i>Specified in Section 1.</i> <br>
 <b><-l/-d>:</b> <i>Lifecycle/Direct</i> <br>
 <b><-f/-r>:</b> <i>Forecast/Real-time (or, historical)</i> <br>
 <b>num_sources:</b> <i>No. of electricity producting sources in that region.</i> <br>
