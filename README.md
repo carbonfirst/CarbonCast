@@ -101,11 +101,13 @@ We have provided the file ``` carbonIntensityCalculator.py ``` to calculate both
 ## 4. Running CarbonCast with existing datasets and models
 
 ### 4.1 Installing dependencies:
-CarbonCast requires Python3. <br>
-Other required packages:
+CarbonCast is built on Python3. It uses Keras/Tensorflow for building the ML models, and grib2 for parsing weather forecasts. <br>
+* Required packages & libraries are specified in ```installDependencies.sh```.<br>
 * Required python modules are listed in ```requirements.txt```.<br>
-Run ```pip3 install -U -r requirements.txt``` for installing the dependecies.
-* wgrib2 (for weather data). Please refer [here](https://www.cpc.ncep.noaa.gov/products/wesley/wgrib2/compile_questions.html) for compilation/installation details. If you are using MacOS and having trouble compiling wgrib2, please refer to [this](https://theweatherguy.net/blog/weather-links-info/how-to-install-and-compile-wgrib2-on-mac-os-10-14-6-mojave/) article.
+Run ```source installDependencies.sh``` for installing the dependecies.
+* wgrib2 (for weather data) should be correctly installed after the above command. If you need to install it from scratch, please refer 
+[here](https://www.cpc.ncep.noaa.gov/products/wesley/wgrib2/compile_questions.html) for compilation/installation details. 
+If you are using MacOS and having trouble compiling wgrib2, please refer to [this](https://theweatherguy.net/blog/weather-links-info/how-to-install-and-compile-wgrib2-on-mac-os-10-14-6-mojave/) article.
 <!-- * ``` pip3 install numpy, matplotlib, sklearn, datetime, matplotlib ``` -->
 
 ### 4.2 Running CarbonCast using saved models/Reproducing results from paper:
@@ -129,20 +131,8 @@ such request or if you found a bug.</b>
 To run CarbonCast from scratch (with new data/for new regions etc.), first install the dependencies mentioned in Section 4.1.
 
 ### 6.1 Getting Weather data:
-The aggregated and cleaned weather forecasts that we have used for our regions are provided in ```data/```. If you need weather forecasts for other regions, or even for the same regions (e.g., if you want to use a different aggregation method or if you want to forecast for a different time period), the procedure is mentioned below.<br>
-* We fetch weather data from the [GFS weather forecast archive](https://rda.ucar.edu/datasets/ds084.1/). You will need to register 
-before you can get weather data. Once you have registered, do the following:
-* GitHub repo of script to fetch weather data can be found [here](https://github.com/NCAR/rda-apps-clients). You can follow the instructions there and download weather forecasts in grib2 format. The repo has a sample [Jupyter Notebook](https://github.com/NCAR/rda-apps-clients/blob/main/src/python/rdams_client_example.ipynb) with step-by-step instructions. Remember to modify the notebook as required (e.g., changing the dataset id (dsid)).
-* Otherwise, clone the above repo and add the following two files in the ```rda-apps-clients/src/python``` folder: <br>
-    ``` src/weather/getWeatherData.py,  src/weather/ds084.1_control.ctl ``` <br>
-```getWeatherData.py``` uses ``` ds084.1_control.ctl ``` as a template file to download 96-hour weather forecasting data for a particular region. Change the template file for different regions and weather variables (weather variables include wind speed, temperature, dewpoint temperature, solar irradiance (dswrf), and precipitation). The template file has instructions on how to modify it for different regions and weather variables. After you have configured the template file, run: ```python3 getWeatherData.py```<br>
-* You may need to add your credentials in ```rda-apps-clients/src/python/rdams_client.py``` for API calls to work. To do that, add the following as the first line in ```get_authentication()```:<br>
-```write_pw_file(<username>, <password>)```
-* Once you have obtained the grib2 files, use the following files to aggregate and clean the data:<br>
-```python3 dataCollectionScript.py``` -- this file uses code from [here](https://towardsdatascience.com/the-correct-way-to-average-the-globe-92ceecd172b7) for aggregating weather forecasts over a specified region. <br>
-```python3 cleanWeatherData.py``` -- this file cleans the data and generates hourly files for the above specified weather variables.<br>
-You will need to modify the relevant fields in the above two files to successfully parse & clean the weather data. <br>
-If you are using any other weather aggregating method, please feel free to modify the above files as required.
+Please refer to the [Weather Readme file](src/weather/README.md) for instructions on fetching and parsing weather forecast data from 
+the GFS archive.
 
 ### 6.2 Getting source production forecasts:
 You will need to obtain, clean, & format the datasets before you can get source production forecasts. You may also need to modify the configuration file as required.<br>
