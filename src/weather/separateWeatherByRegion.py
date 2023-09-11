@@ -1,3 +1,16 @@
+'''
+This file uses the code from https://towardsdatascience.com/the-correct-way-to-average-the-globe-92ceecd172b7 
+for the below two functions:
+    earth_radius()
+    area_grid()
+These functions aggregate the weather data over a specified bounding box.
+
+This file takes in weathre data for a whole continent, aggregates the weather data 
+and separates it by the regions specified.
+
+PLEASE MODIFY THE "FILE_DIR", "OUT_FILE_DIR" AND "YEARS", VARIABLES WITH THE CORRECT PATH FOR THIS TO WORK.
+'''
+
 import subprocess
 from collections import namedtuple
 from calendar import monthrange
@@ -11,16 +24,12 @@ import threading
 import sys
 import os
 
-FILE_DIR = ["../../data_old_v2.1/EU_weather/2022_weather/ugrd_vgrd/",
-            "../../data_old_v2.1/EU_weather/2022_weather/tmp_dpt/",
-            "../../data_old_v2.1/EU_weather/2022_weather/dswrf/",
-            "../../data_old_v2.1/EU_weather/2022_weather/apcp/"]
-
-# OUT_FILE_NAME_LIST = ["../extn/"+ISO+"/weather_data/"+ISO+"_AVG_WIND_SPEED.csv",
-#                     "../extn/"+ISO+"/weather_data/"+ISO+"_AVG_TEMP.csv",
-#                     "../extn/"+ISO+"/weather_data/"+ISO+"_AVG_DPT.csv",
-#                     "../extn/"+ISO+"/weather_data/"+ISO+"_AVG_DSWRF.csv",
-#                     "../extn/"+ISO+"/weather_data/"+ISO+"_AVG_PCP.csv"]
+FILE_DIR = ["../../src/weather/EU_2023/ugrd_vgrd/",
+            "../../src/weather/EU_2023/tmp_dpt/",
+            "../../src/weather/EU_2023/dswrf/",
+            "../../src/weather/EU_2023/apcp/"] # Modify this as required
+OUT_FILE_DIR = "./EU_2023/" # Modify this as required
+YEARS = [2023] # Modify this as required. If YEARS is current year (2023), modify line 254 also.
 
 FILE_PREFIX = "gfs.0p25."
 HOUR = ["00"] ##, "06", "12", "18"]
@@ -36,7 +45,6 @@ FCST_AVG_ACC = ["003", "006", "009", "012", "015", "018", "021", "024",
                 "027", "030", "033", "036", "039", "042", "045", "048",
                 "051", "054", "057", "060", "063", "066", "069", "072",
                 "075", "078", "081", "084", "087", "090", "093", "096"]
-YEARS = [2022]
 HEADER = ["startDate", "endDate", "param", "level", "longitude", "latitude", "value"]
 CSV_FILE_FIELDS_FCST = ["datetime", "param", "level", "latitude", "longitude", "Analysis", "3 hr fcst", 
         "6 hr fcst", "9 hr fcst", "12 hr fcst", "15 hr fcst", "18 hr fcst",
@@ -162,14 +170,6 @@ EU_REGION_LIST = ["AL", "AT", "BE", "BG", "HR", "CZ", "DK", "EE", "FI", "FR", "D
 US_VAR_SEPARATOR =  24780 # 24308 --> for 2022 as different data boundaries, 24780 is for 2019-2021
 EU_VAR_SEPARATOR =  23547
 
-'''
-This file uses the code from https://towardsdatascience.com/the-correct-way-to-average-the-globe-92ceecd172b7 
-for the below two functions:
-    earth_radius()
-    area_grid()
-These functions aggregate the weather data over a specified bounding box.
-'''
-
 import numpy as np
 
 def earth_radius(lat):
@@ -251,7 +251,7 @@ def getFileList(yearList = [2022], fileDir = None, fcstCol = FCST):
     fileList = []
     prevFile = None
     for year in yearList:
-        for month in range(1, 13): # Month is always 1..12
+        for month in range(1, 13): # Month is always 1..12 # [DM] change this from 13 to (current month no. + 1) if 2023.
             for day in range(1, monthrange(year, month)[1] + 1):
                 curDate = str(year)+f"{month:02d}"+f"{day:02d}"
                 fileName = FILE_PREFIX + str(curDate)
@@ -568,12 +568,21 @@ def startScript(continent, regionList, index, pid, inFilePath, outFilePath, isRe
 
 if __name__ == "__main__":
     print("Separating whole US data by CarbonCast regions...")
-    index = int(sys.argv[1])
-    continent = "EU"
+    print("Usage: python3 separateWeatherByRegion <continent> <index>")
+    print("Continent: US") # curently, only US is supported
+    print("Index: 0 -> wind speed, 1 -> tmp/dpt, 2-> dswrf, 3 -> apcp")
+    if (len(sys.argv) < 3):
+        print("Wrong no. of arguments!")
+        exit(0)
+
+    continent = sys.argv[1]
+    index = int(sys.argv[2])
     regionList = US_REGION_LIST
     # index: 0 = wind, 1 = tmp/dpt, 2 = dswrf, 3 = apcp
     inFilePath = FILE_DIR
-    outFilePath = "./EU_2022/"
+    outFilePath = OUT_FILE_DIR
     if (continent == "EU"):
         regionList = EU_REGION_LIST
+        print("Coming soon!") # not ready yet
+        exit(0)
     startScript(continent, regionList, index, os.getpid(), inFilePath, outFilePath, isRealTime=False, startDate=None)
