@@ -156,7 +156,7 @@ For calculating real-time/historical carbon intensity from source data, or carbo
 For getting 96-hour average carbon intensity forecasts, run the following file: <br>
 ```python3 secondTierForecasts.py <configFileName> <-l/-d>```<br>
 <b>Configuration file name:</b> <i>secondTierConfig.json</i> <br>
-<b>Regions:</b> <i>CISO, PJM, ERCO, ISNE, NYISO, FPL, BPAT, SE, DE, ES, NL, PL, AUS_QLD</i> <br>
+<b>Regions:</b> <i>Specified in Section 1.</i> <br>
 <b><-l/-d>:</b> <i>Lifecycle/Direct</i> <br>
 You can get carbon intensity forecasts of multiple regions together. Just add the new regions in the "REGION" parameter.
 
