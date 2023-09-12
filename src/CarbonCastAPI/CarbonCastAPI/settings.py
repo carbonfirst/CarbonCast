@@ -110,11 +110,11 @@ REST_FRAMEWORK = {
         'CarbonCastRESTAPI.throttling.MyViewRateThrottle'
     ],
     'DEFAULT_THROTTLE_RATES': {
-        'default': '10/day'
+        'default': '100/day'
     }
 }
 
-DEFAULT_THROTTLE_LIMIT = 5
+DEFAULT_THROTTLE_LIMIT = 10
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
