@@ -9,3 +9,11 @@ matplotlib==3.5.3
 json5==0.9.10
 seaborn==0.11.2
 statsmodels==0.13.2
+Django==4.2.5
+sqlparse==0.4.4
+djangorestframework==3.14.0
+qrcode==7.4.2
+pyotp==2.9.0
+entsoe-py==0.5.10
+xarray==23.7.0
+

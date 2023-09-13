@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'CarbonCastRESTAPI',
+    'drf_yasg'
 ]
 
 MIDDLEWARE = [
@@ -51,6 +52,10 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+SWAGGER_SETTINGS = {
+    "DEFAULT_INFO": "CarbonCastAPI.api_info.API_INFO",
+}
 
 ROOT_URLCONF = 'CarbonCastAPI.urls'
 
@@ -110,10 +115,11 @@ REST_FRAMEWORK = {
         'CarbonCastRESTAPI.throttling.MyViewRateThrottle'
     ],
     'DEFAULT_THROTTLE_RATES': {
-        'default': '10/day'
+        'default': '100/day'
     }
 }
 
+DEFAULT_THROTTLE_LIMIT = 10
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
