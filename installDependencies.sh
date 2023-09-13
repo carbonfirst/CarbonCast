@@ -14,6 +14,6 @@ export FC=gfortran
 export COMP_SYS=gnu_linux
 make
 make lib
-echo "export PATH=\$PATH:$(pwd)/grib2/wgrib2" >> ~/.bashrc
-
 cd ..
+
+echo "export PATH=\$PATH:$(pwd)/grib2/wgrib2" >> ~/.bashrc

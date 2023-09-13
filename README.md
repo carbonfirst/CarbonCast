@@ -104,7 +104,8 @@ We have provided the file ``` carbonIntensityCalculator.py ``` to calculate both
 CarbonCast is built on Python3. It uses Keras/Tensorflow for building the ML models, and wgrib2 for parsing weather forecasts. <br>
 * Required packages & libraries are specified in ```installDependencies.sh```.<br>
 * Required python modules are listed in ```requirements.txt```.<br>
-Run ```source installDependencies.sh``` for installing the dependecies.
+Run ```./installDependencies.sh``` for installing the dependecies.<br>
+Then, run ```source ~/.bashrc```.
 * wgrib2 (for weather data) should be correctly installed after the above command. If you need to install it from scratch, please refer 
 [here](https://www.cpc.ncep.noaa.gov/products/wesley/wgrib2/compile_questions.html) for compilation/installation details. 
 If you are using MacOS and having trouble compiling wgrib2, please refer to [this](https://theweatherguy.net/blog/weather-links-info/how-to-install-and-compile-wgrib2-on-mac-os-10-14-6-mojave/) article.
