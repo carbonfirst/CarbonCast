@@ -1,0 +1,11 @@
+version: '3.9'
+services:
+  web:
+    build:
+      dockerfile: src/CarbonCastAPI/dockerfile
+    container_name: carbon_cast_api
+    ports:
+    - "8000:8000"
+    volumes:
+      - ./real_time/:/CarbonCast/real_time/
+      - ./src/CarbonCastAPI/db.sqlite3:/CarbonCast/src/CarbonCastAPI/db.sqlite3

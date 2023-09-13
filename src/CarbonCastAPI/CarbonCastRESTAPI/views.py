@@ -474,8 +474,8 @@ class SupportedRegionsApiView(APIView):
                 "carbon_cast_version": carbon_cast_version
             }, status=status.HTTP_429_TOO_MANY_REQUESTS, headers={'Retry-After': 86400})
 
-        items = os.listdir("../../real_time")
-        supported_regions = [item for item in items if os.path.isdir(os.path.join("../../real_time", item)) and item != 'weather_data']
+        items = os.listdir("./real_time")
+        supported_regions = [item for item in items if os.path.isdir(os.path.join("./real_time", item)) and item != 'weather_data']
         response = {
             "US_supported_regions": supported_regions,
             "carbon_cast_version": carbon_cast_version

@@ -2,8 +2,8 @@ import os
 
 
 def get_latest_csv_file(region_code):
-    os.chdir("../../")
-    path = os.chdir(os.path.join('real_time',region_code))
+    # os.chdir("../../")
+    path = os.chdir(os.path.join('./real_time',region_code))
     file_list1= [file for file in os.listdir() if file.endswith("_lifecycle_emissions.csv")]
     file_list2= [file for file in os.listdir() if file.endswith("_direct_emissions.csv")]
     dates_list1 , dates_list2 = [] , []
@@ -21,8 +21,8 @@ def get_latest_csv_file(region_code):
 
 
 def get_CI_forecasts_csv_file(region_code, date):
-    os.chdir("../../")
-    path = os.chdir(os.path.join('real_time',region_code))
+    # os.chdir("../../")
+    path = os.chdir(os.path.join('./real_time',region_code))
     for file in os.listdir():
         print(file)
         if file.endswith(f"lifecycle_CI_forecasts_{date}.csv"):
@@ -33,8 +33,8 @@ def get_CI_forecasts_csv_file(region_code, date):
 
 
 def get_actual_value_file_by_date(region_code, date):
-    os.chdir("../../")
-    path = os.chdir(os.path.join('real_time',region_code))
+    # os.chdir("../../")
+    path = os.chdir(os.path.join('./real_time',region_code))
     i = 0
     for file in os.listdir():
         print(i, file, date)
@@ -49,8 +49,8 @@ def get_actual_value_file_by_date(region_code, date):
     return csv_file_a, csv_file_b
 
 def get_energy_forecasts_csv_file(region_code, date):
-    os.chdir("../../")
-    path = os.chdir(os.path.join('real_time',region_code))
+    # os.chdir("../../")
+    path = os.chdir(os.path.join('./real_time',region_code))
     for file in os.listdir():
         if file.endswith(f"_96hr_forecasts_{date}.csv"):
             e_forecast_csv_file = file
