@@ -19,6 +19,8 @@ from .serializers import UserSerializer
 from .helper import get_latest_csv_file, get_actual_value_file_by_date, get_CI_forecasts_csv_file, get_energy_forecasts_csv_file
 import os
 from .consts import carbon_cast_version
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
 #Defining a list of US region codes
 US_region_codes = ['AECI','AZPS', 'BPAT','CISO', 'DUK', 'EPE', 'ERCO', 'FPL', 
@@ -43,8 +45,19 @@ def check_throttle_limit(user):
 
 # 1: 
 class CarbonIntensityApiView(APIView):
+  
     authentication_classes = [authentication.SessionAuthentication, authentication.BasicAuthentication]
     permission_classes = [permissions.IsAuthenticated]
+
+    @swagger_auto_schema(
+    manual_parameters=[
+        openapi.Parameter('region_code', openapi.IN_QUERY, description="Region code parameter (e.g., 'AECI').", type=openapi.TYPE_STRING),
+    ],
+    responses={
+        200: 'HTTP 200 OK - Success response description',
+        400: 'HTTP 400 Bad Request - Description of possible error responses',
+    }
+    )
 
     def get(self, request, *args, **kwargs):
 
@@ -122,6 +135,16 @@ class EnergySourcesApiView(APIView):
     authentication_classes = [authentication.SessionAuthentication, authentication.BasicAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter('region_code', openapi.IN_QUERY, description="Region code parameter (e.g., 'AECI').", type=openapi.TYPE_STRING),
+        ],
+        responses={
+            200: 'HTTP 200 OK - Success response description',
+            400: 'HTTP 400 Bad Request - Description of possible error responses',
+        }
+    )
+
     def get(self, request, *args, **kwargs):
 
         user = request.user
@@ -186,6 +209,17 @@ class CarbonIntensityHistoryApiView(APIView):
     authentication_classes = [authentication.SessionAuthentication, authentication.BasicAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter('regionCode', openapi.IN_QUERY, description="Region code parameter (e.g., 'AECI').", type=openapi.TYPE_STRING),
+            openapi.Parameter('date', openapi.IN_QUERY, description="Date parameter (in the format: 'YYYY-MM-DD').", type=openapi.TYPE_STRING),
+        ],
+        responses={
+            200: 'HTTP 200 OK - Success response description',
+            400: 'HTTP 400 Bad Request - Description of possible error responses',
+        }
+    )
+
     def get(self, request, *args, **kwargs):
         
         user = request.user
@@ -237,6 +271,17 @@ class CarbonIntensityHistoryApiView(APIView):
 class EnergySourcesHistoryApiView(APIView):
     authentication_classes = [authentication.SessionAuthentication, authentication.BasicAuthentication]
     permission_classes = [permissions.IsAuthenticated]
+
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter('regionCode', openapi.IN_QUERY, description="Region code parameter (e.g., 'AECI').", type=openapi.TYPE_STRING),
+            openapi.Parameter('date', openapi.IN_QUERY, description="Date parameter (in the format: 'YYYY-MM-DD').", type=openapi.TYPE_STRING),
+        ],
+        responses={
+            200: 'HTTP 200 OK - Success response description',
+            400: 'HTTP 400 Bad Request - Description of possible error responses',
+        }
+    )
 
     def get(self, request, *args, **kwargs):
         
@@ -294,6 +339,17 @@ class CarbonIntensityForecastsApiView(APIView):
     authentication_classes = [authentication.SessionAuthentication, authentication.BasicAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter('regionCode', openapi.IN_QUERY, description="Region code parameter (e.g., 'AECI').", type=openapi.TYPE_STRING),
+            openapi.Parameter('forecastPeriod', openapi.IN_QUERY, description="Forecast period in hours ('24h', '48h','96h').", type=openapi.TYPE_STRING, default='24h'),
+        ],
+        responses={
+            200: 'HTTP 200 OK - Success response description',
+            400: 'HTTP 400 Bad Request - Description of possible error responses',
+        }
+    )
+
     def get(self, request, *args, **kwargs):
 
         user = request.user
@@ -312,7 +368,7 @@ class CarbonIntensityForecastsApiView(APIView):
         forecastPeriod = int(final_interval)
 
         # today_date = datetime.now().strftime('%Y-%m-%d')
-        date = '2023-08-20'
+        date = '2023-09-10'
 
         CI_lifecycle, CI_direct = get_CI_forecasts_csv_file(region_code, date)
         with open(CI_lifecycle) as file:
@@ -352,6 +408,17 @@ class CarbonIntensityForecastsApiView(APIView):
 class CarbonIntensityForecastsHistoryApiView(APIView):
     authentication_classes = [authentication.SessionAuthentication, authentication.BasicAuthentication]
     permission_classes = [permissions.IsAuthenticated]
+
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter('regionCode', openapi.IN_QUERY, description="Region code parameter (e.g., 'AECI').", type=openapi.TYPE_STRING),
+            openapi.Parameter('date', openapi.IN_QUERY, description="Date parameter (in the format: 'YYYY-MM-DD').", type=openapi.TYPE_STRING),
+        ],
+        responses={
+            200: 'HTTP 200 OK - Success response description',
+            400: 'HTTP 400 Bad Request - Description of possible error responses',
+        }
+    )
 
     def get(self, request, *args, **kwargs):
 
@@ -403,6 +470,18 @@ class CarbonIntensityForecastsHistoryApiView(APIView):
 class EnergySourcesForecastsHistoryApiView(APIView):
     authentication_classes = [authentication.SessionAuthentication, authentication.BasicAuthentication]
     permission_classes = [permissions.IsAuthenticated]
+
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter('regionCode', openapi.IN_QUERY, description="Region code parameter (e.g., 'AECI').", type=openapi.TYPE_STRING),
+            openapi.Parameter('date', openapi.IN_QUERY, description="Date parameter (in the format: 'YYYY-MM-DD').", type=openapi.TYPE_STRING),
+            openapi.Parameter('forecastPeriod', openapi.IN_QUERY, description="Forecast period in hours ('24h', '48h','96h').", type=openapi.TYPE_STRING, default='24h'),
+        ],
+        responses={
+            200: 'HTTP 200 OK - Success response description',
+            400: 'HTTP 400 Bad Request - Description of possible error responses',
+        }
+    )
 
     def get(self, request, *args, **kwargs):
 
@@ -463,6 +542,12 @@ class SupportedRegionsApiView(APIView):
     authentication_classes = [authentication.SessionAuthentication, authentication.BasicAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
+    @swagger_auto_schema(
+        responses={
+            200: 'HTTP 200 OK - Success response description',
+        }
+    )
+
     def get(self, request, *args, **kwargs):
 
         user = request.user
@@ -487,6 +572,12 @@ class LogoutAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     throttle_classes = []
 
+    @swagger_auto_schema(
+        responses={
+            200: 'HTTP 200 OK - Success response description',
+        }
+    )
+
     def post(self, request, *args, **kwargs):
         logout(request)
         response = {
@@ -502,7 +593,22 @@ class SignUpApiView(APIView):
     queryset = UserModel.objects.all()
     throttle_classes = []
 
+    @swagger_auto_schema(
+        request_body=serializer_class,
+        responses={
+            201: 'HTTP 201 Created - User successfully registered',
+            400: 'HTTP 400 Bad Request - Invalid input data',
+            409: 'HTTP 409 Conflict - User with the same email already exists',
+        },
+    )
+
     def post(self, request):
+        """
+        Register a new user.
+
+        :param request: The HTTP POST request with user registration data.
+        :return: User registration response.
+        """
         serializer = self.serializer_class(data=request.data)
         
         if serializer.is_valid():
@@ -585,7 +691,21 @@ class SignInApiView(APIView):
     queryset = UserModel.objects.all()
     throttle_classes=[]
 
+    @swagger_auto_schema(
+        request_body=serializer_class,
+        responses={
+            200: 'HTTP 200 OK - User successfully authenticated',
+            400: 'HTTP 400 Bad Request - Incorrect email or password',
+        },
+    )
+
     def post(self, request):
+        """
+        Authenticate a user.
+
+        :param request: The HTTP POST request with user authentication data.
+        :return: User authentication response.
+        """
         data = request.data
         email = data.get('email')
         username = data.get('username')
@@ -633,7 +753,34 @@ class VerifyOTP(APIView):
     queryset = UserModel.objects.all()
     throttle_classes=[]
 
+    @swagger_auto_schema(
+        request_body=serializers.Serializer(
+            {
+                "username": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description="The username of the user to verify OTP for.",
+                ),
+                "token": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description="The OTP token to be verified.",
+                ),
+            }
+        ),
+        responses={
+            200: 'HTTP 200 OK - OTP verification successful',
+            400: 'HTTP 400 Bad Request - OTP verification failed',
+            403: 'HTTP 403 Forbidden - User needs to log in first',
+            404: 'HTTP 404 Not Found - User with the given username not found',
+        },
+    )
+
     def post(self, request):
+        """
+        Verify OTP for a user.
+
+        :param request: The HTTP POST request with OTP verification data.
+        :return: OTP verification response.
+        """
         message = "Token is invalid or user doesn't exist"
         data = request.data
         username = data.get('username', None)
