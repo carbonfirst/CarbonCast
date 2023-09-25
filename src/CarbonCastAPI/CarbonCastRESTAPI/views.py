@@ -35,7 +35,9 @@ def check_throttle_limit(user):
         throttle_limit = None
     print(f"Throttle_limit:{throttle_limit_obj.throttle_limit}")
 
-    if throttle_limit is None or throttle_limit <= 0:
+    if throttle_limit is None:
+        return True
+    elif throttle_limit <= 0:
         return False
     else:
         throttle_limit_obj.throttle_limit -= 1
@@ -559,8 +561,9 @@ class SupportedRegionsApiView(APIView):
                 "carbon_cast_version": carbon_cast_version
             }, status=status.HTTP_429_TOO_MANY_REQUESTS, headers={'Retry-After': 86400})
 
-        items = os.listdir("./real_time")
-        supported_regions = [item for item in items if os.path.isdir(os.path.join("./real_time", item)) and item != 'weather_data']
+        path = os.path.abspath(os.path.join(os.getcwd(),'real_time'))
+        items = os.listdir(path)
+        supported_regions = [item for item in items if os.path.isdir(os.path.join(path, item)) and item != 'weather_data']
         response = {
             "US_supported_regions": supported_regions,
             "carbon_cast_version": carbon_cast_version
@@ -615,13 +618,17 @@ class SignUpApiView(APIView):
             # serializer = self.serializer_class(data=request.data)
             try:
                 user = serializer.save()
-                
-                throttle_limit_value = settings.DEFAULT_THROTTLE_LIMIT
-
-                throttle_limit = UserThrottleLimit(user=user, throttle_limit=throttle_limit_value)
-                throttle_limit.save()
-
+            
                 username = request.data.get('username')
+                if username.startswith('Test'):
+                    throttle_limit_value = settings.EXTENDED_THROTTLE_LIMIT
+                    throttle_limit = UserThrottleLimit(user=user, throttle_limit=throttle_limit_value)
+                    throttle_limit.save()
+                else:
+                    throttle_limit_value = settings.DEFAULT_THROTTLE_LIMIT
+                    throttle_limit = UserThrottleLimit(user=user, throttle_limit=throttle_limit_value)
+                    throttle_limit.save()
+                    
                 user.username = username
                 user.save()
 

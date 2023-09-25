@@ -120,6 +120,7 @@ REST_FRAMEWORK = {
 }
 
 DEFAULT_THROTTLE_LIMIT = 10
+EXTENDED_THROTTLE_LIMIT = 1000
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
