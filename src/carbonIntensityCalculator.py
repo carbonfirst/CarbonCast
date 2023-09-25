@@ -196,6 +196,8 @@ def getMape(dates, actual, forecast, predictionWindowHours):
 def runProgram(region, isLifecycle, isForecast, realTimeInFileName, realTimeOutFileName,
                forecastInFileName, forecastOutFileName, creationTimeInUTC=None, version=None, 
                carbonIntensityColumn=1):
+    if (creationTimeInUTC is None and version is None):
+        carbonIntensityColumn = 1 # backward compatibility
         
     dataset = initialize(realTimeInFileName)
     numSources = len(dataset.columns)-1 # excluding UTC time
@@ -256,12 +258,12 @@ def runProgram(region, isLifecycle, isForecast, realTimeInFileName, realTimeOutF
         outputDataset["UTC time"] = forecastDataset["UTC time"].values
         outputDataset["actual_carbon_intensity_"+emissionFactorType] = actual
         outputDataset["forecasted_carbon_intensity_"+emissionFactorType] = forecast
-        # outputDataset.to_csv(forecastOutFileName)
+        outputDataset.to_csv(forecastOutFileName)
     else:
         print("Real time carbon intensities:")
         print(dataset.head())
         # dataset.set_index("UTC time")
-        # dataset.to_csv(realTimeOutFileName)
+        dataset.to_csv(realTimeOutFileName)
     
     return
 

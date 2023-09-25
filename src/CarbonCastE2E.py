@@ -47,31 +47,45 @@ EU_REGIONS = [] # add EU regions here
 def fetchElectricityData(continent, baList, startDate, creationTimeInUTC, version):
     # TODO: Change this to be downloaded only for the specific region
     print(f"Downloading EIA data on {startDate} for all regions in {continent}")
+    regionsWithNoData = []
     if (continent == "US"):
         for balAuth in baList:
             # get electricity data
-            fetchedDataset = eiaParser.getELectricityProductionDataFromEIA(balAuth, startDate, numDays=1, DAY_JUMP=1)
+            fetchedDataset = eiaParser.getElectricityProductionDataFromEIA(balAuth, startDate, numDays=1, DAY_JUMP=1)
             filedir = os.path.dirname(__file__)
             csvFile = os.path.normpath(os.path.join(filedir, f"{REAL_TIME_FILE_DIR}{balAuth}/{balAuth}_{str(startDate)}.csv"))
             with open(csvFile, 'w') as f:
-                fetchedDataset.to_csv(f, index=False)
-            print("Electricity data fetched")
-            # clean electricity data
-            fetchedDataset = pd.read_csv(csvFile, header=0, parse_dates=["UTC time"], index_col=["UTC time"])
-            cleanedDataset = eiaParser.cleanElectricityProductionDataFromEIA(fetchedDataset, balAuth)
-            csvFileClean = REAL_TIME_FILE_DIR+balAuth+"/"+balAuth+"_"+str(startDate)+"_clean.csv"
-            cleanedDataset.to_csv(csvFileClean)
-            print("Electricity data cleaned")
+                fetchedDataset.to_csv(f, index=False)            
+            if (fetchedDataset.empty):
+                regionsWithNoData.append(balAuth)
+                # [DM] TODO: Error check if all zeros/Nan are returned by EIA
+            else:
+                print("Electricity data fetched")
+                # clean electricity data
+                fetchedDataset = pd.read_csv(csvFile, header=0, parse_dates=["UTC time"], index_col=["UTC time"])
+                cleanedDataset = eiaParser.cleanElectricityProductionDataFromEIA(fetchedDataset, balAuth)
+                csvFileClean = REAL_TIME_FILE_DIR+balAuth+"/"+balAuth+"_"+str(startDate)+"_clean.csv"
+                cleanedDataset.to_csv(csvFileClean)
+                print("Electricity data cleaned")
 
-            # adjust source columns
-            cleanedDataset = pd.read_csv(csvFileClean, header=0, index_col=["UTC time"])
-            modifiedDataset = eiaParser.adjustColumns(cleanedDataset, balAuth)
-            modifiedDataset.insert(0, "creation_time (UTC)", creationTimeInUTC)
-            modifiedDataset.insert(1, "version", version)
-            modifiedDataset.to_csv(csvFile)
-            val = subprocess.call("rm "+csvFileClean, shell=True)
+                # adjust source columns
+                cleanedDataset = pd.read_csv(csvFileClean, header=0, index_col=["UTC time"])
+                modifiedDataset = eiaParser.adjustColumns(cleanedDataset, balAuth)
+                modifiedDataset.insert(0, "creation_time (UTC)", creationTimeInUTC)
+                modifiedDataset.insert(1, "version", version)
+                modifiedDataset.to_csv(csvFile)
+                val = subprocess.call("rm "+csvFileClean, shell=True)
         print("Download complete")
 
+        for balAuth in regionsWithNoData:
+            baList.remove(balAuth)
+
+        print("Regions with electricity data for ", startDate, ": ")
+        print(baList)
+        if (len(baList) == 0):
+            print("Electricity data is not fetched for any region.\n"
+                  "Looks like there is a data ouatge in EIA. Please try again later.")
+            exit(0)
         print("Calculating lifecycle and direct CI values")
         for balAuth in baList:
             inFileName = REAL_TIME_FILE_DIR+balAuth+"/"+balAuth+"_"+str(startDate)+".csv"
@@ -79,14 +93,16 @@ def fetchElectricityData(continent, baList, startDate, creationTimeInUTC, versio
             directOutFileName = REAL_TIME_FILE_DIR+balAuth+"/"+balAuth+"_"+str(startDate)+"_direct_emissions.csv"
             cicalc.runProgram(region=balAuth, isLifecycle=True, isForecast=False, realTimeInFileName=inFileName, 
                               realTimeOutFileName=lifecycleOutFileName, forecastInFileName=None, 
-                              forecastOutFileName=None, creationTimeInUTC=creationTimeInUTC, version=version)
+                              forecastOutFileName=None, creationTimeInUTC=creationTimeInUTC, version=version,
+                              carbonIntensityColumn=3)
             cicalc.runProgram(region=balAuth, isLifecycle=False, isForecast=False, realTimeInFileName=inFileName, 
                               realTimeOutFileName=directOutFileName, forecastInFileName=None, 
-                              forecastOutFileName=None, creationTimeInUTC=creationTimeInUTC, version=version)
+                              forecastOutFileName=None, creationTimeInUTC=creationTimeInUTC, version=version,
+                              carbonIntensityColumn=3)
             print(f"Generated lifecycle & direct emissions for {balAuth} on {startDate}")
     else:
         print("Continent (region) not covered by CarbonCast at this time.")
-    return
+    return baList
 
 def fetchWeatherData(continent, baList, startDate, creationTimeInUTC, version):
     print(f"Downloading weather data for {continent} on {startDate}")
@@ -165,7 +181,7 @@ def startScript(continent, baList, startDate, creationTimeInUTC, version):
     electricityDataDateObj = startDateObj - timedelta(days=1)
     electricityDataDate = electricityDataDateObj.strftime("%Y-%m-%d")
     # forecast date is in the future, so real time electricity data needs to be from the previous date
-    fetchElectricityData(continent, baList, electricityDataDate, creationTimeInUTC, version)
+    baList = fetchElectricityData(continent, baList, electricityDataDate, creationTimeInUTC, version)
     fetchWeatherData(continent, baList, startDate, creationTimeInUTC, version)
     solWindFcstDataset = None
     if ("CISO" in baList):
@@ -199,6 +215,12 @@ if __name__ == "__main__":
     elif (len(sys.argv) == 3):
         continent = sys.argv[1]
         startDate = sys.argv[2]
+        today = datetime.today()
+        dateDiffInDays = today - datetime.strptime(startDate, "%Y-%m-%d")
+        if(dateDiffInDays.days >= 10):
+            print("For real-time, weather forecasts are available only for the last 10 days.\n"
+                  "Any date beyond that will throw error.")
+            exit(0)
     
     baList = None
     if continent == "US":

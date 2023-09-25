@@ -6,8 +6,8 @@ import time
 import sys
 import numpy as np
 
-# public key for EIA API
-EIA_API_KEY="CZdQsisRJzwOfqUWV3jiMPNEx3ZbHcuJ2VQus04i"
+# EIA API key. Insert your personal EIA API key here.
+EIA_API_KEY= "empty"
 
 # map EIA fuel types to source types
 EIA_SOURCE_MAP = {
@@ -34,6 +34,10 @@ EIA_BAL_AUTH_LIST = ["AECI", "AZPS", "BPAT", "CISO", "DUK", "EPE", "ERCOT", "FPC
 
 # get production data by source type from EIA API
 def getProductionDataBySourceTypeDataFromEIA(ba, curDate, curEndDate):
+    if (EIA_API_KEY == "empty"):
+        print("No EIA API key specified. Register to EIA & insert your API key in eiaParser.py line 10")
+        exit(0)
+
     print(ba)
     API_URL="https://api.eia.gov/v2/electricity/rto/fuel-type-data/data?api_key="
     API_URL_SORT_PARAMS="sort[0][column]=period&sort[0][direction]=asc&sort[1][column]=fueltype&sort[1][direction]=desc"
@@ -120,7 +124,7 @@ def parseEIAProductionDataBySourceType(data, startDate, electricitySources, numS
     dataset = pd.DataFrame(electricityProductionData, columns=datasetColumns)
     return dataset
 
-def getELectricityProductionDataFromEIA(balAuth, startDate, numDays, DAY_JUMP):
+def getElectricityProductionDataFromEIA(balAuth, startDate, numDays, DAY_JUMP):
     # DM: For DAY_JUMP > 1, there is a bug while filling missing hours
     fullDataset = pd.DataFrame()
     startDateObj = datetime.strptime(startDate, "%Y-%m-%d")
@@ -130,6 +134,9 @@ def getELectricityProductionDataFromEIA(balAuth, startDate, numDays, DAY_JUMP):
         endDateObj = startDateObj + timedelta(days=DAY_JUMP-1)
         endDate = endDateObj.strftime("%Y-%m-%d")
         data = getProductionDataBySourceTypeDataFromEIA(balAuth, startDate, endDate)
+        if (len(data) == 0):
+            print("No data fetched. Region: ", balAuth, ", Date: ", startDate)
+            return fullDataset
         if (days == 0): # assuming all data is correctly available for the first day at least
             for electricitySourceData in data:
                 electricitySources.add(EIA_SOURCE_MAP[electricitySourceData["fueltype"]])
@@ -215,7 +222,7 @@ if __name__ == "__main__":
 
     for balAuth in EIA_BAL_AUTH_LIST:
         # fetch electricity data
-        fullDataset = getELectricityProductionDataFromEIA(balAuth, startDate, numDays, DAY_JUMP=8)
+        fullDataset = getElectricityProductionDataFromEIA(balAuth, startDate, numDays, DAY_JUMP=8)
         # DM: For DAY_JUMP > 1, there is a bug while filling missing hours
         filedir = os.path.dirname(__file__)
         csv_path = os.path.normpath(os.path.join(filedir, f"./eiaData/{balAuth}.csv"))
