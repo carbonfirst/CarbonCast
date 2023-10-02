@@ -20,6 +20,11 @@ Instructions to run CarbonCastAPI:
       - Run the Server:
 
         ```python src/CarbonCastAPI/manage.py runserver```
+      
+      - Optionally, to run the Server with user authentication disabled and with direct access to all the APIs:
+
+        ```python src/CarbonCastAPI/manage.py runserver --rmauth```
+        
 
 3. We can check if a user needs to be authenticated to use the APIs based on the response received using the API: http://127.0.0.1:8000/v1/UserAuthenticationEnforced 
 
