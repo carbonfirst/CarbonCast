@@ -21,7 +21,9 @@ Instructions to run CarbonCastAPI:
 
         ```python src/CarbonCastAPI/manage.py runserver```
 
-3. To get access to the API endpoints, users need to log in:
+3. We can check if a user needs to be authenticated to use the APIs based on the response received using the API: http://127.0.0.1:8000/v1/UserAuthenticationEnforced 
+
+4. Based on the above response, if users need to log in to get access to the API endpoints, follow these steps:
     - To Sign Up, send a POST request to http://127.0.0.1:8000/v1/SignUp  with the parameters “username”, “name”, “password” and “email”. 
     Example:
     ```json 
@@ -51,7 +53,7 @@ Instructions to run CarbonCastAPI:
     }
     ```
 
-4. Access the API endpoint: 
+5. Access the API endpoint: 
 
     - http://127.0.0.1:8000/v1/CarbonIntensity?region_code=all  ( can vary the region_code parameter to specific regions or all regions;  if region_code invalid or not entered, message will pop up )
     - http://127.0.0.1:8000/v1/EnergySources?region_code=all  (can vary the region_code parameter to specific regions or all regions; if region_code invalid or not entered, message will pop up)
@@ -63,9 +65,9 @@ Instructions to run CarbonCastAPI:
     - http://127.0.0.1:8000/v1/SupportedRegions 
 
 
-5. Logout: To log out, it is necessary to be logged in and have an active session. Then access the API endpoint: http://127.0.0.1:8000/v1/Logout
+6. Logout: To log out, it is necessary to be logged in and have an active session. Then access the API endpoint: http://127.0.0.1:8000/v1/Logout
 
-6. A cron job was created to refresh the individual user and overall global limits at 12:00 am everyday. To set up the cron job run: 
+7. A cron job was created to refresh the individual user and overall global limits at 12:00 am everyday. To set up the cron job run: 
 ```crontab -e ```
 and enter the following command to run cron job everyday at 12:00 am: 
 

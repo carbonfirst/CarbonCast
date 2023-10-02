@@ -580,6 +580,23 @@ class SupportedRegionsApiView(APIView):
         return Response(response, status=status.HTTP_200_OK)
     
 
+class UserAuthenticationEnforcedView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    @swagger_auto_schema(
+        responses={
+            200: 'HTTP 200 OK - Success response description',
+        }
+    )
+
+    def get(self, request, *args, **kwargs):
+        response = {
+            "Authentication required": settings.REQUIRES_AUTH,
+            "carbon_cast_version": carbon_cast_version
+        }
+        return Response(response, status=status.HTTP_200_OK)
+    
+
 class LogoutAPIView(APIView):
     permission_classes = permission_classes
     throttle_classes = []
