@@ -596,6 +596,8 @@ class SignUpApiView(APIView):
     queryset = UserModel.objects.all()
     throttle_classes = []
 
+    print(settings.DEFAULT_THROTTLE_LIMIT, settings.EXTENDED_THROTTLE_LIMIT)
+
     @swagger_auto_schema(
         request_body=serializer_class,
         responses={
@@ -617,9 +619,11 @@ class SignUpApiView(APIView):
         if serializer.is_valid():
             # serializer = self.serializer_class(data=request.data)
             try:
-                user = serializer.save()
-            
+                user = serializer.save()            
                 username = request.data.get('username')
+                user.username = username
+                user.save()
+
                 if username.startswith('Test'):
                     throttle_limit_value = settings.EXTENDED_THROTTLE_LIMIT
                     throttle_limit = UserThrottleLimit(user=user, throttle_limit=throttle_limit_value)
@@ -629,9 +633,6 @@ class SignUpApiView(APIView):
                     throttle_limit = UserThrottleLimit(user=user, throttle_limit=throttle_limit_value)
                     throttle_limit.save()
                     
-                user.username = username
-                user.save()
-
                 print(f"Username: {user.username}")
                 print(f"Throttle Limit: {throttle_limit.throttle_limit}")
 
