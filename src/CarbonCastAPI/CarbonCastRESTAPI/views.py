@@ -18,7 +18,7 @@ from .models import UserModel, UserThrottleLimit
 from .serializers import UserSerializer
 from .helper import get_latest_csv_file, get_actual_value_file_by_date, get_CI_forecasts_csv_file, get_energy_forecasts_csv_file
 import os
-from .consts import carbon_cast_version
+from .consts import carbon_cast_version, authentication_classes, permission_classes
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
@@ -48,8 +48,9 @@ def check_throttle_limit(user):
 # 1: 
 class CarbonIntensityApiView(APIView):
   
-    authentication_classes = [authentication.SessionAuthentication, authentication.BasicAuthentication]
-    permission_classes = [permissions.IsAuthenticated]
+    print(authentication_classes, permission_classes)
+    authentication_classes = authentication_classes
+    permission_classes = permission_classes
 
     @swagger_auto_schema(
     manual_parameters=[
@@ -62,15 +63,16 @@ class CarbonIntensityApiView(APIView):
     )
 
     def get(self, request, *args, **kwargs):
-
-        user = request.user
-        print("User:",user)
-        if not check_throttle_limit(user):
-            return Response({
-                "status": "fail",
-                "message": "Throttle limit reached",
-                "carbon_cast_version": carbon_cast_version
-            }, status=status.HTTP_429_TOO_MANY_REQUESTS, headers={'Retry-After': 86400})
+        
+        if permissions.AllowAny not in permission_classes:
+            user = request.user
+            print("User:",user)
+            if not check_throttle_limit(user):
+                return Response({
+                    "status": "fail",
+                    "message": "Throttle limit reached",
+                    "carbon_cast_version": carbon_cast_version
+                }, status=status.HTTP_429_TOO_MANY_REQUESTS, headers={'Retry-After': 86400})
 
         # Define the serializer for validating query parameters
         class QueryParamsSerializer(serializers.Serializer):
@@ -134,8 +136,8 @@ class CarbonIntensityApiView(APIView):
         
 #2    
 class EnergySourcesApiView(APIView):
-    authentication_classes = [authentication.SessionAuthentication, authentication.BasicAuthentication]
-    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = authentication_classes
+    permission_classes = permission_classes
 
     @swagger_auto_schema(
         manual_parameters=[
@@ -149,14 +151,15 @@ class EnergySourcesApiView(APIView):
 
     def get(self, request, *args, **kwargs):
 
-        user = request.user
-        print("User:",user)
-        if not check_throttle_limit(user):
-            return Response({
-                "status": "fail",
-                "message": "Throttle limit reached",
-                "carbon_cast_version": carbon_cast_version
-            }, status=status.HTTP_429_TOO_MANY_REQUESTS, headers={'Retry-After': 86400})
+        if permissions.AllowAny not in permission_classes:
+            user = request.user
+            print("User:",user)
+            if not check_throttle_limit(user):
+                return Response({
+                    "status": "fail",
+                    "message": "Throttle limit reached",
+                    "carbon_cast_version": carbon_cast_version
+                }, status=status.HTTP_429_TOO_MANY_REQUESTS, headers={'Retry-After': 86400})
 
         # Define the serializer for validating query parameters
         class QueryParamsSerializer(serializers.Serializer):
@@ -208,8 +211,8 @@ class EnergySourcesApiView(APIView):
             
 #3    
 class CarbonIntensityHistoryApiView(APIView):
-    authentication_classes = [authentication.SessionAuthentication, authentication.BasicAuthentication]
-    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = authentication_classes
+    permission_classes = permission_classes
 
     @swagger_auto_schema(
         manual_parameters=[
@@ -224,14 +227,15 @@ class CarbonIntensityHistoryApiView(APIView):
 
     def get(self, request, *args, **kwargs):
         
-        user = request.user
-        print("User:",user)
-        if not check_throttle_limit(user):
-            return Response({
-                "status": "fail",
-                "message": "Throttle limit reached",
-                "carbon_cast_version": carbon_cast_version
-            }, status=status.HTTP_429_TOO_MANY_REQUESTS, headers={'Retry-After': 86400})
+        if permissions.AllowAny not in permission_classes:
+            user = request.user
+            print("User:",user)
+            if not check_throttle_limit(user):
+                return Response({
+                    "status": "fail",
+                    "message": "Throttle limit reached",
+                    "carbon_cast_version": carbon_cast_version
+                }, status=status.HTTP_429_TOO_MANY_REQUESTS, headers={'Retry-After': 86400})
 
         region_code = request.query_params.get('regionCode', '')
         date = request.query_params.get('date', '')
@@ -271,8 +275,8 @@ class CarbonIntensityHistoryApiView(APIView):
         
 #4    
 class EnergySourcesHistoryApiView(APIView):
-    authentication_classes = [authentication.SessionAuthentication, authentication.BasicAuthentication]
-    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = authentication_classes
+    permission_classes = permission_classes
 
     @swagger_auto_schema(
         manual_parameters=[
@@ -286,15 +290,16 @@ class EnergySourcesHistoryApiView(APIView):
     )
 
     def get(self, request, *args, **kwargs):
-        
-        user = request.user
-        print("User:",user)
-        if not check_throttle_limit(user):
-            return Response({
-                "status": "fail",
-                "message": "Throttle limit reached",
-                "carbon_cast_version": carbon_cast_version
-            }, status=status.HTTP_429_TOO_MANY_REQUESTS, headers={'Retry-After': 86400})
+
+        if permissions.AllowAny not in permission_classes:
+            user = request.user
+            print("User:",user)
+            if not check_throttle_limit(user):
+                return Response({
+                    "status": "fail",
+                    "message": "Throttle limit reached",
+                    "carbon_cast_version": carbon_cast_version
+                }, status=status.HTTP_429_TOO_MANY_REQUESTS, headers={'Retry-After': 86400})
 
         region_code = request.query_params.get('regionCode', '')
         date = request.query_params.get('date', '')
@@ -338,8 +343,8 @@ class EnergySourcesHistoryApiView(APIView):
 
 #5
 class CarbonIntensityForecastsApiView(APIView):
-    authentication_classes = [authentication.SessionAuthentication, authentication.BasicAuthentication]
-    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = authentication_classes
+    permission_classes = permission_classes
 
     @swagger_auto_schema(
         manual_parameters=[
@@ -354,14 +359,15 @@ class CarbonIntensityForecastsApiView(APIView):
 
     def get(self, request, *args, **kwargs):
 
-        user = request.user
-        print("User:",user)
-        if not check_throttle_limit(user):
-            return Response({
-                "status": "fail",
-                "message": "Throttle limit reached",
-                "carbon_cast_version": carbon_cast_version
-            }, status=status.HTTP_429_TOO_MANY_REQUESTS, headers={'Retry-After': 86400})
+        if permissions.AllowAny not in permission_classes:
+            user = request.user
+            print("User:",user)
+            if not check_throttle_limit(user):
+                return Response({
+                    "status": "fail",
+                    "message": "Throttle limit reached",
+                    "carbon_cast_version": carbon_cast_version
+                }, status=status.HTTP_429_TOO_MANY_REQUESTS, headers={'Retry-After': 86400})
 
         region_code = request.query_params.get('regionCode', '')  
         f = request.query_params.get('forecastPeriod', '24h')
@@ -408,8 +414,8 @@ class CarbonIntensityForecastsApiView(APIView):
 
 #6    
 class CarbonIntensityForecastsHistoryApiView(APIView):
-    authentication_classes = [authentication.SessionAuthentication, authentication.BasicAuthentication]
-    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = authentication_classes
+    permission_classes = permission_classes
 
     @swagger_auto_schema(
         manual_parameters=[
@@ -424,14 +430,15 @@ class CarbonIntensityForecastsHistoryApiView(APIView):
 
     def get(self, request, *args, **kwargs):
 
-        user = request.user
-        print("User:",user)
-        if not check_throttle_limit(user):
-            return Response({
-                "status": "fail",
-                "message": "Throttle limit reached",
-                "carbon_cast_version": carbon_cast_version
-            }, status=status.HTTP_429_TOO_MANY_REQUESTS, headers={'Retry-After': 86400})
+        if permissions.AllowAny not in permission_classes:
+            user = request.user
+            print("User:",user)
+            if not check_throttle_limit(user):
+                return Response({
+                    "status": "fail",
+                    "message": "Throttle limit reached",
+                    "carbon_cast_version": carbon_cast_version
+                }, status=status.HTTP_429_TOO_MANY_REQUESTS, headers={'Retry-After': 86400})
 
         
         region_code = request.query_params.get('regionCode', '')
@@ -470,8 +477,8 @@ class CarbonIntensityForecastsHistoryApiView(APIView):
 
 #7
 class EnergySourcesForecastsHistoryApiView(APIView):
-    authentication_classes = [authentication.SessionAuthentication, authentication.BasicAuthentication]
-    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = authentication_classes
+    permission_classes = permission_classes
 
     @swagger_auto_schema(
         manual_parameters=[
@@ -487,14 +494,15 @@ class EnergySourcesForecastsHistoryApiView(APIView):
 
     def get(self, request, *args, **kwargs):
 
-        user = request.user
-        print("User:",user)
-        if not check_throttle_limit(user):
-            return Response({
-                "status": "fail",
-                "message": "Throttle limit reached",
-                "carbon_cast_version": carbon_cast_version
-            }, status=status.HTTP_429_TOO_MANY_REQUESTS, headers={'Retry-After': 86400})
+        if permissions.AllowAny not in permission_classes:
+            user = request.user
+            print("User:",user)
+            if not check_throttle_limit(user):
+                return Response({
+                    "status": "fail",
+                    "message": "Throttle limit reached",
+                    "carbon_cast_version": carbon_cast_version
+                }, status=status.HTTP_429_TOO_MANY_REQUESTS, headers={'Retry-After': 86400})
 
         region_code = request.query_params.get('regionCode', '')   
         date = request.query_params.get('date', '')
@@ -541,8 +549,8 @@ class EnergySourcesForecastsHistoryApiView(APIView):
 
 #8
 class SupportedRegionsApiView(APIView):
-    authentication_classes = [authentication.SessionAuthentication, authentication.BasicAuthentication]
-    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = authentication_classes
+    permission_classes = permission_classes
 
     @swagger_auto_schema(
         responses={
@@ -552,14 +560,15 @@ class SupportedRegionsApiView(APIView):
 
     def get(self, request, *args, **kwargs):
 
-        user = request.user
-        print("User:",user)
-        if not check_throttle_limit(user):
-            return Response({
-                "status": "fail",
-                "message": "Throttle limit reached",
-                "carbon_cast_version": carbon_cast_version
-            }, status=status.HTTP_429_TOO_MANY_REQUESTS, headers={'Retry-After': 86400})
+        if permissions.AllowAny not in permission_classes:
+            user = request.user
+            print("User:",user)
+            if not check_throttle_limit(user):
+                return Response({
+                    "status": "fail",
+                    "message": "Throttle limit reached",
+                    "carbon_cast_version": carbon_cast_version
+                }, status=status.HTTP_429_TOO_MANY_REQUESTS, headers={'Retry-After': 86400})
 
         path = os.path.abspath(os.path.join(os.getcwd(),'real_time'))
         items = os.listdir(path)
@@ -572,7 +581,7 @@ class SupportedRegionsApiView(APIView):
     
 
 class LogoutAPIView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = permission_classes
     throttle_classes = []
 
     @swagger_auto_schema(

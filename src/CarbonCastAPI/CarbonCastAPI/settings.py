@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -121,6 +122,7 @@ REST_FRAMEWORK = {
 
 DEFAULT_THROTTLE_LIMIT = 10
 EXTENDED_THROTTLE_LIMIT = 1000
+REQUIRES_AUTH = os.environ.get('REQUIRES_AUTH')
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
