@@ -16,4 +16,5 @@ qrcode==7.4.2
 pyotp==2.9.0
 entsoe-py==0.5.10
 xarray==23.7.0
+drf-yasg
 

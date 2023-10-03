@@ -11,6 +11,12 @@ Instructions to run CarbonCastAPI:
 		  (The API routes will be accessible on 0.0.0.0 instead of 127.0.0.1 or localhost)
 
     - Without Docker:
+      - Inside the main CarbonCast Folder, install the dependencies and run:
+
+        ```pip install . ``` \
+        ```python setup.py run_django_server ```
+
+    - Running manually:
       
       - Inside the main CarbonCast Folder, run migrations:
 
