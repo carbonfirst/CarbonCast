@@ -18,14 +18,10 @@ from .models import UserModel, UserThrottleLimit
 from .serializers import UserSerializer
 from .helper import get_latest_csv_file, get_actual_value_file_by_date, get_CI_forecasts_csv_file, get_energy_forecasts_csv_file
 import os
-from .consts import carbon_cast_version, authentication_classes, permission_classes
+from .consts import carbon_cast_version, authentication_classes, permission_classes, US_region_codes
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
-#Defining a list of US region codes
-US_region_codes = ['AECI','AZPS', 'BPAT','CISO', 'DUK', 'EPE', 'ERCO', 'FPL', 
-                'ISNE', 'LDWP', 'MISO', 'NEVP', 'NWMT', 'NYIS', 'PACE', 'PJM', 
-                'SC', 'SCEG', 'SOCO', 'TIDC', 'TVA']
 
 def check_throttle_limit(user):
     try:
@@ -722,7 +718,7 @@ class SignUpApiView(APIView):
 class SignInApiView(APIView):
     permission_classes = [permissions.AllowAny]
     serializer_class = UserSerializer
-    queryset = UserModel.objects.all()
+    # queryset = UserModel.objects.all()
     throttle_classes=[]
 
     @swagger_auto_schema(
@@ -740,13 +736,14 @@ class SignInApiView(APIView):
         :param request: The HTTP POST request with user authentication data.
         :return: User authentication response.
         """
+        # print("Request data: ", request.data)
         data = request.data
-        email = data.get('email')
+        # email = data.get('email')
         username = data.get('username')
         password = data.get('password')
 
         user = authenticate(username=username, password=password)
-        print(user, username, email, password)
+        # print(user, username, email, password)
         if user is None:
             return Response({
                 "status": "fail", 
