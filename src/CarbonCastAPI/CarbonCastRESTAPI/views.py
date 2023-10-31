@@ -43,6 +43,10 @@ def check_throttle_limit(user):
 
 # 1: 
 class CarbonIntensityApiView(APIView):
+
+    """
+    View documentation: [Link to Slate Doc for Carbon Intensity API](/carbon_intensity_api.html)
+    """
   
     print(authentication_classes, permission_classes)
     authentication_classes = authentication_classes
@@ -132,6 +136,11 @@ class CarbonIntensityApiView(APIView):
         
 #2    
 class EnergySourcesApiView(APIView):
+
+    """
+    View documentation: [Link to Slate Doc for Energy Sources API](/energy_sources_api.html)
+    """
+
     authentication_classes = authentication_classes
     permission_classes = permission_classes
 
