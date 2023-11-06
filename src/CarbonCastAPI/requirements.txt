@@ -3,3 +3,4 @@ djangorestframework
 pyotp
 qrcode
 drf-yasg
+django-cors-headers
