@@ -21,8 +21,7 @@ import os
 from .consts import carbon_cast_version, authentication_classes, permission_classes, US_region_codes
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-
-
+from datetime import datetime
 def check_throttle_limit(user):
     try:
         throttle_limit_obj = user.userthrottlelimit  # Access the related UserThrottleLimit object
@@ -100,12 +99,11 @@ class CarbonIntensityApiView(APIView):
                 print(csv_file2)
                 with open(csv_file1) as file:
                     for line in file:
-                        pass
-                values_csv1 = line.split(',')
+                        # pass
+                        values_csv1 = line.split(',')
                 with open(csv_file2) as file:
                     for line in file:
-                        pass
-                values_csv2 = line.split(',')
+                        values_csv2 = line.split(',')
 
                 temp_dict = {
                 fields[0]: values_csv1[1],
@@ -205,14 +203,15 @@ class EnergySourcesApiView(APIView):
 
             return Response(response, status=status.HTTP_200_OK)
             
-#3    
+
+#3 
 class CarbonIntensityHistoryApiView(APIView):
     authentication_classes = authentication_classes
     permission_classes = permission_classes
 
     @swagger_auto_schema(
         manual_parameters=[
-            openapi.Parameter('regionCode', openapi.IN_QUERY, description="Region code parameter (e.g., 'AECI').", type=openapi.TYPE_STRING),
+            openapi.Parameter('region_code', openapi.IN_QUERY, description="Region code parameter (e.g., 'AECI').", type=openapi.TYPE_STRING),
             openapi.Parameter('date', openapi.IN_QUERY, description="Date parameter (in the format: 'YYYY-MM-DD').", type=openapi.TYPE_STRING),
         ],
         responses={
@@ -221,8 +220,7 @@ class CarbonIntensityHistoryApiView(APIView):
         }
     )
 
-    def get(self, request, *args, **kwargs):
-        
+    def get(self, request, *args, **kwargs): #TODO:#focus on this
         if permissions.AllowAny not in permission_classes:
             user = request.user
             print("User:",user)
@@ -232,51 +230,65 @@ class CarbonIntensityHistoryApiView(APIView):
                     "message": "Throttle limit reached",
                     "carbon_cast_version": carbon_cast_version
                 }, status=status.HTTP_429_TOO_MANY_REQUESTS, headers={'Retry-After': 86400})
+        #from here
+        class QueryParamsSerializer(serializers.Serializer):
+            region_code = serializers.CharField(required=False)
 
-        region_code = request.query_params.get('regionCode', '')
+        # Deserialize and validate query parameters
+        query_params_serializer = QueryParamsSerializer(data=request.query_params)
+        if query_params_serializer.is_valid():
+            region_code = query_params_serializer.validated_data.get('region_code')
+            
+            if region_code == 'all':
+                regions = US_region_codes
+            elif region_code in US_region_codes:
+                regions = [region_code]
+            else:
+                return Response({"error": "Invalid region code parameter"}, status=status.HTTP_400_BAD_REQUEST)
         date = request.query_params.get('date', '')
-        
-        csv_file_a, csv_file_b = get_actual_value_file_by_date(region_code, date)
-        print("In view: ", csv_file_a, csv_file_b)
-        with open(csv_file_a) as file:
-            lines_csv1 = file.readlines()
-
-        with open(csv_file_b) as file:
-            lines_csv2 = file.readlines()            
+                  
 
         field_names = [
                         "UTC time", "creation_time (UTC)", "version", "region_code", "carbon_intensity_avg_lifecycle", 
                         "carbon_intensity_avg_direct", "carbon_intensity_unit"
         ]
 
-        values_csv1 = [line.strip().split(',') for line in lines_csv1]
-        values_csv2 = [line.strip().split(',') for line in lines_csv2]
-
         final_list =[]
-        for i in range(1,len(values_csv1)):
-            temp_dict= {}
-            temp_dict[field_names[0]] = values_csv1[i][1]
-            temp_dict[field_names[1]] = values_csv1[i][2]
-            temp_dict[field_names[2]] = values_csv1[i][3]
-            temp_dict[field_names[3]] = region_code
-            temp_dict[field_names[4]] = float(values_csv1[i][4])
-            temp_dict[field_names[5]] = float(values_csv2[i][4])
-            temp_dict[field_names[6]] = "gCO2eg/kWh"
-            final_list.append(temp_dict)
+        for region_code in regions:
+            csv_file_a, csv_file_b = get_actual_value_file_by_date(region_code, date)
+            print("In view: ", csv_file_a, csv_file_b)
+            with open(csv_file_a) as file:
+                lines_csv1 = file.readlines()
+            with open(csv_file_b) as file:
+                lines_csv2 = file.readlines()
+            
+            values_csv1 = [line.strip().split(',') for line in lines_csv1]
+            values_csv2 = [line.strip().split(',') for line in lines_csv2]
+            
+            for i in range(1, len(values_csv1)):
+                temp_dict= {}
+                temp_dict[field_names[0]] = values_csv1[i][1]
+                temp_dict[field_names[1]] = values_csv1[i][2]
+                temp_dict[field_names[2]] = values_csv1[i][3]
+                temp_dict[field_names[3]] = region_code
+                temp_dict[field_names[4]] = (values_csv1[i][4])
+                temp_dict[field_names[5]] = (values_csv2[i][4])
+                temp_dict[field_names[6]] = "gCO2eg/kWh"
+                final_list.append(temp_dict)
         response = {
             "data": final_list,
-            "carbon_cast_version": carbon_cast_version
+            "carbon_cast_version": carbon_cast_version,
         }
-        return Response(response, status=status.HTTP_200_OK)
-        
-#4    
+        return Response(response, status=status.HTTP_200_OK) 
+
+#4  
 class EnergySourcesHistoryApiView(APIView):
     authentication_classes = authentication_classes
     permission_classes = permission_classes
 
     @swagger_auto_schema(
         manual_parameters=[
-            openapi.Parameter('regionCode', openapi.IN_QUERY, description="Region code parameter (e.g., 'AECI').", type=openapi.TYPE_STRING),
+            openapi.Parameter('region_code', openapi.IN_QUERY, description="Region code parameter (e.g., 'AECI').", type=openapi.TYPE_STRING),
             openapi.Parameter('date', openapi.IN_QUERY, description="Date parameter (in the format: 'YYYY-MM-DD').", type=openapi.TYPE_STRING),
         ],
         responses={
@@ -297,38 +309,52 @@ class EnergySourcesHistoryApiView(APIView):
                     "carbon_cast_version": carbon_cast_version
                 }, status=status.HTTP_429_TOO_MANY_REQUESTS, headers={'Retry-After': 86400})
 
-        region_code = request.query_params.get('regionCode', '')
-        date = request.query_params.get('date', '')
+        class QueryParamsSerializer(serializers.Serializer):
+            region_code = serializers.CharField(required=False)
         
-        csv_file_a, csv_file_b = get_actual_value_file_by_date(region_code, date)
-        with open(csv_file_a) as file:
-            lines_csv1 = file.readlines()
+        query_params_serializer = QueryParamsSerializer(data=request.query_params)
+        if query_params_serializer.is_valid():
+            region_code = query_params_serializer.validated_data.get('region_code')
+            
+            if region_code == 'all':
+                regions = US_region_codes
+            elif region_code in US_region_codes:
+                regions = [region_code]
+            else:
+                return Response({"error": "Invalid region code parameter"}, status=status.HTTP_400_BAD_REQUEST)
+        date = request.query_params.get('date', '')
+            
+        final_list =[]
+        for region_code in regions:
+            
+            csv_file_a, csv_file_b = get_actual_value_file_by_date(region_code, date)
+            with open(csv_file_a) as file:
+                lines_csv1 = file.readlines()
 
-        with open(csv_file_b) as file:
-            lines_csv2 = file.readlines()
+            with open(csv_file_b) as file:
+                lines_csv2 = file.readlines()
 
-        values_csv1 = [line.strip().split(',') for line in lines_csv1]
-        values_csv2 = [line.strip().split(',') for line in lines_csv2]
+            values_csv1 = [line.strip().split(',') for line in lines_csv1]
+            values_csv2 = [line.strip().split(',') for line in lines_csv2]
 
-        fields = [
-                "UTC time", "creation_time (UTC)", "version","region_code", "coal", "nat_gas", "nuclear",
-                "oil", "hydro", "solar", "wind", "other"
-            ]
-        final_list = []
+            fields = [
+                    "UTC time", "creation_time (UTC)", "version","region_code", "coal", "nat_gas", "nuclear",
+                    "oil", "hydro", "solar", "wind", "other"
+                ]
+            for i in range(1, len(values_csv1)):
+                temp_dict = {field: "0" for field in fields}
+                temp_dict["UTC time"] = values_csv1[i][1]
+                temp_dict["creation_time (UTC)"] = values_csv1[i][2]
+                temp_dict["version"] = values_csv1[i][3]
+                temp_dict["region_code"] = region_code
 
-        for i in range(1, len(values_csv1)):
-            temp_dict = {field: "0" for field in fields}
-            temp_dict["UTC time"] = values_csv1[i][1]
-            temp_dict["creation_time (UTC)"] = values_csv1[i][2]
-            temp_dict["version"] = values_csv1[i][3]
-            temp_dict["region_code"] = region_code
 
-            for field in fields[2:]:  
-                if field in values_csv1[0]:
-                    index = values_csv1[0].index(field)
-                    temp_dict[field] = values_csv1[i][index]
+                for field in fields[2:]:  
+                    if field in values_csv1[0]:
+                        index = values_csv1[0].index(field)
+                        temp_dict[field] = values_csv1[i][index]
 
-            final_list.append(temp_dict)
+                final_list.append(temp_dict)
 
 
         response = {
@@ -415,7 +441,7 @@ class CarbonIntensityForecastsHistoryApiView(APIView):
 
     @swagger_auto_schema(
         manual_parameters=[
-            openapi.Parameter('regionCode', openapi.IN_QUERY, description="Region code parameter (e.g., 'AECI').", type=openapi.TYPE_STRING),
+            openapi.Parameter('region_code', openapi.IN_QUERY, description="Region code parameter (e.g., 'AECI').", type=openapi.TYPE_STRING),
             openapi.Parameter('date', openapi.IN_QUERY, description="Date parameter (in the format: 'YYYY-MM-DD').", type=openapi.TYPE_STRING),
         ],
         responses={
@@ -435,36 +461,50 @@ class CarbonIntensityForecastsHistoryApiView(APIView):
                     "message": "Throttle limit reached",
                     "carbon_cast_version": carbon_cast_version
                 }, status=status.HTTP_429_TOO_MANY_REQUESTS, headers={'Retry-After': 86400})
-
-        
-        region_code = request.query_params.get('regionCode', '')
+        class QueryParamsSerializer(serializers.Serializer):
+            region_code = serializers.CharField(required=False)
+            
+        # Deserialize and validate query parameters
+        query_params_serializer = QueryParamsSerializer(data=request.query_params)
+        if query_params_serializer.is_valid():
+            region_code = query_params_serializer.validated_data.get('region_code')
+            
+            if region_code == 'all':
+                regions = US_region_codes
+            elif region_code in US_region_codes:
+                regions = [region_code]
+            else:
+                return Response({"error": "Invalid region code parameter"}, status=status.HTTP_400_BAD_REQUEST)
         date = request.query_params.get('date', '')
-        csv_file_l, csv_file_d = get_CI_forecasts_csv_file(region_code, date)
-        with open(csv_file_l) as file:
-            lines_csv1 = file.readlines()
-
-        with open(csv_file_d) as file:
-            lines_csv2 = file.readlines()
 
         field_names = [
                         "UTC time", "creation_time (UTC)", "version", "region_code", "forecasted_avg_carbon_intensity_lifecycle", 
                         "forecasted_avg_carbon_intensity_direct", "carbon_intensity_unit"
         ]
 
-        filtered_data_by_date_csv1 = [line.split(',') for line in lines_csv1 if line.startswith(date)]
-        filtered_data_by_date_csv2 = [line.split(',') for line in lines_csv2 if line.startswith(date)]
-
         final_list =[]
-        for i in range(0,len(filtered_data_by_date_csv1)):
-            temp_dict= {}
-            temp_dict[field_names[0]] = filtered_data_by_date_csv1[i][0]
-            temp_dict[field_names[1]] = filtered_data_by_date_csv1[i][1]
-            temp_dict[field_names[2]] = filtered_data_by_date_csv1[i][2]
-            temp_dict[field_names[3]] = region_code
-            temp_dict[field_names[4]] = float(filtered_data_by_date_csv1[i][3])
-            temp_dict[field_names[5]] = float(filtered_data_by_date_csv2[i][3])
-            temp_dict[field_names[6]] = "gCO2eg/kWh"
-            final_list.append(temp_dict)
+        for region_code in regions:
+            csv_file_l, csv_file_d = get_CI_forecasts_csv_file(region_code, date)
+            #print("In view: ", csv_file_l, csv_file_d)
+            with open(csv_file_l) as file:
+                lines_csv1 = file.readlines()
+
+            with open(csv_file_d) as file:
+                lines_csv2 = file.readlines()
+                
+            filtered_data_by_date_csv1 = [line.strip().split(',') for line in lines_csv1 if line.startswith(date)]
+            filtered_data_by_date_csv2 = [line.strip().split(',') for line in lines_csv2 if line.startswith(date)]
+            
+            for i in range(0,len(filtered_data_by_date_csv1)):
+                temp_dict= {}
+                temp_dict[field_names[0]] = filtered_data_by_date_csv1[i][0]
+                temp_dict[field_names[1]] = filtered_data_by_date_csv1[i][1]
+                temp_dict[field_names[2]] = filtered_data_by_date_csv1[i][2]
+                temp_dict[field_names[3]] = region_code
+                temp_dict[field_names[4]] = filtered_data_by_date_csv1[i][3]
+                temp_dict[field_names[5]] = filtered_data_by_date_csv2[i][3]
+                temp_dict[field_names[6]] = "gCO2eg/kWh"
+                final_list.append(temp_dict)
         response = {
             "data": final_list,
             "carbon_cast_version": carbon_cast_version
