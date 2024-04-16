@@ -1,0 +1,5 @@
+Interval,UTC Time,Next Time,Time Difference
+30.0,2019-05-17 23:30:00+00:00,2019-05-19 00:00:00+00:00,1 days 00:30:00
+30.0,2021-04-29 23:30:00+00:00,2021-05-01 00:00:00+00:00,1 days 00:30:00
+Total Missing Minutes:,2880.0,,
+Total Missing Percent:,0.1366,,

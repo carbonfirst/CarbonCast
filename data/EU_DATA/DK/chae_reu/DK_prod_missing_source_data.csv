@@ -1,0 +1,7 @@
+UTC Time,Biomass,Fossil Gas,Fossil Hard coal,Fossil Oil,Solar,Waste,Wind Offshore,Wind Onshore
+2020-09-09 15:00:00+00:00,True,True,False,True,True,False,True,False
+2022-02-10 08:00:00+00:00,True,True,True,True,False,True,False,False
+2022-07-05 07:00:00+00:00,True,True,True,True,False,True,False,False
+2022-07-22 12:00:00+00:00,False,True,False,False,False,False,False,False
+Total Missing Minutes,180,240,120,180,60,120,60,0
+Percentage per Source,0.0085,0.0114,0.0057,0.0085,0.0028,0.0057,0.0028,0.0

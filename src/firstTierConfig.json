@@ -11,8 +11,12 @@
     // Regions: CISO, PJM, ERCO, ISNE, NYISO, FPL, BPAT, SE, DE, ES, NL, PL, AUS_QLD
     // Can include multiple regions in the list, separated by comma.
 
-    "REGION_WITH_INCONSISTENT_DATA": ["BANC", "FPC", "GRID", "PSEI", "WALC"], // TODO: check these later
+    "REGION_WITH_INCONSISTENT_DATA": ["BANC", "FPC", "GRID", "PSEI", "WALC", "AL", "DK-DK2"], // TODO: check these later
     "REGION_WITH_SINGLE_SOURCE": ["GCPD", "SCL", "TPWR"], // TODO: check these later
+
+    "EU_REGIONS":  ["AL", "AT", "BE", "BG", "HR", "CZ", "DK", "DK-DK2", "EE", "FI", 
+                         "FR", "DE", "GB", "GR", "HU", "IE", "IT", "LV", "LT", "NL",
+                        "PL", "PT", "RO", "RS", "SK", "SI", "ES", "SE", "CH"],
 
     // "REGION": ["AECI", "AZPS", "BPAT", "CISO", "DUK", "EPE", "ERCOT", "FPL", "IPCO", 
     //             "ISNE", "LDWP", "MISO", "NEVP", "NWMT", "NYISO", "PACE", "PACW", "PJM", 
@@ -473,7 +477,385 @@
 
     // EU regions
 
+    "AT": {
+        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/AT/fuel_forecast/AT_",
+        "WEATHER_FORECAST_IN_FILE_NAME": "../data/EU_DATA/AT/AT_weather_forecast.csv",
+        "OUT_FILE_NAME_PREFIX": "../data/EU_DATA/AT/fuel_forecast/AT_ANN",
+        "AGGREGATED_FORECAST_OUT_FILE_NAME": "../data/EU_DATA/AT/AT_96hr_forecasts_DA.csv",
+        "LOCAL_TIMEZONE": "CET",
+        "SOURCES": ["coal", "nat_gas", "oil", "hydro", "solar", "wind", "biomass", "geothermal", "unknown"],
+        "SOURCE_COL": [0, 1, 2, 3, 4, 5, 6, 7, 8],
+        "PARTIAL_FORECAST_AVAILABILITY_LIST": [0, 0, 0, 0, 1, 1, 0, 0, 0], // 0 -- False, 1 -- True
+        // Solar/wind day ahead forecasts are available. For other sources,
+        // using day-ahead forecasts obtained for DACF for consistency
+        "PARTIAL_FORECAST_HOURS": 24
+    },
+
+    "BE": {
+        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/BE/fuel_forecast/BE_",
+        "WEATHER_FORECAST_IN_FILE_NAME": "../data/EU_DATA/BE/BE_weather_forecast.csv",
+        "OUT_FILE_NAME_PREFIX": "../data/EU_DATA/BE/fuel_forecast/BE_ANN",
+        "AGGREGATED_FORECAST_OUT_FILE_NAME": "../data/EU_DATA/BE/BE_96hr_forecasts_DA.csv",
+        "LOCAL_TIMEZONE": "CET",
+        "SOURCES": ["coal", "nat_gas", "nuclear", "oil", "hydro", "solar", "wind", "biomass", "unknown"], // "unknown" and "other" are same
+        "SOURCE_COL": [0, 1, 2, 3, 4, 5, 6, 7, 8],
+        "PARTIAL_FORECAST_AVAILABILITY_LIST": [0, 0, 0, 0, 0, 1, 1, 0, 0], // 0 -- False, 1 -- True
+        // Solar/wind day ahead forecasts are available. For other sources,
+        // using day-ahead forecasts obtained for DACF for consistency
+        "PARTIAL_FORECAST_HOURS": 24
+    },
+
+    "BG": {
+        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/BG/fuel_forecast/BG_",
+        "WEATHER_FORECAST_IN_FILE_NAME": "../data/EU_DATA/BG/BG_weather_forecast.csv",
+        "OUT_FILE_NAME_PREFIX": "../data/EU_DATA/BG/fuel_forecast/BG_ANN",
+        "AGGREGATED_FORECAST_OUT_FILE_NAME": "../data/EU_DATA/BG/BG_96hr_forecasts_DA.csv",
+        "LOCAL_TIMEZONE": "EET",
+        "SOURCES": ["coal", "nat_gas", "nuclear", "hydro", "solar", "wind", "biomass"], // "unknown" and "other" are same
+        "SOURCE_COL": [0, 1, 2, 3, 4, 5, 6],
+        "PARTIAL_FORECAST_AVAILABILITY_LIST": [0, 0, 0, 0, 1, 1, 0], // 0 -- False, 1 -- True
+        // Solar/wind day ahead forecasts are available. For other sources,
+        // using day-ahead forecasts obtained for DACF for consistency
+        "PARTIAL_FORECAST_HOURS": 24
+    },
+
+    "CH": {
+        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/CH/fuel_forecast/CH_",
+        "WEATHER_FORECAST_IN_FILE_NAME": "../data/EU_DATA/CH/CH_weather_forecast.csv",
+        "OUT_FILE_NAME_PREFIX": "../data/EU_DATA/CH/fuel_forecast/CH_ANN",
+        "AGGREGATED_FORECAST_OUT_FILE_NAME": "../data/EU_DATA/CH/CH_96hr_forecasts_DA.csv",
+        "LOCAL_TIMEZONE": "CET",
+        "SOURCES": ["nuclear", "hydro", "solar", "wind"], // "unknown" and "other" are same
+        "SOURCE_COL": [0, 1, 2, 3],
+        "PARTIAL_FORECAST_AVAILABILITY_LIST": [0, 0, 1, 1], // 0 -- False, 1 -- True
+        // Solar/wind day ahead forecasts are available. For other sources,
+        // using day-ahead forecasts obtained for DACF for consistency
+        "PARTIAL_FORECAST_HOURS": 24
+    },
+
+    "CZ": {
+        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/CZ/fuel_forecast/CZ_",
+        "WEATHER_FORECAST_IN_FILE_NAME": "../data/EU_DATA/CZ/CZ_weather_forecast.csv",
+        "OUT_FILE_NAME_PREFIX": "../data/EU_DATA/CZ/fuel_forecast/CZ_ANN",
+        "AGGREGATED_FORECAST_OUT_FILE_NAME": "../data/EU_DATA/CZ/CZ_96hr_forecasts_DA.csv",
+        "LOCAL_TIMEZONE": "CET",
+        "SOURCES": ["coal", "nat_gas", "nuclear", "oil", "hydro", "solar", "wind", "biomass", "unknown"], // "unknown" and "other" are same
+        "SOURCE_COL": [0, 1, 2, 3, 4, 5, 6, 7, 8],
+        "PARTIAL_FORECAST_AVAILABILITY_LIST": [0, 0, 0, 0, 0, 1, 0, 0, 0], // 0 -- False, 1 -- True
+        // Solar/wind day ahead forecasts are available. For other sources,
+        // using day-ahead forecasts obtained for DACF for consistency
+        "PARTIAL_FORECAST_HOURS": 24
+    },
+
+    "DE": {
+        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/DE/fuel_forecast/DE_",
+        "WEATHER_FORECAST_IN_FILE_NAME": "../data/EU_DATA/DE/DE_weather_forecast.csv",
+        "OUT_FILE_NAME_PREFIX": "../data/EU_DATA/DE/fuel_forecast/DE_ANN",
+        "AGGREGATED_FORECAST_OUT_FILE_NAME": "../data/EU_DATA/DE/DE_96hr_forecasts_DA.csv",
+        "LOCAL_TIMEZONE": "CET",
+        "SOURCES": ["coal", "nat_gas", "nuclear", "oil", "hydro", "solar", "wind", "biomass", "geothermal", "unknown"], // "unknown" and "other" are same
+        "SOURCE_COL": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+        "PARTIAL_FORECAST_AVAILABILITY_LIST": [0, 0, 0, 0, 0, 1, 1, 0, 0, 0], // 0 -- False, 1 -- True
+        // Solar/wind day ahead forecasts are available. For other sources,
+        // using day-ahead forecasts obtained for DACF for consistency
+        "PARTIAL_FORECAST_HOURS": 24
+    },
+
+    "DK": {
+        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/DK/fuel_forecast/DK_",
+        "WEATHER_FORECAST_IN_FILE_NAME": "../data/EU_DATA/DK/DK_weather_forecast.csv",
+        "OUT_FILE_NAME_PREFIX": "../data/EU_DATA/DK/fuel_forecast/DK_ANN",
+        "AGGREGATED_FORECAST_OUT_FILE_NAME": "../data/EU_DATA/DK/DK_96hr_forecasts_DA.csv",
+        "LOCAL_TIMEZONE": "CET",
+        "SOURCES": ["coal", "nat_gas", "oil", "solar", "wind", "biomass"], // "unknown" and "other" are same
+        "SOURCE_COL": [0, 1, 2, 3, 4, 5],
+        "PARTIAL_FORECAST_AVAILABILITY_LIST": [0, 0, 0, 1, 1, 0], // 0 -- False, 1 -- True
+        // Solar/wind day ahead forecasts are available. For other sources,
+        // using day-ahead forecasts obtained for DACF for consistency
+        "PARTIAL_FORECAST_HOURS": 24
+    },
+
+    "EE": {
+        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/EE/fuel_forecast/EE_",
+        "WEATHER_FORECAST_IN_FILE_NAME": "../data/EU_DATA/EE/EE_weather_forecast.csv",
+        "OUT_FILE_NAME_PREFIX": "../data/EU_DATA/EE/fuel_forecast/EE_ANN",
+        "AGGREGATED_FORECAST_OUT_FILE_NAME": "../data/EU_DATA/EE/EE_96hr_forecasts_DA.csv",
+        "LOCAL_TIMEZONE": "EET",
+        "SOURCES": ["coal", "nat_gas", "hydro", "solar", "wind", "biomass", "unknown"], // "unknown" and "other" are same
+        "SOURCE_COL": [0, 1, 2, 3, 4, 5, 6],
+        "PARTIAL_FORECAST_AVAILABILITY_LIST": [0, 0, 0, 0, 1, 0, 0], // 0 -- False, 1 -- True
+        // Solar/wind day ahead forecasts are available. For other sources,
+        // using day-ahead forecasts obtained for DACF for consistency
+        "PARTIAL_FORECAST_HOURS": 24
+    },
+
+    "ES": {
+        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/ES/fuel_forecast/ES_",
+        "WEATHER_FORECAST_IN_FILE_NAME": "../data/EU_DATA/ES/ES_weather_forecast.csv",
+        "OUT_FILE_NAME_PREFIX": "../data/EU_DATA/ES/fuel_forecast/ES_ANN",
+        "AGGREGATED_FORECAST_OUT_FILE_NAME": "../data/EU_DATA/ES/ES_96hr_forecasts_DA.csv",
+        "LOCAL_TIMEZONE": "CET",
+        "SOURCES": ["coal", "nat_gas", "nuclear", "oil", "hydro", "solar", "wind", "biomass", "geothermal", "unknown"], // "unknown" and "other" are same
+        "SOURCE_COL": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+        "PARTIAL_FORECAST_AVAILABILITY_LIST": [0, 0, 0, 0, 0, 1, 1, 0, 0, 0], // 0 -- False, 1 -- True
+        // Solar/wind day ahead forecasts are available. For other sources,
+        // using day-ahead forecasts obtained for DACF for consistency
+        "PARTIAL_FORECAST_HOURS": 24
+    },
+
+    "FI": {
+        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/FI/fuel_forecast/FI_",
+        "WEATHER_FORECAST_IN_FILE_NAME": "../data/EU_DATA/FI/FI_weather_forecast.csv",
+        "OUT_FILE_NAME_PREFIX": "../data/EU_DATA/FI/fuel_forecast/FI_ANN",
+        "AGGREGATED_FORECAST_OUT_FILE_NAME": "../data/EU_DATA/FI/FI_96hr_forecasts_DA.csv",
+        "LOCAL_TIMEZONE": "EET",
+        "SOURCES": ["coal", "nat_gas", "nuclear", "oil", "hydro", "solar", "wind", "biomass", "unknown"], // "unknown" and "other" are same
+        "SOURCE_COL": [0, 1, 2, 3, 4, 5, 6, 7, 8],
+        "PARTIAL_FORECAST_AVAILABILITY_LIST": [0, 0, 0, 0, 0, 0, 1, 0, 0], // 0 -- False, 1 -- True
+        // Solar/wind day ahead forecasts are available. For other sources,
+        // using day-ahead forecasts obtained for DACF for consistency
+        "PARTIAL_FORECAST_HOURS": 24
+    },
+
+    "FR": {
+        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/FR/fuel_forecast/FR_",
+        "WEATHER_FORECAST_IN_FILE_NAME": "../data/EU_DATA/FR/FR_weather_forecast.csv",
+        "OUT_FILE_NAME_PREFIX": "../data/EU_DATA/FR/fuel_forecast/FR_ANN",
+        "AGGREGATED_FORECAST_OUT_FILE_NAME": "../data/EU_DATA/FR/FR_96hr_forecasts_DA.csv",
+        "LOCAL_TIMEZONE": "CET",
+        "SOURCES": ["coal", "nat_gas", "nuclear", "oil", "hydro", "solar", "wind", "biomass"], // "unknown" and "other" are same
+        "SOURCE_COL": [0, 1, 2, 3, 4, 5, 6, 7],
+        "PARTIAL_FORECAST_AVAILABILITY_LIST": [0, 0, 0, 0, 0, 1, 1, 0], // 0 -- False, 1 -- True
+        // Solar/wind day ahead forecasts are available. For other sources,
+        // using day-ahead forecasts obtained for DACF for consistency
+        "PARTIAL_FORECAST_HOURS": 24
+    },
+
+    "GB": {
+        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/GB/fuel_forecast/GB_",
+        "WEATHER_FORECAST_IN_FILE_NAME": "../data/EU_DATA/GB/GB_weather_forecast.csv",
+        "OUT_FILE_NAME_PREFIX": "../data/EU_DATA/GB/fuel_forecast/GB_ANN",
+        "AGGREGATED_FORECAST_OUT_FILE_NAME": "../data/EU_DATA/GB/GB_96hr_forecasts_DA.csv",
+        "LOCAL_TIMEZONE": "GMT",
+        "SOURCES": ["coal", "nat_gas", "nuclear", "oil", "hydro", "solar", "wind", "biomass", "geothermal", "unknown"], // "unknown" and "other" are same
+        "SOURCE_COL": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+        "PARTIAL_FORECAST_AVAILABILITY_LIST": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], // 0 -- False, 1 -- True
+        // Solar/wind day ahead forecasts are available. For other sources,
+        // using day-ahead forecasts obtained for DACF for consistency
+        "PARTIAL_FORECAST_HOURS": 24
+    },
+
+    "GR": {
+        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/GR/fuel_forecast/GR_",
+        "WEATHER_FORECAST_IN_FILE_NAME": "../data/EU_DATA/GR/GR_weather_forecast.csv",
+        "OUT_FILE_NAME_PREFIX": "../data/EU_DATA/GR/fuel_forecast/GR_ANN",
+        "AGGREGATED_FORECAST_OUT_FILE_NAME": "../data/EU_DATA/GR/GR_96hr_forecasts_DA.csv",
+        "LOCAL_TIMEZONE": "EET",
+        "SOURCES": ["coal", "nat_gas", "oil", "hydro", "solar", "wind"], // "unknown" and "other" are same
+        "SOURCE_COL": [0, 1, 2, 3, 4, 5],
+        "PARTIAL_FORECAST_AVAILABILITY_LIST": [0, 0, 0, 0, 1, 1], // 0 -- False, 1 -- True
+        // Solar/wind day ahead forecasts are available. For other sources,
+        // using day-ahead forecasts obtained for DACF for consistency
+        "PARTIAL_FORECAST_HOURS": 24
+    },
+
+    "HR": {
+        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/HR/fuel_forecast/HR_",
+        "WEATHER_FORECAST_IN_FILE_NAME": "../data/EU_DATA/HR/HR_weather_forecast.csv",
+        "OUT_FILE_NAME_PREFIX": "../data/EU_DATA/HR/fuel_forecast/HR_ANN",
+        "AGGREGATED_FORECAST_OUT_FILE_NAME": "../data/EU_DATA/HR/HR_96hr_forecasts_DA.csv",
+        "LOCAL_TIMEZONE": "CET",
+        "SOURCES": ["coal", "nat_gas", "oil", "hydro", "solar", "wind", "biomass", "geothermal", "unknown"], // "unknown" and "other" are same
+        "SOURCE_COL": [0, 1, 2, 3, 4, 5, 6, 7, 8],
+        "PARTIAL_FORECAST_AVAILABILITY_LIST": [0, 0, 0, 0, 0, 0, 0, 0, 0], // 0 -- False, 1 -- True
+        // Solar/wind day ahead forecasts are available. For other sources,
+        // using day-ahead forecasts obtained for DACF for consistency
+        "PARTIAL_FORECAST_HOURS": 24
+    },
+
+    "HU": {
+        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/HU/fuel_forecast/HU_",
+        "WEATHER_FORECAST_IN_FILE_NAME": "../data/EU_DATA/HU/HU_weather_forecast.csv",
+        "OUT_FILE_NAME_PREFIX": "../data/EU_DATA/HU/fuel_forecast/HU_ANN",
+        "AGGREGATED_FORECAST_OUT_FILE_NAME": "../data/EU_DATA/HU/HU_96hr_forecasts_DA.csv",
+        "LOCAL_TIMEZONE": "CET",
+        "SOURCES": ["coal", "nat_gas", "nuclear", "oil", "hydro", "solar", "wind", "biomass", "geothermal", "unknown"], // "unknown" and "other" are same
+        "SOURCE_COL": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+        "PARTIAL_FORECAST_AVAILABILITY_LIST": [0, 0, 0, 0, 0, 1, 1, 0, 0, 0], // 0 -- False, 1 -- True
+        // Solar/wind day ahead forecasts are available. For other sources,
+        // using day-ahead forecasts obtained for DACF for consistency
+        "PARTIAL_FORECAST_HOURS": 24
+    },
+
+    "IE": {
+        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/IE/fuel_forecast/IE_",
+        "WEATHER_FORECAST_IN_FILE_NAME": "../data/EU_DATA/IE/IE_weather_forecast.csv",
+        "OUT_FILE_NAME_PREFIX": "../data/EU_DATA/IE/fuel_forecast/IE_ANN",
+        "AGGREGATED_FORECAST_OUT_FILE_NAME": "../data/EU_DATA/IE/IE_96hr_forecasts_DA.csv",
+        "LOCAL_TIMEZONE": "IST",
+        "SOURCES": ["coal", "nat_gas", "nuclear", "oil", "hydro", "solar", "wind", "biomass", "geothermal", "unknown"], // "unknown" and "other" are same
+        "SOURCE_COL": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+        "PARTIAL_FORECAST_AVAILABILITY_LIST": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], // 0 -- False, 1 -- True
+        // Solar/wind day ahead forecasts are available. For other sources,
+        // using day-ahead forecasts obtained for DACF for consistency
+        "PARTIAL_FORECAST_HOURS": 24
+    },
+
+    "IT": {
+        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/IT/fuel_forecast/IT_",
+        "WEATHER_FORECAST_IN_FILE_NAME": "../data/EU_DATA/IT/IT_weather_forecast.csv",
+        "OUT_FILE_NAME_PREFIX": "../data/EU_DATA/IT/fuel_forecast/IT_ANN",
+        "AGGREGATED_FORECAST_OUT_FILE_NAME": "../data/EU_DATA/IT/IT_96hr_forecasts_DA.csv",
+        "LOCAL_TIMEZONE": "CET",
+        "SOURCES": ["coal", "nat_gas", "oil", "hydro", "solar", "wind", "biomass", "geothermal", "unknown"], // "unknown" and "other" are same
+        "SOURCE_COL": [0, 1, 2, 3, 4, 5, 6, 7, 8],
+        "PARTIAL_FORECAST_AVAILABILITY_LIST": [0, 0, 0, 0, 1, 0, 0, 0, 0], // 0 -- False, 1 -- True
+        // Solar/wind day ahead forecasts are available. For other sources,
+        // using day-ahead forecasts obtained for DACF for consistency
+        "PARTIAL_FORECAST_HOURS": 24
+    },
+
+    "LT": {
+        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/LT/fuel_forecast/LT_",
+        "WEATHER_FORECAST_IN_FILE_NAME": "../data/EU_DATA/LT/LT_weather_forecast.csv",
+        "OUT_FILE_NAME_PREFIX": "../data/EU_DATA/LT/fuel_forecast/LT_ANN",
+        "AGGREGATED_FORECAST_OUT_FILE_NAME": "../data/EU_DATA/LT/LT_96hr_forecasts_DA.csv",
+        "LOCAL_TIMEZONE": "EET",
+        "SOURCES": ["nat_gas", "hydro", "solar", "wind", "biomass", "unknown"], // "unknown" and "other" are same
+        "SOURCE_COL": [0, 1, 2, 3, 4, 5],
+        "PARTIAL_FORECAST_AVAILABILITY_LIST": [0, 0, 1, 1, 0, 0], // 0 -- False, 1 -- True
+        // Solar/wind day ahead forecasts are available. For other sources,
+        // using day-ahead forecasts obtained for DACF for consistency
+        "PARTIAL_FORECAST_HOURS": 24
+    },
+
+    "LV": {
+        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/LV/fuel_forecast/LV_",
+        "WEATHER_FORECAST_IN_FILE_NAME": "../data/EU_DATA/LV/LV_weather_forecast.csv",
+        "OUT_FILE_NAME_PREFIX": "../data/EU_DATA/LV/fuel_forecast/LV_ANN",
+        "AGGREGATED_FORECAST_OUT_FILE_NAME": "../data/EU_DATA/LV/LV_96hr_forecasts_DA.csv",
+        "LOCAL_TIMEZONE": "EET",
+        "SOURCES": ["nat_gas", "hydro", "wind", "biomass", "unknown"], // "unknown" and "other" are same
+        "SOURCE_COL": [0, 1, 2, 3, 4],
+        "PARTIAL_FORECAST_AVAILABILITY_LIST": [0, 0, 1, 0, 0], // 0 -- False, 1 -- True
+        // Solar/wind day ahead forecasts are available. For other sources,
+        // using day-ahead forecasts obtained for DACF for consistency
+        "PARTIAL_FORECAST_HOURS": 24
+    },
+
+    "NL": {
+        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/NL/fuel_forecast/NL_",
+        "WEATHER_FORECAST_IN_FILE_NAME": "../data/EU_DATA/NL/NL_weather_forecast.csv",
+        "OUT_FILE_NAME_PREFIX": "../data/EU_DATA/NL/fuel_forecast/NL_ANN",
+        "AGGREGATED_FORECAST_OUT_FILE_NAME": "../data/EU_DATA/NL/NL_96hr_forecasts_DA.csv",
+        "LOCAL_TIMEZONE": "CET",
+        "SOURCES": ["coal", "nat_gas", "nuclear", "hydro", "solar", "wind", "biomass", "unknown"], // "unknown" and "other" are same
+        "SOURCE_COL": [0, 1, 2, 3, 4, 5, 6, 7],
+        "PARTIAL_FORECAST_AVAILABILITY_LIST": [0, 0, 0, 0, 1, 1, 0, 0], // 0 -- False, 1 -- True
+        // Solar/wind day ahead forecasts are available. For other sources,
+        // using day-ahead forecasts obtained for DACF for consistency
+        "PARTIAL_FORECAST_HOURS": 24
+    },
+
+    "PL": {
+        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/PL/fuel_forecast/PL_",
+        "WEATHER_FORECAST_IN_FILE_NAME": "../data/EU_DATA/PL/PL_weather_forecast.csv",
+        "OUT_FILE_NAME_PREFIX": "../data/EU_DATA/PL/fuel_forecast/PL_ANN",
+        "AGGREGATED_FORECAST_OUT_FILE_NAME": "../data/EU_DATA/PL/PL_96hr_forecasts_DA.csv",
+        "LOCAL_TIMEZONE": "CET",
+        "SOURCES": ["coal", "nat_gas", "oil", "hydro", "solar", "wind", "biomass"], // "unknown" and "other" are same
+        "SOURCE_COL": [0, 1, 2, 3, 4, 5, 6],
+        "PARTIAL_FORECAST_AVAILABILITY_LIST": [0, 0, 0, 0, 0, 1, 0], // 0 -- False, 1 -- True
+        // Solar/wind day ahead forecasts are available. For other sources,
+        // using day-ahead forecasts obtained for DACF for consistency
+        "PARTIAL_FORECAST_HOURS": 24
+    },
+
+    "PT": {
+        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/PT/fuel_forecast/PT_",
+        "WEATHER_FORECAST_IN_FILE_NAME": "../data/EU_DATA/PT/PT_weather_forecast.csv",
+        "OUT_FILE_NAME_PREFIX": "../data/EU_DATA/PT/fuel_forecast/PT_ANN",
+        "AGGREGATED_FORECAST_OUT_FILE_NAME": "../data/EU_DATA/PT/PT_96hr_forecasts_DA.csv",
+        "LOCAL_TIMEZONE": "WET",
+        "SOURCES": ["coal", "nat_gas", "hydro", "solar", "wind", "biomass", "unknown"], // "unknown" and "other" are same
+        "SOURCE_COL": [0, 1, 2, 3, 4, 5, 6],
+        "PARTIAL_FORECAST_AVAILABILITY_LIST": [0, 0, 0, 0, 0, 0, 0], // 0 -- False, 1 -- True
+        // Solar/wind day ahead forecasts are available. For other sources,
+        // using day-ahead forecasts obtained for DACF for consistency
+        "PARTIAL_FORECAST_HOURS": 24
+    },
+
+    "RO": {
+        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/RO/fuel_forecast/RO_",
+        "WEATHER_FORECAST_IN_FILE_NAME": "../data/EU_DATA/RO/RO_weather_forecast.csv",
+        "OUT_FILE_NAME_PREFIX": "../data/EU_DATA/RO/fuel_forecast/RO_ANN",
+        "AGGREGATED_FORECAST_OUT_FILE_NAME": "../data/EU_DATA/RO/RO_96hr_forecasts_DA.csv",
+        "LOCAL_TIMEZONE": "EET",
+        "SOURCES": ["coal", "nat_gas", "nuclear", "hydro", "solar", "wind", "biomass"], // "unknown" and "other" are same
+        "SOURCE_COL": [0, 1, 2, 3, 4, 5, 6],
+        "PARTIAL_FORECAST_AVAILABILITY_LIST": [0, 0, 0, 0, 1, 1, 0], // 0 -- False, 1 -- True
+        // Solar/wind day ahead forecasts are available. For other sources,
+        // using day-ahead forecasts obtained for DACF for consistency
+        "PARTIAL_FORECAST_HOURS": 24
+    },
+
+    "RS": {
+        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/RS/fuel_forecast/RS_",
+        "WEATHER_FORECAST_IN_FILE_NAME": "../data/EU_DATA/RS/RS_weather_forecast.csv",
+        "OUT_FILE_NAME_PREFIX": "../data/EU_DATA/RS/fuel_forecast/RS_ANN",
+        "AGGREGATED_FORECAST_OUT_FILE_NAME": "../data/EU_DATA/RS/RS_96hr_forecasts_DA.csv",
+        "LOCAL_TIMEZONE": "CET",
+        "SOURCES": ["coal", "nat_gas", "hydro", "wind", "biomass", "unknown"], // "unknown" and "other" are same
+        "SOURCE_COL": [0, 1, 2, 3, 4, 5],
+        "PARTIAL_FORECAST_AVAILABILITY_LIST": [0, 0, 0, 0, 0, 0], // 0 -- False, 1 -- True
+        // Solar/wind day ahead forecasts are available. For other sources,
+        // using day-ahead forecasts obtained for DACF for consistency
+        "PARTIAL_FORECAST_HOURS": 24
+    },
+
     "SE": {
+        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/SE/fuel_forecast/SE_",
+        "WEATHER_FORECAST_IN_FILE_NAME": "../data/EU_DATA/SE/SE_weather_forecast.csv",
+        "OUT_FILE_NAME_PREFIX": "../data/EU_DATA/SE/fuel_forecast/SE_ANN",
+        "AGGREGATED_FORECAST_OUT_FILE_NAME": "../data/EU_DATA/SE/SE_96hr_forecasts_DA.csv",
+        "LOCAL_TIMEZONE": "CET",
+        "SOURCES": ["nat_gas", "nuclear", "hydro", "solar", "wind", "unknown"], // "unknown" and "other" are same
+        "SOURCE_COL": [0, 1, 2, 3, 4, 5],
+        "PARTIAL_FORECAST_AVAILABILITY_LIST": [0, 0, 0, 0, 1, 0], // 0 -- False, 1 -- True
+        // Solar/wind day ahead forecasts are available. For other sources,
+        // using day-ahead forecasts obtained for DACF for consistency
+        "PARTIAL_FORECAST_HOURS": 24
+    },
+
+    "SI": {
+        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/SI/fuel_forecast/SI_",
+        "WEATHER_FORECAST_IN_FILE_NAME": "../data/EU_DATA/SI/SI_weather_forecast.csv",
+        "OUT_FILE_NAME_PREFIX": "../data/EU_DATA/SI/fuel_forecast/SI_ANN",
+        "AGGREGATED_FORECAST_OUT_FILE_NAME": "../data/EU_DATA/SI/SI_96hr_forecasts_DA.csv",
+        "LOCAL_TIMEZONE": "CET",
+        "SOURCES": ["coal", "nat_gas", "nuclear", "oil", "hydro", "solar", "wind", "biomass"], // "unknown" and "other" are same
+        "SOURCE_COL": [0, 1, 2, 3, 4, 5, 6, 7],
+        "PARTIAL_FORECAST_AVAILABILITY_LIST": [0, 0, 0, 0, 0, 1, 0, 0], // 0 -- False, 1 -- True
+        // Solar/wind day ahead forecasts are available. For other sources,
+        // using day-ahead forecasts obtained for DACF for consistency
+        "PARTIAL_FORECAST_HOURS": 24
+    },
+
+    "SK": {
+        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/SK/fuel_forecast/SK_",
+        "WEATHER_FORECAST_IN_FILE_NAME": "../data/EU_DATA/SK/SK_weather_forecast.csv",
+        "OUT_FILE_NAME_PREFIX": "../data/EU_DATA/SK/fuel_forecast/SK_ANN",
+        "AGGREGATED_FORECAST_OUT_FILE_NAME": "../data/EU_DATA/SK/SK_96hr_forecasts_DA.csv",
+        "LOCAL_TIMEZONE": "CET",
+        "SOURCES": ["coal", "nat_gas", "nuclear", "oil", "hydro", "solar", "wind", "biomass", "unknown"], // "unknown" and "other" are same
+        "SOURCE_COL": [0, 1, 2, 3, 4, 5, 6, 7, 8],
+        "PARTIAL_FORECAST_AVAILABILITY_LIST": [0, 0, 0, 0, 0, 1, 1, 0, 0], // 0 -- False, 1 -- True
+        // Solar/wind day ahead forecasts are available. For other sources,
+        // using day-ahead forecasts obtained for DACF for consistency
+        "PARTIAL_FORECAST_HOURS": 24
+    },
+
+    "SE_v2.1": {
         "IN_FILE_NAME_PREFIX": "../data/SE/fuel_forecast/SE_",
         "WEATHER_FORECAST_IN_FILE_NAME": "../data/SE/SE_weather_forecast.csv",
         "OUT_FILE_NAME_PREFIX": "../data/SE/fuel_forecast/SE_ANN",
@@ -487,7 +869,7 @@
         "PARTIAL_FORECAST_HOURS": 24
     },
 
-    "DE": {
+    "DE_v2.1": {
         "IN_FILE_NAME_PREFIX": "../data/DE/fuel_forecast/DE_",
         "WEATHER_FORECAST_IN_FILE_NAME": "../data/DE/DE_weather_forecast.csv",
         "OUT_FILE_NAME_PREFIX": "../data/DE/fuel_forecast/DE_ANN",
@@ -501,7 +883,7 @@
         "PARTIAL_FORECAST_HOURS": 24
     },
 
-    "ES": {
+    "ES_v2.1": {
         "IN_FILE_NAME_PREFIX": "../data/ES/fuel_forecast/ES_",
         "WEATHER_FORECAST_IN_FILE_NAME": "../data/ES/ES_weather_forecast.csv",
         "OUT_FILE_NAME_PREFIX": "../data/ES/fuel_forecast/ES_ANN",
@@ -514,7 +896,7 @@
         "PARTIAL_FORECAST_HOURS": 24
     },
 
-    "PL": {
+    "PL_v2.1": {
         "IN_FILE_NAME_PREFIX": "../data/PL/fuel_forecast/PL_",
         "WEATHER_FORECAST_IN_FILE_NAME": "../data/PL/PL_weather_forecast.csv",
         "OUT_FILE_NAME_PREFIX": "../data/PL/fuel_forecast/PL_ANN",
@@ -527,7 +909,7 @@
         "PARTIAL_FORECAST_HOURS": 24
     },
 
-    "NL": {
+    "NL_v2.1": {
         "IN_FILE_NAME_PREFIX": "../data/NL/fuel_forecast/NL_",
         "WEATHER_FORECAST_IN_FILE_NAME": "../data/NL/NL_weather_forecast.csv",
         "OUT_FILE_NAME_PREFIX": "../data/NL/fuel_forecast/NL_ANN",
