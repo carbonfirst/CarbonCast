@@ -13,6 +13,7 @@ statsmodels==0.13.2
 Django==4.2.5
 sqlparse==0.4.4
 djangorestframework==3.14.0
+django-cors-headers
 qrcode==7.4.2
 pyotp==2.9.0
 entsoe-py==0.5.10
