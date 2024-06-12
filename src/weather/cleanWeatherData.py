@@ -14,11 +14,9 @@ import sys
 US_REGION_LIST = ["AECI", "AZPS", "BPAT", "CISO", "DUK", "EPE", "ERCO", "FPL", 
                 "ISNE", "LDWP", "MISO", "NEVP", "NWMT", "NYIS", "PACE", "PJM", 
                 "SC", "SCEG", "SOCO", "TIDC", "TVA"] # add US regions here
-EU_REGION_LIST = ["AL", "AT", "BE", "BG", "HR", "CZ", "DK", "EE", "FI", "FR", "DE", 
-                  "GB", "GR", "HU", "IE", "IT", "LV", "LT", "NL", "PL", "PT", "RO", 
-                  "RS", "SK", "SI", "ES", "SE", "CH"] # add EU regions here]
-
-FILE_DIR = "./US_2023/" # Modify this as required
+EU_REGION_LIST = ["AL", "AT", "BE", "BG", "CH", "CZ", "DE", "DK", "EE", "ES", "FI", 
+                  "FR", "GB", "GR", "HR", "HU", "IE", "IT", "LT", "LV", "NL", "PL", 
+                  "PT", "RO", "RS", "SE", "SI", "SK"] # add EU regions here]
 
 COLUMN_NAME = ["forecast_avg_wind_speed_wMean", "forecast_avg_temperature_wMean", "forecast_avg_dewpoint_wMean", 
                 "forecast_avg_dswrf_wMean", "forecast_avg_precipitation_wMean"]
@@ -29,8 +27,7 @@ PREDICTION_WINDOW_HOURS = 24 * PREDICTION_PERIOD_DAYS
 
 def readFile(inFileName):
     print("Filename: ", inFileName)
-    dataset = pd.read_csv(inFileName, header=0, infer_datetime_format=True, 
-                            parse_dates=['datetime'], index_col=['datetime'])
+    dataset = pd.read_csv(inFileName, header=0, parse_dates=['datetime'], index_col=['datetime'])
     dataset = dataset.iloc[:, 1:]    
     print(dataset.head())
     print(dataset.columns)
@@ -238,34 +235,31 @@ def moveForecastsAheadByADay(region, inFileDir, outFileDir):
     return
 
 if __name__ == "__main__":
-    print("Cleaning up whole US data by CarbonCast regions...")
-    print("Usage: python3 cleanWeatherData <continent>")
-    print("Continent: US") # curently, only US is supported
-    if (len(sys.argv) < 2):
+    print("Cleaning up weather data by CarbonCast regions...")
+    print("Usage: python3 cleanWeatherData <continent> <infileDir>")
+    print("Continent: US/EU") # curently, only US is supported
+    if (len(sys.argv) < 3):
         print("Wrong no. of arguments!")
         exit(0)
 
     continent = sys.argv[1]
+    inFileDir = sys.argv[2]
+    # startYear = 2023
+    # endYear = 2023
     ISO_LIST = US_REGION_LIST
     if (continent == "EU"):
         ISO_LIST = EU_REGION_LIST
-        print("Coming soon!") # not ready yet
-        exit(0)
 
 
-    startScript(ISO_LIST, FILE_DIR, COLUMN_NAME, isRealTime=False, startDate=None, creationTimeInUTC=None, version=None)
+    startScript(ISO_LIST, inFileDir, COLUMN_NAME, isRealTime=False, startDate=None, creationTimeInUTC=None, version=None)
 
     # years = [2019, 2020, 2021, 2022]
     # inFileDir = "EU_"
     # outFileDir = "./EU_total_aggregated_weather_data/"
     # aggregateWeatherDataAcrossYears(inFileDir, outFileDir, years)
 
-    # for region in ISO_LIST:
-    #     # inFileDir = "../../data/"+region
-    #     # outFileDir = "../../data/"+region
-    #     inFileDir = "./US_2023/"
-    #     outFileDir = "./US_2023/"
-    #     moveForecastsAheadByADay(region, inFileDir, outFileDir)
+    for region in ISO_LIST:
+        moveForecastsAheadByADay(region, inFileDir=inFileDir, outFileDir=inFileDir)
 
 
 
