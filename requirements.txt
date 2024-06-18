@@ -1,6 +1,7 @@
 numpy==1.23.2
 pandas==1.4.4
-tensorflow==2.9.1
+tensorflow-macos==2.9.2; sys_platform == 'darwin' and platform_machine == 'arm64'
+tensorflow==2.9.2; sys_platform != 'darwin' or platform_machine != 'arm64'
 keras==2.9.0
 scikit-learn==1.1.2
 scipy==1.9.1
