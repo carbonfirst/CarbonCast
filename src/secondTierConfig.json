@@ -33,10 +33,32 @@
     "REGION_LIFECYCLE": ["IPCO", "PACW", 
                 "PSCO", "SPA", "SWPP"],
 
-    "TMP_REGION": ["DK"],
+    "TMP_REGION": ["DE"],
 
-    "NUM_TEST_DAYS": 181, //last 6 months of 2022
-    "NUM_VAL_DAYS": 181, // first 6 months of 2022, make it 184 if OUT_WINDOW_LEN is 24
+    "TRAIN_TEST_PERIOD": {
+        "PERIOD_0": {
+            // Train - Jan 2020 - Jun 2022, Test - Jul - Dec 2022
+            "DATASET_LIMITER": 35064,
+            "OUT_FILE_SUFFIX": "h2_2022",
+            "NUM_TEST_DAYS": 184
+        },
+        "PERIOD_1": {
+            // Train - Jan - Dec 2022, Test - Jan - Jun 2023
+            "DATASET_LIMITER": 39408,
+            "OUT_FILE_SUFFIX": "h1_2023",
+            "NUM_TEST_DAYS": 181
+        },
+        "PERIOD_2": {
+            // Train - Jan 2020 - June 2023, Test - Jul - Dec 2023
+            "DATASET_LIMITER": 43824,
+            "OUT_FILE_SUFFIX": "h2_2023",
+            "NUM_TEST_DAYS": 184
+        }
+   },
+    
+    
+    "NUM_TEST_DAYS": 184, //last 6 months of 2023
+    "NUM_VAL_DAYS": 181, // first 6 months of 2023, make it 184 if OUT_WINDOW_LEN is 24
     "MODEL_SLIDING_WINDOW_LEN": 24, 
     "TRAINING_WINDOW_HOURS": 24, 
     "PREDICTION_WINDOW_HOURS": 96,
@@ -50,24 +72,24 @@
     "WRITE_CI_FORECASTS_TO_FILE": "True",
     
     "SECOND_TIER_CNN_LSTM_MODEL_HYPERPARAMS": {
-        "EPOCH": 100,
-        "BATCH_SIZE": [10],
+        "EPOCH": 100, // 100
+        "BATCH_SIZE": [10], //10
         "ACTIVATION_FUNC": "relu",
         "LOSS_FUNC": "mse",
-        "LEARNING_RATE": 0.01,
-        "MIN_LEARNING_RATE": 0.001,
+        "LEARNING_RATE": 0.001, //0.001
+        "MIN_LEARNING_RATE": 0.0001, //0.0001
 
-        "CNN_KERNEL1": 4,
-        "CNN_KERNEL2": 4,
-        "CNN_NUM_FILTERS1": 4,
-        "CNN_NUM_FILTERS2": 16,
-        "CNN_POOL_SIZE": 2,
+        "CNN_KERNEL1": 4, //4
+        "CNN_KERNEL2": 4, //4
+        "CNN_NUM_FILTERS1": 16, //4
+        "CNN_NUM_FILTERS2": 32, //16
+        "CNN_POOL_SIZE": 4, //2
 
         // "REPEAT_VECTOR_UNITS":
         // "LSTM_UNITS":
-        "LSTM_DROPOUT_RATE": 0.1, 
+        "LSTM_DROPOUT_RATE": 0.1,  // 0.1
 
-        "DENSE_UNITS": 20
+        "DENSE_UNITS": 20 //20
     },
 
     // US regions
@@ -380,7 +402,9 @@
         "FORECAST_IN_FILE_NAME": "../data/EU_DATA/DE/DE_96hr_forecasts_DA.csv",
         "LIFECYCLE_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/EU_DATA/DE/DE_lifecycle_96hr_CI_forecasts",
         "DIRECT_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/EU_DATA/DE/DE_direct_96hr_CI_forecasts",
-        "NUM_FORECAST_FEATURES": 15 
+        "NUM_FORECAST_FEATURES": 15,
+        "NUM_SPECIALIZED_FORECAST_FEATURES": 10, // weather + subset of source production forecasts
+        "SPECIALIZED_FORECASTS": ["nat_gas", "hydro", "solar", "wind", "biomass"]
     },
 
     "DK": {

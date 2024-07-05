@@ -17,7 +17,7 @@
     // "REGION": ["AECI", "AZPS", "BPAT", "CISO", "DUK", "EPE", "ERCOT", "FPL", "IPCO", 
     //             "ISNE", "LDWP", "MISO", "NEVP", "NWMT", "NYISO", "PACE", "PACW", "PJM", 
     //             "PSCO", "SC", "SCEG", "SOCO", "SPA", "SRP", "SWPP", "TIDC", "TVA", "WACM"],
-    "REGION": ["DK"],
+    "REGION": ["SK"],
     "NUM_VAL_DAYS": 30, // 1 month
     "MODEL_SLIDING_WINDOW_LEN": 24, 
     "TRAINING_WINDOW_HOURS": 24, 
@@ -29,8 +29,8 @@
     "SAVED_MODEL_LOCATION": "../saved_first_tier_models/",
 
     "ROW_START_FOR_2020": 35040,
-    "ROW_END_FOR_2022": 139968,
-    "SOURCE_FORECAST_ROW_END_FOR_2022": 104928,
+    "ROW_END_FOR_2022": 175008,
+    "SOURCE_FORECAST_ROW_END_FOR_2022": 139968,
 
     "TRAIN_TEST_PERIOD": {
         "PERIOD_0": {
@@ -67,6 +67,18 @@
             // Train - Jan 2020 - Jun 2022, Test - Jul - Dec 2022
             "DATASET_LIMITER": 35064,
             "OUT_FILE_SUFFIX": "h2_2022",
+            "NUM_TEST_DAYS": 184
+        },
+        "PERIOD_6": {
+            // Train - Jan 2019 - Dec 2022, Test - Jan - June 2023
+            "DATASET_LIMITER": 39408,
+            "OUT_FILE_SUFFIX": "h1_2023",
+            "NUM_TEST_DAYS": 181
+        },
+        "PERIOD_7": {
+            // Train - Jan 2019 - Jun 2023, Test - Jul - Dec 2023
+            "DATASET_LIMITER": 43824,
+            "OUT_FILE_SUFFIX": "h2_2023",
             "NUM_TEST_DAYS": 184
         }
     },
@@ -474,7 +486,7 @@
     // EU regions
 
     "AT": {
-        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/AT/fuel_forecast/AT_",
+        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/AT/fuel_forecast/AT_source_prod_clean.csv",
         "WEATHER_FORECAST_IN_FILE_NAME": "../data/EU_DATA/AT/AT_weather_forecast.csv",
         "OUT_FILE_NAME_PREFIX": "../data/EU_DATA/AT/fuel_forecast/AT_ANN",
         "AGGREGATED_FORECAST_OUT_FILE_NAME": "../data/EU_DATA/AT/AT_96hr_forecasts_DA.csv",
@@ -488,7 +500,7 @@
     },
 
     "BE": {
-        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/BE/fuel_forecast/BE_",
+        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/BE/fuel_forecast/BE_source_prod_clean.csv",
         "WEATHER_FORECAST_IN_FILE_NAME": "../data/EU_DATA/BE/BE_weather_forecast.csv",
         "OUT_FILE_NAME_PREFIX": "../data/EU_DATA/BE/fuel_forecast/BE_ANN",
         "AGGREGATED_FORECAST_OUT_FILE_NAME": "../data/EU_DATA/BE/BE_96hr_forecasts_DA.csv",
@@ -502,7 +514,7 @@
     },
 
     "BG": {
-        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/BG/fuel_forecast/BG_",
+        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/BG/fuel_forecast/BG_source_prod_clean.csv",
         "WEATHER_FORECAST_IN_FILE_NAME": "../data/EU_DATA/BG/BG_weather_forecast.csv",
         "OUT_FILE_NAME_PREFIX": "../data/EU_DATA/BG/fuel_forecast/BG_ANN",
         "AGGREGATED_FORECAST_OUT_FILE_NAME": "../data/EU_DATA/BG/BG_96hr_forecasts_DA.csv",
@@ -516,7 +528,7 @@
     },
 
     "CH": {
-        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/CH/fuel_forecast/CH_",
+        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/CH/fuel_forecast/CH_source_prod_clean.csv",
         "WEATHER_FORECAST_IN_FILE_NAME": "../data/EU_DATA/CH/CH_weather_forecast.csv",
         "OUT_FILE_NAME_PREFIX": "../data/EU_DATA/CH/fuel_forecast/CH_ANN",
         "AGGREGATED_FORECAST_OUT_FILE_NAME": "../data/EU_DATA/CH/CH_96hr_forecasts_DA.csv",
@@ -530,7 +542,7 @@
     },
 
     "CZ": {
-        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/CZ/fuel_forecast/CZ_",
+        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/CZ/fuel_forecast/CZ_source_prod_clean.csv",
         "WEATHER_FORECAST_IN_FILE_NAME": "../data/EU_DATA/CZ/CZ_weather_forecast.csv",
         "OUT_FILE_NAME_PREFIX": "../data/EU_DATA/CZ/fuel_forecast/CZ_ANN",
         "AGGREGATED_FORECAST_OUT_FILE_NAME": "../data/EU_DATA/CZ/CZ_96hr_forecasts_DA.csv",
@@ -544,7 +556,7 @@
     },
 
     "DE": {
-        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/DE/fuel_forecast/DE_",
+        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/DE/fuel_forecast/DE_source_prod_clean.csv",
         "WEATHER_FORECAST_IN_FILE_NAME": "../data/EU_DATA/DE/DE_weather_forecast.csv",
         "OUT_FILE_NAME_PREFIX": "../data/EU_DATA/DE/fuel_forecast/DE_ANN",
         "AGGREGATED_FORECAST_OUT_FILE_NAME": "../data/EU_DATA/DE/DE_96hr_forecasts_DA.csv",
@@ -558,7 +570,7 @@
     },
 
     "DK": {
-        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/DK/fuel_forecast/DK_",
+        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/DK/fuel_forecast/DK_source_prod_clean.csv",
         "WEATHER_FORECAST_IN_FILE_NAME": "../data/EU_DATA/DK/DK_weather_forecast.csv",
         "OUT_FILE_NAME_PREFIX": "../data/EU_DATA/DK/fuel_forecast/DK_ANN",
         "AGGREGATED_FORECAST_OUT_FILE_NAME": "../data/EU_DATA/DK/DK_96hr_forecasts_DA.csv",
@@ -572,7 +584,7 @@
     },
 
     "EE": {
-        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/EE/fuel_forecast/EE_",
+        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/EE/fuel_forecast/EE_source_prod_clean.csv",
         "WEATHER_FORECAST_IN_FILE_NAME": "../data/EU_DATA/EE/EE_weather_forecast.csv",
         "OUT_FILE_NAME_PREFIX": "../data/EU_DATA/EE/fuel_forecast/EE_ANN",
         "AGGREGATED_FORECAST_OUT_FILE_NAME": "../data/EU_DATA/EE/EE_96hr_forecasts_DA.csv",
@@ -586,7 +598,7 @@
     },
 
     "ES": {
-        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/ES/fuel_forecast/ES_",
+        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/ES/fuel_forecast/ES_source_prod_clean.csv",
         "WEATHER_FORECAST_IN_FILE_NAME": "../data/EU_DATA/ES/ES_weather_forecast.csv",
         "OUT_FILE_NAME_PREFIX": "../data/EU_DATA/ES/fuel_forecast/ES_ANN",
         "AGGREGATED_FORECAST_OUT_FILE_NAME": "../data/EU_DATA/ES/ES_96hr_forecasts_DA.csv",
@@ -600,7 +612,7 @@
     },
 
     "FI": {
-        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/FI/fuel_forecast/FI_",
+        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/FI/fuel_forecast/FI_source_prod_clean.csv",
         "WEATHER_FORECAST_IN_FILE_NAME": "../data/EU_DATA/FI/FI_weather_forecast.csv",
         "OUT_FILE_NAME_PREFIX": "../data/EU_DATA/FI/fuel_forecast/FI_ANN",
         "AGGREGATED_FORECAST_OUT_FILE_NAME": "../data/EU_DATA/FI/FI_96hr_forecasts_DA.csv",
@@ -614,7 +626,7 @@
     },
 
     "FR": {
-        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/FR/fuel_forecast/FR_",
+        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/FR/fuel_forecast/FR_source_prod_clean.csv",
         "WEATHER_FORECAST_IN_FILE_NAME": "../data/EU_DATA/FR/FR_weather_forecast.csv",
         "OUT_FILE_NAME_PREFIX": "../data/EU_DATA/FR/fuel_forecast/FR_ANN",
         "AGGREGATED_FORECAST_OUT_FILE_NAME": "../data/EU_DATA/FR/FR_96hr_forecasts_DA.csv",
@@ -628,7 +640,7 @@
     },
 
     "GB": {
-        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/GB/fuel_forecast/GB_",
+        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/GB/fuel_forecast/GB_source_prod_clean.csv",
         "WEATHER_FORECAST_IN_FILE_NAME": "../data/EU_DATA/GB/GB_weather_forecast.csv",
         "OUT_FILE_NAME_PREFIX": "../data/EU_DATA/GB/fuel_forecast/GB_ANN",
         "AGGREGATED_FORECAST_OUT_FILE_NAME": "../data/EU_DATA/GB/GB_96hr_forecasts_DA.csv",
@@ -642,7 +654,7 @@
     },
 
     "GR": {
-        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/GR/fuel_forecast/GR_",
+        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/GR/fuel_forecast/GR_source_prod_clean.csv",
         "WEATHER_FORECAST_IN_FILE_NAME": "../data/EU_DATA/GR/GR_weather_forecast.csv",
         "OUT_FILE_NAME_PREFIX": "../data/EU_DATA/GR/fuel_forecast/GR_ANN",
         "AGGREGATED_FORECAST_OUT_FILE_NAME": "../data/EU_DATA/GR/GR_96hr_forecasts_DA.csv",
@@ -656,7 +668,7 @@
     },
 
     "HR": {
-        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/HR/fuel_forecast/HR_",
+        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/HR/fuel_forecast/HR_source_prod_clean.csv",
         "WEATHER_FORECAST_IN_FILE_NAME": "../data/EU_DATA/HR/HR_weather_forecast.csv",
         "OUT_FILE_NAME_PREFIX": "../data/EU_DATA/HR/fuel_forecast/HR_ANN",
         "AGGREGATED_FORECAST_OUT_FILE_NAME": "../data/EU_DATA/HR/HR_96hr_forecasts_DA.csv",
@@ -670,7 +682,7 @@
     },
 
     "HU": {
-        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/HU/fuel_forecast/HU_",
+        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/HU/fuel_forecast/HU_source_prod_clean.csv",
         "WEATHER_FORECAST_IN_FILE_NAME": "../data/EU_DATA/HU/HU_weather_forecast.csv",
         "OUT_FILE_NAME_PREFIX": "../data/EU_DATA/HU/fuel_forecast/HU_ANN",
         "AGGREGATED_FORECAST_OUT_FILE_NAME": "../data/EU_DATA/HU/HU_96hr_forecasts_DA.csv",
@@ -684,7 +696,7 @@
     },
 
     "IE": {
-        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/IE/fuel_forecast/IE_",
+        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/IE/fuel_forecast/IE_source_prod_clean.csv",
         "WEATHER_FORECAST_IN_FILE_NAME": "../data/EU_DATA/IE/IE_weather_forecast.csv",
         "OUT_FILE_NAME_PREFIX": "../data/EU_DATA/IE/fuel_forecast/IE_ANN",
         "AGGREGATED_FORECAST_OUT_FILE_NAME": "../data/EU_DATA/IE/IE_96hr_forecasts_DA.csv",
@@ -698,7 +710,7 @@
     },
 
     "IT": {
-        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/IT/fuel_forecast/IT_",
+        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/IT/fuel_forecast/IT_source_prod_clean.csv",
         "WEATHER_FORECAST_IN_FILE_NAME": "../data/EU_DATA/IT/IT_weather_forecast.csv",
         "OUT_FILE_NAME_PREFIX": "../data/EU_DATA/IT/fuel_forecast/IT_ANN",
         "AGGREGATED_FORECAST_OUT_FILE_NAME": "../data/EU_DATA/IT/IT_96hr_forecasts_DA.csv",
@@ -712,7 +724,7 @@
     },
 
     "LT": {
-        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/LT/fuel_forecast/LT_",
+        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/LT/fuel_forecast/LT_source_prod_clean.csv",
         "WEATHER_FORECAST_IN_FILE_NAME": "../data/EU_DATA/LT/LT_weather_forecast.csv",
         "OUT_FILE_NAME_PREFIX": "../data/EU_DATA/LT/fuel_forecast/LT_ANN",
         "AGGREGATED_FORECAST_OUT_FILE_NAME": "../data/EU_DATA/LT/LT_96hr_forecasts_DA.csv",
@@ -726,7 +738,7 @@
     },
 
     "LV": {
-        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/LV/fuel_forecast/LV_",
+        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/LV/fuel_forecast/LV_source_prod_clean.csv",
         "WEATHER_FORECAST_IN_FILE_NAME": "../data/EU_DATA/LV/LV_weather_forecast.csv",
         "OUT_FILE_NAME_PREFIX": "../data/EU_DATA/LV/fuel_forecast/LV_ANN",
         "AGGREGATED_FORECAST_OUT_FILE_NAME": "../data/EU_DATA/LV/LV_96hr_forecasts_DA.csv",
@@ -740,7 +752,7 @@
     },
 
     "NL": {
-        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/NL/fuel_forecast/NL_",
+        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/NL/fuel_forecast/NL_source_prod_clean.csv",
         "WEATHER_FORECAST_IN_FILE_NAME": "../data/EU_DATA/NL/NL_weather_forecast.csv",
         "OUT_FILE_NAME_PREFIX": "../data/EU_DATA/NL/fuel_forecast/NL_ANN",
         "AGGREGATED_FORECAST_OUT_FILE_NAME": "../data/EU_DATA/NL/NL_96hr_forecasts_DA.csv",
@@ -754,7 +766,7 @@
     },
 
     "PL": {
-        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/PL/fuel_forecast/PL_",
+        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/PL/fuel_forecast/PL_source_prod_clean.csv",
         "WEATHER_FORECAST_IN_FILE_NAME": "../data/EU_DATA/PL/PL_weather_forecast.csv",
         "OUT_FILE_NAME_PREFIX": "../data/EU_DATA/PL/fuel_forecast/PL_ANN",
         "AGGREGATED_FORECAST_OUT_FILE_NAME": "../data/EU_DATA/PL/PL_96hr_forecasts_DA.csv",
@@ -768,7 +780,7 @@
     },
 
     "PT": {
-        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/PT/fuel_forecast/PT_",
+        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/PT/fuel_forecast/PT_source_prod_clean.csv",
         "WEATHER_FORECAST_IN_FILE_NAME": "../data/EU_DATA/PT/PT_weather_forecast.csv",
         "OUT_FILE_NAME_PREFIX": "../data/EU_DATA/PT/fuel_forecast/PT_ANN",
         "AGGREGATED_FORECAST_OUT_FILE_NAME": "../data/EU_DATA/PT/PT_96hr_forecasts_DA.csv",
@@ -782,7 +794,7 @@
     },
 
     "RO": {
-        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/RO/fuel_forecast/RO_",
+        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/RO/fuel_forecast/RO_source_prod_clean.csv",
         "WEATHER_FORECAST_IN_FILE_NAME": "../data/EU_DATA/RO/RO_weather_forecast.csv",
         "OUT_FILE_NAME_PREFIX": "../data/EU_DATA/RO/fuel_forecast/RO_ANN",
         "AGGREGATED_FORECAST_OUT_FILE_NAME": "../data/EU_DATA/RO/RO_96hr_forecasts_DA.csv",
@@ -796,7 +808,7 @@
     },
 
     "RS": {
-        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/RS/fuel_forecast/RS_",
+        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/RS/fuel_forecast/RS_source_prod_clean.csv",
         "WEATHER_FORECAST_IN_FILE_NAME": "../data/EU_DATA/RS/RS_weather_forecast.csv",
         "OUT_FILE_NAME_PREFIX": "../data/EU_DATA/RS/fuel_forecast/RS_ANN",
         "AGGREGATED_FORECAST_OUT_FILE_NAME": "../data/EU_DATA/RS/RS_96hr_forecasts_DA.csv",
@@ -810,7 +822,7 @@
     },
 
     "SE": {
-        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/SE/fuel_forecast/SE_",
+        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/SE/fuel_forecast/SE_source_prod_clean.csv",
         "WEATHER_FORECAST_IN_FILE_NAME": "../data/EU_DATA/SE/SE_weather_forecast.csv",
         "OUT_FILE_NAME_PREFIX": "../data/EU_DATA/SE/fuel_forecast/SE_ANN",
         "AGGREGATED_FORECAST_OUT_FILE_NAME": "../data/EU_DATA/SE/SE_96hr_forecasts_DA.csv",
@@ -824,7 +836,7 @@
     },
 
     "SI": {
-        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/SI/fuel_forecast/SI_",
+        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/SI/fuel_forecast/SI_source_prod_clean.csv",
         "WEATHER_FORECAST_IN_FILE_NAME": "../data/EU_DATA/SI/SI_weather_forecast.csv",
         "OUT_FILE_NAME_PREFIX": "../data/EU_DATA/SI/fuel_forecast/SI_ANN",
         "AGGREGATED_FORECAST_OUT_FILE_NAME": "../data/EU_DATA/SI/SI_96hr_forecasts_DA.csv",
@@ -838,7 +850,7 @@
     },
 
     "SK": {
-        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/SK/fuel_forecast/SK_",
+        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/SK/fuel_forecast/SK_source_prod_clean.csv",
         "WEATHER_FORECAST_IN_FILE_NAME": "../data/EU_DATA/SK/SK_weather_forecast.csv",
         "OUT_FILE_NAME_PREFIX": "../data/EU_DATA/SK/fuel_forecast/SK_ANN",
         "AGGREGATED_FORECAST_OUT_FILE_NAME": "../data/EU_DATA/SK/SK_96hr_forecasts_DA.csv",
