@@ -15,8 +15,8 @@ import numpy as np
 import pandas as pd
 import pytz as pytz
 from keras.layers import Dense, Flatten, LSTM
-from keras.layers.convolutional import Conv1D, MaxPooling1D
-from keras.layers.core import Activation, Dropout
+from keras.layers import Conv1D, MaxPooling1D
+from keras.layers import Activation, Dropout
 from keras.models import Sequential
 import tensorflow as tf
 from keras.callbacks import EarlyStopping
@@ -93,164 +93,182 @@ def runSecondTier(configFileName, cefType, loadFromSavedModel):
         numHistoricalAndDateTimeFeatures = secondTierConfig["NUM_FEATURES"]
         numForecastFeatures = regionConfig["NUM_FORECAST_FEATURES"]
         startCol = secondTierConfig["START_COL"]
+        trainTestPeriodConfig = secondTierConfig["TRAIN_TEST_PERIOD"]
 
-        print("Initializing...")
-        dataset, forecastDataset, dateTime = initialize(inFileName, forecastInFileName, startCol)
-        specializedForecasts = None
-        if ("NUM_SPECIALIZED_FORECAST_FEATURES" in regionConfig): # weather + subset of source production forecasts
-            numForecastFeatures = regionConfig["NUM_SPECIALIZED_FORECAST_FEATURES"]
-            specializedForecasts = regionConfig["SPECIALIZED_FORECASTS"]
-            modifiedForecastDataset = forecastDataset.iloc[:, :5].copy()
-            for source in specializedForecasts:
-                modifiedForecastDataset["avg_"+source.lower()+"_production_forecast"] = forecastDataset["avg_"+source.lower()+"_production_forecast"]
-            forecastDataset = modifiedForecastDataset
-        print("***** Initialization done *****")
+        periodIdx = 0 
+        for period in trainTestPeriodConfig: 
+            print(trainTestPeriodConfig[period])
+            datasetLimiter = trainTestPeriodConfig[period]["DATASET_LIMITER"]
+            numTestDays = trainTestPeriodConfig[period]["NUM_TEST_DAYS"]
+            numValDays = secondTierConfig["NUM_VAL_DAYS"]
+            forecastDatasetLimiter = datasetLimiter//24*PREDICTION_WINDOW_HOURS
+            print(numTestDays)
 
-        # split into train and test
-        print("Spliting dataset into train/test...")
-        # dataset = dataset[:-BUFFER_HOURS]
-        trainData, valData, testData, _ = common.splitDataset(dataset.values, 
-                                                (numTestDays+BUFFER_HOURS//24), numValDays, 
-                                                MAX_PREDICTION_WINDOW_HOURS-PREDICTION_WINDOW_HOURS)
-        trainDates = dateTime[: -((numTestDays+BUFFER_HOURS//24)*24):]
-        trainDates, validationDates = trainDates[: -(numValDays*24)], trainDates[-(numValDays*24):]
-        testDates = dateTime[-((numTestDays+BUFFER_HOURS//24)*24):]
-        trainData = trainData[:, startCol: startCol+numHistoricalAndDateTimeFeatures]
-        valData = valData[:, startCol: startCol+numHistoricalAndDateTimeFeatures]
-        testData = testData[:, startCol: startCol+numHistoricalAndDateTimeFeatures]
-        print("TrainData shape: ", trainData.shape) # days x hour x features
-        print("ValData shape: ", valData.shape) # days x hour x features
-        print("TestData shape: ", testData.shape) # days x hour x features
+            print("Initializing...")
+            dataset, dateTime, forecastDataset = initialize(inFileName, forecastInFileName, startCol)
+            specializedForecasts = None
 
-        wTrainData, wValData, wTestData, wFullTrainData = common.splitWeatherDataset(
-                forecastDataset.values, numTestDays, numValDays, MAX_PREDICTION_WINDOW_HOURS)
-        wTrainData = wTrainData[:, :numForecastFeatures]
-        wValData = wValData[:, :numForecastFeatures]
-        wTestData = wTestData[:, :numForecastFeatures]
-        print("WeatherTrainData shape: ", wTrainData.shape) # (days x hour) x features
-        print("WeatherValData shape: ", wValData.shape) # (days x hour) x features
-        print("WeatherTestData shape: ", wTestData.shape) # (days x hour) x features
+            if ("NUM_SPECIALIZED_FORECAST_FEATURES" in regionConfig): # weather + subset of source production forecasts
+                numForecastFeatures = regionConfig["NUM_SPECIALIZED_FORECAST_FEATURES"]
+                specializedForecasts = regionConfig["SPECIALIZED_FORECASTS"]
+                modifiedForecastDataset = forecastDataset.iloc[:, :5].copy()
+                for source in specializedForecasts:
+                    modifiedForecastDataset["avg_"+source.lower()+"_production_forecast"] = forecastDataset["avg_"+source.lower()+"_production_forecast"]
+                forecastDataset = modifiedForecastDataset
+            print("***** Initialization done *****")
 
-        trainData = fillMissingData(trainData)
-        valData = fillMissingData(valData)
-        testData = fillMissingData(testData)
+            # split into train and test
+            print("Spliting dataset into train/test...")
+            # dataset = dataset[:-BUFFER_HOURS]
+            trainData, valData, testData, _ = common.splitDataset(dataset.values, 
+                                                    (numTestDays+BUFFER_HOURS//24), numValDays, 
+                                                    MAX_PREDICTION_WINDOW_HOURS-PREDICTION_WINDOW_HOURS)
+            trainDates = dateTime[: -((numTestDays+BUFFER_HOURS//24)*24):]
+            trainDates, validationDates = trainDates[: -(numValDays*24)], trainDates[-(numValDays*24):]
+            testDates = dateTime[-((numTestDays+BUFFER_HOURS//24)*24):]
+            trainData = trainData[:, startCol: startCol+numHistoricalAndDateTimeFeatures]
+            valData = valData[:, startCol: startCol+numHistoricalAndDateTimeFeatures]
+            testData = testData[:, startCol: startCol+numHistoricalAndDateTimeFeatures]
 
-        wTrainData = fillMissingData(wTrainData)
-        wValData = fillMissingData(wValData)
-        wTestData = fillMissingData(wTestData)
+            #bufferPeriod = bufferPeriod[:, startCol: startCol + numHistoricalAndDateTimeFeatures]
+            #if len((bufferDates)>0):
+            #    testDates = np.append(testDates,bufferDates)
+            #    testData = np.vstack(testData,bufferPeriod)
 
-        print("***** Dataset split done *****")
+            print("TrainData shape: ", trainData.shape) # days x hour x features
+            print("ValData shape: ", valData.shape) # days x hour x features
+            print("TestData shape: ", testData.shape) # days x hour x features
 
-        featureList = dataset.columns.values
-        featureList = featureList[startCol:startCol+numHistoricalAndDateTimeFeatures].tolist()
-        featureList.extend(forecastDataset.columns.values[:numForecastFeatures])
-        print("Features: ", featureList)
+            wTrainData, wValData, wTestData, wFullTrainData = common.splitWeatherDataset(
+                    forecastDataset.values, numTestDays, numValDays, MAX_PREDICTION_WINDOW_HOURS)
+            wTrainData = wTrainData[:, :numForecastFeatures]
+            wValData = wValData[:, :numForecastFeatures]
+            wTestData = wTestData[:, :numForecastFeatures]
+            print("WeatherTrainData shape: ", wTrainData.shape) # (days x hour) x features
+            print("WeatherValData shape: ", wValData.shape) # (days x hour) x features
+            print("WeatherTestData shape: ", wTestData.shape) # (days x hour) x features
 
-        print("Scaling data...")
-        # unscaledTestData = np.zeros(testData.shape[0])
-        unscaledTrainCarbonIntensity = np.zeros(trainData.shape[0])
-        # for i in range(testData.shape[0]):
-        #     unscaledTestData[i] = testData[i, DEPENDENT_VARIABLE_COL]
-        for i in range(trainData.shape[0]):
-            unscaledTrainCarbonIntensity[i] = trainData[i, DEPENDENT_VARIABLE_COL]
-        trainData, valData, testData, ftMin, ftMax = common.scaleDataset(trainData, valData, testData)
-        print(trainData.shape, valData.shape, testData.shape)
-        wTrainData, wValData, wTestData, wFtMin, wFtMax = common.scaleDataset(wTrainData, wValData, wTestData)
-        print(wTrainData.shape, wValData.shape, wTestData.shape)
-        print("***** Data scaling done *****")
+            trainData = fillMissingData(trainData)
+            valData = fillMissingData(valData)
+            testData = fillMissingData(testData)
 
-        print("Saving min & max values for each column in file...")
-        with open(SAVED_MODEL_LOCATION+region+"/"+region+"_min_max_values.txt", "w") as f:
-            f.writelines(str(ftMin))
-            f.write("\n")
-            f.writelines(str(ftMax))
-            f.write("\n")
-            f.writelines(str(wFtMin))
-            f.write("\n")
-            f.writelines(str(wFtMax))
-            f.write("\n")
-        print("Min-max values saved")
+            wTrainData = fillMissingData(wTrainData)
+            wValData = fillMissingData(wValData)
+            wTestData = fillMissingData(wTestData)
 
-        ######################## START #####################
-        bestRMSE, bestMAPE = [], []
-        predictedData = None
-        for exptNum in range(NUMBER_OF_EXPERIMENTS):
-            print("Iteration: ", exptNum)
-            regionDailyMape = {}
-            bestModel, numFeaturesInTraining = trainingandValidationPhase(region, trainData, wTrainData, 
-                                            valData, wValData, secondTierConfig, exptNum, loadFromSavedModel)            
-            history = valData[-TRAINING_WINDOW_HOURS:, :]
-            weatherData = None
-            weatherData = wValData[-MAX_PREDICTION_WINDOW_HOURS:, :]
-            print("weatherData shape:", weatherData.shape)
-            history = history.tolist()
-            
-            predictedData = getDayAheadForecasts(bestModel, history, testData, 
-                                TRAINING_WINDOW_HOURS, numFeaturesInTraining, DEPENDENT_VARIABLE_COL,
-                                wFtMin[5:], wFtMax[5:], ftMin[DEPENDENT_VARIABLE_COL], ftMax[DEPENDENT_VARIABLE_COL],
-                                wTestData, weatherData, forecastDataset.columns.values[:numForecastFeatures])
-            print("***** Forecast done *****")
+            print("***** Dataset split done *****")
 
-            unscaledTestData, unscaledPredictedData, formattedTestDates, rmseScore, mapeScore, dailyMapeScore = getUnscaledForecastsAndForecastAccuracy(
-                                                                        testData, testDates, predictedData, 
-                                                                        ftMin, ftMax)
-            regionDailyMape[region] = dailyMapeScore
+            featureList = dataset.columns.values
+            featureList = featureList[startCol:startCol+numHistoricalAndDateTimeFeatures].tolist()
+            featureList.extend(forecastDataset.columns.values[:numForecastFeatures])
+            print("Features: ", featureList)
 
-            # print("**** Important features based on valData:")
-            # topNFeatures = findImportantFeatures(bestModel, valData, featureList, testDates)
-            print("**** Important features based on testData:")
-            modTestData = manipulateTestDataShape(testData, MODEL_SLIDING_WINDOW_LEN, PREDICTION_WINDOW_HOURS, False)
-            modTestData = np.reshape(modTestData, (modTestData.shape[0]*modTestData.shape[1], modTestData.shape[2]))
-            print(modTestData.shape, wTestData.shape)
-            modTestData = np.append(modTestData, wTestData, axis=1)
-            print("modtestdata shape: ", modTestData.shape)
-            # topNFeatures = findImportantFeatures(bestModel, modTestData, featureList, testDates)
+            print("Scaling data...")
+            # unscaledTestData = np.zeros(testData.shape[0])
+            unscaledTrainCarbonIntensity = np.zeros(trainData.shape[0])
+            # for i in range(testData.shape[0]):
+            #     unscaledTestData[i] = testData[i, DEPENDENT_VARIABLE_COL]
+            for i in range(trainData.shape[0]):
+                unscaledTrainCarbonIntensity[i] = trainData[i, DEPENDENT_VARIABLE_COL]
+            trainData, valData, testData, ftMin, ftMax = common.scaleDataset(trainData, valData, testData)
+            print(trainData.shape, valData.shape, testData.shape)
+            wTrainData, wValData, wTestData, wFtMin, wFtMax = common.scaleDataset(wTrainData, wValData, wTestData)
+            print(wTrainData.shape, wValData.shape, wTestData.shape)
+            print("***** Data scaling done *****")
 
-            print("[BESTMODEL] Overall RMSE score: ", rmseScore)
-            print("[BESTMODEL] Overall MAPE score: ", mapeScore)
-            # print(scores)
-            bestRMSE.append(rmseScore)
-            bestMAPE.append(mapeScore)
-            print("Overall Mean MAPE: ", mapeScore)
-            print("Daywise statistics...")
-            mapeByDay = []
-            for i in range(0, PREDICTION_WINDOW_HOURS//24):
-                print("Prediction day ", i+1, "(", (i*24), " - ", (i+1)*24, " hrs)")
-                print("Mean MAPE: ", np.mean(regionDailyMape[region][:, i]))
-                print("Median MAPE: ", np.percentile(regionDailyMape[region][:, i], 50))
-                print("90th percentile MAPE: ", np.percentile(regionDailyMape[region][:, i], 90))
-                print("95th percentile MAPE: ", np.percentile(regionDailyMape[region][:, i], 95))
-                print("99th percentile MAPE: ", np.percentile(regionDailyMape[region][:, i], 99))
-                mapeByDay.append([i+1, np.mean(regionDailyMape[region][:, i]), np.percentile(regionDailyMape[region][:, i], 50),
-                                    np.percentile(regionDailyMape[region][:, i], 90), 
-                                    np.percentile(regionDailyMape[region][:, i], 95),
-                                    np.percentile(regionDailyMape[region][:, i], 99)])
-
-            print("Saving MAPE values by day in file...")
-            with open("../data/EU_DATA/"+region+"/"+region+"_MAPE_iter"+str(exptNum)+".txt", "w") as f:
-                for item in mapeByDay:
-                    f.writelines(str(item))
+            if (periodIdx == len(trainTestPeriodConfig)-1):
+                print("Saving min & max values for each column in file...")
+                with open(SAVED_MODEL_LOCATION+region+"/"+region+"_min_max_values.txt", "w") as f:
+                    f.writelines(str(ftMin))
                     f.write("\n")
-            print("MAPE values by day saved")
+                    f.writelines(str(ftMax))
+                    f.write("\n")
+                    f.writelines(str(wFtMin))
+                    f.write("\n")
+                    f.writelines(str(wFtMax))
+                    f.write("\n")
+                print("Min-max values saved")
 
-            data = []
-            for i in range(len(unscaledTestData)):
-                row = []
-                row.append(str(formattedTestDates[i]))
-                row.append(str(unscaledTestData[i]))
-                row.append(str(unscaledPredictedData[i]))
-                data.append(row)
-            if (writeCIForecastsToFile == "True"):
-                common.writeOutFile(outFileNamePrefix+"_"+str(exptNum)+".csv", data, "carbon_intensity", "w")
+            ######################## START #####################
+            bestRMSE, bestMAPE = [], []
+            predictedData = None
+            for exptNum in range(NUMBER_OF_EXPERIMENTS):
+                print("Iteration: ", exptNum)
+                regionDailyMape = {}
+                bestModel, numFeaturesInTraining = trainingandValidationPhase(region, trainData, wTrainData, 
+                                                valData, wValData, secondTierConfig, exptNum, loadFromSavedModel)            
+                history = valData[-TRAINING_WINDOW_HOURS:, :]
+                weatherData = None
+                weatherData = wValData[-MAX_PREDICTION_WINDOW_HOURS:, :]
+                print("weatherData shape:", weatherData.shape)
+                history = history.tolist()
+                
+                predictedData = getDayAheadForecasts(bestModel, history, testData, 
+                                    TRAINING_WINDOW_HOURS, numFeaturesInTraining, DEPENDENT_VARIABLE_COL,
+                                    wFtMin[5:], wFtMax[5:], ftMin[DEPENDENT_VARIABLE_COL], ftMax[DEPENDENT_VARIABLE_COL],
+                                    wTestData, weatherData, forecastDataset.columns.values[:numForecastFeatures])
+                print("***** Forecast done *****")
 
-        print("[BEST] Average RMSE after ", NUMBER_OF_EXPERIMENTS, " expts: ", np.mean(bestRMSE))
-        print("[BEST] Average MAPE after ", NUMBER_OF_EXPERIMENTS, " expts: ", np.mean(bestMAPE))
-        print(bestRMSE)
-        print(bestMAPE)
+                unscaledTestData, unscaledPredictedData, formattedTestDates, rmseScore, mapeScore, dailyMapeScore = getUnscaledForecastsAndForecastAccuracy(
+                                                                            testData, testDates, predictedData, 
+                                                                            ftMin, ftMax)
+                regionDailyMape[region] = dailyMapeScore
 
-        ######################## END #####################
-        
-        print("####################", region, " done ####################\n\n")
+                # print("**** Important features based on valData:")
+                # topNFeatures = findImportantFeatures(bestModel, valData, featureList, testDates)
+                print("**** Important features based on testData:")
+                modTestData = manipulateTestDataShape(testData, MODEL_SLIDING_WINDOW_LEN, PREDICTION_WINDOW_HOURS, False)
+                modTestData = np.reshape(modTestData, (modTestData.shape[0]*modTestData.shape[1], modTestData.shape[2]))
+                print(modTestData.shape, wTestData.shape)
+                modTestData = np.append(modTestData, wTestData, axis=1)
+                print("modtestdata shape: ", modTestData.shape)
+                topNFeatures = findImportantFeatures(bestModel, modTestData, featureList, testDates)
+
+                print("[BESTMODEL] Overall RMSE score: ", rmseScore)
+                print("[BESTMODEL] Overall MAPE score: ", mapeScore)
+                # print(scores)
+                bestRMSE.append(rmseScore)
+                bestMAPE.append(mapeScore)
+                print("Overall Mean MAPE: ", mapeScore)
+                print("Daywise statistics...")
+                mapeByDay = []
+                for i in range(0, PREDICTION_WINDOW_HOURS//24):
+                    print("Prediction day ", i+1, "(", (i*24), " - ", (i+1)*24, " hrs)")
+                    print("Mean MAPE: ", np.mean(regionDailyMape[region][:, i]))
+                    print("Median MAPE: ", np.percentile(regionDailyMape[region][:, i], 50))
+                    print("90th percentile MAPE: ", np.percentile(regionDailyMape[region][:, i], 90))
+                    print("95th percentile MAPE: ", np.percentile(regionDailyMape[region][:, i], 95))
+                    print("99th percentile MAPE: ", np.percentile(regionDailyMape[region][:, i], 99))
+                    mapeByDay.append([i+1, np.mean(regionDailyMape[region][:, i]), np.percentile(regionDailyMape[region][:, i], 50),
+                                        np.percentile(regionDailyMape[region][:, i], 90), 
+                                        np.percentile(regionDailyMape[region][:, i], 95),
+                                        np.percentile(regionDailyMape[region][:, i], 99)])
+
+                print("Saving MAPE values by day in file...")
+                with open("../data/EU_DATA/"+region+"/"+region+"_MAPE_iter"+str(exptNum)+".txt", "w") as f:
+                    for item in mapeByDay:
+                        f.writelines(str(item))
+                        f.write("\n")
+                print("MAPE values by day saved")
+
+                data = []
+                for i in range(len(unscaledTestData)):
+                    row = []
+                    row.append(str(formattedTestDates[i]))
+                    row.append(str(unscaledTestData[i]))
+                    row.append(str(unscaledPredictedData[i]))
+                    data.append(row)
+                if (writeCIForecastsToFile == "True"):
+                    common.writeOutFile(outFileNamePrefix+"_"+str(exptNum)+".csv", data, "carbon_intensity", "w")
+
+            print("[BEST] Average RMSE after ", NUMBER_OF_EXPERIMENTS, " expts: ", np.mean(bestRMSE))
+            print("[BEST] Average MAPE after ", NUMBER_OF_EXPERIMENTS, " expts: ", np.mean(bestMAPE))
+            print(bestRMSE)
+            print(bestMAPE)
+
+            ######################## END #####################
+            
+            print("####################", region, " done ####################\n\n")
 
         
     return
@@ -361,6 +379,7 @@ def initialize(inFileName, forecastInFileName, startCol):
     #                         parse_dates=['UTC time'], index_col=['UTC time']) # old data files
     forecastDataset = pd.read_csv(forecastInFileName, header=0, infer_datetime_format=True, 
                             parse_dates=['datetime'], index_col=['datetime']) # new data files in data
+
     for i in range(startCol, len(dataset.columns.values)):
         col = dataset.columns.values[i]
         dataset[col] = dataset[col].astype(np.float64)
@@ -371,7 +390,8 @@ def initialize(inFileName, forecastInFileName, startCol):
     dataset = modifiedDataset
     print("Features related to date & time added")
 
-    return dataset, forecastDataset, dateTime
+
+    return dataset, dateTime, forecastDataset
 
 def initializeInRealTime(inFileName, forecastInFileName, startCol):
     # load the new file
@@ -807,6 +827,7 @@ def getHyperParams(secondTierConfig):
     hyperParams["poolsize"] = modelHyperparamsFromConfigFile["CNN_POOL_SIZE"] # 2
 
     hyperParams["dropoutRate"] = modelHyperparamsFromConfigFile["LSTM_DROPOUT_RATE"] # 2
+
 
     return hyperParams
 

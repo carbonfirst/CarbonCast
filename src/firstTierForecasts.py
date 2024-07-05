@@ -67,8 +67,8 @@ def runFirstTier(configFileName):
 
         sourceIdx = 0
         outFileNamePrefix = regionConfig["OUT_FILE_NAME_PREFIX"]
+        inFileName = regionConfig["IN_FILE_NAME_PREFIX"]
         for source in sourceList:
-            inFileName = regionConfig["IN_FILE_NAME_PREFIX"] + source.lower() + firstTierConfig["IN_FILE_NAME_SUFFIX"]
             sourceCol = sourceColList[sourceIdx]
             partialSourceProductionForecastAvailable = regionConfig["PARTIAL_FORECAST_AVAILABILITY_LIST"][sourceIdx]
             partialForecastHours =  regionConfig["PARTIAL_FORECAST_HOURS"]
