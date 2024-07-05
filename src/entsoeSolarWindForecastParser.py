@@ -30,9 +30,9 @@ ENTSOE_SOURCE_MAP = {
     "WND": "wind"
     }
 
-ENTSOE_BAL_AUTH_LIST = ['AL', 'AT', 'BE', 'BG', 'HR', 'CZ', 'DK', 'DK-DK2', 'EE', 'FI', 
-                         'FR', 'DE', 'GB', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'NL',
-                        'PL', 'PT', 'RO', 'RS', 'SK', 'SI', 'ES', 'SE', 'CH']
+ENTSOE_BAL_AUTH_LIST = ['AL', 'AT', 'BA', 'BE', 'BG', 'HR', 'CZ', 'CY', 'DK', 'DK-DK2', 'EE', 'FI', 
+                         'FR', 'GE', 'DE', 'GB', 'GR', 'HU', 'IE', 'IT', 'XK', 'LV', 'LT', 'LU', 'MD', 'ME', 'NL',
+                        'MK', 'NO', 'PL', 'PT', 'RO', 'RS', 'SK', 'SI', 'ES', 'SE', 'CH', 'UA', 'UK']
 INVALID_AUTH_LIST = ['AL', 'DK-DK2']
 
 # get forecast data by source type from ENTSOE API
@@ -295,7 +295,7 @@ def adjustMinIntervalData(data): # input = pandas dataframe
         newDataframe.rename(index={row: newIndeces[row]}, inplace=True)
     return newDataframe
 
-def startScript(balAuthList, startDate, numDays, dayJump, outputFileDir, isRealTime=False):
+def startScript(balAuthList, startDate, numDays, dayJump, isRealTime=False):
     modifiedDataset = {}
     for balAuth in balAuthList:
         # fetch forecast data
@@ -304,13 +304,13 @@ def startScript(balAuthList, startDate, numDays, dayJump, outputFileDir, isRealT
 
         # saving files from src folder
         parentdir = os.path.normpath(os.path.join(os.getcwd(), os.pardir)) # goes to CarbonCast folder
-        filedir = os.path.normpath(os.path.join(parentdir, outputFileDir))
-
+        filedir = os.path.normpath(os.path.join(parentdir, f"./data/EU_DATA/{balAuth}/ENTSOE")) #to address scope issue
         if (isRealTime is True):
-            filedir = os.path.normpath(os.path.join(os.getcwd(),outputFileDir))
-        
-        # csv_path = os.path.normpath(os.path.join(filedir, f"./{balAuth}_solar_wind_forecasts_raw.csv"))
-        csv_path = filedir+"/"+balAuth+"/solar_wind_forecasts/"+balAuth+"_solar_wind_forecasts_raw.csv"
+            filedir = os.path.normpath(os.path.join(os.getcwd(),f"./data/EU_DATA/{balAuth}/ENTSOE"))
+
+        #csv_path = os.path.normpath(os.path.join(filedir, f"./{balAuth}_solar_wind_forecasts_raw.csv"))
+        #csv_path = filedir+"/"+balAuth+"/solar_wind_forecasts/"+balAuth+"_solar_wind_forecasts_raw.csv"
+        csv_path = os.path.normpath(os.path.join(filedir, f"./{balAuth}_solar_wind_forecasts_raw.csv"))        
         with open(csv_path, 'w') as f:
             fullDataset.to_csv(f, index=False)
         print("Written raw csv data to file")
@@ -319,14 +319,16 @@ def startScript(balAuthList, startDate, numDays, dayJump, outputFileDir, isRealT
         dataset = pd.read_csv(csv_path, header=0, 
                             parse_dates=["UTC time"], index_col=["UTC time"])
         cleanedDataset = cleanSolarWindForecastDataFromENTSOE(dataset, balAuth)
-        partial_clean_csv_path = filedir+"/"+balAuth+"/solar_wind_forecasts/"+balAuth+"_solar_wind_forecasts_partial_clean.csv"
+        #partial_clean_csv_path = filedir+"/"+balAuth+"/solar_wind_forecasts/"+balAuth+"_solar_wind_forecasts_partial_clean.csv"
+        partial_clean_csv_path = os.path.normpath(os.path.join(filedir, f"./{balAuth}_solar_wind_forecasts_partial_clean.csv"))
         cleanedDataset.to_csv(partial_clean_csv_path)
         print("Written partial cleaned csv data to file")
 
         # adjust source columns
         dataset = pd.read_csv(partial_clean_csv_path, header=0, index_col=["UTC time"])
         modifiedDataset[balAuth] = adjustColumns(dataset, balAuth)
-        clean_csv_path = filedir+"/"+balAuth+"/solar_wind_forecasts/"+balAuth+"_solar_wind_forecasts.csv"
+        #clean_csv_path = filedir+"/"+balAuth+"/solar_wind_forecasts/"+balAuth+"_solar_wind_forecasts.csv"
+        clean_csv_path = os.path.normpath(os.path.join(filedir, f"./{balAuth}_solar_wind_forecasts.csv"))
         modifiedDataset[balAuth].to_csv(clean_csv_path)
 
         val = subprocess.call("rm "+csv_path, shell=True)
@@ -344,7 +346,7 @@ if __name__ == "__main__":
     numDays = int(sys.argv[2]) #368 #1096
 
     startScript(ENTSOE_BAL_AUTH_LIST, startDate, numDays, dayJump=1, 
-                outputFileDir="./data/EU_DATA/{balAuth}/ENTSOE", isRealTime=False)
+                isRealTime=False)
 
     
 

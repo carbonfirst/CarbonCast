@@ -54,9 +54,9 @@ ENTSOE_SOURCE_MAP = {
     "UNK": "unknown",
     }
 
-ENTSOE_BAL_AUTH_LIST = ['AL', 'AT', 'BE', 'BG', 'HR', 'CZ', 'DK', 'DK-DK2', 'EE', 'FI', 
-                         'FR', 'DE', 'GB', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'NL',
-                        'PL', 'PT', 'RO', 'RS', 'SK', 'SI', 'ES', 'SE', 'CH']
+ENTSOE_BAL_AUTH_LIST = ['AL', 'AT', 'BA', 'BE', 'BG', 'HR', 'CZ', 'CY', 'DK', 'DK-DK2', 'EE', 'FI', 
+                         'FR', 'GE', 'DE', 'GB', 'GR', 'HU', 'IE', 'IT', 'XK', 'LV', 'LT', 'LU', 'MD', 'ME', 'NL',
+                        'MK', 'NO', 'PL', 'PT', 'RO', 'RS', 'SK', 'SI', 'ES', 'SE', 'CH', 'UA', 'UK']
 INVALID_AUTH_LIST = ['AL', 'DK-DK2']
 
 # get production data by source type from ENTSOE API
