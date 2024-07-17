@@ -8,11 +8,12 @@ import seaborn as sns
 import sys
 import os 
 
-#US_REGIONS = ["AECI","AZPS","BPAT","CISO","DUK","EPE","ERCO","FPC","FPL",
-#             "GRID","IPCO","ISNE","LDWP","MISO","NEVP","NWMT","NYIS","PACE",
-#             "PACW","PJM","PSCO","PSEI","SC","SCEG","SOCO","SPA","SRP","SWPP",
-#             "TIDC","TVA","WACM","WALC"]
-US_REGIONS = ["SRP"] # test region 
+US_REGIONS = ["AECI","AZPS","BPAT","CISO","DUK","EPE","ERCO","FPC","FPL",
+             "GRID","IPCO","ISNE","LDWP","MISO","NEVP","NWMT","NYIS","PACE",
+            "PACW","PJM","PSCO","PSEI","SC","SCEG","SOCO","SPA","SRP","SWPP",
+             "TIDC","TVA","WACM","WALC"]
+
+#US_REGIONS = ["SRP"] # test region 
 
 FILES = ["clean.csv", "direct_emissions.csv", "lifecycle_emissions.csv",
                   "96hr_forecasts_DA.csv", "direct_96hr_CI_forecasts_0.csv", 
