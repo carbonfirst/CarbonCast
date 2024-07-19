@@ -8,11 +8,11 @@ import seaborn as sns
 import sys
 import os 
 
-#EU_REGIONS = ["AT","BE","BG","CH","CZ","DK","EE","ES","FI",
-#             "FR","GB","GR","HR","HU","IE","IT","LT","LV","NL",
-#            "PL","PT","RO","RS","SE","SI","SK"] # testing DE right now don't upload 
+EU_REGIONS = ["AT","BE","BG","CH","CZ","DK","EE","ES","FI",
+             "FR","GB","GR","HR","HU","IE","IT","LT","LV","NL",
+            "PL","PT","RO","RS","SE","SI","SK"] # testing DE right now don't upload 
 
-EU_REGIONS = ['BE']
+#EU_REGIONS = ['BE']
 
 FILES = [
     "clean.csv", 
