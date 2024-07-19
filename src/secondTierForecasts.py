@@ -95,104 +95,112 @@ def runSecondTier(configFileName, cefType, loadFromSavedModel):
         startCol = secondTierConfig["START_COL"]
         trainTestPeriodConfig = secondTierConfig["TRAIN_TEST_PERIOD"]
 
-        periodIdx = 0 
-        for period in trainTestPeriodConfig: 
-            print(trainTestPeriodConfig[period])
-            datasetLimiter = trainTestPeriodConfig[period]["DATASET_LIMITER"]
-            numTestDays = trainTestPeriodConfig[period]["NUM_TEST_DAYS"]
-            numValDays = secondTierConfig["NUM_VAL_DAYS"]
-            forecastDatasetLimiter = datasetLimiter//24*PREDICTION_WINDOW_HOURS
-            print(numTestDays)
+        
+        for exptNum in range(NUMBER_OF_EXPERIMENTS):
+            periodIdx = 0 
+            for period in trainTestPeriodConfig: 
+                print(trainTestPeriodConfig[period])
+                datasetLimiter = trainTestPeriodConfig[period]["DATASET_LIMITER"]
+                numTestDays = trainTestPeriodConfig[period]["NUM_TEST_DAYS"]
+                numValDays = secondTierConfig["NUM_VAL_DAYS"]
+                forecastDatasetLimiter = datasetLimiter//24*PREDICTION_WINDOW_HOURS
+                print(numTestDays)
 
-            print("Initializing...")
-            dataset, dateTime, forecastDataset = initialize(inFileName, forecastInFileName, startCol)
-            specializedForecasts = None
+                print("Initializing...")
+                dataset, dateTime, forecastDataset = initialize(inFileName, forecastInFileName, startCol)
+                print(dataset.tail())
+                dataset = dataset[:datasetLimiter]
+                dateTime = dateTime[:datasetLimiter]
+                print(dataset.tail())
+                specializedForecasts = None
 
-            if ("NUM_SPECIALIZED_FORECAST_FEATURES" in regionConfig): # weather + subset of source production forecasts
-                numForecastFeatures = regionConfig["NUM_SPECIALIZED_FORECAST_FEATURES"]
-                specializedForecasts = regionConfig["SPECIALIZED_FORECASTS"]
-                modifiedForecastDataset = forecastDataset.iloc[:, :5].copy()
-                for source in specializedForecasts:
-                    modifiedForecastDataset["avg_"+source.lower()+"_production_forecast"] = forecastDataset["avg_"+source.lower()+"_production_forecast"]
-                forecastDataset = modifiedForecastDataset
-            print("***** Initialization done *****")
+                if ("NUM_SPECIALIZED_FORECAST_FEATURES" in regionConfig): # weather + subset of source production forecasts
+                    numForecastFeatures = regionConfig["NUM_SPECIALIZED_FORECAST_FEATURES"]
+                    specializedForecasts = regionConfig["SPECIALIZED_FORECASTS"]
+                    modifiedForecastDataset = forecastDataset.iloc[:, :5].copy()
+                    for source in specializedForecasts:
+                        modifiedForecastDataset["avg_"+source.lower()+"_production_forecast"] = forecastDataset["avg_"+source.lower()+"_production_forecast"]
+                    forecastDataset = modifiedForecastDataset
+                print("***** Initialization done *****")
 
-            # split into train and test
-            print("Spliting dataset into train/test...")
-            # dataset = dataset[:-BUFFER_HOURS]
-            trainData, valData, testData, _ = common.splitDataset(dataset.values, 
-                                                    (numTestDays+BUFFER_HOURS//24), numValDays, 
-                                                    MAX_PREDICTION_WINDOW_HOURS-PREDICTION_WINDOW_HOURS)
-            trainDates = dateTime[: -((numTestDays+BUFFER_HOURS//24)*24):]
-            trainDates, validationDates = trainDates[: -(numValDays*24)], trainDates[-(numValDays*24):]
-            testDates = dateTime[-((numTestDays+BUFFER_HOURS//24)*24):]
-            trainData = trainData[:, startCol: startCol+numHistoricalAndDateTimeFeatures]
-            valData = valData[:, startCol: startCol+numHistoricalAndDateTimeFeatures]
-            testData = testData[:, startCol: startCol+numHistoricalAndDateTimeFeatures]
+                # split into train and test
+                print("Spliting dataset into train/test...")
+                # dataset = dataset[:-BUFFER_HOURS]
+                trainData, valData, testData, _ = common.splitDataset(dataset.values, 
+                                                        (numTestDays+BUFFER_HOURS//24), numValDays, 
+                                                        MAX_PREDICTION_WINDOW_HOURS-PREDICTION_WINDOW_HOURS)
+                trainDates = dateTime[: -((numTestDays+BUFFER_HOURS//24)*24):]
+                print(f'The train dates for {period} {trainDates[-10:]}')
+                trainDates, validationDates = trainDates[: -(numValDays*24)], trainDates[-(numValDays*24):]
+                testDates = dateTime[-((numTestDays+BUFFER_HOURS//24)*24):]
+                print(f'The test dates for {period} {testDates[-10:]}')
 
-            #bufferPeriod = bufferPeriod[:, startCol: startCol + numHistoricalAndDateTimeFeatures]
-            #if len((bufferDates)>0):
-            #    testDates = np.append(testDates,bufferDates)
-            #    testData = np.vstack(testData,bufferPeriod)
+                trainData = trainData[:, startCol: startCol+numHistoricalAndDateTimeFeatures]
+                valData = valData[:, startCol: startCol+numHistoricalAndDateTimeFeatures]
+                testData = testData[:, startCol: startCol+numHistoricalAndDateTimeFeatures]
 
-            print("TrainData shape: ", trainData.shape) # days x hour x features
-            print("ValData shape: ", valData.shape) # days x hour x features
-            print("TestData shape: ", testData.shape) # days x hour x features
+                #bufferPeriod = bufferPeriod[:, startCol: startCol + numHistoricalAndDateTimeFeatures]
+                #if len((bufferDates)>0):
+                #    testDates = np.append(testDates,bufferDates)
+                #    testData = np.vstack(testData,bufferPeriod)
 
-            wTrainData, wValData, wTestData, wFullTrainData = common.splitWeatherDataset(
-                    forecastDataset.values, numTestDays, numValDays, MAX_PREDICTION_WINDOW_HOURS)
-            wTrainData = wTrainData[:, :numForecastFeatures]
-            wValData = wValData[:, :numForecastFeatures]
-            wTestData = wTestData[:, :numForecastFeatures]
-            print("WeatherTrainData shape: ", wTrainData.shape) # (days x hour) x features
-            print("WeatherValData shape: ", wValData.shape) # (days x hour) x features
-            print("WeatherTestData shape: ", wTestData.shape) # (days x hour) x features
+                print("TrainData shape: ", trainData.shape) # days x hour x features
+                print("ValData shape: ", valData.shape) # days x hour x features
+                print("TestData shape: ", testData.shape) # days x hour x features
 
-            trainData = fillMissingData(trainData)
-            valData = fillMissingData(valData)
-            testData = fillMissingData(testData)
+                wTrainData, wValData, wTestData, wFullTrainData = common.splitWeatherDataset(
+                        forecastDataset.values, numTestDays, numValDays, MAX_PREDICTION_WINDOW_HOURS)
+                wTrainData = wTrainData[:, :numForecastFeatures]
+                wValData = wValData[:, :numForecastFeatures]
+                wTestData = wTestData[:, :numForecastFeatures]
+                print("WeatherTrainData shape: ", wTrainData.shape) # (days x hour) x features
+                print("WeatherValData shape: ", wValData.shape) # (days x hour) x features
+                print("WeatherTestData shape: ", wTestData.shape) # (days x hour) x features
 
-            wTrainData = fillMissingData(wTrainData)
-            wValData = fillMissingData(wValData)
-            wTestData = fillMissingData(wTestData)
+                trainData = fillMissingData(trainData)
+                valData = fillMissingData(valData)
+                testData = fillMissingData(testData)
 
-            print("***** Dataset split done *****")
+                wTrainData = fillMissingData(wTrainData)
+                wValData = fillMissingData(wValData)
+                wTestData = fillMissingData(wTestData)
 
-            featureList = dataset.columns.values
-            featureList = featureList[startCol:startCol+numHistoricalAndDateTimeFeatures].tolist()
-            featureList.extend(forecastDataset.columns.values[:numForecastFeatures])
-            print("Features: ", featureList)
+                print("***** Dataset split done *****")
 
-            print("Scaling data...")
-            # unscaledTestData = np.zeros(testData.shape[0])
-            unscaledTrainCarbonIntensity = np.zeros(trainData.shape[0])
-            # for i in range(testData.shape[0]):
-            #     unscaledTestData[i] = testData[i, DEPENDENT_VARIABLE_COL]
-            for i in range(trainData.shape[0]):
-                unscaledTrainCarbonIntensity[i] = trainData[i, DEPENDENT_VARIABLE_COL]
-            trainData, valData, testData, ftMin, ftMax = common.scaleDataset(trainData, valData, testData)
-            print(trainData.shape, valData.shape, testData.shape)
-            wTrainData, wValData, wTestData, wFtMin, wFtMax = common.scaleDataset(wTrainData, wValData, wTestData)
-            print(wTrainData.shape, wValData.shape, wTestData.shape)
-            print("***** Data scaling done *****")
+                featureList = dataset.columns.values
+                featureList = featureList[startCol:startCol+numHistoricalAndDateTimeFeatures].tolist()
+                featureList.extend(forecastDataset.columns.values[:numForecastFeatures])
+                print("Features: ", featureList)
 
-            if (periodIdx == len(trainTestPeriodConfig)-1):
-                print("Saving min & max values for each column in file...")
-                with open(SAVED_MODEL_LOCATION+region+"/"+region+"_min_max_values.txt", "w") as f:
-                    f.writelines(str(ftMin))
-                    f.write("\n")
-                    f.writelines(str(ftMax))
-                    f.write("\n")
-                    f.writelines(str(wFtMin))
-                    f.write("\n")
-                    f.writelines(str(wFtMax))
-                    f.write("\n")
-                print("Min-max values saved")
+                print("Scaling data...")
+                # unscaledTestData = np.zeros(testData.shape[0])
+                unscaledTrainCarbonIntensity = np.zeros(trainData.shape[0])
+                # for i in range(testData.shape[0]):
+                #     unscaledTestData[i] = testData[i, DEPENDENT_VARIABLE_COL]
+                for i in range(trainData.shape[0]):
+                    unscaledTrainCarbonIntensity[i] = trainData[i, DEPENDENT_VARIABLE_COL]
+                trainData, valData, testData, ftMin, ftMax = common.scaleDataset(trainData, valData, testData)
+                print(trainData.shape, valData.shape, testData.shape)
+                wTrainData, wValData, wTestData, wFtMin, wFtMax = common.scaleDataset(wTrainData, wValData, wTestData)
+                print(wTrainData.shape, wValData.shape, wTestData.shape)
+                print("***** Data scaling done *****")
 
-            ######################## START #####################
-            bestRMSE, bestMAPE = [], []
-            predictedData = None
-            for exptNum in range(NUMBER_OF_EXPERIMENTS):
+                if (periodIdx == len(trainTestPeriodConfig)-1):
+                    print("Saving min & max values for each column in file...")
+                    with open(SAVED_MODEL_LOCATION+region+"/"+region+"_min_max_values.txt", "w") as f:
+                        f.writelines(str(ftMin))
+                        f.write("\n")
+                        f.writelines(str(ftMax))
+                        f.write("\n")
+                        f.writelines(str(wFtMin))
+                        f.write("\n")
+                        f.writelines(str(wFtMax))
+                        f.write("\n")
+                    print("Min-max values saved")
+
+                ######################## START #####################
+                bestRMSE, bestMAPE = [], []
+                predictedData = None
                 print("Iteration: ", exptNum)
                 regionDailyMape = {}
                 bestModel, numFeaturesInTraining = trainingandValidationPhase(region, trainData, wTrainData, 
@@ -222,7 +230,7 @@ def runSecondTier(configFileName, cefType, loadFromSavedModel):
                 print(modTestData.shape, wTestData.shape)
                 modTestData = np.append(modTestData, wTestData, axis=1)
                 print("modtestdata shape: ", modTestData.shape)
-                topNFeatures = findImportantFeatures(bestModel, modTestData, featureList, testDates)
+                #topNFeatures = findImportantFeatures(bestModel, modTestData, featureList, testDates)
 
                 print("[BESTMODEL] Overall RMSE score: ", rmseScore)
                 print("[BESTMODEL] Overall MAPE score: ", mapeScore)
@@ -245,7 +253,8 @@ def runSecondTier(configFileName, cefType, loadFromSavedModel):
                                         np.percentile(regionDailyMape[region][:, i], 99)])
 
                 print("Saving MAPE values by day in file...")
-                with open("../data/EU_DATA/"+region+"/"+region+"_MAPE_iter"+str(exptNum)+".txt", "w") as f:
+                with open("../data/EU_DATA/"+region+"/"+region+"_MAPE_iter"+str(exptNum)+".txt", "w") as f: 
+                #with open("../data/"+region+"/"+region+"_MAPE_iter"+str(exptNum)+".txt", "w") as f:
                     for item in mapeByDay:
                         f.writelines(str(item))
                         f.write("\n")
@@ -258,19 +267,21 @@ def runSecondTier(configFileName, cefType, loadFromSavedModel):
                     row.append(str(unscaledTestData[i]))
                     row.append(str(unscaledPredictedData[i]))
                     data.append(row)
+                    #print(data)
+
                 if (writeCIForecastsToFile == "True"):
-                    common.writeOutFile(outFileNamePrefix+"_"+str(exptNum)+".csv", data, "carbon_intensity", "w")
+                    common.writeOutFile(outFileNamePrefix+"_"+str(exptNum)+ period +".csv", data, "carbon_intensity", "w")
 
-            print("[BEST] Average RMSE after ", NUMBER_OF_EXPERIMENTS, " expts: ", np.mean(bestRMSE))
-            print("[BEST] Average MAPE after ", NUMBER_OF_EXPERIMENTS, " expts: ", np.mean(bestMAPE))
-            print(bestRMSE)
-            print(bestMAPE)
+                print("[BEST] Average RMSE after ", NUMBER_OF_EXPERIMENTS, " expts: ", np.mean(bestRMSE))
+                print("[BEST] Average MAPE after ", NUMBER_OF_EXPERIMENTS, " expts: ", np.mean(bestMAPE))
+                print(bestRMSE)
+                print(bestMAPE)
+            periodIdx +=1 
 
-            ######################## END #####################
-            
-            print("####################", region, " done ####################\n\n")
-
+        ######################## END #####################
         
+        print("####################", region, " done ####################\n\n")
+
     return
 
 def runSecondTierInRealTime(configFileName, regionList, cefType, startDate, electricityDataDate, 
