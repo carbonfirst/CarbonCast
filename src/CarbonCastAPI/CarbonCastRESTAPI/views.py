@@ -323,7 +323,7 @@ class EnergySourcesHistoryApiView(APIView):
             else:
                 return Response({"error": "Invalid region code parameter"}, status=status.HTTP_400_BAD_REQUEST)
         date = request.query_params.get('date', '')
-            
+        print("this is the query" ,date)   
         final_list =[]
         for region_code in regions:
             
@@ -398,7 +398,7 @@ class CarbonIntensityForecastsApiView(APIView):
         forecastPeriod = int(final_interval)
 
         # today_date = datetime.now().strftime('%Y-%m-%d')
-        date = '2023-09-10'
+        date = '2023-09-17'
 
         CI_lifecycle, CI_direct = get_CI_forecasts_csv_file(region_code, date)
         with open(CI_lifecycle) as file:
@@ -468,7 +468,7 @@ class CarbonIntensityForecastsHistoryApiView(APIView):
         query_params_serializer = QueryParamsSerializer(data=request.query_params)
         if query_params_serializer.is_valid():
             region_code = query_params_serializer.validated_data.get('region_code')
-            
+            print("printing region code", region_code)
             if region_code == 'all':
                 regions = US_region_codes
             elif region_code in US_region_codes:
@@ -501,8 +501,15 @@ class CarbonIntensityForecastsHistoryApiView(APIView):
                 temp_dict[field_names[1]] = filtered_data_by_date_csv1[i][1]
                 temp_dict[field_names[2]] = filtered_data_by_date_csv1[i][2]
                 temp_dict[field_names[3]] = region_code
-                temp_dict[field_names[4]] = filtered_data_by_date_csv1[i][3]
-                temp_dict[field_names[5]] = filtered_data_by_date_csv2[i][3]
+                try:
+                    temp_dict[field_names[4]] = filtered_data_by_date_csv1[i][3]
+                except:
+                    temp_dict[field_names[4]] = 0
+
+                try:
+                    temp_dict[field_names[5]] = filtered_data_by_date_csv2[i][3]
+                except:
+                    temp_dict[field_names[5]] = 0
                 temp_dict[field_names[6]] = "gCO2eg/kWh"
                 final_list.append(temp_dict)
         response = {
