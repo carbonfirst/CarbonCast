@@ -1,7 +1,11 @@
 #!/bin/bash
 
-DIR_SRC=/Users/asouza/tmp2/CarbonCast/EU_DATA
-DIR_DST=/Users/asouza/tmp2/CarbonCast/real_time
+# Change the below to the CarbonCast diretory
+CARBON_CAST_DIR=.
+
+# No need to change the below
+DIR_SRC=$CARBON_CAST_DIR/EU_DATA
+DIR_DST=$CARBON_CAST_DIR/real_time
 
 pushd $DIR_SRC
 for x in `ls -d */`; do
