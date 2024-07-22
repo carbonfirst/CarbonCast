@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # Change the below to the CarbonCast diretory
-CARBON_CAST_DIR=.
+CARBON_CAST_DIR=/Users/jc/Downloads/CarbonCast_3.0/
 
 # Change the below to the directory you want to move
 # Default is `EU_DATA`
-DATA=EU_DATA
+DATA=US_DATA
 
 # No need to change the below
 DIR_SRC=$CARBON_CAST_DIR/$DATA
