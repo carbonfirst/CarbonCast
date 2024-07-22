@@ -6,10 +6,10 @@ carbon_cast_version = "v3.0"
 #Defining a list of US region codes
 US_region_codes = ['AT', 'AECI','AZPS', 'BPAT','CISO', 'DUK', 'EPE', 'ERCO', 'FPL', 
                 'ISNE', 'LDWP', 'MISO', 'NEVP', 'NWMT', 'NYIS', 'PACE', 'PJM', 
-                'SC', 'SCEG', 'SOCO','SRP', 'TIDC', 'TVA']
-                #"BG","CH","CZ","DE","DK","EE","ES","FI",
-             #"FR","GB","GR","HR","HU","IE","IT","LT","LV","NL",
-             #"PL","PT","RO","RS","SE","SI","SK"]
+                'SC', 'SCEG', 'SOCO','SRP', 'TIDC', 'TVA','WACM','BE',
+                'BG','CH','CZ','DK','EE','ES','FI','FR','GB','GR','HR','HU','IE','IT','LT','LV','NL',
+             'PL','PT','RS','SE','SI','SK','DE','IPCO','SWPP','PACW']
+#add PSCO, SPA,
 authentication_classes = []
 permission_classes = []
 
