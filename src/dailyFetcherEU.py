@@ -12,7 +12,7 @@ EU_REGIONS = ["AT","BE","BG","CH","CZ","DK","EE","ES","FI",
              "FR","GB","GR","HR","HU","IE","IT","LT","LV","NL",
             "PL","PT","RO","RS","SE","SI","SK"] # testing DE right now don't upload 
 
-#EU_REGIONS = ['BE']
+#EU_REGIONS = ['DE']
 
 FILES = [
     "clean.csv", 
@@ -57,7 +57,7 @@ def getDailyFilesFromDataFile(folder,source,region_name,file_name):
     for i in range(start, len(dataset), numRows): #change start index to when 2023 starts for EU and US (or the latest year)
         start = i
         end = min(i+numRows, len(dataset))
-        subset = dataset.iloc[start:end]
+        subset = dataset.iloc[start:end].copy()
         subset.rename(columns={"datetime": "UTC time"}, inplace=True)
         curDate = pd.to_datetime(dataset[index].values[i]).strftime('%Y-%m-%d')
         print(curDate)
@@ -77,6 +77,7 @@ def getDailyFilesFromDataFile(folder,source,region_name,file_name):
             subset.insert(2, "version", version)
             output_file_name = f"{region_name}_96hr_forecasts_{curDate}.csv"
         elif file_name.endswith(("_direct_96hr_CI_forecasts_0PERIOD_0.csv","_direct_96hr_CI_forecasts_0PERIOD_1.csv","_direct_96hr_CI_forecasts_0PERIOD_2.csv")):
+        #elif file_name.endswith(("_direct_96hr_CI_forecasts_0.csv",)):
             subset.insert(1, "creation_time (UTC)", creationTime)
             subset.insert(2, "version", version)
             output_file_name = f"{region_name}_direct_CI_forecasts_{curDate}.csv"
@@ -87,6 +88,7 @@ def getDailyFilesFromDataFile(folder,source,region_name,file_name):
         subset.to_csv(f"{outputFileDir}/{output_file_name}", index=False)
 
     return
+    
 
 if __name__ == "__main__":
    # if len(sys.argv) < 5:
