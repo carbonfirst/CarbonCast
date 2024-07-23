@@ -5,7 +5,7 @@ carbon_cast_version = "v3.0"
 
 #Defining a list of US region codes
 US_region_codes = ['AECI','AZPS','BPAT', 'CISO', 'DUK', 'EPE', 'ERCO', 'FPL', 'IPCO' ,'ISNE', 'LDWP', 'MISO', 'NEVP', 'NWMT', 'NYIS', 'PACE', 'SCEG', 'SOCO', 'TIDC', 'TVA', 'WACM','SRP',
-        'AT','BE', 'BG', 'CH', 'CZ','DE', 'DK','EE','ES','FI','FR','GB','GR','HR', 'HU','IE','IT','LT','LV','NL','PL','PT','RS', 'SE','SI','SK', 'PSCO', 'SWPP', 'SPA', 'PACW'];
+        'AT','BE', 'BG', 'CH', 'CZ','DE', 'DK','EE','ES','FI','FR','GB','GR','HR', 'HU','IE','IT','LT','LV','NL','PL','PT','RS', 'SE','SI','SK', 'PSCO', 'SWPP', 'SPA', 'PACW', 'FPC', 'GRID', 'PJM', 'PSEI', 'SC', 'WALC'];
                 #"BG","CH","CZ","DE","DK","EE","ES","FI",
              #"FR","GB","GR","HR","HU","IE","IT","LT","LV","NL",
              #"PL","PT","RO","RS","SE","SI","SK"]
