@@ -502,12 +502,12 @@ class CarbonIntensityForecastsHistoryApiView(APIView):
                 temp_dict[field_names[2]] = filtered_data_by_date_csv1[i][2]
                 temp_dict[field_names[3]] = region_code
                 try:
-                    temp_dict[field_names[4]] = filtered_data_by_date_csv1[i][3]
+                    temp_dict[field_names[4]] = filtered_data_by_date_csv1[i][4]
                 except:
                     temp_dict[field_names[4]] = 0
 
                 try:
-                    temp_dict[field_names[5]] = filtered_data_by_date_csv2[i][3]
+                    temp_dict[field_names[5]] = filtered_data_by_date_csv2[i][4]
                 except:
                     temp_dict[field_names[5]] = 0
                 temp_dict[field_names[6]] = "gCO2eg/kWh"
