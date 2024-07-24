@@ -16,7 +16,7 @@ class Command(BaseCommand):
             user.save()
             user.throttle_limit.save()
 
-        global_throttle_limit = '100/day'
+        global_throttle_limit = '9999/day'
         SimpleRateThrottle.rate = global_throttle_limit
         settings.REST_FRAMEWORK['DEFAULT_THROTTLE_RATES']['default'] = global_throttle_limit
 
