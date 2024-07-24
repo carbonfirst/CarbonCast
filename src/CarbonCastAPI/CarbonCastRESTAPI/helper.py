@@ -26,7 +26,7 @@ def get_CI_forecasts_csv_file(region_code, date):
     csv_file_l= None
     csv_file_d = None
     for file in os.listdir(path):
-        print("this is printing file:",file)
+        #print("this is printing file:",file)
         if(i ==numFiles-1):
             print(i, file, date)
         i+=1 
