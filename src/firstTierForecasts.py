@@ -16,10 +16,14 @@ from tensorflow import keras
 from keras.callbacks import EarlyStopping
 from keras.callbacks import ModelCheckpoint
 from keras.models import load_model
+from sklearn.ensemble import RandomForestRegressor
+from xgboost import XGBRegressor
 
 import common
 import sys
 import json5 as json
+
+import firstTierModel
 
 
 ############################# MACRO START #######################################
@@ -84,7 +88,7 @@ def runFirstTier(configFileName):
 
             for exptNum in range(NUMBER_OF_EXPERIMENTS):
                 outFileName = outFileNamePrefix + "_" + source.lower() + "_iter" + str(exptNum) + ".csv"
-                periodRMSE, periodMAPE = [], []
+                periodRMSE, periodMAPE, periodMBE = [], [], []
                 
                 periodIdx = 0
                 for period in trainTestPeriodConfig:
@@ -192,7 +196,7 @@ def runFirstTier(configFileName):
                         print("weatherData shape:", weatherData.shape)
                     history = history.tolist()
 
-                    bestRMSE, bestMAPE = [], []
+                    bestRMSE, bestMAPE, bestMBE = [], [], []
                     predictedData = getDayAheadForecasts(bestModel, history, testData, 
                                         numFeatures+numWeatherFeatures, wTestData, weatherData, partialSourceProductionForecast)
                     print("***** Forecast done *****")
@@ -201,19 +205,27 @@ def runFirstTier(configFileName):
                                                                         testData, testDates, predictedData, 
                                                                         ftMin, ftMax)
                     
+                    mbeScore = calculateMBE(unscaledTestData, unscaledPredictedData)
+
                     print("[BESTMODEL] Overall RMSE score: ", rmseScore)
                     print("[BESTMODEL] Overall MAPE score: ", mapeScore)
+                    print("[BESTMODEL] Overall MBE score: ", mbeScore)
                     # print(scores)
                     bestRMSE.append(rmseScore)
                     bestMAPE.append(mapeScore)
+                    bestMBE.append(mbeScore)
 
                     
                     print("[BEST] Average RMSE after ", NUMBER_OF_EXPERIMENTS, " expts: ", np.mean(bestRMSE))
                     print("[BEST] Average MAPE after ", NUMBER_OF_EXPERIMENTS, " expts: ", np.mean(bestMAPE))
+                    print("[BEST] Average MBE after ", NUMBER_OF_EXPERIMENTS, " expts: ", np.mean(bestMBE))
+
                     print(bestRMSE)
                     print(bestMAPE)
+                    print(bestMBE)
                     periodRMSE.append(bestRMSE)
                     periodMAPE.append(bestMAPE)
+                    periodMBE.append(bestMBE)
 
                     writeSourceProductionForecastsToFile(formattedTestDates, unscaledTestData, unscaledPredictedData,
                                                         periodIdx, source, outFileName)
@@ -229,6 +241,7 @@ def runFirstTier(configFileName):
 
                 print("RMSE: ", periodRMSE)
                 print("MAPE: ", periodMAPE)
+                print("MBE: ", periodMBE)
             sourceIdx += 1
 
             print("####################", region, source, " done ####################\n\n")
@@ -462,6 +475,7 @@ def trainingandValidationPhase(trainData, wTrainData, valData, wValData,
     hyperParams = getANNHyperParams(firstTierConfig)                
     print("\n[BESTMODEL] Starting training...")
     bestTrainedModel = trainANN(X, y, valX, valY, hyperParams, savedModelLocation, region, source)
+    #bestTrainedModel = firstTierModel.trainfirstTier(X, y, valX, valY, hyperParams, savedModelLocation, region, source, 'xgb')
     print("***** Training done *****")
     return bestTrainedModel
 
@@ -513,7 +527,6 @@ def manipulateTestDataShape(data, isDates=False):
         X = np.array(X)
     return X
 
-
 def trainANN(trainX, trainY, valX, valY, hyperParams, savedModelLocation, region, source):
     n_timesteps, n_features, n_outputs = trainX.shape[1], trainX.shape[2], trainY.shape[1]
     epochs = hyperParams["epoch"]
@@ -522,12 +535,24 @@ def trainANN(trainX, trainY, valX, valY, hyperParams, savedModelLocation, region
     actvFunc = hyperParams["actv"]
     hiddenDims = hyperParams["hidden"]
     learningRates = hyperParams["lr"]
+    inputShape = hyperParams["input_shape"]
+    numHeads = hyperParams["numheads"]
+    ffDim = hyperParams["ffdim"]
+    dropoutRate = hyperParams["dropout"]
+    nEstimators = hyperParams['n_estimators']
+
+    #model = firstTierModel.train_RNN(n_timesteps,n_features,hiddenDims,actvFunc,n_outputs)
+    #model = firstTierModel.train_Transformers(n_timesteps,n_features,hiddenDims,actvFunc,n_outputs,numHeads,ffDim)
+    #model = firstTierModel.train_MLP(inputShape, hiddenDims,actvFunc,n_outputs)
+    #model = firstTierModel.train_LSTM(n_timesteps,n_features,hiddenDims,actvFunc,n_outputs)
+    #model = firstTierModel.train_GRU(n_timesteps,n_features,hiddenDims,actvFunc,n_outputs)
+
     model = Sequential()
     model.add(Flatten())
     model.add(Dense(hiddenDims[0], input_shape=(n_timesteps, n_features), activation=actvFunc)) # 50
     model.add(Dense(hiddenDims[1], activation=actvFunc)) # 34
     model.add(Dense(n_outputs))
-    
+
     opt = tf.keras.optimizers.Adam(learning_rate = learningRates)
     model.compile(loss=lossFunc, optimizer=opt,
                     metrics=["mean_absolute_error"])
@@ -637,7 +662,11 @@ def getForecasts(model, history, numFeatures, weatherData):
         input_x = np.append(input_x, weatherData, axis=1)
     # reshape into [1, n_input, num_features]
     input_x = input_x.reshape((1, len(input_x), numFeatures))
-    yhat = model.predict(input_x, verbose=0)
+    if isinstance(model, (RandomForestRegressor, XGBRegressor)):
+        input_x = input_x.reshape((input_x.shape[0], -1))
+        yhat = model.predict(input_x)
+    else:
+        yhat = model.predict(input_x, verbose=0)
     # we only want the vector forecast
     yhat = yhat[0]
     return yhat, input_x
@@ -657,6 +686,9 @@ def getForecastsInRealTime(model, history, numFeatures, weatherData):
     yhat = yhat[0]
     return yhat
 
+def calculateMBE(original_value,predicted_value):
+    return np.mean(predicted_value - original_value)
+
 def getANNHyperParams(firstTierConfig):
     hyperParams = {}
     modelHyperparamsFromConfigFile = firstTierConfig["FIRST_TIER_ANN_MODEL_HYPERPARAMS"]
@@ -666,6 +698,11 @@ def getANNHyperParams(firstTierConfig):
     hyperParams["loss"] = modelHyperparamsFromConfigFile["LOSS_FUNC"]
     hyperParams["lr"] = modelHyperparamsFromConfigFile["LEARNING_RATE"]
     hyperParams["hidden"] = modelHyperparamsFromConfigFile["HIDDEN_UNITS"]
+    hyperParams["input_shape"] = modelHyperparamsFromConfigFile["INPUT_SHAPE"]
+    hyperParams["numheads"] = modelHyperparamsFromConfigFile["NUM_HEADS"]
+    hyperParams["ffdim"] = modelHyperparamsFromConfigFile["FF_DIM"]
+    hyperParams["dropout"] = modelHyperparamsFromConfigFile["DROPOUT"]
+    hyperParams["n_estimators"] = modelHyperparamsFromConfigFile["N_ESTIMATORS"]
     return hyperParams
 
 def getUnscaledForecastsAndForecastAccuracy(testData, testDates, predictedData, ftMin, ftMax):

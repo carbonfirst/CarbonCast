@@ -230,7 +230,7 @@ def runSecondTier(configFileName, cefType, loadFromSavedModel):
                 print(modTestData.shape, wTestData.shape)
                 modTestData = np.append(modTestData, wTestData, axis=1)
                 print("modtestdata shape: ", modTestData.shape)
-                #topNFeatures = findImportantFeatures(bestModel, modTestData, featureList, testDates)
+                topNFeatures = findImportantFeatures(bestModel, modTestData, featureList, testDates)
 
                 print("[BESTMODEL] Overall RMSE score: ", rmseScore)
                 print("[BESTMODEL] Overall MAPE score: ", mapeScore)
@@ -253,8 +253,8 @@ def runSecondTier(configFileName, cefType, loadFromSavedModel):
                                         np.percentile(regionDailyMape[region][:, i], 99)])
 
                 print("Saving MAPE values by day in file...")
-                with open("../data/EU_DATA/"+region+"/"+region+"_MAPE_iter"+str(exptNum)+".txt", "w") as f: 
-                #with open("../data/"+region+"/"+region+"_MAPE_iter"+str(exptNum)+".txt", "w") as f:
+                #with open("../data/EU_DATA/"+region+"/"+region+"_MAPE_iter"+str(exptNum)+".txt", "w") as f: 
+                with open("../data/"+region+"/"+region+"_MAPE_iter"+str(exptNum)+".txt", "w") as f:
                     for item in mapeByDay:
                         f.writelines(str(item))
                         f.write("\n")
