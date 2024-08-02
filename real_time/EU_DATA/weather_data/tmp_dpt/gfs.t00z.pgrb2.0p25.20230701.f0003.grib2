@@ -1,0 +1,17 @@
+<!doctype html>
+    <html>
+    <head>
+        <title>Request for Old Data</title>
+        <style type="text/css">body { text-align: center; padding: 150px; }h1 { font-size: 40px; }body { font: 16px Helvetica, sans-serif; color: #333; }#error { display: block; text-align: left; width: 650px; margin: 0 auto; }    </style>
+    </head>
+    <body>
+        <div id="error">
+        <h1>Request for old data nomads.ncep.noaa.gov</h1>
+        <div>
+            <hr>
+            <p>This data has expired and is no longer available. </p>
+             <p> Reference ID 0.bf9419b8.1720730753.c95e33f connecting from IP 128.119.202.1 </p>
+        </div>
+        </div>
+    </body>
+    </html>
