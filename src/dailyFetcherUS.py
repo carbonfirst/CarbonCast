@@ -13,7 +13,7 @@ import os
 #            "PACW","PJM","PSCO","PSEI","SC","SCEG","SOCO","SPA","SRP","SWPP",
 #             "TIDC","TVA","WACM","WALC"]
 
-US_REGIONS = ["WALC"] #"FPC","GRID","PSEI","WALC",
+US_REGIONS = ["PACW"] #"FPC","GRID","PSEI","WALC",
 
 FILES = [
     "clean.csv", 

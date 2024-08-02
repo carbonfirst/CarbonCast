@@ -33,7 +33,7 @@
     "REGION_LIFECYCLE": ["IPCO", "PACW", 
                 "PSCO", "SPA", "SWPP"],
 
-    "TMP_REGION": ["BE"],
+    "TMP_REGION": ["CISO"],
 
     "TRAIN_TEST_PERIOD": {
         "PERIOD_0": {
@@ -160,12 +160,30 @@
         "NUM_FORECAST_FEATURES": 12
     },
 
+    "FPC": {
+        "LIFECYCLE_CEF_IN_FILE_NAME": "../data/FPC/FPC_lifecycle_emissions.csv",
+        "DIRECT_CEF_IN_FILE_NAME": "../data/FPC/FPC_direct_emissions.csv",
+        "FORECAST_IN_FILE_NAME": "../data/FPC/FPC_96hr_forecasts_DA.csv",
+        "LIFECYCLE_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/FPC/FPC_lifecycle_96hr_CI_forecasts",
+        "DIRECT_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/FPC/FPC_direct_96hr_CI_forecasts",
+        "NUM_FORECAST_FEATURES": 11
+    },
+
     "FPL": {
         "LIFECYCLE_CEF_IN_FILE_NAME": "../data/FPL/FPL_lifecycle_emissions.csv",
         "DIRECT_CEF_IN_FILE_NAME": "../data/FPL/FPL_direct_emissions.csv",
         "FORECAST_IN_FILE_NAME": "../data/FPL/FPL_96hr_forecasts_DA.csv",
         "LIFECYCLE_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/FPL/FPL_lifecycle_96hr_CI_forecasts",
         "DIRECT_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/FPL/FPL_direct_96hr_CI_forecasts",
+        "NUM_FORECAST_FEATURES": 9
+    },
+
+    "GRID": {
+        "LIFECYCLE_CEF_IN_FILE_NAME": "../data/GRID/GRID_lifecycle_emissions.csv",
+        "DIRECT_CEF_IN_FILE_NAME": "../data/GRID/GRID_direct_emissions.csv",
+        "FORECAST_IN_FILE_NAME": "../data/GRID/GRID_96hr_forecasts_DA.csv",
+        "LIFECYCLE_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/GRID/GRID_lifecycle_96hr_CI_forecasts",
+        "DIRECT_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/GRID/GRID_direct_96hr_CI_forecasts",
         "NUM_FORECAST_FEATURES": 9
     },
 
@@ -268,6 +286,16 @@
         "NUM_FORECAST_FEATURES": 11
     },
 
+    "PSEI": {
+        "LIFECYCLE_CEF_IN_FILE_NAME": "../data/PSEI/PSEI_lifecycle_emissions.csv",
+        "DIRECT_CEF_IN_FILE_NAME": "../data/PSEI/PSEI_direct_emissions.csv",
+        "FORECAST_IN_FILE_NAME": "../data/PSEI/PSEI_96hr_forecasts_DA.csv",
+        "LIFECYCLE_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/PSEI/PSEI_lifecycle_96hr_CI_forecasts",
+        "DIRECT_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/PSEI/PSEI_direct_96hr_CI_forecasts",
+        "NUM_FORECAST_FEATURES": 12
+    },
+
+
     "SC": {
         "LIFECYCLE_CEF_IN_FILE_NAME": "../data/SC/SC_lifecycle_emissions.csv",
         "DIRECT_CEF_IN_FILE_NAME": "../data/SC/SC_direct_emissions.csv",
@@ -349,6 +377,15 @@
         "NUM_FORECAST_FEATURES": 13
     },
 
+    "WALC": {
+        "LIFECYCLE_CEF_IN_FILE_NAME": "../data/WALC/WALC_lifecycle_emissions.csv",
+        "DIRECT_CEF_IN_FILE_NAME": "../data/WALC/WALC_direct_emissions.csv",
+        "FORECAST_IN_FILE_NAME": "../data/WALC/WALC_96hr_forecasts_DA.csv",
+        "LIFECYCLE_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/WALC/WALC_lifecycle_96hr_CI_forecasts",
+        "DIRECT_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/WALC/WALC_direct_96hr_CI_forecasts",
+        "NUM_FORECAST_FEATURES": 9
+    },
+
     // EU regions
 
     "AT": {
@@ -404,7 +441,7 @@
         "DIRECT_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/EU_DATA/DE/DE_direct_96hr_CI_forecasts",
         "NUM_FORECAST_FEATURES": 15, //change to 15
         "NUM_SPECIALIZED_FORECAST_FEATURES": 10, // weather + subset of source production forecasts
-        "SPECIALIZED_FORECASTS": ["nat_gas", "hydro", "solar", "wind", "biomass"]
+        "SPECIALIZED_FORECASTS": ["nat_gas", "hydro", "solar", "wind", "biomass"] //remove certain features for model testing
     },
 
     "DK": {

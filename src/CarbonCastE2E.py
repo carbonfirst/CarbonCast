@@ -47,7 +47,9 @@ US_REGIONS = ["AECI", "AZPS", "BPAT", "CISO", "DUK", "EPE", "ERCO", "FPL",
 
 # US_REGIONS = ["CISO"]
 
-EU_REGIONS = ["RO", "DE", "FR", "DK"] # add EU regions here
+#EU_REGIONS = ["RO", "DE", "FR", "DK"] # add EU regions here
+EU_REGIONS = ["DE"] # add EU regions here
+
 EU_REGIONS_WITH_SOLAR_WIND_FORECASTS = ["BG", "CZ", "DK", 
                          "FR", "DE", "GR", "HU", "LV", "LT",
                           "RO", "RS", "SK", "SI", "ES", "SE", "CH"]

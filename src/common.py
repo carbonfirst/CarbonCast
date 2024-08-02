@@ -4,6 +4,7 @@ import pytz as pytz
 import tensorflow as tf
 import matplotlib.pyplot as plt
 import csv
+import os 
 import math
 import seaborn as sns
 from statsmodels.tsa.stattools import adfuller
@@ -55,6 +56,11 @@ def writeOutFile(outFileName, data, fuel, writeMode):
     if (fuel == "carbon_intensity"):
         fields = ["datetime", fuel+"_actual", "avg_"+fuel+"_forecast"]
     
+    #create the directory if it doesn't exists
+    directory = os.path.dirname(outFileName)
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
     # writing to csv file 
     with open(outFileName, writeMode) as csvfile: 
         # creating a csv writer object 
