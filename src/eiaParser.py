@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# cp .env.example .env and fill in the EIA_API_KEY
 EIA_API_KEY= os.getenv("EIA_API_KEY")
 
 # map EIA fuel types to source types
