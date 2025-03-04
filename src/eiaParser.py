@@ -19,7 +19,7 @@ EIA_SOURCE_MAP = {
     "WND": "wind",
     "WAT": "hydro",
     "OIL": "oil"
-    }
+}
 
 # list of balancing authorities to get data for
 # EIA_BAL_AUTH_LIST = ["CISO", "PJM", "ERCO", "ISNE", "MISO", "SWPP", "SOCO", "BPAT", "FPL", "NYIS", "BANC", "LDWP", 
@@ -92,7 +92,9 @@ def parseEIAProductionDataBySourceType(data, startDate, electricitySources, numS
 
     for electricitySourceData in data:
         if (electricitySourceData["period"] == curDate):
-            electricityBySource[EIA_SOURCE_MAP[electricitySourceData["fueltype"]]]= electricitySourceData["value"]
+            fueltype = electricitySourceData["fueltype"]
+            if fueltype in EIA_SOURCE_MAP.keys():
+                electricityBySource[EIA_SOURCE_MAP[fueltype]]= electricitySourceData["value"]
         else:
             curDate = electricitySourceData["period"]
             curHour = curDate.split("T")[1]
@@ -104,7 +106,9 @@ def parseEIAProductionDataBySourceType(data, startDate, electricitySources, numS
             electricityProductionData.append(hourlyElectricityData)
             # print(hourlyElectricityData)
             hourlyElectricityData = [curDate.split("T")[0]+" "+curHour.zfill(2)+":00"]
-            electricityBySource[EIA_SOURCE_MAP[electricitySourceData["fueltype"]]]= electricitySourceData["value"]
+            fueltype = electricitySourceData["fueltype"]
+            if fueltype in EIA_SOURCE_MAP.keys():
+                electricityBySource[EIA_SOURCE_MAP[fueltype]]= electricitySourceData["value"]
     for source in electricitySources:
         hourlyElectricityData.append(electricityBySource[source])
     electricityProductionData.append(hourlyElectricityData)
@@ -139,7 +143,9 @@ def getElectricityProductionDataFromEIA(balAuth, startDate, numDays, DAY_JUMP):
             return fullDataset
         if (days == 0): # assuming all data is correctly available for the first day at least
             for electricitySourceData in data:
-                electricitySources.add(EIA_SOURCE_MAP[electricitySourceData["fueltype"]])
+                fueltype = electricitySourceData["fueltype"]
+                if fueltype in EIA_SOURCE_MAP.keys():
+                    electricitySources.add(EIA_SOURCE_MAP[fueltype])
                 numSources = len(electricitySources)
         dataset = parseEIAProductionDataBySourceType(data, startDate, electricitySources, numSources)
         print(dataset)
