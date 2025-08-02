@@ -221,6 +221,10 @@
         }
         
         function getStatusBadge(status) {
+            // Handle undefined, null, or empty status values
+            if (!status || typeof status !== 'string') {
+                status = 'unknown';
+            }
             const statusClass = status.toLowerCase().replace(/[^a-z]/g, '');
             return `<span class="status-badge status-${statusClass}">${status.charAt(0).toUpperCase() + status.slice(1)}</span>`;
         }

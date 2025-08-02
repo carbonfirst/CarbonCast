@@ -463,6 +463,10 @@
         }
         
         function getStatusBadge(status) {
+            // Handle undefined, null, or empty status values
+            if (!status || typeof status !== 'string') {
+                status = 'unknown';
+            }
             const statusClass = status.toLowerCase().replace(/[^a-z]/g, '');
             return `<span class="status-badge status-${statusClass}">${status}</span>`;
         }
@@ -734,31 +738,65 @@
             const container = document.getElementById('completedRegionsContent');
             const statsElement = document.getElementById('completedStats');
             
-            // Update statistics
-            const stats = data.statistics;
-            statsElement.innerHTML = `
-                <strong>${stats.total_completed_files}</strong> completed |
-                <strong>${stats.unique_regions}</strong> regions |
-                <strong>${stats.unique_variables}</strong> variables |
-                Avg: <strong>${stats.avg_processing_hours.toFixed(1)}h</strong>
-            `;
-            
-            if (data.completed_regions.length === 0) {
+            try {
+                // Add error handling for missing data structure
+                if (!data || typeof data !== 'object') {
+                    throw new Error('Invalid data structure received');
+                }
+                
+                // Update statistics with safe property access
+                const stats = data.statistics || {};
+                const totalFiles = stats.total_completed_files || stats.total_downloaded_files || 0;
+                const uniqueRegions = stats.unique_regions || 0;
+                const uniqueVariables = stats.unique_variables || 0;
+                const avgHours = stats.avg_processing_hours || 0;
+                
+                statsElement.innerHTML = `
+                    <strong>${totalFiles}</strong> completed |
+                    <strong>${uniqueRegions}</strong> regions |
+                    <strong>${uniqueVariables}</strong> variables |
+                    Avg: <strong>${avgHours.toFixed(1)}h</strong>
+                `;
+                
+                // Handle completed regions array safely
+                const completedRegions = data.completed_regions || [];
+                
+                if (completedRegions.length === 0) {
+                    container.innerHTML = `
+                        <div class="alert alert-info">
+                            <strong>✅ No Completed Requests</strong><br>
+                            No completed requests found in the system.
+                        </div>
+                    `;
+                    return;
+                }
+                
+                let html = '';
+                completedRegions.forEach(req => {
+                    try {
+                        html += createRequestCard(req);
+                    } catch (cardError) {
+                        console.warn('Error creating request card:', cardError, req);
+                        // Skip problematic cards but continue processing
+                    }
+                });
+                
+                container.innerHTML = html;
+                
+            } catch (error) {
+                console.error('Error updating completed regions display:', error);
                 container.innerHTML = `
-                    <div class="alert alert-info">
-                        <strong>✅ No Completed Requests</strong><br>
-                        No completed requests found in the system.
+                    <div class="alert alert-danger">
+                        <strong>❌ Error Loading Completed Regions</strong><br>
+                        ${error.message || 'An unexpected error occurred while loading completed regions data.'}
                     </div>
                 `;
-                return;
+                
+                // Update stats with error message
+                if (statsElement) {
+                    statsElement.innerHTML = '<span style="color: #dc3545;">Error loading statistics</span>';
+                }
             }
-            
-            let html = '';
-            data.completed_regions.forEach(req => {
-                html += createRequestCard(req);
-            });
-            
-            container.innerHTML = html;
         }
         
         async function refreshUnknownRegions() {
