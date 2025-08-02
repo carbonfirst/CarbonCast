@@ -22,6 +22,7 @@ pip install -r requirements.txt
 
 # 3. Configure RDA authentication
 #can be found at https://rda.ucar.edu/accounts/profile/
+cd src/python
 echo "your_rda_token_here" > rdams_token.txt
 
 # 4. Navigate to the automation directory
