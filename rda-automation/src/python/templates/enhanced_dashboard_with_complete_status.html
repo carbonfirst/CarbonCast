@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Enhanced RDA Dashboard - Complete Status Information</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 12px; margin-bottom: 30px; text-align: center; position: relative; }
+        
+        /* Navigation tabs */
+        .nav-tabs {
+            display: flex;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .nav-tab {
+            flex: 1;
+            padding: 15px 20px;
+            text-align: center;
+            cursor: pointer;
+            border: none;
+            background: white;
+            color: #666;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .nav-tab.active {
+            background: #667eea;
+            color: white;
+        }
+        .nav-tab:hover:not(.active) {
+            background: #f8f9fa;
+            color: #333;
+        }
+        
+        /* Tab content */
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Real-time sync status indicators */
+        .sync-status-bar {
+            background: rgba(255,255,255,0.1);
+            padding: 10px 20px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .sync-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9em;
+        }
+        .sync-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        .sync-dot.fresh { background: #28a745; }
+        .sync-dot.acceptable { background: #ffc107; }
+        .sync-dot.stale { background: #fd7e14; }
+        .sync-dot.critical { background: #dc3545; }
+        .sync-dot.syncing { background: #007bff; animation: spin 1s linear infinite; }
+        .sync-dot.error { background: #dc3545; animation: flash 1s infinite; }
+        
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes flash { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        
+        .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .metric-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); position: relative; }
+        .metric-value { font-size: 2em; font-weight: bold; color: #2196F3; }
+        .metric-label { color: #666; margin-top: 5px; }
+        
+        /* Enhanced buttons */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-primary:hover { background: #0056b3; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-success:hover { background: #1e7e34; }
+        .btn-warning { background: #ffc107; color: #212529; }
+        .btn-warning:hover { background: #e0a800; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-danger:hover { background: #c82333; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn-secondary:hover { background: #545b62; }
+        
+        .refresh-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.3);
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0 5px;
+        }
+        .refresh-btn:hover { background: rgba(255,255,255,0.3); }
+        .refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .table-container { background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin: 20px 0; overflow: hidden; }
+        .table-header {
+            padding: 20px;
+            margin: 0;
+            background: #f8f9fa;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        /* Expandable request cards */
+        .request-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin: 10px;
+            background: white;
+            transition: all 0.3s ease;
+        }
+        .request-card:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .request-card.expanded {
+            border-color: #007bff;
+        }
+        
+        .request-summary {
+            padding: 15px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .request-summary:hover {
+            background: #f8f9fa;
+        }
+        
+        .request-basic-info {
+            flex: 1;
+        }
+        .request-id {
+            font-weight: bold;
+            color: #007bff;
+            font-size: 1.1em;
+        }
+        .request-meta {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+        
+        .expand-icon {
+            font-size: 1.2em;
+            color: #666;
+            transition: transform 0.3s ease;
+        }
+        .expand-icon.expanded {
+            transform: rotate(180deg);
+        }
+        
+        .request-details {
+            display: none;
+            border-top: 1px solid #eee;
+            padding: 20px;
+            background: #f9f9f9;
+        }
+        .request-details.expanded {
+            display: block;
+        }
+        
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .detail-section {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #007bff;
+        }
+        .detail-section h4 {
+            margin: 0 0 10px 0;
+            color: #333;
+            font-size: 1.1em;
+        }
+        
+        .status-badge { 
+            padding: 4px 8px; 
+            border-radius: 12px; 
+            font-size: 0.8em; 
+            font-weight: 500;
+        }
+        .status-processing { background: #cce5ff; color: #004085; }
+        .status-completed { background: #d4edda; color: #155724; }
+        .status-failed { background: #f8d7da; color: #721c24; }
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-queued { background: #e2e3e5; color: #383d41; }
+        
+        .param-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .param-list li {
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .param-list li:last-child {
+            border-bottom: none;
+        }
+        .param-key {
+            font-weight: 500;
+            color: #555;
+            display: inline-block;
+            min-width: 100px;
+        }
+        .param-value {
+            color: #333;
+        }
+        
+        .subset-note {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.9em;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .spatial-bounds {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .bound-item {
+            background: #e9ecef;
+            padding: 8px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .bound-label {
+            font-size: 0.8em;
+            color: #666;
+            display: block;
+        }
+        .bound-value {
+            font-weight: bold;
+            color: #333;
+        }
+        
+        /* Loading states */
+        .loading { opacity: 0.6; pointer-events: none; }
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+        
+        /* Alerts */
+        .alert {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .alert-danger {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .alert-info {
+            background: #cce5ff;
+            color: #004085;
+            border: 1px solid #b3d7ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🌦️ Enhanced RDA Automation Dashboard</h1>
+        <p>Complete get_status information with expandable request details</p>
+        <div class="sync-status-bar">
+            <div class="sync-indicator">
+                <div class="sync-dot fresh" id="syncDot"></div>
+                <span id="syncStatus">Data Fresh</span>
+            </div>
+            <div>
+                <button class="refresh-btn" onclick="refreshData()">🔄 Refresh Data</button>
+            </div>
+            <div>
+                <span>Last updated: <span id="lastUpdate">Loading...</span></span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Navigation Tabs -->
+    <div class="nav-tabs">
+        <button class="nav-tab active" onclick="showTab('overview', this)">📊 Overview</button>
+        <button class="nav-tab" onclick="showTab('current-requests', this)">📋 Current Requests</button>
+        <button class="nav-tab" onclick="showTab('completed-regions', this)">✅ Completed Regions</button>
+        <button class="nav-tab" onclick="showTab('unknown-regions', this)">❓ Unknown Regions</button>
+    </div>
+    
+    <!-- Overview Tab -->
+    <div id="overview" class="tab-content active">
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-value" id="totalRequests">-</div>
+                <div class="metric-label">Total Requests</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value" id="completedRequests">-</div>
+                <div class="metric-label">Completed</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value" id="processingRequests">-</div>
+                <div class="metric-label">Processing</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value" id="unknownRegions">-</div>
+                <div class="metric-label">Unknown Regions</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value" id="successRate">-</div>
+                <div class="metric-label">Success Rate</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value" id="uniqueRegions">-</div>
+                <div class="metric-label">Active Regions</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Current Requests Tab -->
+    <div id="current-requests" class="tab-content">
+        <div class="table-container">
+            <div class="table-header">
+                <h3>📋 Current Requests - Complete Status Information</h3>
+                <div>
+                    <button class="btn btn-secondary" onclick="refreshCurrentRequests()">🔄 Refresh</button>
+                </div>
+            </div>
+            <div id="currentRequestsContent">
+                <div style="text-align: center; padding: 40px;">Loading current requests...</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Completed Regions Tab -->
+    <div id="completed-regions" class="tab-content">
+        <div class="table-container">
+            <div class="table-header">
+                <h3>✅ Completed Regions - Complete Status Information</h3>
+                <div>
+                    <span id="completedStats">Loading statistics...</span>
+                    <button class="btn btn-secondary" onclick="refreshCompletedRegions()">🔄 Refresh</button>
+                </div>
+            </div>
+            <div id="completedRegionsContent">
+                <div style="text-align: center; padding: 40px;">Loading completed regions...</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Unknown Regions Tab -->
+    <div id="unknown-regions" class="tab-content">
+        <div class="table-container">
+            <div class="table-header">
+                <h3>❓ Unknown Regions - Complete Status Information</h3>
+                <div>
+                    <button class="btn btn-secondary" onclick="refreshUnknownRegions()">🔄 Refresh</button>
+                </div>
+            </div>
+            <div id="unknownRegionsContent">
+                <div style="text-align: center; padding: 40px;">Loading unknown regions...</div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let currentTab = 'overview';
+        
+        function showTab(tabName, clickedElement) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remove active class from all nav tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to clicked nav tab
+            if (clickedElement) {
+                clickedElement.classList.add('active');
+            }
+            
+            currentTab = tabName;
+            
+            // Load data for the selected tab
+            if (tabName === 'current-requests') {
+                refreshCurrentRequests();
+            } else if (tabName === 'completed-regions') {
+                refreshCompletedRegions();
+            } else if (tabName === 'unknown-regions') {
+                refreshUnknownRegions();
+            }
+        }
+        
+        function formatTime(timeStr) {
+            if (!timeStr) return 'N/A';
+            return new Date(timeStr).toLocaleString();
+        }
+        
+        function formatProcessingTime(hours) {
+            if (!hours) return 'N/A';
+            if (hours < 1) return Math.round(hours * 60) + ' min';
+            return hours.toFixed(1) + ' hrs';
+        }
+        
+        function getStatusBadge(status) {
+            const statusClass = status.toLowerCase().replace(/[^a-z]/g, '');
+            return `<span class="status-badge status-${statusClass}">${status}</span>`;
+        }
+        
+        function getParameterDisplayName(param) {
+            const names = {
+                'dswrf': 'Solar Radiation',
+                'ugrd_vgrd': 'Wind Speed',
+                'tmp_dpt': 'Temperature',
+                'apcp': 'Precipitation'
+            };
+            return names[param] || param.toUpperCase();
+        }
+        
+        function toggleRequestDetails(requestId) {
+            const card = document.getElementById(`card-${requestId}`);
+            const details = document.getElementById(`details-${requestId}`);
+            const icon = document.getElementById(`icon-${requestId}`);
+            
+            if (details.classList.contains('expanded')) {
+                details.classList.remove('expanded');
+                card.classList.remove('expanded');
+                icon.classList.remove('expanded');
+            } else {
+                details.classList.add('expanded');
+                card.classList.add('expanded');
+                icon.classList.add('expanded');
+            }
+        }
+        
+        function createRequestCard(req) {
+            const cardId = `card-${req.request_id}`;
+            const detailsId = `details-${req.request_id}`;
+            const iconId = `icon-${req.request_id}`;
+            
+            // Format spatial bounds if available
+            let spatialBoundsHtml = '';
+            if (req.formatted_subset_info && req.formatted_subset_info.spatial_bounds) {
+                const bounds = req.formatted_subset_info.spatial_bounds;
+                spatialBoundsHtml = `
+                    <div class="spatial-bounds">
+                        <div class="bound-item">
+                            <span class="bound-label">North Lat</span>
+                            <span class="bound-value">${bounds.north_lat}°</span>
+                        </div>
+                        <div class="bound-item">
+                            <span class="bound-label">South Lat</span>
+                            <span class="bound-value">${bounds.south_lat}°</span>
+                        </div>
+                        <div class="bound-item">
+                            <span class="bound-label">West Lon</span>
+                            <span class="bound-value">${bounds.west_lon}°</span>
+                        </div>
+                        <div class="bound-item">
+                            <span class="bound-label">East Lon</span>
+                            <span class="bound-value">${bounds.east_lon}°</span>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Format rinfo parameters
+            let rinfoParamsHtml = '';
+            if (req.rinfo_params && Object.keys(req.rinfo_params).length > 0) {
+                rinfoParamsHtml = '<ul class="param-list">';
+                for (const [key, value] of Object.entries(req.rinfo_params)) {
+                    rinfoParamsHtml += `
+                        <li>
+                            <span class="param-key">${key}:</span>
+                            <span class="param-value">${value}</span>
+                        </li>
+                    `;
+                }
+                rinfoParamsHtml += '</ul>';
+            }
+            
+            // Format date range if available
+            let dateRangeHtml = '';
+            if (req.formatted_subset_info && req.formatted_subset_info.date_range) {
+                const dateRange = req.formatted_subset_info.date_range;
+                dateRangeHtml = `
+                    <p><strong>Start:</strong> ${dateRange.formatted_start || dateRange.start}</p>
+                    <p><strong>End:</strong> ${dateRange.formatted_end || dateRange.end}</p>
+                `;
+            }
+            
+            // Format parameters list
+            let parametersHtml = '';
+            if (req.formatted_subset_info && req.formatted_subset_info.parameters) {
+                parametersHtml = '<ul>';
+                req.formatted_subset_info.parameters.forEach(param => {
+                    parametersHtml += `<li>${param}</li>`;
+                });
+                parametersHtml += '</ul>';
+            }
+            
+            return `
+                <div class="request-card" id="${cardId}">
+                    <div class="request-summary" onclick="toggleRequestDetails('${req.request_id}')">
+                        <div class="request-basic-info">
+                            <div class="request-id">${req.request_id}</div>
+                            <div class="request-meta">
+                                ${getStatusBadge(req.status)} | 
+                                ${req.region || 'UNKNOWN'} | 
+                                ${getParameterDisplayName(req.variable_type || 'unknown')} |
+                                Index: ${req.request_index}
+                            </div>
+                        </div>
+                        <div class="expand-icon" id="${iconId}">▼</div>
+                    </div>
+                    <div class="request-details" id="${detailsId}">
+                        <div class="details-grid">
+                            <div class="detail-section">
+                                <h4>📋 Request Information</h4>
+                                <ul class="param-list">
+                                    <li><span class="param-key">Request ID:</span> <span class="param-value">${req.request_id}</span></li>
+                                    <li><span class="param-key">Request Index:</span> <span class="param-value">${req.request_index}</span></li>
+                                    <li><span class="param-key">Dataset ID:</span> <span class="param-value">${req.dsid || 'N/A'}</span></li>
+                                    <li><span class="param-key">Status:</span> <span class="param-value">${getStatusBadge(req.status)}</span></li>
+                                    <li><span class="param-key">Region:</span> <span class="param-value">${req.region || 'UNKNOWN'}</span></li>
+                                    <li><span class="param-key">Variable:</span> <span class="param-value">${getParameterDisplayName(req.variable_type || 'unknown')}</span></li>
+                                </ul>
+                            </div>
+                            
+                            <div class="detail-section">
+                                <h4>📅 Timeline</h4>
+                                <ul class="param-list">
+                                    <li><span class="param-key">Requested:</span> <span class="param-value">${formatTime(req.date_rqst)}</span></li>
+                                    <li><span class="param-key">Ready:</span> <span class="param-value">${formatTime(req.date_ready)}</span></li>
+                                    <li><span class="param-key">Purge:</span> <span class="param-value">${formatTime(req.date_purge)}</span></li>
+                                    <li><span class="param-key">Processing Time:</span> <span class="param-value">${formatProcessingTime(req.processing_time_hours)}</span></li>
+                                </ul>
+                            </div>
+                            
+                            <div class="detail-section">
+                                <h4>👤 Contact & Location</h4>
+                                <ul class="param-list">
+                                    <li><span class="param-key">NCAR Contact:</span> <span class="param-value">${req.NCAR_contact || req.ncar_contact || 'N/A'}</span></li>
+                                    <li><span class="param-key">Location:</span> <span class="param-value">${req.location || 'N/A'}</span></li>
+                                </ul>
+                            </div>
+                            
+                            <div class="detail-section">
+                                <h4>⚙️ Request Parameters</h4>
+                                ${rinfoParamsHtml || '<p>No parameters available</p>'}
+                            </div>
+                            
+                            ${dateRangeHtml ? `
+                            <div class="detail-section">
+                                <h4>📅 Data Range</h4>
+                                ${dateRangeHtml}
+                            </div>
+                            ` : ''}
+                            
+                            ${parametersHtml ? `
+                            <div class="detail-section">
+                                <h4>🌡️ Parameters</h4>
+                                ${parametersHtml}
+                            </div>
+                            ` : ''}
+                            
+                            ${spatialBoundsHtml ? `
+                            <div class="detail-section">
+                                <h4>🗺️ Spatial Bounds</h4>
+                                ${spatialBoundsHtml}
+                            </div>
+                            ` : ''}
+                            
+                            <div class="detail-section" style="grid-column: 1 / -1;">
+                                <h4>📝 Subset Information</h4>
+                                <div class="subset-note">${req.formatted_subset_info?.raw_note || req.subset_note || 'No subset information available'}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        async function refreshData() {
+            try {
+                // Update summary metrics
+                const summaryResponse = await fetch('/api/summary');
+                const summaryData = await summaryResponse.json();
+                updateSummaryMetrics(summaryData);
+                
+                // Refresh current tab data
+                if (currentTab === 'current-requests') {
+                    await refreshCurrentRequests();
+                } else if (currentTab === 'completed-regions') {
+                    await refreshCompletedRegions();
+                } else if (currentTab === 'unknown-regions') {
+                    await refreshUnknownRegions();
+                }
+                
+                document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+            } catch (error) {
+                console.error('Error refreshing data:', error);
+                showAlert('Error refreshing data: ' + error.message, 'danger');
+            }
+        }
+        
+        function updateSummaryMetrics(data) {
+            const overview = data.overview;
+            document.getElementById('totalRequests').textContent = overview.total_requests || 0;
+            document.getElementById('completedRequests').textContent = overview.completed_requests || 0;
+            document.getElementById('processingRequests').textContent = (overview.processing_requests || 0) + (overview.queued_requests || 0);
+            document.getElementById('successRate').textContent = (overview.success_rate || 0).toFixed(1) + '%';
+            document.getElementById('uniqueRegions').textContent = overview.unique_regions || 0;
+        }
+        
+        async function refreshCurrentRequests() {
+            try {
+                const response = await fetch('/api/current-requests');
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                updateCurrentRequestsDisplay(data);
+                
+            } catch (error) {
+                console.error('Error refreshing current requests:', error);
+                document.getElementById('currentRequestsContent').innerHTML = 
+                    `<div class="alert alert-danger">Error loading current requests: ${error.message}</div>`;
+            }
+        }
+        
+        function updateCurrentRequestsDisplay(requests) {
+            const container = document.getElementById('currentRequestsContent');
+            
+            if (requests.length === 0) {
+                container.innerHTML = `
+                    <div class="alert alert-info">
+                        <strong>📋 No Current Requests</strong><br>
+                        No active requests found in the system.
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '';
+            requests.forEach(req => {
+                html += createRequestCard(req);
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        async function refreshCompletedRegions() {
+            try {
+                const response = await fetch('/api/completed-regions');
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                updateCompletedRegionsDisplay(data);
+                
+            } catch (error) {
+                console.error('Error refreshing completed regions:', error);
+                document.getElementById('completedRegionsContent').innerHTML = 
+                    `<div class="alert alert-danger">Error loading completed regions: ${error.message}</div>`;
+            }
+        }
+        
+        function updateCompletedRegionsDisplay(data) {
+            const container = document.getElementById('completedRegionsContent');
+            const statsElement = document.getElementById('completedStats');
+            
+            // Update statistics
+            const stats = data.statistics;
+            statsElement.innerHTML = `
+                <strong>${stats.total_completed_files}</strong> completed |
+                <strong>${stats.unique_regions}</strong> regions |
+                <strong>${stats.unique_variables}</strong> variables |
+                Avg: <strong>${stats.avg_processing_hours.toFixed(1)}h</strong>
+            `;
+            
+            if (data.completed_regions.length === 0) {
+                container.innerHTML = `
+                    <div class="alert alert-info">
+                        <strong>✅ No Completed Requests</strong><br>
+                        No completed requests found in the system.
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '';
+            data.completed_regions.forEach(req => {
+                html += createRequestCard(req);
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        async function refreshUnknownRegions() {
+            try {
+                const response = await fetch('/api/unknown-regions');
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                updateUnknownRegionsDisplay(data);
+                
+                // Update unknown regions count in overview
+                document.getElementById('unknownRegions').textContent = data.unknown_requests.length;
+                
+            } catch (error) {
+                console.error('Error refreshing unknown regions:', error);
+                document.getElementById('unknownRegionsContent').innerHTML = 
+                    `<div class="alert alert-danger">Error loading unknown regions: ${error.message}</div>`;
+            }
+        }
+        
+        function updateUnknownRegionsDisplay(data) {
+            const container = document.getElementById('unknownRegionsContent');
+            
+            if (data.unknown_requests.length === 0) {
+                container.innerHTML = `
+                    <div class="alert alert-success">
+                        <strong>🎉 Great!</strong> No unknown regions found. All requests have been properly resolved.
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = `
+                <div class="alert alert-info">
+                    <strong>📊 Summary:</strong> ${data.status.summary.total_unknown} unknown regions found, 
+                    ${data.status.summary.resolved} resolved, ${data.status.summary.fallback_assigned} with fallback names.
+                </div>
+            `;
+            
+            data.unknown_requests.forEach(req => {
+                html += createRequestCard(req);
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        function showAlert(message, type = 'info') {
+            // Remove existing alerts
+            const existingAlerts = document.querySelectorAll('.alert-temporary');
+            existingAlerts.forEach(alert => alert.remove());
+            
+            // Create new alert
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type} alert-temporary`;
+            alert.innerHTML = message;
+            alert.style.position = 'fixed';
+            alert.style.top = '20px';
+            alert.style.right = '20px';
+            alert.style.zIndex = '9999';
+            alert.style.maxWidth = '400px';
+            alert.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';
+            
+            // Add close button
+            const closeBtn = document.createElement('button');
+            closeBtn.innerHTML = '×';
+            closeBtn.style.float = 'right';
+            closeBtn.style.background = 'none';
+            closeBtn.style.border = 'none';
+            closeBtn.style.fontSize = '20px';
+            closeBtn.style.cursor = 'pointer';
+            closeBtn.onclick = () => alert.remove();
+            alert.appendChild(closeBtn);
+            
+            document.body.appendChild(alert);
+            
+            // Auto-remove after 5 seconds for non-info alerts
+            if (type !== 'info') {
+                setTimeout(() => {
+                    if (alert.parentNode) {
+                        alert.remove();
+                    }
+                }, 5000);
+            }
+        }
+        
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            refreshData();
+            // Auto-refresh every 30 seconds
+            setInterval(refreshData, 30000);
+        });
+    </script>
+</body>
+</html>

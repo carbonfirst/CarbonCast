@@ -1,0 +1,50 @@
+{
+  "automation": {
+    "max_concurrent_requests": 10,
+    "check_interval_seconds": 300,
+    "retry_attempts": 3,
+    "retry_delay_seconds": 60,
+    "auto_upload_enabled": true,
+    "status_check_interval_seconds": 180
+  },
+  "upload": {
+    "dest_file": "./ds0841.1_control.ctl",
+    "rate_limit_delay": 2.0,
+    "auto_discover_incoming": true
+  },
+  "directories": {
+    "base_download_dir": "./data/downloaded_files",
+    "logs_dir": "./logs",
+    "control_files_dir": "./src/python/control_files"
+  },
+  "database": {
+    "path": "./src/python/data/automation_state.db"
+  },
+  "logging": {
+    "level": "INFO",
+    "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    "file": "./logs/automation.log"
+  },
+  "regions": {
+    "CISO": {
+      "name": "California Independent System Operator",
+      "parameters": ["dswrf", "wind", "temp", "rain"]
+    },
+    "ERCOT": {
+      "name": "Electric Reliability Council of Texas",
+      "parameters": ["dswrf", "wind", "temp", "rain"]
+    },
+    "PJM": {
+      "name": "PJM Interconnection",
+      "parameters": ["dswrf", "wind", "temp", "rain"]
+    },
+    "MISO": {
+      "name": "Midcontinent Independent System Operator",
+      "parameters": ["dswrf", "wind", "temp", "rain", "apcp"]
+    },
+    "NYISO": {
+      "name": "New York Independent System Operator",
+      "parameters": ["dswrf", "wind", "temp", "rain"]
+    }
+  }
+}

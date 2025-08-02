@@ -1,0 +1,11 @@
+dataset=ds084.1
+date=202101010000/to/202112310000
+datetype=init
+param=U GRD/V GRD
+level=HTGL:10
+nlat=46.75
+slat=45.5
+wlon=13.75
+elon=16.5  
+product=Analysis/3-hour Forecast/6-hour Forecast/9-hour Forecast/12-hour Forecast/15-hour Forecast/18-hour Forecast/21-hour Forecast/24-hour Forecast/27-hour Forecast/30-hour Forecast/33-hour Forecast/36-hour Forecast/39-hour Forecast/42-hour Forecast/45-hour Forecast/48-hour Forecast/51-hour Forecast/54-hour Forecast/57-hour Forecast/60-hour Forecast/63-hour Forecast/66-hour Forecast/69-hour Forecast/72-hour Forecast/75-hour Forecast/78-hour Forecast/81-hour Forecast/84-hour Forecast/87-hour Forecast/90-hour Forecast/93-hour Forecast/96-hour Forecast/99-hour Forecast/102-hour Forecast/105-hour Forecast/108-hour Forecast/111-hour Forecast/114-hour Forecast/117-hour Forecast/120-hour Forecast/123-hour Forecast/126-hour Forecast/129-hour Forecast/132-hour Forecast/135-hour Forecast/138-hour Forecast/141-hour Forecast/144-hour Forecast/147-hour Forecast/150-hour Forecast/153-hour Forecast/156-hour Forecast/159-hour Forecast/162-hour Forecast/165-hour Forecast/168-hour Forecast
+targetdir=/glade/scratch

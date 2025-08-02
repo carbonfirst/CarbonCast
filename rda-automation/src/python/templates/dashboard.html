@@ -1,0 +1,222 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Batch Automation Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .metric-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .metric-value { font-size: 2em; font-weight: bold; color: #2196F3; }
+        .metric-label { color: #666; margin-top: 5px; }
+        .progress-bar { width: 100%; height: 20px; background-color: #e0e0e0; border-radius: 10px; overflow: hidden; margin: 10px 0; }
+        .progress-fill { height: 100%; background-color: #4CAF50; transition: width 0.3s ease; }
+        .chart-container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .status-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+        .status-item { text-align: center; padding: 10px; border-radius: 4px; }
+        .status-pending { background-color: #FFF3E0; color: #F57C00; }
+        .status-processing { background-color: #E3F2FD; color: #1976D2; }
+        .status-completed { background-color: #E8F5E8; color: #388E3C; }
+        .status-failed { background-color: #FFEBEE; color: #D32F2F; }
+        .refresh-btn { background-color: #2196F3; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; }
+        .refresh-btn:hover { background-color: #1976D2; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Batch Automation Dashboard</h1>
+            <button class="refresh-btn" onclick="refreshData()">Refresh Data</button>
+            <p>Last updated: <span id="lastUpdate">Loading...</span></p>
+        </div>
+        
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-value" id="totalRequests">-</div>
+                <div class="metric-label">Total Requests</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value" id="completedRequests">-</div>
+                <div class="metric-label">Completed</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressBar" style="width: 0%"></div>
+                </div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value" id="successRate">-</div>
+                <div class="metric-label">Success Rate</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value" id="completionRate">-</div>
+                <div class="metric-label">Requests/Hour</div>
+            </div>
+        </div>
+        
+        <div class="chart-container">
+            <h3>Progress Over Time</h3>
+            <canvas id="progressChart" width="400" height="200"></canvas>
+        </div>
+        
+        <div class="chart-container">
+            <h3>Current Status Distribution</h3>
+            <div class="status-grid" id="statusGrid">
+                <!-- Status items will be populated by JavaScript -->
+            </div>
+        </div>
+        
+        <div class="chart-container">
+            <h3>System Performance</h3>
+            <canvas id="performanceChart" width="400" height="200"></canvas>
+        </div>
+    </div>
+    
+    <script>
+        let progressChart, performanceChart;
+        
+        function initCharts() {
+            // Progress chart
+            const progressCtx = document.getElementById('progressChart').getContext('2d');
+            progressChart = new Chart(progressCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Completed Requests',
+                        data: [],
+                        borderColor: '#4CAF50',
+                        backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+            
+            // Performance chart
+            const performanceCtx = document.getElementById('performanceChart').getContext('2d');
+            performanceChart = new Chart(performanceCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'System Load (%)',
+                            data: [],
+                            borderColor: '#FF9800',
+                            backgroundColor: 'rgba(255, 152, 0, 0.1)',
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Memory Usage (MB)',
+                            data: [],
+                            borderColor: '#9C27B0',
+                            backgroundColor: 'rgba(156, 39, 176, 0.1)',
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: { type: 'linear', display: true, position: 'left' },
+                        y1: { type: 'linear', display: true, position: 'right', grid: { drawOnChartArea: false } }
+                    }
+                }
+            });
+        }
+        
+        async function refreshData() {
+            try {
+                // Fetch current status
+                const statusResponse = await fetch('/api/status');
+                const statusData = await statusResponse.json();
+                
+                // Update metrics
+                updateMetrics(statusData);
+                
+                // Fetch and update charts
+                const metricsResponse = await fetch('/api/metrics');
+                const metricsData = await metricsResponse.json();
+                updateCharts(metricsData);
+                
+                document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+            } catch (error) {
+                console.error('Error refreshing data:', error);
+            }
+        }
+        
+        function updateMetrics(data) {
+            const overall = data.overall_progress;
+            const status = data.current_status;
+            const performance = data.performance_metrics;
+            
+            document.getElementById('totalRequests').textContent = overall.total_requests;
+            document.getElementById('completedRequests').textContent = overall.downloaded_requests;
+            document.getElementById('successRate').textContent = performance.success_rate.toFixed(1) + '%';
+            document.getElementById('completionRate').textContent = overall.completion_rate_per_hour.toFixed(2);
+            
+            // Update progress bar
+            const progressPercent = overall.progress_percentage;
+            document.getElementById('progressBar').style.width = progressPercent + '%';
+            
+            // Update status grid
+            const statusGrid = document.getElementById('statusGrid');
+            statusGrid.innerHTML = `
+                <div class="status-item status-pending">
+                    <div style="font-size: 1.5em; font-weight: bold;">${status.pending}</div>
+                    <div>Pending</div>
+                </div>
+                <div class="status-item status-processing">
+                    <div style="font-size: 1.5em; font-weight: bold;">${status.processing}</div>
+                    <div>Processing</div>
+                </div>
+                <div class="status-item status-completed">
+                    <div style="font-size: 1.5em; font-weight: bold;">${status.completed}</div>
+                    <div>Completed</div>
+                </div>
+                <div class="status-item status-failed">
+                    <div style="font-size: 1.5em; font-weight: bold;">${status.failed}</div>
+                    <div>Failed</div>
+                </div>
+            `;
+        }
+        
+        function updateCharts(metricsData) {
+            const labels = metricsData.map(m => new Date(m.timestamp).toLocaleTimeString());
+            const completedData = metricsData.map(m => m.downloaded_requests);
+            const systemLoadData = metricsData.map(m => m.system_load);
+            const memoryData = metricsData.map(m => m.memory_usage_mb);
+            
+            // Update progress chart
+            progressChart.data.labels = labels;
+            progressChart.data.datasets[0].data = completedData;
+            progressChart.update();
+            
+            // Update performance chart
+            performanceChart.data.labels = labels;
+            performanceChart.data.datasets[0].data = systemLoadData;
+            performanceChart.data.datasets[1].data = memoryData;
+            performanceChart.update();
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            initCharts();
+            refreshData();
+            
+            // Auto-refresh every 30 seconds
+            setInterval(refreshData, 30000);
+        });
+    </script>
+</body>
+</html>
+        

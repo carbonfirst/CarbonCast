@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Enhanced RDA Dashboard - Real-Time Sync</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 12px; margin-bottom: 30px; text-align: center; position: relative; }
+        
+        /* Real-time sync status indicators */
+        .sync-status-bar {
+            background: rgba(255,255,255,0.1);
+            padding: 10px 20px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .sync-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9em;
+        }
+        .sync-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        .sync-dot.fresh { background: #28a745; }
+        .sync-dot.acceptable { background: #ffc107; }
+        .sync-dot.stale { background: #fd7e14; }
+        .sync-dot.critical { background: #dc3545; }
+        .sync-dot.syncing { background: #007bff; animation: spin 1s linear infinite; }
+        .sync-dot.error { background: #dc3545; animation: flash 1s infinite; }
+        
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes flash { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        
+        .freshness-warning {
+            background: rgba(255, 193, 7, 0.2);
+            color: #856404;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            margin-top: 10px;
+            border-left: 4px solid #ffc107;
+        }
+        .freshness-critical {
+            background: rgba(220, 53, 69, 0.2);
+            color: #721c24;
+            border-left-color: #dc3545;
+        }
+        
+        .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .metric-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); position: relative; }
+        .metric-value { font-size: 2em; font-weight: bold; color: #2196F3; }
+        .metric-label { color: #666; margin-top: 5px; }
+        
+        /* Enhanced buttons */
+        .refresh-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.3);
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0 5px;
+        }
+        .refresh-btn:hover { background: rgba(255,255,255,0.3); }
+        .refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .sync-btn {
+            background: rgba(40, 167, 69, 0.8);
+            border-color: rgba(40, 167, 69, 0.8);
+        }
+        .sync-btn:hover { background: rgba(40, 167, 69, 1); }
+        
+        .table-container { background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin: 20px 0; overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background: #f8f9fa; font-weight: 600; }
+        .status-badge { padding: 4px 8px; border-radius: 12px; font-size: 0.8em; }
+        .status-processing { background: #cce5ff; color: #004085; }
+        .status-completed { background: #d4edda; color: #155724; }
+        .status-failed { background: #f8d7da; color: #721c24; }
+        .status-pending { background: #fff3cd; color: #856404; }
+        
+        /* Loading states */
+        .loading { opacity: 0.6; pointer-events: none; }
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🌦️ Enhanced RDA Automation Dashboard</h1>
+        <p>Real-time monitoring of weather data requests</p>
+        <button class="refresh-btn" onclick="refreshData()">🔄 Refresh Data</button>
+        <button class="refresh-btn sync-btn" onclick="triggerSync()">⚡ Force Sync</button>
+        <div class="sync-status-bar">
+            <div class="sync-indicator">
+                <div class="sync-dot fresh" id="syncDot"></div>
+                <span id="syncStatus">Real-time sync active</span>
+            </div>
+            <div class="sync-indicator">
+                <span id="dataFreshness">Data is fresh</span>
+            </div>
+        </div>
+        <p>Last updated: <span id="lastUpdate">Loading...</span></p>
+    </div>
+    
+    <div class="metrics-grid">
+        <div class="metric-card">
+            <div class="metric-value" id="totalRequests">-</div>
+            <div class="metric-label">Total Requests</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value" id="completedRequests">-</div>
+            <div class="metric-label">Completed</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value" id="processingRequests">-</div>
+            <div class="metric-label">Processing</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value" id="failedRequests">-</div>
+            <div class="metric-label">Purged</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value" id="successRate">-</div>
+            <div class="metric-label">Success Rate</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value" id="uniqueRegions">-</div>
+            <div class="metric-label">Active Regions</div>
+        </div>
+    </div>
+    
+    <div class="table-container">
+        <h3 style="padding: 20px; margin: 0; background: #f8f9fa;">📋 Current Requests</h3>
+        <table id="requestsTable">
+            <thead>
+                <tr>
+                    <th>Region</th>
+                    <th>Weather Variable</th>
+                    <th>Status</th>
+                    <th>Submitted</th>
+                    <th>Processing Time</th>
+                    <th>Request Index</th>
+                </tr>
+            </thead>
+            <tbody id="requestsTableBody">
+                <tr><td colspan="6" style="text-align: center; padding: 40px;">Loading requests...</td></tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="table-container">
+        <h3 style="padding: 20px; margin: 0; background: #f8f9fa;">🗺️ Regional Performance</h3>
+        <table id="regionalTable">
+            <thead>
+                <tr>
+                    <th>Region</th>
+                    <th>Total Requests</th>
+                    <th>Success Rate</th>
+                    <th>Most Common Variable</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="regionalTableBody">
+                <tr><td colspan="5" style="text-align: center; padding: 40px;">Loading regional data...</td></tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="table-container">
+        <h3 style="padding: 20px; margin: 0; background: #f8f9fa;">🌡️ Weather Variable Analysis</h3>
+        <table id="variableTable">
+            <thead>
+                <tr>
+                    <th>Weather Variable</th>
+                    <th>Total Requests</th>
+                    <th>Success Rate</th>
+                    <th>Most Active Regions</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="variableTableBody">
+                <tr><td colspan="5" style="text-align: center; padding: 40px;">Loading weather variable data...</td></tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <script>
+        function formatTime(timeStr) {
+            if (!timeStr) return 'N/A';
+            return new Date(timeStr).toLocaleString();
+        }
+        
+        function formatProcessingTime(hours) {
+            if (!hours) return 'N/A';
+            if (hours < 1) return Math.round(hours * 60) + ' min';
+            return hours.toFixed(1) + ' hrs';
+        }
+        
+        function getStatusBadge(status) {
+            const statusClass = status.toLowerCase().replace(/[^a-z]/g, '');
+            return `<span class="status-badge status-${statusClass}">${status.charAt(0).toUpperCase() + status.slice(1)}</span>`;
+        }
+        
+        function getParameterDisplayName(param) {
+            const names = {
+                'dswrf': 'Solar Radiation',
+                'wind': 'Wind Speed',
+                'temp': 'Temperature',
+                'rain': 'Precipitation'
+            };
+            return names[param] || param.toUpperCase();
+        }
+        
+        function updateSyncStatus(syncStatus, freshness) {
+            const syncDot = document.getElementById('syncDot');
+            const syncStatusText = document.getElementById('syncStatus');
+            const dataFreshnessText = document.getElementById('dataFreshness');
+            
+            if (syncStatus) {
+                syncDot.className = `sync-dot ${syncStatus.current_status}`;
+                syncStatusText.textContent = `Sync: ${syncStatus.current_status}`;
+            }
+            
+            if (freshness) {
+                dataFreshnessText.textContent = freshness.warning_message || 'Data is fresh';
+                if (freshness.level === 'critical') {
+                    dataFreshnessText.className = 'freshness-critical';
+                } else if (freshness.level === 'stale') {
+                    dataFreshnessText.className = 'freshness-warning';
+                }
+            }
+        }
+        
+        async function triggerSync() {
+            try {
+                const response = await fetch('/api/trigger-sync', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reason: 'manual_trigger' })
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    console.log('Manual sync completed successfully');
+                    refreshData();
+                } else {
+                    console.error('Manual sync failed:', result.error_message);
+                }
+            } catch (error) {
+                console.error('Error triggering sync:', error);
+            }
+        }
+        
+        async function refreshData() {
+            try {
+                // Update summary metrics
+                const summaryResponse = await fetch('/api/summary');
+                const summaryData = await summaryResponse.json();
+                updateSummaryMetrics(summaryData);
+                updateSyncStatus(summaryData.sync_status, summaryData.data_freshness);
+                
+                // Update current requests
+                const requestsResponse = await fetch('/api/current-requests');
+                const requestsData = await requestsResponse.json();
+                updateRequestsTable(requestsData);
+                
+                // Update regional metrics
+                const regionalResponse = await fetch('/api/regional-metrics');
+                const regionalData = await regionalResponse.json();
+                updateRegionalTable(regionalData);
+                
+                // Update weather variable metrics
+                const variableResponse = await fetch('/api/weather-variable-metrics');
+                const variableData = await variableResponse.json();
+                updateVariableTable(variableData);
+                
+                document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+            } catch (error) {
+                console.error('Error refreshing data:', error);
+            }
+        }
+        
+        function updateSummaryMetrics(data) {
+            const overview = data.overview || {};
+            document.getElementById('totalRequests').textContent = overview.total_requests || 0;
+            document.getElementById('completedRequests').textContent = overview.completed_requests || 0;
+            document.getElementById('processingRequests').textContent = (overview.processing_requests || 0) + (overview.queued_requests || 0);
+            document.getElementById('failedRequests').textContent = overview.purged_requests || 0;
+            document.getElementById('successRate').textContent = (overview.success_rate || 0).toFixed(1) + '%';
+            document.getElementById('uniqueRegions').textContent = overview.unique_regions || 0;
+        }
+        
+        function updateRequestsTable(requests) {
+            const tbody = document.getElementById('requestsTableBody');
+            if (requests.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px;">No requests found</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = requests.map(req => `
+                <tr>
+                    <td>${req.region || 'UNKNOWN'}</td>
+                    <td>${getParameterDisplayName(req.variable_type || 'unknown')}</td>
+                    <td>${getStatusBadge(req.status)}</td>
+                    <td>${formatTime(req.date_rqst)}</td>
+                    <td>${formatProcessingTime(req.processing_time_hours)}</td>
+                    <td>${req.request_index}</td>
+                </tr>
+            `).join('');
+        }
+        
+        function updateRegionalTable(regions) {
+            const tbody = document.getElementById('regionalTableBody');
+            if (regions.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px;">No regional data found</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = regions.map(region => `
+                <tr>
+                    <td><strong>${region.region}</strong></td>
+                    <td>${region.total_requests}</td>
+                    <td>${region.success_rate.toFixed(1)}%</td>
+                    <td>${getParameterDisplayName(region.most_common_variable)}</td>
+                    <td>
+                        <small>
+                            ✅ ${region.completed_requests} |
+                            🔄 ${region.processing_requests} |
+                            🗑️ ${region.purged_requests}
+                        </small>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        function updateVariableTable(variables) {
+            const tbody = document.getElementById('variableTableBody');
+            if (variables.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px;">No weather variable data found</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = variables.map(variable => `
+                <tr>
+                    <td><strong>${getParameterDisplayName(variable.variable_type)}</strong></td>
+                    <td>${variable.total_requests}</td>
+                    <td>${variable.success_rate.toFixed(1)}%</td>
+                    <td>${variable.most_active_regions.join(', ')}</td>
+                    <td>
+                        <small>
+                            ✅ ${variable.completed_requests} |
+                            🔄 ${variable.processing_requests} |
+                            🗑️ ${variable.purged_requests}
+                        </small>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            refreshData();
+            // Auto-refresh every 30 seconds
+            setInterval(refreshData, 30000);
+        });
+    </script>
+</body>
+</html>

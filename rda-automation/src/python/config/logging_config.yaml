@@ -1,0 +1,150 @@
+# RDA Automation System - Logging Configuration
+# This file defines the logging configuration for the entire system
+
+version: 1
+disable_existing_loggers: false
+
+formatters:
+  standard:
+    format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    datefmt: '%Y-%m-%d %H:%M:%S'
+  
+  detailed:
+    format: '%(asctime)s - %(name)s - %(levelname)s - %(module)s - %(funcName)s:%(lineno)d - %(message)s'
+    datefmt: '%Y-%m-%d %H:%M:%S'
+  
+  json:
+    format: '{"timestamp": "%(asctime)s", "logger": "%(name)s", "level": "%(levelname)s", "module": "%(module)s", "function": "%(funcName)s", "line": %(lineno)d, "message": "%(message)s"}'
+    datefmt: '%Y-%m-%d %H:%M:%S'
+
+handlers:
+  console:
+    class: logging.StreamHandler
+    level: INFO
+    formatter: standard
+    stream: ext://sys.stdout
+  
+  file_info:
+    class: logging.handlers.RotatingFileHandler
+    level: INFO
+    formatter: detailed
+    filename: src/python/logs/rda_automation.log
+    maxBytes: 10485760  # 10MB
+    backupCount: 5
+    encoding: utf8
+  
+  file_error:
+    class: logging.handlers.RotatingFileHandler
+    level: ERROR
+    formatter: detailed
+    filename: src/python/logs/rda_errors.log
+    maxBytes: 10485760  # 10MB
+    backupCount: 5
+    encoding: utf8
+  
+  file_debug:
+    class: logging.handlers.RotatingFileHandler
+    level: DEBUG
+    formatter: json
+    filename: src/python/logs/rda_debug.log
+    maxBytes: 52428800  # 50MB
+    backupCount: 3
+    encoding: utf8
+
+loggers:
+  # Root logger
+  '':
+    level: INFO
+    handlers: [console, file_info, file_error]
+    propagate: false
+  
+  # Automation components
+  automation:
+    level: INFO
+    handlers: [console, file_info, file_error]
+    propagate: false
+  
+  automation.workflow_orchestrator:
+    level: DEBUG
+    handlers: [console, file_info, file_debug]
+    propagate: false
+  
+  automation.upload_automation:
+    level: INFO
+    handlers: [console, file_info, file_error]
+    propagate: false
+  
+  automation.data_sync:
+    level: INFO
+    handlers: [console, file_info, file_error]
+    propagate: false
+  
+  automation.error_manager:
+    level: DEBUG
+    handlers: [console, file_error, file_debug]
+    propagate: false
+  
+  automation.retry_manager:
+    level: INFO
+    handlers: [console, file_info, file_error]
+    propagate: false
+  
+  automation.status_monitor:
+    level: INFO
+    handlers: [console, file_info]
+    propagate: false
+  
+  automation.dashboard:
+    level: INFO
+    handlers: [console, file_info]
+    propagate: false
+  
+  automation.report_generator:
+    level: INFO
+    handlers: [console, file_info, file_error]
+    propagate: false
+  
+  # External libraries
+  requests:
+    level: WARNING
+    handlers: [file_info]
+    propagate: false
+  
+  urllib3:
+    level: WARNING
+    handlers: [file_info]
+    propagate: false
+  
+  sqlalchemy:
+    level: WARNING
+    handlers: [file_info]
+    propagate: false
+
+# Log levels by environment
+environments:
+  development:
+    root_level: DEBUG
+    console_level: DEBUG
+    file_level: DEBUG
+  
+  testing:
+    root_level: INFO
+    console_level: INFO
+    file_level: DEBUG
+  
+  production:
+    root_level: INFO
+    console_level: WARNING
+    file_level: INFO
+
+# Log rotation settings
+rotation:
+  max_file_size: 10485760  # 10MB
+  backup_count: 5
+  compress_backups: true
+  
+# Performance settings
+performance:
+  buffer_size: 8192
+  flush_interval: 5  # seconds
+  async_logging: false

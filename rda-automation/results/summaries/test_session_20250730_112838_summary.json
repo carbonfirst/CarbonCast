@@ -1,0 +1,37 @@
+{
+  "session_id": "test_session_20250730_112838",
+  "timestamp": "2025-07-30T15:28:38.470035+00:00",
+  "runtime_seconds": 0.0011043548583984375,
+  "workflow_results": {
+    "success": false,
+    "upload_results": {
+      "success": false,
+      "submitted_files": [],
+      "failed_files": [
+        "src/python/control_files/GR_temp_control.ctl",
+        "src/python/control_files/IT_temp_control.ctl"
+      ],
+      "request_ids": [],
+      "errors": [
+        "src/python/control_files/GR_temp_control.ctl: 'StateManager' object has no attribute 'FileStatus'",
+        "src/python/control_files/IT_temp_control.ctl: 'StateManager' object has no attribute 'FileStatus'"
+      ]
+    },
+    "monitoring_results": {},
+    "download_results": {},
+    "purge_results": {},
+    "total_files": 2,
+    "completed_files": 0,
+    "failed_files": 0,
+    "errors": [
+      "Upload phase failed - no requests submitted"
+    ]
+  },
+  "session_progress": {
+    "total_files": 2,
+    "pending_files": 2,
+    "completed_files": 0,
+    "failed_files": 0,
+    "success_rate": 0.0
+  }
+}

@@ -1,0 +1,348 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "RDA Automation System Report Schema",
+  "description": "Schema definition for RDA automation system reports",
+  "type": "object",
+  "required": [
+    "report_metadata",
+    "executive_summary",
+    "regional_data",
+    "system_health"
+  ],
+  "properties": {
+    "report_metadata": {
+      "type": "object",
+      "description": "Metadata about the report generation",
+      "required": ["report_id", "report_date", "report_period", "version"],
+      "properties": {
+        "report_id": {
+          "type": "string",
+          "description": "Unique identifier for the report"
+        },
+        "report_date": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Date and time when the report was generated"
+        },
+        "report_period": {
+          "type": "object",
+          "description": "Time period covered by the report",
+          "required": ["start_date", "end_date"],
+          "properties": {
+            "start_date": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "end_date": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        },
+        "version": {
+          "type": "string",
+          "description": "Report generator version"
+        },
+        "next_report_time": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Scheduled time for next report"
+        }
+      }
+    },
+    "executive_summary": {
+      "type": "object",
+      "description": "High-level summary statistics",
+      "required": [
+        "total_regions",
+        "total_files_processed",
+        "success_rate",
+        "system_uptime"
+      ],
+      "properties": {
+        "total_regions": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total number of regions being monitored"
+        },
+        "total_files_processed": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total number of files processed during the period"
+        },
+        "success_rate": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Overall success rate as a percentage"
+        },
+        "system_uptime": {
+          "type": "string",
+          "description": "System uptime in human-readable format"
+        },
+        "avg_processing_time": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Average processing time in milliseconds"
+        },
+        "peak_processing_rate": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Peak processing rate in files per hour"
+        }
+      }
+    },
+    "regional_data": {
+      "type": "array",
+      "description": "Performance data for each region",
+      "items": {
+        "type": "object",
+        "required": [
+          "region_code",
+          "name",
+          "files_processed",
+          "success_rate",
+          "last_update",
+          "status"
+        ],
+        "properties": {
+          "region_code": {
+            "type": "string",
+            "description": "Region identifier code"
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable region name"
+          },
+          "files_processed": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of files processed for this region"
+          },
+          "success_rate": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "Success rate for this region as a percentage"
+          },
+          "last_update": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last successful update timestamp"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["active", "inactive", "error", "maintenance"],
+            "description": "Current status of the region"
+          },
+          "status_class": {
+            "type": "string",
+            "enum": ["success", "error", "warning", "info"],
+            "description": "CSS class for status display"
+          },
+          "data_types": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["dswrf", "rain", "temp", "wind"]
+            },
+            "description": "Data types processed for this region"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "error_type": {"type": "string"},
+                "count": {"type": "integer", "minimum": 0},
+                "last_occurrence": {"type": "string", "format": "date-time"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "data_type_stats": {
+      "type": "array",
+      "description": "Statistics for each data type",
+      "items": {
+        "type": "object",
+        "required": ["type", "name", "count", "description"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["dswrf", "rain", "temp", "wind"],
+            "description": "Data type identifier"
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable data type name"
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of files processed for this data type"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the data type"
+          },
+          "unit": {
+            "type": "string",
+            "description": "Unit of measurement for this data type"
+          },
+          "success_rate": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "Success rate for this data type"
+          }
+        }
+      }
+    },
+    "error_summary": {
+      "type": "array",
+      "description": "Summary of errors encountered",
+      "items": {
+        "type": "object",
+        "required": ["type", "count", "last_occurrence", "severity"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Error type or category"
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of occurrences"
+          },
+          "last_occurrence": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp of last occurrence"
+          },
+          "severity": {
+            "type": "string",
+            "enum": ["low", "medium", "high", "critical"],
+            "description": "Error severity level"
+          },
+          "severity_class": {
+            "type": "string",
+            "enum": ["success", "info", "warning", "error"],
+            "description": "CSS class for severity display"
+          },
+          "affected_regions": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "List of regions affected by this error"
+          },
+          "resolution_status": {
+            "type": "string",
+            "enum": ["resolved", "investigating", "pending", "ignored"],
+            "description": "Current resolution status"
+          }
+        }
+      }
+    },
+    "system_health": {
+      "type": "object",
+      "description": "System health metrics",
+      "required": [
+        "cpu_usage",
+        "memory_usage",
+        "disk_usage",
+        "active_connections"
+      ],
+      "properties": {
+        "cpu_usage": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "CPU usage percentage"
+        },
+        "memory_usage": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Memory usage percentage"
+        },
+        "disk_usage": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Disk usage percentage"
+        },
+        "active_connections": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of active connections"
+        },
+        "network_throughput": {
+          "type": "object",
+          "properties": {
+            "incoming_mbps": {"type": "number", "minimum": 0},
+            "outgoing_mbps": {"type": "number", "minimum": 0}
+          }
+        },
+        "database_status": {
+          "type": "object",
+          "properties": {
+            "connection_pool_size": {"type": "integer", "minimum": 0},
+            "active_queries": {"type": "integer", "minimum": 0},
+            "avg_query_time": {"type": "number", "minimum": 0}
+          }
+        }
+      }
+    },
+    "performance_metrics": {
+      "type": "object",
+      "description": "Detailed performance metrics",
+      "properties": {
+        "processing_times": {
+          "type": "object",
+          "properties": {
+            "min": {"type": "number", "minimum": 0},
+            "max": {"type": "number", "minimum": 0},
+            "avg": {"type": "number", "minimum": 0},
+            "median": {"type": "number", "minimum": 0}
+          }
+        },
+        "throughput": {
+          "type": "object",
+          "properties": {
+            "files_per_hour": {"type": "number", "minimum": 0},
+            "data_volume_mb": {"type": "number", "minimum": 0}
+          }
+        },
+        "queue_metrics": {
+          "type": "object",
+          "properties": {
+            "pending_jobs": {"type": "integer", "minimum": 0},
+            "failed_jobs": {"type": "integer", "minimum": 0},
+            "completed_jobs": {"type": "integer", "minimum": 0}
+          }
+        }
+      }
+    },
+    "alerts": {
+      "type": "array",
+      "description": "Active alerts and notifications",
+      "items": {
+        "type": "object",
+        "required": ["id", "type", "severity", "message", "timestamp"],
+        "properties": {
+          "id": {"type": "string"},
+          "type": {"type": "string"},
+          "severity": {
+            "type": "string",
+            "enum": ["info", "warning", "error", "critical"]
+          },
+          "message": {"type": "string"},
+          "timestamp": {"type": "string", "format": "date-time"},
+          "acknowledged": {"type": "boolean"},
+          "region": {"type": "string"}
+        }
+      }
+    }
+  }
+}

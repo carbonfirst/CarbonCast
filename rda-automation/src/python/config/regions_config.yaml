@@ -1,0 +1,122 @@
+# RDA Automation System - Regions Configuration
+# This file defines the regions and their associated parameters for data processing
+
+regions:
+  # North American Regions
+  MISO:
+    name: "Midcontinent Independent System Operator"
+    timezone: "America/Chicago"
+    data_types: ["dswrf", "rain", "temp", "wind"]
+    api_endpoints:
+      base_url: "https://api.misoenergy.org"
+      data_path: "/data"
+    processing_priority: 1
+    
+  PJM:
+    name: "PJM Interconnection"
+    timezone: "America/New_York"
+    data_types: ["rain", "temp", "wind"]
+    api_endpoints:
+      base_url: "https://api.pjm.com"
+      data_path: "/data"
+    processing_priority: 1
+    
+  ERCOT:
+    name: "Electric Reliability Council of Texas"
+    timezone: "America/Chicago"
+    data_types: ["wind", "temp"]
+    api_endpoints:
+      base_url: "https://api.ercot.com"
+      data_path: "/data"
+    processing_priority: 1
+    
+  CISO:
+    name: "California Independent System Operator"
+    timezone: "America/Los_Angeles"
+    data_types: ["dswrf", "rain", "temp", "wind"]
+    api_endpoints:
+      base_url: "https://api.caiso.com"
+      data_path: "/data"
+    processing_priority: 1
+    
+  NYISO:
+    name: "New York Independent System Operator"
+    timezone: "America/New_York"
+    data_types: ["dswrf", "rain", "temp"]
+    api_endpoints:
+      base_url: "https://api.nyiso.com"
+      data_path: "/data"
+    processing_priority: 1
+    
+  ISNE:
+    name: "ISO New England"
+    timezone: "America/New_York"
+    data_types: ["dswrf", "rain", "temp"]
+    api_endpoints:
+      base_url: "https://api.iso-ne.com"
+      data_path: "/data"
+    processing_priority: 1
+
+  # European Regions
+  DE:
+    name: "Germany"
+    timezone: "Europe/Berlin"
+    data_types: ["rain", "temp", "wind"]
+    api_endpoints:
+      base_url: "https://api.energy-charts.info"
+      data_path: "/data"
+    processing_priority: 2
+    
+  GB:
+    name: "Great Britain"
+    timezone: "Europe/London"
+    data_types: ["dswrf", "rain", "wind"]
+    api_endpoints:
+      base_url: "https://api.nationalgrideso.com"
+      data_path: "/data"
+    processing_priority: 2
+    
+  FR:
+    name: "France"
+    timezone: "Europe/Paris"
+    data_types: ["rain", "wind"]
+    api_endpoints:
+      base_url: "https://api.rte-france.com"
+      data_path: "/data"
+    processing_priority: 2
+
+# Data type definitions
+data_types:
+  dswrf:
+    name: "Downward Short-Wave Radiation Flux"
+    unit: "W/m²"
+    description: "Solar radiation data"
+    
+  rain:
+    name: "Precipitation"
+    unit: "mm"
+    description: "Rainfall data"
+    
+  temp:
+    name: "Temperature"
+    unit: "°C"
+    description: "Temperature data"
+    
+  wind:
+    name: "Wind Speed"
+    unit: "m/s"
+    description: "Wind speed data"
+
+# Processing configuration
+processing:
+  batch_size: 100
+  retry_attempts: 3
+  timeout_seconds: 300
+  parallel_workers: 4
+  
+# File organization
+file_structure:
+  incoming_dir: "src/python/incoming"
+  downloaded_dir: "src/python/downloaded_files"
+  processed_dir: "src/python/processed"
+  backup_dir: "src/python/data/backups"
