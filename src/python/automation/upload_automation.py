@@ -54,27 +54,27 @@ class UploadStatus(Enum):
 
 @dataclass
 class UploadConfig:
-    """Configuration for upload automation."""
-    # Core settings
+    """Configuration for upload automation - AGGRESSIVE 10-REQUEST TARGETING."""
+    # Core settings - AGGRESSIVE
     enabled: bool = True
-    capacity_threshold: int = 9  # Only upload when <= 9 requests active
-    batch_size: int = 2  # Maximum files to upload per cycle
-    rate_limit_delay: float = 2.0  # Delay between uploads
+    capacity_threshold: int = 10  # Changed from 9 to 10 - upload even at 10 requests
+    batch_size: int = 10  # Increased from 2 to 10 for aggressive uploading
+    rate_limit_delay: float = 0.5  # Reduced from 2.0 to 0.5 for faster uploads
     
     # File management
     control_files_dir: str = "src/python/incoming"
     processed_files_dir: str = "src/python/processed"
     failed_files_dir: str = "src/python/failed_uploads"
     
-    # Scheduling
-    min_upload_interval: int = 300  # 5 minutes minimum between uploads
-    max_daily_uploads: int = 50  # Maximum uploads per day
-    upload_window_start: int = 6  # Start uploads at 6 AM
-    upload_window_end: int = 22  # Stop uploads at 10 PM
+    # Scheduling - AGGRESSIVE
+    min_upload_interval: int = 30  # Reduced from 300 to 30 seconds for frequent uploads
+    max_daily_uploads: int = 1000  # Increased from 50 to 1000 for maximum throughput
+    upload_window_start: int = 0  # Changed from 6 to 0 - upload 24/7
+    upload_window_end: int = 24  # Changed from 22 to 24 - upload 24/7
     
-    # Error handling
-    max_retry_attempts: int = 3
-    retry_delay: int = 600  # 10 minutes between retries
+    # Error handling - AGGRESSIVE
+    max_retry_attempts: int = 5  # Increased from 3 to 5
+    retry_delay: int = 60  # Reduced from 600 to 60 seconds for faster retries
     
     # Integration
     db_path: str = "src/python/data/automation_state.db"
@@ -324,6 +324,7 @@ class UploadAutomationManager:
                     capacity_status = self.capacity_manager.get_current_capacity_status()
                     capacity_before = capacity_status.total_requests
                     
+                    # AGGRESSIVE: Allow uploads even at capacity threshold to maintain 10 requests
                     if capacity_before > self.config.capacity_threshold:
                         self.logger.info(f"🚫 Upload blocked: capacity too high ({capacity_before} > {self.config.capacity_threshold})")
                         return UploadResult(
@@ -362,11 +363,21 @@ class UploadAutomationManager:
                         capacity_after=capacity_before
                     )
                 
-                # Determine batch size
-                batch_size = max_files if max_files is not None else self.config.batch_size
+                # AGGRESSIVE: Determine batch size to fill available slots
+                available_slots = max(0, 10 - capacity_before)
+                if max_files is not None:
+                    batch_size = min(max_files, available_slots, self.config.batch_size)
+                else:
+                    batch_size = min(available_slots, self.config.batch_size, len(control_files))
+                
+                # AGGRESSIVE: Always try to upload at least 1 file if available
+                if batch_size == 0 and len(control_files) > 0:
+                    batch_size = 1
+                    self.logger.info(f"🔥 AGGRESSIVE: No slots but forcing 1 file upload to maintain pressure")
+                
                 files_to_upload = control_files[:batch_size]
                 
-                self.logger.info(f"📤 Uploading {len(files_to_upload)} files (capacity: {capacity_before}/10)")
+                self.logger.info(f"📤 AGGRESSIVE Upload: {len(files_to_upload)} files (capacity: {capacity_before}/10, target: 10)")
                 
                 # Mark upload as active
                 self.upload_active = True

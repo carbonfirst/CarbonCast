@@ -1381,7 +1381,7 @@ class EnhancedRDADashboard:
                         # Scan for files in region directory and subdirectories
                         for root, dirs, files in os.walk(region_path):
                             for file in files:
-                                if file.endswith(('.nc', '.grb', '.grib', '.dat', '.bin')):  # Common weather data formats
+                                if file.endswith(('.nc', '.grb', '.grib', '.dat', '.bin', '.tar', '.gz', '.bz2', '.zip', '.grib2')):  # Common weather data formats including compressed
                                     total_files += 1
                                     
                                     # Try to extract variable type from filename or directory

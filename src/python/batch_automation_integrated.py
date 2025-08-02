@@ -180,24 +180,29 @@ class IntegratedBatchSystem:
             # Start web dashboard in background - ALWAYS for all automation commands
             self._start_web_dashboard_background()
             
-            # Main processing loop with intelligent queuing
+            # Main processing loop with intelligent queuing - AGGRESSIVE 10-REQUEST TARGETING
             self.running = True
-            check_interval = self.batch_system.config['automation']['check_interval_seconds']
+            # AGGRESSIVE: Reduced check interval from 300 to 60 seconds for faster response
+            check_interval = min(self.batch_system.config['automation']['check_interval_seconds'], 60)
             
             while self.running:
-                self.logger.info("=== Processing Cycle Started ===")
+                self.logger.info("=== AGGRESSIVE Processing Cycle Started ===")
                 
                 # Check current request count and automatically upload files if slots available
                 current_request_count = self.batch_system._get_current_request_count()
-                self.logger.info(f"Current active requests: {current_request_count}/10")
+                self.logger.info(f"🎯 AGGRESSIVE TARGET: {current_request_count}/10 requests active")
                 
-                # MISSING INTEGRATION: Automatically call upload_files.py when request count < 10
+                # AGGRESSIVE INTEGRATION: Always try to maintain exactly 10 requests
                 if current_request_count < 10:
                     available_slots = 10 - current_request_count
-                    self.logger.info(f"🚀 Available request slots detected ({available_slots} slots). Checking for new files to upload...")
+                    self.logger.info(f"🚀 AGGRESSIVE UPLOAD: {available_slots} slots available - IMMEDIATELY filling to reach 10 requests")
                     
-                    # Call upload_files.py functionality to submit new requests
+                    # Call upload_files.py functionality to submit new requests AGGRESSIVELY
                     self._auto_upload_new_files(available_slots)
+                elif current_request_count == 10:
+                    self.logger.info(f"🎯 PERFECT: Exactly 10 requests active - maintaining target")
+                else:
+                    self.logger.warning(f"⚠️ OVER CAPACITY: {current_request_count} requests active - this should not happen")
                 
                 # Get next requests from intelligent queue
                 next_requests = self.queue_manager.get_next_requests()
@@ -250,9 +255,10 @@ class IntegratedBatchSystem:
                     self.logger.info("🎉 All requests processed successfully!")
                     break
                 
-                # Wait before next cycle
-                self.logger.info(f"Waiting {check_interval} seconds before next cycle...")
-                time.sleep(check_interval)
+                # AGGRESSIVE: Reduced wait time for faster response
+                aggressive_interval = min(check_interval, 60)  # Never wait more than 60 seconds
+                self.logger.info(f"⚡ AGGRESSIVE: Waiting {aggressive_interval} seconds before next cycle (reduced for 10-request targeting)...")
+                time.sleep(aggressive_interval)
         
         except KeyboardInterrupt:
             self.logger.info("Received interrupt signal, shutting down...")
@@ -263,13 +269,10 @@ class IntegratedBatchSystem:
     
     def _auto_upload_new_files(self, available_slots: int):
         """
-        Automatically upload new files when request slots are available.
+        AGGRESSIVELY upload new files when request slots are available.
         
-        This implements the missing integration to call upload_files.py functionality
-        when there are fewer than 10 active requests, as specified in user requirements:
-        "As soon as the requests are freed up and notice there is space to submit a request,
-        usually done by checking if there are fewer than 10 requests, I will then go ahead
-        and run the upload_files.py file to submit a request."
+        This implements AGGRESSIVE integration to call upload_files.py functionality
+        to maintain exactly 10 active requests at all times.
         
         Args:
             available_slots: Number of available request slots (10 - current_request_count)
@@ -286,7 +289,7 @@ class IntegratedBatchSystem:
                 self.logger.error("❌ upload_files module not available for auto-upload functionality")
                 return
             
-            self.logger.info(f"🔍 Auto-upload: Checking for new control files to submit ({available_slots} slots available)")
+            self.logger.info(f"🔍 AGGRESSIVE Auto-upload: Checking for new control files to submit ({available_slots} slots available)")
             
             # Discover available control files using upload_files functionality
             control_files_dir = self.config.get('directories', {}).get('control_files_dir', './control_files')
@@ -319,14 +322,14 @@ class IntegratedBatchSystem:
                 self.logger.info("📋 All discovered control files are already in processing queue")
                 return
             
-            # Limit to available slots to respect the 10-request limit
+            # AGGRESSIVE: Try to fill ALL available slots to reach exactly 10 requests
             files_to_submit = new_files[:available_slots]
             
-            self.logger.info(f"🚀 Auto-upload: Found {len(new_files)} new files, submitting {len(files_to_submit)} (limited by available slots)")
+            self.logger.info(f"🚀 AGGRESSIVE Auto-upload: Found {len(new_files)} new files, submitting {len(files_to_submit)} to reach 10-request target")
             
-            # Get configuration for upload_files
+            # Get configuration for upload_files - AGGRESSIVE SETTINGS
             dest_file = self.config.get('upload', {}).get('dest_file', './ds0841.1_control.ctl')
-            rate_limit_delay = self.config.get('upload', {}).get('rate_limit_delay', 2.0)
+            rate_limit_delay = min(self.config.get('upload', {}).get('rate_limit_delay', 2.0), 1.0)  # Reduced delay for aggressive uploading
             
             # Submit the batch of files using upload_files functionality
             self.logger.info(f"📤 Submitting {len(files_to_submit)} files via upload_files.py integration...")

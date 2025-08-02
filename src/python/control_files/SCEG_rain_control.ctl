@@ -1,5 +1,5 @@
 dataset=ds084.1
-date=202401010000/to/202403312359
+date=202201010000/to/202312310000
 datetype=init
 param=A PCP
 level=SFC:0

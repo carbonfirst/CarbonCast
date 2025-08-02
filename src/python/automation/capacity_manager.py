@@ -55,22 +55,22 @@ class PriorityLevel(Enum):
 @dataclass
 class CapacityConfig:
     """Configuration for capacity management."""
-    normal_threshold: int = 6
-    approaching_threshold: int = 7
+    normal_threshold: int = 8  # Increased from 6 to be more aggressive
+    approaching_threshold: int = 9  # Increased from 7 to be more aggressive
     critical_threshold: int = 10
     crisis_threshold: int = 10
-    monitoring_interval: int = 60  # 1 minute
+    monitoring_interval: int = 30  # Reduced from 60 to 30 seconds for faster response
     crisis_resolution_timeout: int = 1800  # 30 minutes
     aggressive_processing_enabled: bool = True
     auto_purge_completed: bool = True
     auto_purge_errors: bool = True
     priority_boost_at_critical: bool = True
     emergency_processing_enabled: bool = True
-    # Upload automation settings
+    # Upload automation settings - AGGRESSIVE SETTINGS FOR 10-REQUEST TARGET
     enable_upload_automation: bool = True
-    upload_capacity_threshold: int = 9  # Only upload when <= 9 requests active
-    upload_batch_size: int = 2  # Maximum files to upload per cycle
-    upload_rate_limit_delay: float = 2.0  # Delay between uploads
+    upload_capacity_threshold: int = 10  # Changed from 9 to 10 - upload even at 10 requests
+    upload_batch_size: int = 5  # Increased from 2 to 5 for more aggressive uploading
+    upload_rate_limit_delay: float = 1.0  # Reduced from 2.0 to 1.0 for faster uploads
     control_files_dir: str = "src/python/incoming"
 
 
@@ -438,30 +438,33 @@ class CapacityManager:
         return actions
     
     def _execute_normal_strategy(self, capacity_status: CapacityStatus) -> List[CapacityAction]:
-        """Execute normal strategy when capacity is normal."""
+        """Execute normal strategy when capacity is normal - AGGRESSIVE 10-REQUEST TARGETING."""
         actions = []
         
         self.logger.debug(f"✅ CAPACITY NORMAL: {capacity_status.total_requests}/10 requests active")
         
-        # Strategy 1: Upload automation when capacity allows
-        if self.config.enable_upload_automation:
+        # AGGRESSIVE STRATEGY 1: Always try to upload when below 10 requests
+        if self.config.enable_upload_automation and capacity_status.total_requests < 10:
+            available_slots = 10 - capacity_status.total_requests
+            self.logger.info(f"🚀 AGGRESSIVE UPLOAD: {available_slots} slots available, attempting to fill all slots")
+            
             upload_action = self._attempt_upload_automation(capacity_status)
             if upload_action:
                 actions.append(upload_action)
         
-        # Strategy 2: Regular maintenance and optimization
-        if capacity_status.priority_requests > 2:  # Only if there are several priority requests
-            self.logger.info("🔄 NORMAL ACTION: Regular maintenance processing")
+        # AGGRESSIVE STRATEGY 2: Process priority requests immediately (reduced threshold)
+        if capacity_status.priority_requests > 0:  # Changed from > 2 to > 0 for immediate processing
+            self.logger.info("🔄 AGGRESSIVE ACTION: Immediate priority request processing")
             
             start_time = time.time()
             cycle_result = self.request_manager.run_processing_cycle()
             processing_time = time.time() - start_time
             
             action = CapacityAction(
-                action_type="normal_maintenance_processing",
+                action_type="aggressive_priority_processing",
                 request_id=None,
                 success=cycle_result.get('success', False),
-                message="Regular maintenance processing completed",
+                message="Aggressive priority processing completed",
                 details=cycle_result,
                 timestamp=datetime.now().isoformat(),
                 processing_time=processing_time
@@ -514,7 +517,7 @@ class CapacityManager:
             CapacityAction if upload was attempted, None otherwise
         """
         try:
-            # Check if we have sufficient capacity for uploads
+            # AGGRESSIVE CAPACITY CHECK: Allow uploads even at 10 requests to maintain maximum throughput
             if capacity_status.total_requests > self.config.upload_capacity_threshold:
                 self.logger.debug(f"🚫 Upload skipped: {capacity_status.total_requests} requests active "
                                 f"(threshold: {self.config.upload_capacity_threshold})")
@@ -527,18 +530,18 @@ class CapacityManager:
                 self.logger.debug("📤 No control files found for upload")
                 return None
             
-            # Calculate how many files we can safely upload
-            available_slots = capacity_status.available_slots
+            # AGGRESSIVE UPLOAD STRATEGY: Calculate maximum files to upload to reach exactly 10 requests
+            available_slots = max(0, 10 - capacity_status.total_requests)
             max_uploadable = min(
                 len(control_files),
                 self.config.upload_batch_size,
-                available_slots  # Use all available slots up to threshold
+                max(available_slots, 1)  # Always try to upload at least 1 file if any available
             )
             
-            if max_uploadable <= 0:
-                self.logger.debug(f"🚫 Upload skipped: insufficient capacity "
-                                f"({available_slots} slots available)")
-                return None
+            # AGGRESSIVE: Even if no slots, try to upload 1 file to maintain pressure
+            if max_uploadable <= 0 and len(control_files) > 0:
+                max_uploadable = 1
+                self.logger.info(f"🔥 AGGRESSIVE UPLOAD: No slots available but forcing 1 file upload to maintain 10-request target")
             
             # Select files to upload
             files_to_upload = control_files[:max_uploadable]
