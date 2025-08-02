@@ -419,16 +419,20 @@ class RDADataSyncService:
                         region = self._extract_region_from_rinfo(request.rinfo)
                         variable = self._extract_variable_from_subset_note(request.subset_note)
                     
+                    # Generate control file path for this request
+                    control_file_path = f"control_files/{region}_{variable}_control.ctl"
+                    
                     cursor.execute("""
                         INSERT INTO rda_requests (
-                            request_index, request_id, dsid, status,
+                            request_index, request_id, control_file_path, dsid, status,
                             date_rqst, date_ready, date_purge, location,
                             ncar_contact, rinfo, subset_note, raw_response,
                             region, variable_type, created_at, updated_at
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """, (
                         request.request_index,
                         request.request_id,
+                        control_file_path,  # Add the required control_file_path
                         request.dsid,
                         request.status,
                         request.date_rqst,
@@ -516,8 +520,8 @@ class RDADataSyncService:
                         INSERT OR REPLACE INTO control_files_tracking (
                             file_path, filename, region, variable_type,
                             discovered_at, status, request_index, request_id,
-                            control_file_path, created_at, updated_at
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            created_at, updated_at
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """, (
                         control_file_path,  # file_path (required)
                         filename,           # filename (required)
@@ -527,7 +531,6 @@ class RDADataSyncService:
                         request.status,
                         request.request_index,
                         request.request_id,
-                        control_file_path,  # control_file_path (the new column we added)
                         datetime.now().isoformat(),  # created_at
                         datetime.now().isoformat()   # updated_at
                     ))

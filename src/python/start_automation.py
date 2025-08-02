@@ -55,6 +55,8 @@ try:
     from batch_automation_integrated import IntegratedBatchSystem
     from automation.dashboard import create_dashboard
     from directory_utils import setup_directories
+    from setup_database import UnifiedDatabaseSetup
+    from check_database import DatabaseHealthChecker
 except ImportError as e:
     print(f"❌ Error importing required modules: {e}")
     print("Please ensure you're running from the correct directory and all dependencies are installed.")
@@ -143,20 +145,21 @@ class RDAAutomationStarter:
         
         Validates that all required components are available for the
         automation system to operate properly, including directories,
-        configuration files, and authentication tokens.
+        configuration files, authentication tokens, and database setup.
         
         The method checks for:
             - Control files directory and contents
             - RDA authentication token file
             - Required data and logs directories
+            - Database setup and health
         
         Returns:
             bool: True if all prerequisites are satisfied, False otherwise.
                 When False, detailed guidance is provided to resolve issues.
         
         Note:
-            This method will attempt to create missing directories automatically
-            but requires manual intervention for missing files.
+            This method will attempt to create missing directories and
+            set up the database automatically.
         """
         print("🔍 Checking system prerequisites...")
         
@@ -209,6 +212,11 @@ class RDAAutomationStarter:
         else:
             print("   ✅ Logs directory exists")
         
+        # Database setup and health check
+        print("   🗄️  Checking database setup...")
+        if not self._setup_and_check_database():
+            issues.append("❌ Database setup or health check failed")
+        
         if issues:
             print("\n❌ Prerequisites check failed:")
             for issue in issues:
@@ -216,11 +224,63 @@ class RDAAutomationStarter:
             print("\n📋 To fix these issues:")
             print("   1. Ensure control files are in the 'control_files/' directory")
             print("   2. Create 'rdams_token.txt' with your RDA authentication token")
-            print("   3. Run this script again")
+            print("   3. Check database setup logs for specific issues")
+            print("   4. Run this script again")
             return False
         
         print("✅ All prerequisites satisfied!")
         return True
+    
+    def _setup_and_check_database(self) -> bool:
+        """
+        Set up and check database health.
+        
+        Returns:
+            bool: True if database setup and health check passed, False otherwise.
+        """
+        try:
+            # Initialize database setup
+            print("      🔧 Setting up database...")
+            db_setup = UnifiedDatabaseSetup(enable_enhanced_schema=True)
+            
+            # Run database setup
+            setup_success = db_setup.setup_database()
+            if not setup_success:
+                print("      ❌ Database setup failed")
+                self.logger.error("Database setup failed during prerequisites check")
+                return False
+            
+            print("      ✅ Database setup completed")
+            
+            # Run health check
+            print("      🔍 Running database health check...")
+            health_checker = DatabaseHealthChecker(check_enhanced=True)
+            health_report = health_checker.run_health_check()
+            
+            if health_report.overall_status == "critical":
+                print("      ❌ Database health check failed - critical issues found")
+                print("      💡 Check logs for detailed error information")
+                self.logger.error(f"Database health check failed: {len([r for r in health_report.results if r.status == 'fail'])} critical issues")
+                return False
+            elif health_report.overall_status == "issues":
+                print("      ⚠️  Database health check passed with warnings")
+                warning_count = len([r for r in health_report.results if r.status == 'warning'])
+                print(f"      💡 {warning_count} warnings found - system will continue")
+                self.logger.warning(f"Database health check found {warning_count} warnings")
+            else:
+                print("      ✅ Database health check passed")
+            
+            # Show database info
+            db_info = db_setup.get_database_info()
+            table_count = len(db_info.get('tables', {}))
+            print(f"      📊 Database ready with {table_count} tables")
+            
+            return True
+            
+        except Exception as e:
+            print(f"      ❌ Database setup error: {e}")
+            self.logger.error(f"Database setup error during prerequisites: {e}")
+            return False
     
     def show_interactive_menu(self):
         """

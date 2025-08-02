@@ -1,0 +1,10 @@
+2025-08-02 04:43:47,664 - unified_database_setup - INFO - [__init__:90] - Unified Database Setup initialized for: src/python/data/automation_state.db
+2025-08-02 04:43:47,664 - unified_database_setup - INFO - [setup_database:490] - 🚀 Starting unified database setup...
+2025-08-02 04:43:47,665 - unified_database_setup - INFO - [_create_backup:150] - ✅ Backup created: src/python/data/automation_state.db.pre_setup_20250802_044347
+2025-08-02 04:43:47,666 - unified_database_setup - INFO - [_migrate_legacy_data:399] - Standard database already exists with 2 tables
+2025-08-02 04:43:47,666 - unified_database_setup - INFO - [_create_basic_tables:173] - Creating basic database tables...
+2025-08-02 04:43:47,687 - unified_database_setup - INFO - [_create_basic_tables:351] - ✅ Basic database tables created successfully
+2025-08-02 04:43:47,687 - unified_database_setup - INFO - [setup_database:509] - Creating enhanced database tables...
+2025-08-02 04:43:47,739 - unified_database_setup - INFO - [setup_database:524] - ✅ Unified database setup completed successfully!
+2025-08-02 04:43:47,739 - unified_database_setup - INFO - [setup_database:525] - 📊 Database location: src/python/data/automation_state.db
+2025-08-02 04:43:47,739 - unified_database_setup - INFO - [setup_database:526] - 📋 Tables created: 13

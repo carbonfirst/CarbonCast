@@ -1,0 +1,673 @@
+2025-08-02 04:56:34,025 - comprehensive_tracker - INFO - [_initialize_tracking_database:246] - Tracking database initialized successfully
+2025-08-02 04:56:34,027 - comprehensive_tracker - INFO - [_load_tracking_state:508] - Loaded 288 control files from database
+2025-08-02 04:56:34,027 - comprehensive_tracker - INFO - [__init__:146] - Comprehensive Tracker initialized
+2025-08-02 04:56:34,028 - comprehensive_tracker - INFO - [discover_all_control_files:263] - 🔍 Starting comprehensive control file discovery in control_files
+2025-08-02 04:56:34,029 - comprehensive_tracker - DEBUG - [discover_all_control_files:286] - Pattern '*.ctl' found 288 files
+2025-08-02 04:56:34,029 - comprehensive_tracker - DEBUG - [discover_all_control_files:286] - Pattern '*_control.ctl' found 288 files
+2025-08-02 04:56:34,030 - comprehensive_tracker - DEBUG - [discover_all_control_files:286] - Pattern '*control*.ctl' found 288 files
+2025-08-02 04:56:34,031 - comprehensive_tracker - DEBUG - [discover_all_control_files:286] - Pattern '**/*.ctl' found 288 files
+2025-08-02 04:56:34,031 - comprehensive_tracker - INFO - [discover_all_control_files:288] - 📁 Found 288 total control files
+2025-08-02 04:56:34,031 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: ES/dswrf
+2025-08-02 04:56:34,031 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: ES_dswrf_control.ctl -> ES/dswrf
+2025-08-02 04:56:34,031 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: EE/wind
+2025-08-02 04:56:34,031 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: EE_wind_control.ctl -> EE/wind
+2025-08-02 04:56:34,031 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: PACE/dswrf
+2025-08-02 04:56:34,031 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: PACE_dswrf_control.ctl -> PACE/dswrf
+2025-08-02 04:56:34,031 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: IT/temp
+2025-08-02 04:56:34,031 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: IT_temp_control.ctl -> IT/temp
+2025-08-02 04:56:34,031 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: TEPC/rain
+2025-08-02 04:56:34,031 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: TEPC_rain_control.ctl -> TEPC/rain
+2025-08-02 04:56:34,032 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: AT/wind
+2025-08-02 04:56:34,032 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: AT_wind_control.ctl -> AT/wind
+2025-08-02 04:56:34,032 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: ES/temp
+2025-08-02 04:56:34,032 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: ES_temp_control.ctl -> ES/temp
+2025-08-02 04:56:34,032 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: HR/temp
+2025-08-02 04:56:34,032 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: HR_temp_control.ctl -> HR/temp
+2025-08-02 04:56:34,032 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: HR/dswrf
+2025-08-02 04:56:34,032 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: HR_dswrf_control.ctl -> HR/dswrf
+2025-08-02 04:56:34,032 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: PT/wind
+2025-08-02 04:56:34,032 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: PT_wind_control.ctl -> PT/wind
+2025-08-02 04:56:34,032 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: HU/temp
+2025-08-02 04:56:34,032 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: HU_temp_control.ctl -> HU/temp
+2025-08-02 04:56:34,032 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: FI/temp
+2025-08-02 04:56:34,032 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: FI_temp_control.ctl -> FI/temp
+2025-08-02 04:56:34,032 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: SCL/wind
+2025-08-02 04:56:34,032 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: SCL_wind_control.ctl -> SCL/wind
+2025-08-02 04:56:34,032 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: PACW/temp
+2025-08-02 04:56:34,032 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: PACW_temp_control.ctl -> PACW/temp
+2025-08-02 04:56:34,032 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: TPWR/dswrf
+2025-08-02 04:56:34,032 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: TPWR_dswrf_control.ctl -> TPWR/dswrf
+2025-08-02 04:56:34,032 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: LV/wind
+2025-08-02 04:56:34,032 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: LV_wind_control.ctl -> LV/wind
+2025-08-02 04:56:34,032 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: FPC/rain
+2025-08-02 04:56:34,032 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: FPC_rain_control.ctl -> FPC/rain
+2025-08-02 04:56:34,032 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: NL/dswrf
+2025-08-02 04:56:34,032 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: NL_dswrf_control.ctl -> NL/dswrf
+2025-08-02 04:56:34,032 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: BPAT/temp
+2025-08-02 04:56:34,032 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: BPAT_temp_control.ctl -> BPAT/temp
+2025-08-02 04:56:34,032 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: FPC/temp
+2025-08-02 04:56:34,032 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: FPC_temp_control.ctl -> FPC/temp
+2025-08-02 04:56:34,032 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: AZPS/rain
+2025-08-02 04:56:34,032 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: AZPS_rain_control.ctl -> AZPS/rain
+2025-08-02 04:56:34,032 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: IT/dswrf
+2025-08-02 04:56:34,032 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: IT_dswrf_control.ctl -> IT/dswrf
+2025-08-02 04:56:34,032 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: EPE/wind
+2025-08-02 04:56:34,032 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: EPE_wind_control.ctl -> EPE/wind
+2025-08-02 04:56:34,033 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: NL/rain
+2025-08-02 04:56:34,033 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: NL_rain_control.ctl -> NL/rain
+2025-08-02 04:56:34,033 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: GCPD/dswrf
+2025-08-02 04:56:34,033 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: GCPD_dswrf_control.ctl -> GCPD/dswrf
+2025-08-02 04:56:34,033 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: WACM/dswrf
+2025-08-02 04:56:34,033 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: WACM_dswrf_control.ctl -> WACM/dswrf
+2025-08-02 04:56:34,033 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: FPL/wind
+2025-08-02 04:56:34,033 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: FPL_wind_control.ctl -> FPL/wind
+2025-08-02 04:56:34,033 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: AECI/temp
+2025-08-02 04:56:34,033 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: AECI_temp_control.ctl -> AECI/temp
+2025-08-02 04:56:34,033 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: FMPP/rain
+2025-08-02 04:56:34,033 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: FMPP_rain_control.ctl -> FMPP/rain
+2025-08-02 04:56:34,033 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: PACW/rain
+2025-08-02 04:56:34,033 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: PACW_rain_control.ctl -> PACW/rain
+2025-08-02 04:56:34,033 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: NWMT/rain
+2025-08-02 04:56:34,033 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: NWMT_rain_control.ctl -> NWMT/rain
+2025-08-02 04:56:34,033 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: IT/wind
+2025-08-02 04:56:34,033 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: IT_wind_control.ctl -> IT/wind
+2025-08-02 04:56:34,033 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: MISO/temp
+2025-08-02 04:56:34,033 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: MISO_temp_control.ctl -> MISO/temp
+2025-08-02 04:56:34,033 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: AT/dswrf
+2025-08-02 04:56:34,033 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: AT_dswrf_control.ctl -> AT/dswrf
+2025-08-02 04:56:34,033 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: NYISO/temp
+2025-08-02 04:56:34,033 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: NYISO_temp_control.ctl -> NYISO/temp
+2025-08-02 04:56:34,033 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: IE/dswrf
+2025-08-02 04:56:34,033 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: IE_dswrf_control.ctl -> IE/dswrf
+2025-08-02 04:56:34,033 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: SC/wind
+2025-08-02 04:56:34,033 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: SC_wind_control.ctl -> SC/wind
+2025-08-02 04:56:34,033 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: DOPD/temp
+2025-08-02 04:56:34,033 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: DOPD_temp_control.ctl -> DOPD/temp
+2025-08-02 04:56:34,033 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: TVA/temp
+2025-08-02 04:56:34,033 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: TVA_temp_control.ctl -> TVA/temp
+2025-08-02 04:56:34,033 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: TVA/wind
+2025-08-02 04:56:34,034 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: TVA_wind_control.ctl -> TVA/wind
+2025-08-02 04:56:34,034 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: IT/rain
+2025-08-02 04:56:34,034 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: IT_rain_control.ctl -> IT/rain
+2025-08-02 04:56:34,034 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: PACE/rain
+2025-08-02 04:56:34,034 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: PACE_rain_control.ctl -> PACE/rain
+2025-08-02 04:56:34,034 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: AECI/rain
+2025-08-02 04:56:34,034 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: AECI_rain_control.ctl -> AECI/rain
+2025-08-02 04:56:34,034 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: GB/temp
+2025-08-02 04:56:34,034 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: GB_temp_control.ctl -> GB/temp
+2025-08-02 04:56:34,034 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: DK/rain
+2025-08-02 04:56:34,034 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: DK_rain_control.ctl -> DK/rain
+2025-08-02 04:56:34,034 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: EPE/temp
+2025-08-02 04:56:34,034 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: EPE_temp_control.ctl -> EPE/temp
+2025-08-02 04:56:34,034 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: PNM/temp
+2025-08-02 04:56:34,034 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: PNM_temp_control.ctl -> PNM/temp
+2025-08-02 04:56:34,034 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: SK/temp
+2025-08-02 04:56:34,034 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: SK_temp_control.ctl -> SK/temp
+2025-08-02 04:56:34,034 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: LDWP/dswrf
+2025-08-02 04:56:34,034 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: LDWP_dswrf_control.ctl -> LDWP/dswrf
+2025-08-02 04:56:34,034 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: TVA/dswrf
+2025-08-02 04:56:34,034 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: TVA_dswrf_control.ctl -> TVA/dswrf
+2025-08-02 04:56:34,034 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: DUK/dswrf
+2025-08-02 04:56:34,034 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: DUK_dswrf_control.ctl -> DUK/dswrf
+2025-08-02 04:56:34,034 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: FI/dswrf
+2025-08-02 04:56:34,034 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: FI_dswrf_control.ctl -> FI/dswrf
+2025-08-02 04:56:34,034 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: SRP/temp
+2025-08-02 04:56:34,034 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: SRP_temp_control.ctl -> SRP/temp
+2025-08-02 04:56:34,034 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: TIDC/rain
+2025-08-02 04:56:34,034 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: TIDC_rain_control.ctl -> TIDC/rain
+2025-08-02 04:56:34,034 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: GRID/wind
+2025-08-02 04:56:34,034 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: GRID_wind_control.ctl -> GRID/wind
+2025-08-02 04:56:34,035 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: HR/rain
+2025-08-02 04:56:34,035 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: HR_rain_control.ctl -> HR/rain
+2025-08-02 04:56:34,035 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: RO/wind
+2025-08-02 04:56:34,035 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: RO_wind_control.ctl -> RO/wind
+2025-08-02 04:56:34,035 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: TIDC/temp
+2025-08-02 04:56:34,035 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: TIDC_temp_control.ctl -> TIDC/temp
+2025-08-02 04:56:34,035 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: PGE/temp
+2025-08-02 04:56:34,035 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: PGE_temp_control.ctl -> PGE/temp
+2025-08-02 04:56:34,035 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: GCPD/wind
+2025-08-02 04:56:34,035 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: GCPD_wind_control.ctl -> GCPD/wind
+2025-08-02 04:56:34,035 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: ISNE/rain
+2025-08-02 04:56:34,035 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: ISNE_rain_control.ctl -> ISNE/rain
+2025-08-02 04:56:34,035 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: SPA/rain
+2025-08-02 04:56:34,035 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: SPA_rain_control.ctl -> SPA/rain
+2025-08-02 04:56:34,035 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: LDWP/temp
+2025-08-02 04:56:34,035 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: LDWP_temp_control.ctl -> LDWP/temp
+2025-08-02 04:56:34,035 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: PNM/rain
+2025-08-02 04:56:34,035 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: PNM_rain_control.ctl -> PNM/rain
+2025-08-02 04:56:34,035 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: LDWP/rain
+2025-08-02 04:56:34,035 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: LDWP_rain_control.ctl -> LDWP/rain
+2025-08-02 04:56:34,035 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: NYISO/dswrf
+2025-08-02 04:56:34,035 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: NYISO_dswrf_control.ctl -> NYISO/dswrf
+2025-08-02 04:56:34,035 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: EE/temp
+2025-08-02 04:56:34,035 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: EE_temp_control.ctl -> EE/temp
+2025-08-02 04:56:34,035 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: PT/dswrf
+2025-08-02 04:56:34,035 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: PT_dswrf_control.ctl -> PT/dswrf
+2025-08-02 04:56:34,035 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: PGE/wind
+2025-08-02 04:56:34,035 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: PGE_wind_control.ctl -> PGE/wind
+2025-08-02 04:56:34,035 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: NYISO/rain
+2025-08-02 04:56:34,035 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: NYISO_rain_control.ctl -> NYISO/rain
+2025-08-02 04:56:34,035 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: FPC/dswrf
+2025-08-02 04:56:34,035 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: FPC_dswrf_control.ctl -> FPC/dswrf
+2025-08-02 04:56:34,035 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: WALC/wind
+2025-08-02 04:56:34,035 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: WALC_wind_control.ctl -> WALC/wind
+2025-08-02 04:56:34,035 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: NWMT/dswrf
+2025-08-02 04:56:34,035 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: NWMT_dswrf_control.ctl -> NWMT/dswrf
+2025-08-02 04:56:34,035 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: FMPP/temp
+2025-08-02 04:56:34,035 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: FMPP_temp_control.ctl -> FMPP/temp
+2025-08-02 04:56:34,035 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: PGE/dswrf
+2025-08-02 04:56:34,035 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: PGE_dswrf_control.ctl -> PGE/dswrf
+2025-08-02 04:56:34,035 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: GCPD/temp
+2025-08-02 04:56:34,035 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: GCPD_temp_control.ctl -> GCPD/temp
+2025-08-02 04:56:34,035 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: DK/wind
+2025-08-02 04:56:34,035 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: DK_wind_control.ctl -> DK/wind
+2025-08-02 04:56:34,036 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: PNM/wind
+2025-08-02 04:56:34,036 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: PNM_wind_control.ctl -> PNM/wind
+2025-08-02 04:56:34,036 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: WALC/rain
+2025-08-02 04:56:34,036 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: WALC_rain_control.ctl -> WALC/rain
+2025-08-02 04:56:34,036 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: CH/dswrf
+2025-08-02 04:56:34,036 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: CH_dswrf_control.ctl -> CH/dswrf
+2025-08-02 04:56:34,036 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: WALC/dswrf
+2025-08-02 04:56:34,036 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: WALC_dswrf_control.ctl -> WALC/dswrf
+2025-08-02 04:56:34,036 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: GB/dswrf
+2025-08-02 04:56:34,036 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: GB_dswrf_control.ctl -> GB/dswrf
+2025-08-02 04:56:34,036 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: GB/wind
+2025-08-02 04:56:34,036 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: GB_wind_control.ctl -> GB/wind
+2025-08-02 04:56:34,036 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: BPAT/dswrf
+2025-08-02 04:56:34,036 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: BPAT_dswrf_control.ctl -> BPAT/dswrf
+2025-08-02 04:56:34,036 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: PJM/rain
+2025-08-02 04:56:34,036 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: PJM_rain_control.ctl -> PJM/rain
+2025-08-02 04:56:34,036 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: LV/rain
+2025-08-02 04:56:34,036 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: LV_rain_control.ctl -> LV/rain
+2025-08-02 04:56:34,036 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: IE/temp
+2025-08-02 04:56:34,036 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: IE_temp_control.ctl -> IE/temp
+2025-08-02 04:56:34,036 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: MISO/dswrf
+2025-08-02 04:56:34,036 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: MISO_dswrf_control.ctl -> MISO/dswrf
+2025-08-02 04:56:34,036 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: RS/rain
+2025-08-02 04:56:34,036 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: RS_rain_control.ctl -> RS/rain
+2025-08-02 04:56:34,036 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: BE/rain
+2025-08-02 04:56:34,036 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: BE_rain_control.ctl -> BE/rain
+2025-08-02 04:56:34,036 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: ES/wind
+2025-08-02 04:56:34,036 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: ES_wind_control.ctl -> ES/wind
+2025-08-02 04:56:34,036 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: SK/rain
+2025-08-02 04:56:34,036 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: SK_rain_control.ctl -> SK/rain
+2025-08-02 04:56:34,036 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: FMPP/wind
+2025-08-02 04:56:34,036 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: FMPP_wind_control.ctl -> FMPP/wind
+2025-08-02 04:56:34,036 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: TEC/dswrf
+2025-08-02 04:56:34,036 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: TEC_dswrf_control.ctl -> TEC/dswrf
+2025-08-02 04:56:34,036 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: RO/temp
+2025-08-02 04:56:34,036 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: RO_temp_control.ctl -> RO/temp
+2025-08-02 04:56:34,036 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: SOCO/temp
+2025-08-02 04:56:34,036 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: SOCO_temp_control.ctl -> SOCO/temp
+2025-08-02 04:56:34,036 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: PJM/wind
+2025-08-02 04:56:34,036 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: PJM_wind_control.ctl -> PJM/wind
+2025-08-02 04:56:34,036 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: LT/temp
+2025-08-02 04:56:34,036 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: LT_temp_control.ctl -> LT/temp
+2025-08-02 04:56:34,036 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: FPL/dswrf
+2025-08-02 04:56:34,036 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: FPL_dswrf_control.ctl -> FPL/dswrf
+2025-08-02 04:56:34,036 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: CISO/dswrf
+2025-08-02 04:56:34,036 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: CISO_dswrf_control.ctl -> CISO/dswrf
+2025-08-02 04:56:34,037 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: PJM/dswrf
+2025-08-02 04:56:34,037 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: PJM_dswrf_control.ctl -> PJM/dswrf
+2025-08-02 04:56:34,037 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: DUK/rain
+2025-08-02 04:56:34,037 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: DUK_rain_control.ctl -> DUK/rain
+2025-08-02 04:56:34,037 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: GCPD/rain
+2025-08-02 04:56:34,037 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: GCPD_rain_control.ctl -> GCPD/rain
+2025-08-02 04:56:34,037 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: HU/dswrf
+2025-08-02 04:56:34,037 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: HU_dswrf_control.ctl -> HU/dswrf
+2025-08-02 04:56:34,037 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: TEPC/wind
+2025-08-02 04:56:34,037 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: TEPC_wind_control.ctl -> TEPC/wind
+2025-08-02 04:56:34,037 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: IPCO/dswrf
+2025-08-02 04:56:34,037 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: IPCO_dswrf_control.ctl -> IPCO/dswrf
+2025-08-02 04:56:34,037 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: CH/wind
+2025-08-02 04:56:34,037 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: CH_wind_control.ctl -> CH/wind
+2025-08-02 04:56:34,037 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: SCEG/dswrf
+2025-08-02 04:56:34,037 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: SCEG_dswrf_control.ctl -> SCEG/dswrf
+2025-08-02 04:56:34,037 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: SC/rain
+2025-08-02 04:56:34,037 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: SC_rain_control.ctl -> SC/rain
+2025-08-02 04:56:34,037 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: FR/wind
+2025-08-02 04:56:34,037 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: FR_wind_control.ctl -> FR/wind
+2025-08-02 04:56:34,037 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: BPAT/wind
+2025-08-02 04:56:34,037 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: BPAT_wind_control.ctl -> BPAT/wind
+2025-08-02 04:56:34,037 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: IE/wind
+2025-08-02 04:56:34,037 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: IE_wind_control.ctl -> IE/wind
+2025-08-02 04:56:34,037 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: LGEE/dswrf
+2025-08-02 04:56:34,037 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: LGEE_dswrf_control.ctl -> LGEE/dswrf
+2025-08-02 04:56:34,037 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: PACW/dswrf
+2025-08-02 04:56:34,037 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: PACW_dswrf_control.ctl -> PACW/dswrf
+2025-08-02 04:56:34,037 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: PSCO/temp
+2025-08-02 04:56:34,037 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: PSCO_temp_control.ctl -> PSCO/temp
+2025-08-02 04:56:34,037 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: SCL/temp
+2025-08-02 04:56:34,037 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: SCL_temp_control.ctl -> SCL/temp
+2025-08-02 04:56:34,037 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: GB/rain
+2025-08-02 04:56:34,037 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: GB_rain_control.ctl -> GB/rain
+2025-08-02 04:56:34,037 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: SCEG/wind
+2025-08-02 04:56:34,037 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: SCEG_wind_control.ctl -> SCEG/wind
+2025-08-02 04:56:34,037 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: SK/wind
+2025-08-02 04:56:34,037 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: SK_wind_control.ctl -> SK/wind
+2025-08-02 04:56:34,037 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: PSEI/dswrf
+2025-08-02 04:56:34,037 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: PSEI_dswrf_control.ctl -> PSEI/dswrf
+2025-08-02 04:56:34,038 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: AL/rain
+2025-08-02 04:56:34,038 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: AL_rain_control.ctl -> AL/rain
+2025-08-02 04:56:34,038 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: PL/rain
+2025-08-02 04:56:34,038 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: PL_rain_control.ctl -> PL/rain
+2025-08-02 04:56:34,038 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: LDWP/wind
+2025-08-02 04:56:34,038 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: LDWP_wind_control.ctl -> LDWP/wind
+2025-08-02 04:56:34,038 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: LGEE/wind
+2025-08-02 04:56:34,038 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: LGEE_wind_control.ctl -> LGEE/wind
+2025-08-02 04:56:34,038 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: SCEG/temp
+2025-08-02 04:56:34,038 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: SCEG_temp_control.ctl -> SCEG/temp
+2025-08-02 04:56:34,038 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: FR/dswrf
+2025-08-02 04:56:34,038 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: FR_dswrf_control.ctl -> FR/dswrf
+2025-08-02 04:56:34,038 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: NWMT/wind
+2025-08-02 04:56:34,038 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: NWMT_wind_control.ctl -> NWMT/wind
+2025-08-02 04:56:34,038 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: SE/dswrf
+2025-08-02 04:56:34,038 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: SE_dswrf_control.ctl -> SE/dswrf
+2025-08-02 04:56:34,038 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: MISO/wind
+2025-08-02 04:56:34,038 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: MISO_wind_control.ctl -> MISO/wind
+2025-08-02 04:56:34,038 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: SI/temp
+2025-08-02 04:56:34,038 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: SI_temp_control.ctl -> SI/temp
+2025-08-02 04:56:34,038 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: SI/wind
+2025-08-02 04:56:34,038 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: SI_wind_control.ctl -> SI/wind
+2025-08-02 04:56:34,038 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: BANC/wind
+2025-08-02 04:56:34,038 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: BANC_wind_control.ctl -> BANC/wind
+2025-08-02 04:56:34,038 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: WACM/wind
+2025-08-02 04:56:34,038 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: WACM_wind_control.ctl -> WACM/wind
+2025-08-02 04:56:34,038 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: LGEE/temp
+2025-08-02 04:56:34,038 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: LGEE_temp_control.ctl -> LGEE/temp
+2025-08-02 04:56:34,038 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: NEVP/rain
+2025-08-02 04:56:34,038 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: NEVP_rain_control.ctl -> NEVP/rain
+2025-08-02 04:56:34,038 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: DOPD/wind
+2025-08-02 04:56:34,038 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: DOPD_wind_control.ctl -> DOPD/wind
+2025-08-02 04:56:34,039 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: SRP/dswrf
+2025-08-02 04:56:34,039 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: SRP_dswrf_control.ctl -> SRP/dswrf
+2025-08-02 04:56:34,039 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: GR/wind
+2025-08-02 04:56:34,039 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: GR_wind_control.ctl -> GR/wind
+2025-08-02 04:56:34,039 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: NL/temp
+2025-08-02 04:56:34,039 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: NL_temp_control.ctl -> NL/temp
+2025-08-02 04:56:34,039 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: BE/wind
+2025-08-02 04:56:34,039 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: BE_wind_control.ctl -> BE/wind
+2025-08-02 04:56:34,039 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: BE/dswrf
+2025-08-02 04:56:34,039 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: BE_dswrf_control.ctl -> BE/dswrf
+2025-08-02 04:56:34,039 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: IPCO/rain
+2025-08-02 04:56:34,039 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: IPCO_rain_control.ctl -> IPCO/rain
+2025-08-02 04:56:34,039 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: TAL/rain
+2025-08-02 04:56:34,039 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: TAL_rain_control.ctl -> TAL/rain
+2025-08-02 04:56:34,039 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: HR/wind
+2025-08-02 04:56:34,039 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: HR_wind_control.ctl -> HR/wind
+2025-08-02 04:56:34,039 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: TEPC/dswrf
+2025-08-02 04:56:34,039 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: TEPC_dswrf_control.ctl -> TEPC/dswrf
+2025-08-02 04:56:34,039 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: AT/temp
+2025-08-02 04:56:34,039 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: AT_temp_control.ctl -> AT/temp
+2025-08-02 04:56:34,039 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: ERCOT/rain
+2025-08-02 04:56:34,039 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: ERCOT_rain_control.ctl -> ERCOT/rain
+2025-08-02 04:56:34,039 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: WACM/temp
+2025-08-02 04:56:34,039 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: WACM_temp_control.ctl -> WACM/temp
+2025-08-02 04:56:34,039 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: ISNE/dswrf
+2025-08-02 04:56:34,039 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: ISNE_dswrf_control.ctl -> ISNE/dswrf
+2025-08-02 04:56:34,039 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: FPL/temp
+2025-08-02 04:56:34,039 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: FPL_temp_control.ctl -> FPL/temp
+2025-08-02 04:56:34,039 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: TPWR/temp
+2025-08-02 04:56:34,039 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: TPWR_temp_control.ctl -> TPWR/temp
+2025-08-02 04:56:34,039 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: ISNE/temp
+2025-08-02 04:56:34,039 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: ISNE_temp_control.ctl -> ISNE/temp
+2025-08-02 04:56:34,039 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: FR/temp
+2025-08-02 04:56:34,039 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: FR_temp_control.ctl -> FR/temp
+2025-08-02 04:56:34,039 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: IPCO/temp
+2025-08-02 04:56:34,039 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: IPCO_temp_control.ctl -> IPCO/temp
+2025-08-02 04:56:34,039 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: SPA/temp
+2025-08-02 04:56:34,039 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: SPA_temp_control.ctl -> SPA/temp
+2025-08-02 04:56:34,039 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: SCEG/rain
+2025-08-02 04:56:34,039 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: SCEG_rain_control.ctl -> SCEG/rain
+2025-08-02 04:56:34,039 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: HU/wind
+2025-08-02 04:56:34,039 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: HU_wind_control.ctl -> HU/wind
+2025-08-02 04:56:34,039 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: RS/temp
+2025-08-02 04:56:34,039 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: RS_temp_control.ctl -> RS/temp
+2025-08-02 04:56:34,039 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: TPWR/wind
+2025-08-02 04:56:34,040 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: TPWR_wind_control.ctl -> TPWR/wind
+2025-08-02 04:56:34,040 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: AL/wind
+2025-08-02 04:56:34,040 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: AL_wind_control.ctl -> AL/wind
+2025-08-02 04:56:34,040 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: MISO/rain
+2025-08-02 04:56:34,040 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: MISO_rain_control.ctl -> MISO/rain
+2025-08-02 04:56:34,040 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: AZPS/temp
+2025-08-02 04:56:34,040 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: AZPS_temp_control.ctl -> AZPS/temp
+2025-08-02 04:56:34,040 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: PACE/wind
+2025-08-02 04:56:34,040 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: PACE_wind_control.ctl -> PACE/wind
+2025-08-02 04:56:34,040 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: PJM/temp
+2025-08-02 04:56:34,040 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: PJM_temp_control.ctl -> PJM/temp
+2025-08-02 04:56:34,040 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: ES/rain
+2025-08-02 04:56:34,040 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: ES_rain_control.ctl -> ES/rain
+2025-08-02 04:56:34,040 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: GRID/dswrf
+2025-08-02 04:56:34,040 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: GRID_dswrf_control.ctl -> GRID/dswrf
+2025-08-02 04:56:34,040 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: BANC/temp
+2025-08-02 04:56:34,040 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: BANC_temp_control.ctl -> BANC/temp
+2025-08-02 04:56:34,040 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: NYISO/wind
+2025-08-02 04:56:34,040 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: NYISO_wind_control.ctl -> NYISO/wind
+2025-08-02 04:56:34,040 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: SE/temp
+2025-08-02 04:56:34,040 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: SE_temp_control.ctl -> SE/temp
+2025-08-02 04:56:34,040 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: SK/dswrf
+2025-08-02 04:56:34,040 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: SK_dswrf_control.ctl -> SK/dswrf
+2025-08-02 04:56:34,040 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: NEVP/wind
+2025-08-02 04:56:34,040 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: NEVP_wind_control.ctl -> NEVP/wind
+2025-08-02 04:56:34,040 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: EPE/dswrf
+2025-08-02 04:56:34,040 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: EPE_dswrf_control.ctl -> EPE/dswrf
+2025-08-02 04:56:34,040 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: CZ/dswrf
+2025-08-02 04:56:34,040 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: CZ_dswrf_control.ctl -> CZ/dswrf
+2025-08-02 04:56:34,040 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: LGEE/rain
+2025-08-02 04:56:34,040 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: LGEE_rain_control.ctl -> LGEE/rain
+2025-08-02 04:56:34,040 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: SE/rain
+2025-08-02 04:56:34,040 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: SE_rain_control.ctl -> SE/rain
+2025-08-02 04:56:34,040 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: ISNE/wind
+2025-08-02 04:56:34,040 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: ISNE_wind_control.ctl -> ISNE/wind
+2025-08-02 04:56:34,040 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: TAL/wind
+2025-08-02 04:56:34,040 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: TAL_wind_control.ctl -> TAL/wind
+2025-08-02 04:56:34,040 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: IE/rain
+2025-08-02 04:56:34,040 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: IE_rain_control.ctl -> IE/rain
+2025-08-02 04:56:34,041 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: PSCO/wind
+2025-08-02 04:56:34,041 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: PSCO_wind_control.ctl -> PSCO/wind
+2025-08-02 04:56:34,041 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: SRP/rain
+2025-08-02 04:56:34,041 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: SRP_rain_control.ctl -> SRP/rain
+2025-08-02 04:56:34,041 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: ERCOT/wind
+2025-08-02 04:56:34,041 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: ERCOT_wind_control.ctl -> ERCOT/wind
+2025-08-02 04:56:34,041 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: AZPS/dswrf
+2025-08-02 04:56:34,041 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: AZPS_dswrf_control.ctl -> AZPS/dswrf
+2025-08-02 04:56:34,041 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: BG/wind
+2025-08-02 04:56:34,041 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: BG_wind_control.ctl -> BG/wind
+2025-08-02 04:56:34,041 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: BG/rain
+2025-08-02 04:56:34,041 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: BG_rain_control.ctl -> BG/rain
+2025-08-02 04:56:34,041 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: WALC/temp
+2025-08-02 04:56:34,041 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: WALC_temp_control.ctl -> WALC/temp
+2025-08-02 04:56:34,041 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: DK/dswrf
+2025-08-02 04:56:34,041 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: DK_dswrf_control.ctl -> DK/dswrf
+2025-08-02 04:56:34,041 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: GR/dswrf
+2025-08-02 04:56:34,041 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: GR_dswrf_control.ctl -> GR/dswrf
+2025-08-02 04:56:34,041 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: NEVP/temp
+2025-08-02 04:56:34,041 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: NEVP_temp_control.ctl -> NEVP/temp
+2025-08-02 04:56:34,041 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: PL/wind
+2025-08-02 04:56:34,041 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: PL_wind_control.ctl -> PL/wind
+2025-08-02 04:56:34,041 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: PACW/wind
+2025-08-02 04:56:34,041 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: PACW_wind_control.ctl -> PACW/wind
+2025-08-02 04:56:34,041 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: DE/wind
+2025-08-02 04:56:34,041 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: DE_wind_control.ctl -> DE/wind
+2025-08-02 04:56:34,041 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: TAL/temp
+2025-08-02 04:56:34,041 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: TAL_temp_control.ctl -> TAL/temp
+2025-08-02 04:56:34,041 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: AT/rain
+2025-08-02 04:56:34,041 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: AT_rain_control.ctl -> AT/rain
+2025-08-02 04:56:34,041 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: GR/rain
+2025-08-02 04:56:34,041 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: GR_rain_control.ctl -> GR/rain
+2025-08-02 04:56:34,041 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: FI/rain
+2025-08-02 04:56:34,041 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: FI_rain_control.ctl -> FI/rain
+2025-08-02 04:56:34,041 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: PT/rain
+2025-08-02 04:56:34,041 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: PT_rain_control.ctl -> PT/rain
+2025-08-02 04:56:34,041 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: DOPD/dswrf
+2025-08-02 04:56:34,041 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: DOPD_dswrf_control.ctl -> DOPD/dswrf
+2025-08-02 04:56:34,041 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: BANC/dswrf
+2025-08-02 04:56:34,041 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: BANC_dswrf_control.ctl -> BANC/dswrf
+2025-08-02 04:56:34,042 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: CZ/rain
+2025-08-02 04:56:34,042 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: CZ_rain_control.ctl -> CZ/rain
+2025-08-02 04:56:34,042 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: AECI/wind
+2025-08-02 04:56:34,042 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: AECI_wind_control.ctl -> AECI/wind
+2025-08-02 04:56:34,042 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: PNM/dswrf
+2025-08-02 04:56:34,042 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: PNM_dswrf_control.ctl -> PNM/dswrf
+2025-08-02 04:56:34,042 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: SOCO/rain
+2025-08-02 04:56:34,042 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: SOCO_rain_control.ctl -> SOCO/rain
+2025-08-02 04:56:34,042 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: PL/temp
+2025-08-02 04:56:34,042 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: PL_temp_control.ctl -> PL/temp
+2025-08-02 04:56:34,042 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: RO/dswrf
+2025-08-02 04:56:34,042 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: RO_dswrf_control.ctl -> RO/dswrf
+2025-08-02 04:56:34,042 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: GR/temp
+2025-08-02 04:56:34,042 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: GR_temp_control.ctl -> GR/temp
+2025-08-02 04:56:34,042 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: NWMT/temp
+2025-08-02 04:56:34,042 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: NWMT_temp_control.ctl -> NWMT/temp
+2025-08-02 04:56:34,042 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: NL/wind
+2025-08-02 04:56:34,042 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: NL_wind_control.ctl -> NL/wind
+2025-08-02 04:56:34,042 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: TIDC/dswrf
+2025-08-02 04:56:34,042 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: TIDC_dswrf_control.ctl -> TIDC/dswrf
+2025-08-02 04:56:34,042 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: PSEI/rain
+2025-08-02 04:56:34,042 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: PSEI_rain_control.ctl -> PSEI/rain
+2025-08-02 04:56:34,042 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: SRP/wind
+2025-08-02 04:56:34,042 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: SRP_wind_control.ctl -> SRP/wind
+2025-08-02 04:56:34,043 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: LV/temp
+2025-08-02 04:56:34,043 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: LV_temp_control.ctl -> LV/temp
+2025-08-02 04:56:34,043 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: SCL/dswrf
+2025-08-02 04:56:34,043 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: SCL_dswrf_control.ctl -> SCL/dswrf
+2025-08-02 04:56:34,043 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: AL/dswrf
+2025-08-02 04:56:34,043 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: AL_dswrf_control.ctl -> AL/dswrf
+2025-08-02 04:56:34,043 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: SWPP/wind
+2025-08-02 04:56:34,043 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: SWPP_wind_control.ctl -> SWPP/wind
+2025-08-02 04:56:34,043 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: SE/wind
+2025-08-02 04:56:34,043 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: SE_wind_control.ctl -> SE/wind
+2025-08-02 04:56:34,043 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: ERCOT/temp
+2025-08-02 04:56:34,043 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: ERCOT_temp_control.ctl -> ERCOT/temp
+2025-08-02 04:56:34,043 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: AECI/dswrf
+2025-08-02 04:56:34,043 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: AECI_dswrf_control.ctl -> AECI/dswrf
+2025-08-02 04:56:34,043 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: BANC/rain
+2025-08-02 04:56:34,043 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: BANC_rain_control.ctl -> BANC/rain
+2025-08-02 04:56:34,043 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: PL/dswrf
+2025-08-02 04:56:34,043 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: PL_dswrf_control.ctl -> PL/dswrf
+2025-08-02 04:56:34,043 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: PSEI/temp
+2025-08-02 04:56:34,043 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: PSEI_temp_control.ctl -> PSEI/temp
+2025-08-02 04:56:34,043 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: DE/temp
+2025-08-02 04:56:34,043 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: DE_temp_control.ctl -> DE/temp
+2025-08-02 04:56:34,043 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: SI/rain
+2025-08-02 04:56:34,043 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: SI_rain_control.ctl -> SI/rain
+2025-08-02 04:56:34,043 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: CZ/temp
+2025-08-02 04:56:34,043 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: CZ_temp_control.ctl -> CZ/temp
+2025-08-02 04:56:34,043 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: NEVP/dswrf
+2025-08-02 04:56:34,043 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: NEVP_dswrf_control.ctl -> NEVP/dswrf
+2025-08-02 04:56:34,043 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: RO/rain
+2025-08-02 04:56:34,043 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: RO_rain_control.ctl -> RO/rain
+2025-08-02 04:56:34,043 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: FPC/wind
+2025-08-02 04:56:34,044 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: FPC_wind_control.ctl -> FPC/wind
+2025-08-02 04:56:34,044 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: PGE/rain
+2025-08-02 04:56:34,044 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: PGE_rain_control.ctl -> PGE/rain
+2025-08-02 04:56:34,044 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: CZ/wind
+2025-08-02 04:56:34,044 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: CZ_wind_control.ctl -> CZ/wind
+2025-08-02 04:56:34,044 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: TEPC/temp
+2025-08-02 04:56:34,044 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: TEPC_temp_control.ctl -> TEPC/temp
+2025-08-02 04:56:34,044 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: TPWR/rain
+2025-08-02 04:56:34,044 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: TPWR_rain_control.ctl -> TPWR/rain
+2025-08-02 04:56:34,044 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: BG/temp
+2025-08-02 04:56:34,044 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: BG_temp_control.ctl -> BG/temp
+2025-08-02 04:56:34,044 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: EPE/rain
+2025-08-02 04:56:34,044 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: EPE_rain_control.ctl -> EPE/rain
+2025-08-02 04:56:34,044 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: SI/dswrf
+2025-08-02 04:56:34,044 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: SI_dswrf_control.ctl -> SI/dswrf
+2025-08-02 04:56:34,044 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: TEC/wind
+2025-08-02 04:56:34,044 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: TEC_wind_control.ctl -> TEC/wind
+2025-08-02 04:56:34,044 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: PT/temp
+2025-08-02 04:56:34,044 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: PT_temp_control.ctl -> PT/temp
+2025-08-02 04:56:34,044 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: CISO/rain
+2025-08-02 04:56:34,044 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: CISO_rain_control.ctl -> CISO/rain
+2025-08-02 04:56:34,044 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: PSCO/rain
+2025-08-02 04:56:34,044 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: PSCO_rain_control.ctl -> PSCO/rain
+2025-08-02 04:56:34,044 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: ERCOT/dswrf
+2025-08-02 04:56:34,044 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: ERCOT_dswrf_control.ctl -> ERCOT/dswrf
+2025-08-02 04:56:34,044 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: SOCO/dswrf
+2025-08-02 04:56:34,044 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: SOCO_dswrf_control.ctl -> SOCO/dswrf
+2025-08-02 04:56:34,044 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: GRID/temp
+2025-08-02 04:56:34,044 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: GRID_temp_control.ctl -> GRID/temp
+2025-08-02 04:56:34,044 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: LV/dswrf
+2025-08-02 04:56:34,044 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: LV_dswrf_control.ctl -> LV/dswrf
+2025-08-02 04:56:34,044 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: TEC/rain
+2025-08-02 04:56:34,044 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: TEC_rain_control.ctl -> TEC/rain
+2025-08-02 04:56:34,044 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: LT/wind
+2025-08-02 04:56:34,044 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: LT_wind_control.ctl -> LT/wind
+2025-08-02 04:56:34,044 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: SPA/dswrf
+2025-08-02 04:56:34,045 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: SPA_dswrf_control.ctl -> SPA/dswrf
+2025-08-02 04:56:34,045 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: CH/rain
+2025-08-02 04:56:34,045 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: CH_rain_control.ctl -> CH/rain
+2025-08-02 04:56:34,045 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: DE/rain
+2025-08-02 04:56:34,045 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: DE_rain_control.ctl -> DE/rain
+2025-08-02 04:56:34,045 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: DOPD/rain
+2025-08-02 04:56:34,045 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: DOPD_rain_control.ctl -> DOPD/rain
+2025-08-02 04:56:34,045 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: SOCO/wind
+2025-08-02 04:56:34,045 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: SOCO_wind_control.ctl -> SOCO/wind
+2025-08-02 04:56:34,045 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: CH/temp
+2025-08-02 04:56:34,045 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: CH_temp_control.ctl -> CH/temp
+2025-08-02 04:56:34,045 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: BG/dswrf
+2025-08-02 04:56:34,045 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: BG_dswrf_control.ctl -> BG/dswrf
+2025-08-02 04:56:34,045 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: SWPP/dswrf
+2025-08-02 04:56:34,045 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: SWPP_dswrf_control.ctl -> SWPP/dswrf
+2025-08-02 04:56:34,045 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: SC/temp
+2025-08-02 04:56:34,045 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: SC_temp_control.ctl -> SC/temp
+2025-08-02 04:56:34,045 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: FI/wind
+2025-08-02 04:56:34,045 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: FI_wind_control.ctl -> FI/wind
+2025-08-02 04:56:34,045 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: SPA/wind
+2025-08-02 04:56:34,045 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: SPA_wind_control.ctl -> SPA/wind
+2025-08-02 04:56:34,045 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: GRID/rain
+2025-08-02 04:56:34,045 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: GRID_rain_control.ctl -> GRID/rain
+2025-08-02 04:56:34,045 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: SCL/rain
+2025-08-02 04:56:34,045 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: SCL_rain_control.ctl -> SCL/rain
+2025-08-02 04:56:34,045 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: DK/temp
+2025-08-02 04:56:34,045 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: DK_temp_control.ctl -> DK/temp
+2025-08-02 04:56:34,045 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: PACE/temp
+2025-08-02 04:56:34,045 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: PACE_temp_control.ctl -> PACE/temp
+2025-08-02 04:56:34,045 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: HU/rain
+2025-08-02 04:56:34,045 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: HU_rain_control.ctl -> HU/rain
+2025-08-02 04:56:34,045 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: DUK/wind
+2025-08-02 04:56:34,045 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: DUK_wind_control.ctl -> DUK/wind
+2025-08-02 04:56:34,045 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: TVA/rain
+2025-08-02 04:56:34,045 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: TVA_rain_control.ctl -> TVA/rain
+2025-08-02 04:56:34,045 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: PSEI/wind
+2025-08-02 04:56:34,045 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: PSEI_wind_control.ctl -> PSEI/wind
+2025-08-02 04:56:34,046 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: SC/dswrf
+2025-08-02 04:56:34,046 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: SC_dswrf_control.ctl -> SC/dswrf
+2025-08-02 04:56:34,046 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: DUK/temp
+2025-08-02 04:56:34,046 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: DUK_temp_control.ctl -> DUK/temp
+2025-08-02 04:56:34,046 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: EE/rain
+2025-08-02 04:56:34,046 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: EE_rain_control.ctl -> EE/rain
+2025-08-02 04:56:34,046 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: RS/dswrf
+2025-08-02 04:56:34,046 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: RS_dswrf_control.ctl -> RS/dswrf
+2025-08-02 04:56:34,046 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: IPCO/wind
+2025-08-02 04:56:34,046 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: IPCO_wind_control.ctl -> IPCO/wind
+2025-08-02 04:56:34,046 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: AZPS/wind
+2025-08-02 04:56:34,046 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: AZPS_wind_control.ctl -> AZPS/wind
+2025-08-02 04:56:34,046 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: WACM/rain
+2025-08-02 04:56:34,046 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: WACM_rain_control.ctl -> WACM/rain
+2025-08-02 04:56:34,046 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: RS/wind
+2025-08-02 04:56:34,046 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: RS_wind_control.ctl -> RS/wind
+2025-08-02 04:56:34,046 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: EE/dswrf
+2025-08-02 04:56:34,046 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: EE_dswrf_control.ctl -> EE/dswrf
+2025-08-02 04:56:34,046 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: FPL/rain
+2025-08-02 04:56:34,046 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: FPL_rain_control.ctl -> FPL/rain
+2025-08-02 04:56:34,046 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: SWPP/temp
+2025-08-02 04:56:34,046 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: SWPP_temp_control.ctl -> SWPP/temp
+2025-08-02 04:56:34,046 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: FMPP/dswrf
+2025-08-02 04:56:34,046 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: FMPP_dswrf_control.ctl -> FMPP/dswrf
+2025-08-02 04:56:34,046 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: SWPP/rain
+2025-08-02 04:56:34,046 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: SWPP_rain_control.ctl -> SWPP/rain
+2025-08-02 04:56:34,046 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: BPAT/rain
+2025-08-02 04:56:34,046 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: BPAT_rain_control.ctl -> BPAT/rain
+2025-08-02 04:56:34,046 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: AL/temp
+2025-08-02 04:56:34,046 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: AL_temp_control.ctl -> AL/temp
+2025-08-02 04:56:34,046 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: LT/rain
+2025-08-02 04:56:34,046 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: LT_rain_control.ctl -> LT/rain
+2025-08-02 04:56:34,046 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: BE/temp
+2025-08-02 04:56:34,046 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: BE_temp_control.ctl -> BE/temp
+2025-08-02 04:56:34,046 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: CISO/temp
+2025-08-02 04:56:34,046 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: CISO_temp_control.ctl -> CISO/temp
+2025-08-02 04:56:34,046 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: LT/dswrf
+2025-08-02 04:56:34,046 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: LT_dswrf_control.ctl -> LT/dswrf
+2025-08-02 04:56:34,047 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: DE/dswrf
+2025-08-02 04:56:34,047 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: DE_dswrf_control.ctl -> DE/dswrf
+2025-08-02 04:56:34,047 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: FR/rain
+2025-08-02 04:56:34,047 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: FR_rain_control.ctl -> FR/rain
+2025-08-02 04:56:34,047 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: PSCO/dswrf
+2025-08-02 04:56:34,047 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: PSCO_dswrf_control.ctl -> PSCO/dswrf
+2025-08-02 04:56:34,047 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: CISO/wind
+2025-08-02 04:56:34,047 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: CISO_wind_control.ctl -> CISO/wind
+2025-08-02 04:56:34,047 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: TIDC/wind
+2025-08-02 04:56:34,047 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: TIDC_wind_control.ctl -> TIDC/wind
+2025-08-02 04:56:34,047 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: TAL/dswrf
+2025-08-02 04:56:34,047 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: TAL_dswrf_control.ctl -> TAL/dswrf
+2025-08-02 04:56:34,047 - comprehensive_tracker - DEBUG - [_extract_region_and_variable:370] - Extracted from filename: TEC/temp
+2025-08-02 04:56:34,047 - comprehensive_tracker - DEBUG - [discover_all_control_files:327] - 📄 UPDATED: TEC_temp_control.ctl -> TEC/temp
+2025-08-02 04:56:34,050 - comprehensive_tracker - DEBUG - [_save_control_files_to_db:468] - Saved 288 control files to database
+2025-08-02 04:56:34,050 - comprehensive_tracker - INFO - [discover_all_control_files:341] - ✅ Control file discovery completed in 0.02s
+2025-08-02 04:56:34,050 - comprehensive_tracker - INFO - [discover_all_control_files:342] - 📊 Summary: 288 total, 0 new, 288 updated
+2025-08-02 04:56:34,050 - comprehensive_tracker - INFO - [generate_comprehensive_coverage_report:667] - 📋 Generating comprehensive coverage report...
+2025-08-02 04:56:34,050 - comprehensive_tracker - INFO - [discover_all_control_files:263] - 🔍 Starting comprehensive control file discovery in control_files
+2025-08-02 04:56:34,051 - comprehensive_tracker - DEBUG - [discover_all_control_files:286] - Pattern '*.ctl' found 288 files
+2025-08-02 04:56:34,051 - comprehensive_tracker - DEBUG - [discover_all_control_files:286] - Pattern '*_control.ctl' found 288 files
+2025-08-02 04:56:34,052 - comprehensive_tracker - DEBUG - [discover_all_control_files:286] - Pattern '*control*.ctl' found 288 files
+2025-08-02 04:56:34,053 - comprehensive_tracker - DEBUG - [discover_all_control_files:286] - Pattern '**/*.ctl' found 288 files
+2025-08-02 04:56:34,053 - comprehensive_tracker - INFO - [discover_all_control_files:288] - 📁 Found 288 total control files
+2025-08-02 04:56:34,056 - comprehensive_tracker - DEBUG - [_save_control_files_to_db:468] - Saved 288 control files to database
+2025-08-02 04:56:34,056 - comprehensive_tracker - INFO - [discover_all_control_files:341] - ✅ Control file discovery completed in 0.01s
+2025-08-02 04:56:34,056 - comprehensive_tracker - INFO - [discover_all_control_files:342] - 📊 Summary: 288 total, 0 new, 0 updated
+2025-08-02 04:56:34,056 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,056 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,056 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,056 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,056 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,056 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,056 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,056 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,056 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,056 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,056 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,056 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,057 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,057 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,057 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,057 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,057 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,057 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,057 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,057 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,057 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,057 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,057 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,057 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,057 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,057 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,057 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,057 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,057 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,057 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,057 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,057 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,057 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,057 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,057 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,057 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,057 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,057 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,058 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,058 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,058 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,058 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,058 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,058 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,058 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,058 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,058 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,058 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,058 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,058 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,058 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,058 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,058 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,058 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,058 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,058 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,058 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,058 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,058 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,058 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,058 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,058 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,058 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,058 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,059 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,059 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,059 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,059 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,059 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,059 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,059 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,059 - comprehensive_tracker - WARNING - [_save_regional_progress_to_db:655] - _save_regional_progress_to_db called but regional_progress table has been removed
+2025-08-02 04:56:34,059 - comprehensive_tracker - ERROR - [_save_coverage_report_to_db:798] - Error saving coverage report to database: first argument must be callable or None
+2025-08-02 04:56:34,059 - comprehensive_tracker - INFO - [generate_comprehensive_coverage_report:747] - ✅ Coverage report generated: 0.0% coverage, 73 alerts
+2025-08-02 04:57:29,323 - comprehensive_tracker - INFO - [update_control_file_status:536] - 📊 Updated IPCO_dswrf_control.ctl: pending

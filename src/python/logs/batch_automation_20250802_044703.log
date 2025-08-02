@@ -1,0 +1,77 @@
+2025-08-02 04:47:03,124 - batch_automation - INFO - Loaded state for 288 requests
+2025-08-02 04:47:03,124 - batch_automation - INFO - Batch Automation System initialized
+2025-08-02 04:47:03,173 - batch_automation - INFO - Initialized 288 requests
+2025-08-02 04:47:04,574 - batch_automation - INFO - Loaded state for 288 requests
+2025-08-02 04:47:04,579 - batch_automation - INFO - Loaded state for 288 requests
+2025-08-02 04:47:04,584 - batch_automation - INFO - Loaded state for 288 requests
+2025-08-02 04:47:05,226 - batch_automation - INFO - RDA Request Status Breakdown: {'queued for processing': 10} (Active: 10/10)
+2025-08-02 04:47:06,392 - batch_automation - INFO - RDA Request Status Breakdown: {'queued for processing': 10} (Active: 10/10)
+2025-08-02 04:47:06,393 - batch_automation - WARNING - Cannot submit control_files/AT_dswrf_control.ctl: Already at 10-request limit (10 active)
+2025-08-02 04:47:06,393 - batch_automation - INFO - 🚨 Attempting automatic crisis resolution...
+2025-08-02 04:47:06,394 - batch_automation - WARNING - 🚨 CRISIS RESOLUTION: Attempting to resolve request limit crisis
+2025-08-02 04:47:07,388 - batch_automation - INFO - ✅ System already within limits: 10/10 requests
+2025-08-02 04:47:07,390 - batch_automation - INFO - ✅ Crisis resolved: 0 → 0 requests
+2025-08-02 04:47:08,416 - batch_automation - INFO - RDA Request Status Breakdown: {'queued for processing': 10} (Active: 10/10)
+2025-08-02 04:47:11,459 - batch_automation - INFO - RDA Request Status Breakdown: {'queued for processing': 10} (Active: 10/10)
+2025-08-02 04:47:11,459 - batch_automation - WARNING - Cannot submit control_files/BE_dswrf_control.ctl: Already at 10-request limit (10 active)
+2025-08-02 04:47:11,459 - batch_automation - INFO - 🚨 Attempting automatic crisis resolution...
+2025-08-02 04:47:11,459 - batch_automation - WARNING - 🚨 CRISIS RESOLUTION: Attempting to resolve request limit crisis
+2025-08-02 04:47:12,442 - batch_automation - INFO - ✅ System already within limits: 10/10 requests
+2025-08-02 04:47:12,442 - batch_automation - INFO - ✅ Crisis resolved: 0 → 0 requests
+2025-08-02 04:47:13,399 - batch_automation - INFO - RDA Request Status Breakdown: {'queued for processing': 10} (Active: 10/10)
+2025-08-02 04:47:16,365 - batch_automation - INFO - RDA Request Status Breakdown: {'queued for processing': 10} (Active: 10/10)
+2025-08-02 04:47:16,365 - batch_automation - WARNING - Cannot submit control_files/SCL_dswrf_control.ctl: Already at 10-request limit (10 active)
+2025-08-02 04:47:16,366 - batch_automation - INFO - 🚨 Attempting automatic crisis resolution...
+2025-08-02 04:47:16,366 - batch_automation - WARNING - 🚨 CRISIS RESOLUTION: Attempting to resolve request limit crisis
+2025-08-02 04:47:17,358 - batch_automation - INFO - ✅ System already within limits: 10/10 requests
+2025-08-02 04:47:17,359 - batch_automation - INFO - ✅ Crisis resolved: 0 → 0 requests
+2025-08-02 04:47:18,320 - batch_automation - INFO - RDA Request Status Breakdown: {'queued for processing': 10} (Active: 10/10)
+2025-08-02 04:47:21,332 - batch_automation - INFO - RDA Request Status Breakdown: {'queued for processing': 10} (Active: 10/10)
+2025-08-02 04:47:21,333 - batch_automation - WARNING - Cannot submit control_files/PSCO_dswrf_control.ctl: Already at 10-request limit (10 active)
+2025-08-02 04:47:21,333 - batch_automation - INFO - 🚨 Attempting automatic crisis resolution...
+2025-08-02 04:47:21,333 - batch_automation - WARNING - 🚨 CRISIS RESOLUTION: Attempting to resolve request limit crisis
+2025-08-02 04:47:22,291 - batch_automation - INFO - ✅ System already within limits: 10/10 requests
+2025-08-02 04:47:22,291 - batch_automation - INFO - ✅ Crisis resolved: 0 → 0 requests
+2025-08-02 04:47:23,301 - batch_automation - INFO - RDA Request Status Breakdown: {'queued for processing': 10} (Active: 10/10)
+2025-08-02 04:47:26,314 - batch_automation - INFO - RDA Request Status Breakdown: {'queued for processing': 10} (Active: 10/10)
+2025-08-02 04:47:26,314 - batch_automation - WARNING - Cannot submit control_files/HR_dswrf_control.ctl: Already at 10-request limit (10 active)
+2025-08-02 04:47:26,315 - batch_automation - INFO - 🚨 Attempting automatic crisis resolution...
+2025-08-02 04:47:26,315 - batch_automation - WARNING - 🚨 CRISIS RESOLUTION: Attempting to resolve request limit crisis
+2025-08-02 04:47:27,325 - batch_automation - INFO - ✅ System already within limits: 10/10 requests
+2025-08-02 04:47:27,326 - batch_automation - INFO - ✅ Crisis resolved: 0 → 0 requests
+2025-08-02 04:47:28,284 - batch_automation - INFO - RDA Request Status Breakdown: {'queued for processing': 10} (Active: 10/10)
+2025-08-02 04:47:31,332 - batch_automation - INFO - RDA Request Status Breakdown: {'queued for processing': 10} (Active: 10/10)
+2025-08-02 04:47:31,332 - batch_automation - WARNING - Cannot submit control_files/BPAT_dswrf_control.ctl: Already at 10-request limit (10 active)
+2025-08-02 04:47:31,332 - batch_automation - INFO - 🚨 Attempting automatic crisis resolution...
+2025-08-02 04:47:31,332 - batch_automation - WARNING - 🚨 CRISIS RESOLUTION: Attempting to resolve request limit crisis
+2025-08-02 04:47:32,300 - batch_automation - INFO - ✅ System already within limits: 10/10 requests
+2025-08-02 04:47:32,300 - batch_automation - INFO - ✅ Crisis resolved: 0 → 0 requests
+2025-08-02 04:47:33,287 - batch_automation - INFO - RDA Request Status Breakdown: {'queued for processing': 10} (Active: 10/10)
+2025-08-02 04:47:36,341 - batch_automation - INFO - RDA Request Status Breakdown: {'queued for processing': 10} (Active: 10/10)
+2025-08-02 04:47:36,341 - batch_automation - WARNING - Cannot submit control_files/FI_dswrf_control.ctl: Already at 10-request limit (10 active)
+2025-08-02 04:47:36,341 - batch_automation - INFO - 🚨 Attempting automatic crisis resolution...
+2025-08-02 04:47:36,341 - batch_automation - WARNING - 🚨 CRISIS RESOLUTION: Attempting to resolve request limit crisis
+2025-08-02 04:47:37,398 - batch_automation - INFO - ✅ System already within limits: 10/10 requests
+2025-08-02 04:47:37,398 - batch_automation - INFO - ✅ Crisis resolved: 0 → 0 requests
+2025-08-02 04:47:38,392 - batch_automation - INFO - RDA Request Status Breakdown: {'queued for processing': 10} (Active: 10/10)
+2025-08-02 04:47:41,385 - batch_automation - INFO - RDA Request Status Breakdown: {'queued for processing': 10} (Active: 10/10)
+2025-08-02 04:47:41,385 - batch_automation - WARNING - Cannot submit control_files/WACM_dswrf_control.ctl: Already at 10-request limit (10 active)
+2025-08-02 04:47:41,386 - batch_automation - INFO - 🚨 Attempting automatic crisis resolution...
+2025-08-02 04:47:41,386 - batch_automation - WARNING - 🚨 CRISIS RESOLUTION: Attempting to resolve request limit crisis
+2025-08-02 04:47:42,454 - batch_automation - INFO - ✅ System already within limits: 10/10 requests
+2025-08-02 04:47:42,455 - batch_automation - INFO - ✅ Crisis resolved: 0 → 0 requests
+2025-08-02 04:47:43,424 - batch_automation - INFO - RDA Request Status Breakdown: {'queued for processing': 10} (Active: 10/10)
+2025-08-02 04:47:46,462 - batch_automation - INFO - RDA Request Status Breakdown: {'queued for processing': 10} (Active: 10/10)
+2025-08-02 04:47:46,462 - batch_automation - WARNING - Cannot submit control_files/LGEE_dswrf_control.ctl: Already at 10-request limit (10 active)
+2025-08-02 04:47:46,462 - batch_automation - INFO - 🚨 Attempting automatic crisis resolution...
+2025-08-02 04:47:46,463 - batch_automation - WARNING - 🚨 CRISIS RESOLUTION: Attempting to resolve request limit crisis
+2025-08-02 04:47:47,500 - batch_automation - INFO - ✅ System already within limits: 10/10 requests
+2025-08-02 04:47:47,500 - batch_automation - INFO - ✅ Crisis resolved: 0 → 0 requests
+2025-08-02 04:47:48,587 - batch_automation - INFO - RDA Request Status Breakdown: {'queued for processing': 10} (Active: 10/10)
+2025-08-02 04:47:51,623 - batch_automation - INFO - RDA Request Status Breakdown: {'queued for processing': 10} (Active: 10/10)
+2025-08-02 04:47:51,623 - batch_automation - WARNING - Cannot submit control_files/DK_dswrf_control.ctl: Already at 10-request limit (10 active)
+2025-08-02 04:47:51,623 - batch_automation - INFO - 🚨 Attempting automatic crisis resolution...
+2025-08-02 04:47:51,623 - batch_automation - WARNING - 🚨 CRISIS RESOLUTION: Attempting to resolve request limit crisis
+2025-08-02 04:47:52,618 - batch_automation - INFO - ✅ System already within limits: 10/10 requests
+2025-08-02 04:47:52,618 - batch_automation - INFO - ✅ Crisis resolved: 0 → 0 requests
+2025-08-02 04:47:53,747 - batch_automation - INFO - RDA Request Status Breakdown: {'queued for processing': 10} (Active: 10/10)

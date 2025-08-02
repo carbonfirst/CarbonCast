@@ -1,0 +1,2888 @@
+{
+  "priority_queue": [
+    {
+      "control_file": "control_files/IPCO_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "IPCO",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.456243"
+    },
+    {
+      "control_file": "control_files/ISNE_rain_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "ISNE",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.456280"
+    },
+    {
+      "control_file": "control_files/RO_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "RO",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.458243"
+    },
+    {
+      "control_file": "control_files/TEC_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "TEC",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.458540"
+    },
+    {
+      "control_file": "control_files/PNM_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "PNM",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.456477"
+    },
+    {
+      "control_file": "control_files/FMPP_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "FMPP",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.462425"
+    },
+    {
+      "control_file": "control_files/PGE_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "PGE",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.463414"
+    },
+    {
+      "control_file": "control_files/HU_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "HU",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.456325"
+    },
+    {
+      "control_file": "control_files/PJM_temp_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "PJM",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.458563"
+    },
+    {
+      "control_file": "control_files/RO_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "RO",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.457595"
+    },
+    {
+      "control_file": "control_files/NEVP_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "NEVP",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.461458"
+    },
+    {
+      "control_file": "control_files/GRID_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "GRID",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.457818"
+    },
+    {
+      "control_file": "control_files/SPA_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "SPA",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.463749"
+    },
+    {
+      "control_file": "control_files/GCPD_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "GCPD",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.462890"
+    },
+    {
+      "control_file": "control_files/LGEE_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "LGEE",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.460253"
+    },
+    {
+      "control_file": "control_files/ISNE_temp_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "ISNE",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.457272"
+    },
+    {
+      "control_file": "control_files/SRP_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "SRP",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.456401"
+    },
+    {
+      "control_file": "control_files/GR_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "GR",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.456639"
+    },
+    {
+      "control_file": "control_files/TIDC_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "TIDC",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.460548"
+    },
+    {
+      "control_file": "control_files/SK_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "SK",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.460754"
+    },
+    {
+      "control_file": "control_files/CH_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "CH",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.458692"
+    },
+    {
+      "control_file": "control_files/FR_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "FR",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.457718"
+    },
+    {
+      "control_file": "control_files/CISO_rain_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "CISO",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.461486"
+    },
+    {
+      "control_file": "control_files/NL_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "NL",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.456809"
+    },
+    {
+      "control_file": "control_files/TAL_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "TAL",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.459151"
+    },
+    {
+      "control_file": "control_files/PGE_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "PGE",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.457858"
+    },
+    {
+      "control_file": "control_files/FMPP_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "FMPP",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.463717"
+    },
+    {
+      "control_file": "control_files/AL_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "AL",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.456550"
+    },
+    {
+      "control_file": "control_files/EE_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "EE",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.460097"
+    },
+    {
+      "control_file": "control_files/TEC_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "TEC",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.458201"
+    },
+    {
+      "control_file": "control_files/SOCO_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "SOCO",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.464429"
+    },
+    {
+      "control_file": "control_files/TAL_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "TAL",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.458265"
+    },
+    {
+      "control_file": "control_files/FPL_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "FPL",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.459913"
+    },
+    {
+      "control_file": "control_files/PJM_wind_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "PJM",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.457407"
+    },
+    {
+      "control_file": "control_files/IE_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "IE",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.456621"
+    },
+    {
+      "control_file": "control_files/SPA_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "SPA",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.460328"
+    },
+    {
+      "control_file": "control_files/PGE_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "PGE",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.458474"
+    },
+    {
+      "control_file": "control_files/PT_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "PT",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.456659"
+    },
+    {
+      "control_file": "control_files/AECI_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "AECI",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.458585"
+    },
+    {
+      "control_file": "control_files/ES_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "ES",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.456448"
+    },
+    {
+      "control_file": "control_files/SI_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "SI",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.460808"
+    },
+    {
+      "control_file": "control_files/MISO_temp_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "MISO",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.460972"
+    },
+    {
+      "control_file": "control_files/DOPD_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "DOPD",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.461024"
+    },
+    {
+      "control_file": "control_files/TVA_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "TVA",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.461131"
+    },
+    {
+      "control_file": "control_files/CZ_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "CZ",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.458780"
+    },
+    {
+      "control_file": "control_files/BANC_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "BANC",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.456789"
+    },
+    {
+      "control_file": "control_files/SCL_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "SCL",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.461513"
+    },
+    {
+      "control_file": "control_files/NYISO_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "NYISO",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.456364"
+    },
+    {
+      "control_file": "control_files/NYISO_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "NYISO",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.461729"
+    },
+    {
+      "control_file": "control_files/ES_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "ES",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.456828"
+    },
+    {
+      "control_file": "control_files/TEC_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "TEC",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.461970"
+    },
+    {
+      "control_file": "control_files/WACM_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "WACM",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.462083"
+    },
+    {
+      "control_file": "control_files/IPCO_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "IPCO",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.462198"
+    },
+    {
+      "control_file": "control_files/LDWP_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "LDWP",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.457877"
+    },
+    {
+      "control_file": "control_files/LDWP_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "LDWP",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.458287"
+    },
+    {
+      "control_file": "control_files/CZ_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "CZ",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.458079"
+    },
+    {
+      "control_file": "control_files/AZPS_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "AZPS",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.459426"
+    },
+    {
+      "control_file": "control_files/FI_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "FI",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.462765"
+    },
+    {
+      "control_file": "control_files/GCPD_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "GCPD",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.464036"
+    },
+    {
+      "control_file": "control_files/NEVP_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "NEVP",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.463060"
+    },
+    {
+      "control_file": "control_files/PNM_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "PNM",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.463176"
+    },
+    {
+      "control_file": "control_files/DUK_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "DUK",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.457188"
+    },
+    {
+      "control_file": "control_files/WALC_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "WALC",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.464129"
+    },
+    {
+      "control_file": "control_files/IE_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "IE",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.457249"
+    },
+    {
+      "control_file": "control_files/PJM_rain_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "PJM",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.459837"
+    },
+    {
+      "control_file": "control_files/DE_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "DE",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.458307"
+    },
+    {
+      "control_file": "control_files/TEPC_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "TEPC",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.463836"
+    },
+    {
+      "control_file": "control_files/TPWR_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "TPWR",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.459961"
+    },
+    {
+      "control_file": "control_files/SOCO_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "SOCO",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.464097"
+    },
+    {
+      "control_file": "control_files/FMPP_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "FMPP",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.460175"
+    },
+    {
+      "control_file": "control_files/RS_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "RS",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.458412"
+    },
+    {
+      "control_file": "control_files/PSEI_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "PSEI",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.464601"
+    },
+    {
+      "control_file": "control_files/DE_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "DE",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.457498"
+    },
+    {
+      "control_file": "control_files/LT_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "LT",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.456418"
+    },
+    {
+      "control_file": "control_files/TVA_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "TVA",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.458497"
+    },
+    {
+      "control_file": "control_files/FI_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "FI",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.458518"
+    },
+    {
+      "control_file": "control_files/PSEI_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "PSEI",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.457554"
+    },
+    {
+      "control_file": "control_files/TAL_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "TAL",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.457574"
+    },
+    {
+      "control_file": "control_files/CH_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "CH",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.460650"
+    },
+    {
+      "control_file": "control_files/GR_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "GR",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.458606"
+    },
+    {
+      "control_file": "control_files/TPWR_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "TPWR",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.456707"
+    },
+    {
+      "control_file": "control_files/FPL_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "FPL",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.457615"
+    },
+    {
+      "control_file": "control_files/AZPS_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "AZPS",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.460834"
+    },
+    {
+      "control_file": "control_files/TIDC_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "TIDC",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.457636"
+    },
+    {
+      "control_file": "control_files/FMPP_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "FMPP",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.456743"
+    },
+    {
+      "control_file": "control_files/SK_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "SK",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.457656"
+    },
+    {
+      "control_file": "control_files/PL_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "PL",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.461052"
+    },
+    {
+      "control_file": "control_files/LT_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "LT",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.456768"
+    },
+    {
+      "control_file": "control_files/DE_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "DE",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.461188"
+    },
+    {
+      "control_file": "control_files/SC_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "SC",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.461242"
+    },
+    {
+      "control_file": "control_files/ERCOT_rain_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "ERCOT",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.461268"
+    },
+    {
+      "control_file": "control_files/RO_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "RO",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.458895"
+    },
+    {
+      "control_file": "control_files/GB_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "GB",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.458919"
+    },
+    {
+      "control_file": "control_files/FPC_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "FPC",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.456346"
+    },
+    {
+      "control_file": "control_files/DUK_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "DUK",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.464508"
+    },
+    {
+      "control_file": "control_files/NWMT_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "NWMT",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.457758"
+    },
+    {
+      "control_file": "control_files/CZ_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "CZ",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.461621"
+    },
+    {
+      "control_file": "control_files/BE_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "BE",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.459035"
+    },
+    {
+      "control_file": "control_files/BG_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "BG",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.463793"
+    },
+    {
+      "control_file": "control_files/SE_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "SE",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.459080"
+    },
+    {
+      "control_file": "control_files/PACW_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "PACW",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.457799"
+    },
+    {
+      "control_file": "control_files/PL_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "PL",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.459129"
+    },
+    {
+      "control_file": "control_files/GRID_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "GRID",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.463444"
+    },
+    {
+      "control_file": "control_files/BG_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "BG",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.456304"
+    },
+    {
+      "control_file": "control_files/BPAT_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "BPAT",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.459806"
+    },
+    {
+      "control_file": "control_files/PACW_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "PACW",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.459219"
+    },
+    {
+      "control_file": "control_files/SI_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "SI",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.463623"
+    },
+    {
+      "control_file": "control_files/PSEI_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "PSEI",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.456524"
+    },
+    {
+      "control_file": "control_files/CH_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "CH",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.462310"
+    },
+    {
+      "control_file": "control_files/AZPS_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "AZPS",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.458057"
+    },
+    {
+      "control_file": "control_files/TPWR_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "TPWR",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.463474"
+    },
+    {
+      "control_file": "control_files/SOCO_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "SOCO",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.459356"
+    },
+    {
+      "control_file": "control_files/GCPD_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "GCPD",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.459379"
+    },
+    {
+      "control_file": "control_files/FI_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "FI",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.456885"
+    },
+    {
+      "control_file": "control_files/GR_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "GR",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.459938"
+    },
+    {
+      "control_file": "control_files/PACE_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "PACE",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.456382"
+    },
+    {
+      "control_file": "control_files/RS_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "RS",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.464005"
+    },
+    {
+      "control_file": "control_files/PNM_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "PNM",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.457099"
+    },
+    {
+      "control_file": "control_files/HR_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "HR",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.463944"
+    },
+    {
+      "control_file": "control_files/FPC_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "FPC",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.456570"
+    },
+    {
+      "control_file": "control_files/WACM_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "WACM",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.460151"
+    },
+    {
+      "control_file": "control_files/BE_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "BE",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.459592"
+    },
+    {
+      "control_file": "control_files/PSEI_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "PSEI",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.458389"
+    },
+    {
+      "control_file": "control_files/NWMT_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "NWMT",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.459640"
+    },
+    {
+      "control_file": "control_files/TEPC_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "TEPC",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.458222"
+    },
+    {
+      "control_file": "control_files/DK_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "DK",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.459688"
+    },
+    {
+      "control_file": "control_files/NL_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "NL",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.463265"
+    },
+    {
+      "control_file": "control_files/DOPD_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "DOPD",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.459734"
+    },
+    {
+      "control_file": "control_files/SI_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "SI",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.459760"
+    },
+    {
+      "control_file": "control_files/PACW_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "PACW",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.463562"
+    },
+    {
+      "control_file": "control_files/CISO_wind_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "CISO",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.463652"
+    },
+    {
+      "control_file": "control_files/FPL_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "FPL",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.459863"
+    },
+    {
+      "control_file": "control_files/PSCO_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "PSCO",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.459888"
+    },
+    {
+      "control_file": "control_files/WALC_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "WALC",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.456602"
+    },
+    {
+      "control_file": "control_files/CISO_temp_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "CISO",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.463913"
+    },
+    {
+      "control_file": "control_files/IT_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "IT",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.458347"
+    },
+    {
+      "control_file": "control_files/SCEG_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "SCEG",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.460004"
+    },
+    {
+      "control_file": "control_files/ES_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "ES",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.458368"
+    },
+    {
+      "control_file": "control_files/LDWP_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "LDWP",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.464160"
+    },
+    {
+      "control_file": "control_files/ERCOT_wind_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "ERCOT",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.464362"
+    },
+    {
+      "control_file": "control_files/GRID_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "GRID",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.464396"
+    },
+    {
+      "control_file": "control_files/SWPP_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "SWPP",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.464474"
+    },
+    {
+      "control_file": "control_files/MISO_rain_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "MISO",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.464539"
+    },
+    {
+      "control_file": "control_files/CH_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "CH",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.458433"
+    },
+    {
+      "control_file": "control_files/SWPP_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "SWPP",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.460278"
+    },
+    {
+      "control_file": "control_files/FR_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "FR",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.460303"
+    },
+    {
+      "control_file": "control_files/FPC_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "FPC",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.458454"
+    },
+    {
+      "control_file": "control_files/SC_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "SC",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.460361"
+    },
+    {
+      "control_file": "control_files/DOPD_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "DOPD",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.457528"
+    },
+    {
+      "control_file": "control_files/TEC_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "TEC",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.460420"
+    },
+    {
+      "control_file": "control_files/EPE_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "EPE",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.460446"
+    },
+    {
+      "control_file": "control_files/LDWP_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "LDWP",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.460471"
+    },
+    {
+      "control_file": "control_files/EE_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "EE",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.460497"
+    },
+    {
+      "control_file": "control_files/WALC_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "WALC",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.460522"
+    },
+    {
+      "control_file": "control_files/RS_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "RS",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.457471"
+    },
+    {
+      "control_file": "control_files/PSCO_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "PSCO",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.460574"
+    },
+    {
+      "control_file": "control_files/NEVP_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "NEVP",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.460599"
+    },
+    {
+      "control_file": "control_files/SWPP_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "SWPP",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.460625"
+    },
+    {
+      "control_file": "control_files/PACE_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "PACE",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.464570"
+    },
+    {
+      "control_file": "control_files/AECI_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "AECI",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.460676"
+    },
+    {
+      "control_file": "control_files/EPE_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "EPE",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.460702"
+    },
+    {
+      "control_file": "control_files/SK_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "SK",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.460728"
+    },
+    {
+      "control_file": "control_files/RO_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "RO",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.458627"
+    },
+    {
+      "control_file": "control_files/AECI_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "AECI",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.460781"
+    },
+    {
+      "control_file": "control_files/TPWR_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "TPWR",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.458649"
+    },
+    {
+      "control_file": "control_files/SK_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "SK",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.458670"
+    },
+    {
+      "control_file": "control_files/HU_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "HU",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.460860"
+    },
+    {
+      "control_file": "control_files/HR_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "HR",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.460886"
+    },
+    {
+      "control_file": "control_files/NL_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "NL",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.460912"
+    },
+    {
+      "control_file": "control_files/PSCO_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "PSCO",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.460945"
+    },
+    {
+      "control_file": "control_files/SRP_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "SRP",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.458715"
+    },
+    {
+      "control_file": "control_files/LV_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "LV",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.460999"
+    },
+    {
+      "control_file": "control_files/PL_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "PL",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.458737"
+    },
+    {
+      "control_file": "control_files/GRID_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "GRID",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.458759"
+    },
+    {
+      "control_file": "control_files/BE_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "BE",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.461079"
+    },
+    {
+      "control_file": "control_files/PACE_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "PACE",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.461105"
+    },
+    {
+      "control_file": "control_files/FR_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "FR",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.457676"
+    },
+    {
+      "control_file": "control_files/SRP_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "SRP",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.461158"
+    },
+    {
+      "control_file": "control_files/AL_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "AL",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.458814"
+    },
+    {
+      "control_file": "control_files/BPAT_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "BPAT",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.461215"
+    },
+    {
+      "control_file": "control_files/IPCO_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "IPCO",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.458845"
+    },
+    {
+      "control_file": "control_files/SCL_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "SCL",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.457697"
+    },
+    {
+      "control_file": "control_files/SC_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "SC",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.461296"
+    },
+    {
+      "control_file": "control_files/IT_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "IT",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.461322"
+    },
+    {
+      "control_file": "control_files/HU_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "HU",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.461349"
+    },
+    {
+      "control_file": "control_files/TEPC_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "TEPC",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.461378"
+    },
+    {
+      "control_file": "control_files/FR_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "FR",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.461405"
+    },
+    {
+      "control_file": "control_files/HU_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "HU",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.461432"
+    },
+    {
+      "control_file": "control_files/AT_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "AT",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.458942"
+    },
+    {
+      "control_file": "control_files/AT_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "AT",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.457739"
+    },
+    {
+      "control_file": "control_files/HR_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "HR",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.463235"
+    },
+    {
+      "control_file": "control_files/DE_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "DE",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.461540"
+    },
+    {
+      "control_file": "control_files/LV_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "LV",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.461567"
+    },
+    {
+      "control_file": "control_files/RS_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "RS",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.461594"
+    },
+    {
+      "control_file": "control_files/DUK_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "DUK",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.459711"
+    },
+    {
+      "control_file": "control_files/SI_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "SI",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.461648"
+    },
+    {
+      "control_file": "control_files/AL_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "AL",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.461675"
+    },
+    {
+      "control_file": "control_files/LT_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "LT",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.461703"
+    },
+    {
+      "control_file": "control_files/TIDC_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "TIDC",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.463354"
+    },
+    {
+      "control_file": "control_files/TAL_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "TAL",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.461756"
+    },
+    {
+      "control_file": "control_files/DK_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "DK",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.461782"
+    },
+    {
+      "control_file": "control_files/BANC_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "BANC",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.461808"
+    },
+    {
+      "control_file": "control_files/AT_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "AT",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.461838"
+    },
+    {
+      "control_file": "control_files/NEVP_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "NEVP",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.461866"
+    },
+    {
+      "control_file": "control_files/TEPC_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "TEPC",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.461916"
+    },
+    {
+      "control_file": "control_files/SCL_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "SCL",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.461944"
+    },
+    {
+      "control_file": "control_files/EPE_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "EPE",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.463325"
+    },
+    {
+      "control_file": "control_files/CZ_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "CZ",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.461999"
+    },
+    {
+      "control_file": "control_files/AZPS_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "AZPS",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.457837"
+    },
+    {
+      "control_file": "control_files/IT_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "IT",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.456846"
+    },
+    {
+      "control_file": "control_files/NWMT_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "NWMT",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.463533"
+    },
+    {
+      "control_file": "control_files/PGE_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "PGE",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.462111"
+    },
+    {
+      "control_file": "control_files/BG_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "BG",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.462139"
+    },
+    {
+      "control_file": "control_files/PL_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "PL",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.462168"
+    },
+    {
+      "control_file": "control_files/SRP_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "SRP",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.463503"
+    },
+    {
+      "control_file": "control_files/DOPD_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "DOPD",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.462225"
+    },
+    {
+      "control_file": "control_files/GB_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "GB",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.459263"
+    },
+    {
+      "control_file": "control_files/IE_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "IE",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.462282"
+    },
+    {
+      "control_file": "control_files/SWPP_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "SWPP",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.463686"
+    },
+    {
+      "control_file": "control_files/GB_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "GB",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.462338"
+    },
+    {
+      "control_file": "control_files/SPA_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "SPA",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.459310"
+    },
+    {
+      "control_file": "control_files/BANC_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "BANC",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.459333"
+    },
+    {
+      "control_file": "control_files/TVA_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "TVA",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.460200"
+    },
+    {
+      "control_file": "control_files/SE_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "SE",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.462453"
+    },
+    {
+      "control_file": "control_files/PT_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "PT",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.462482"
+    },
+    {
+      "control_file": "control_files/GR_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "GR",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.462511"
+    },
+    {
+      "control_file": "control_files/DK_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "DK",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.462538"
+    },
+    {
+      "control_file": "control_files/WACM_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "WACM",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.462567"
+    },
+    {
+      "control_file": "control_files/TVA_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "TVA",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.462595"
+    },
+    {
+      "control_file": "control_files/SCEG_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "SCEG",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.462623"
+    },
+    {
+      "control_file": "control_files/LV_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "LV",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.463871"
+    },
+    {
+      "control_file": "control_files/NYISO_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "NYISO",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.462679"
+    },
+    {
+      "control_file": "control_files/SE_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "SE",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.458138"
+    },
+    {
+      "control_file": "control_files/FPL_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "FPL",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.459473"
+    },
+    {
+      "control_file": "control_files/LGEE_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "LGEE",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.463975"
+    },
+    {
+      "control_file": "control_files/SCEG_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "SCEG",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.462794"
+    },
+    {
+      "control_file": "control_files/IPCO_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "IPCO",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.464067"
+    },
+    {
+      "control_file": "control_files/PT_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "PT",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.462852"
+    },
+    {
+      "control_file": "control_files/TIDC_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "TIDC",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.458327"
+    },
+    {
+      "control_file": "control_files/SPA_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "SPA",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.462919"
+    },
+    {
+      "control_file": "control_files/SOCO_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "SOCO",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.457120"
+    },
+    {
+      "control_file": "control_files/IE_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "IE",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.459569"
+    },
+    {
+      "control_file": "control_files/PNM_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "PNM",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.464328"
+    },
+    {
+      "control_file": "control_files/SC_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "SC",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.463089"
+    },
+    {
+      "control_file": "control_files/BPAT_wind_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "BPAT",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.463118"
+    },
+    {
+      "control_file": "control_files/PACW_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "PACW",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.459616"
+    },
+    {
+      "control_file": "control_files/LGEE_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "LGEE",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.460126"
+    },
+    {
+      "control_file": "control_files/EE_rain_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
+      "dependencies": [],
+      "region_group": "EE",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.463206"
+    }
+  ],
+  "processing_queue": [],
+  "completed_queue": [],
+  "failed_queue": [
+    {
+      "control_file": "control_files/CISO_dswrf_control.ctl",
+      "priority": "URGENT",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "CISO",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.458869"
+    },
+    {
+      "control_file": "control_files/PJM_dswrf_control.ctl",
+      "priority": "URGENT",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "PJM",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.462395"
+    },
+    {
+      "control_file": "control_files/ISNE_dswrf_control.ctl",
+      "priority": "URGENT",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "ISNE",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.458964"
+    },
+    {
+      "control_file": "control_files/MISO_dswrf_control.ctl",
+      "priority": "URGENT",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "MISO",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.460225"
+    },
+    {
+      "control_file": "control_files/ERCOT_dswrf_control.ctl",
+      "priority": "URGENT",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "ERCOT",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.460392"
+    },
+    {
+      "control_file": "control_files/GCPD_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "GCPD",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.458100"
+    },
+    {
+      "control_file": "control_files/IT_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "IT",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.458180"
+    },
+    {
+      "control_file": "control_files/EE_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "EE",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.459663"
+    },
+    {
+      "control_file": "control_files/GB_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "GB",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.463384"
+    },
+    {
+      "control_file": "control_files/DUK_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "DUK",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.463294"
+    },
+    {
+      "control_file": "control_files/AT_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "AT",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.459544"
+    },
+    {
+      "control_file": "control_files/BE_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "BE",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.463146"
+    },
+    {
+      "control_file": "control_files/SCL_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "SCL",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.462947"
+    },
+    {
+      "control_file": "control_files/PSCO_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "PSCO",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.462976"
+    },
+    {
+      "control_file": "control_files/HR_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "HR",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.464269"
+    },
+    {
+      "control_file": "control_files/BPAT_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "BPAT",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.458158"
+    },
+    {
+      "control_file": "control_files/FI_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "FI",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.459449"
+    },
+    {
+      "control_file": "control_files/WACM_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "WACM",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.459497"
+    },
+    {
+      "control_file": "control_files/LGEE_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "LGEE",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.459521"
+    },
+    {
+      "control_file": "control_files/DK_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "DK",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.462822"
+    },
+    {
+      "control_file": "control_files/ERCOT_temp_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "ERCOT",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.462707"
+    },
+    {
+      "control_file": "control_files/NL_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "NL",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.462737"
+    },
+    {
+      "control_file": "control_files/EPE_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "EPE",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.459402"
+    },
+    {
+      "control_file": "control_files/NYISO_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "NYISO",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.462650"
+    },
+    {
+      "control_file": "control_files/BG_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "BG",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.456499"
+    },
+    {
+      "control_file": "control_files/WALC_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "WALC",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.456865"
+    },
+    {
+      "control_file": "control_files/ES_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "ES",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.459173"
+    },
+    {
+      "control_file": "control_files/LT_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "LT",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.459286"
+    },
+    {
+      "control_file": "control_files/AECI_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "AECI",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.462366"
+    },
+    {
+      "control_file": "control_files/ISNE_wind_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "ISNE",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.462253"
+    },
+    {
+      "control_file": "control_files/PT_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "PT",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.459196"
+    },
+    {
+      "control_file": "control_files/SCEG_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "SCEG",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.459241"
+    },
+    {
+      "control_file": "control_files/LV_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "LV",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.462026"
+    },
+    {
+      "control_file": "control_files/BANC_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "BANC",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.462054"
+    },
+    {
+      "control_file": "control_files/AL_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "AL",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.463592"
+    },
+    {
+      "control_file": "control_files/NWMT_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "NWMT",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.457779"
+    },
+    {
+      "control_file": "control_files/SE_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "SE",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.459105"
+    },
+    {
+      "control_file": "control_files/FPC_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "FPC",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.458989"
+    },
+    {
+      "control_file": "control_files/MISO_wind_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
+      "dependencies": [],
+      "region_group": "MISO",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.459057"
+    },
+    {
+      "control_file": "control_files/PACE_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "PACE",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T04:35:56.459012"
+    }
+  ]
+}

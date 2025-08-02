@@ -4,6 +4,9 @@ Database Initialization Script for RDA Automation System
 
 This script ensures all required database tables exist and are properly initialized.
 It creates missing tables and handles schema migrations.
+
+DEPRECATED: This script is maintained for backward compatibility.
+For new installations, use setup_database.py instead.
 """
 
 import os
@@ -15,6 +18,13 @@ from datetime import datetime
 
 # Add current directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+# Import the new unified setup
+try:
+    from setup_database import UnifiedDatabaseSetup
+    UNIFIED_SETUP_AVAILABLE = True
+except ImportError:
+    UNIFIED_SETUP_AVAILABLE = False
 
 
 def setup_logging() -> logging.Logger:
@@ -51,6 +61,16 @@ def create_rda_requests_table(cursor):
             download_directory TEXT,
             file_size INTEGER,
             processing_duration REAL,
+            request_index INTEGER,
+            dsid TEXT,
+            date_rqst TEXT,
+            date_ready TEXT,
+            date_purge TEXT,
+            location TEXT,
+            ncar_contact TEXT,
+            rinfo TEXT,
+            subset_note TEXT,
+            raw_response TEXT,
             created_at TEXT DEFAULT CURRENT_TIMESTAMP,
             updated_at TEXT DEFAULT CURRENT_TIMESTAMP
         )
@@ -76,6 +96,7 @@ def create_control_files_tracking_table(cursor):
             last_modified TEXT,
             status TEXT DEFAULT 'discovered',
             request_id TEXT,
+            request_index INTEGER,
             submission_time TEXT,
             completion_time TEXT,
             download_time TEXT,
@@ -389,20 +410,48 @@ def main():
     """Main function for database initialization."""
     import argparse
     
-    parser = argparse.ArgumentParser(description='Initialize RDA Automation Database')
-    parser.add_argument('--db-path', 
+    parser = argparse.ArgumentParser(
+        description='Initialize RDA Automation Database',
+        epilog="""
+DEPRECATION NOTICE:
+This script is maintained for backward compatibility.
+For new installations and enhanced features, use setup_database.py instead:
+  python setup_database.py --setup --enhanced
+        """
+    )
+    parser.add_argument('--db-path',
                        default=os.path.join(os.path.dirname(__file__), 'data', 'automation_state.db'),
                        help='Path to database file')
     parser.add_argument('--verify-only', action='store_true',
                        help='Only verify schema, do not initialize')
     parser.add_argument('--force-init', action='store_true',
                        help='Force initialization even if database exists')
+    parser.add_argument('--use-unified', action='store_true',
+                       help='Use the new unified database setup (recommended)')
     
     args = parser.parse_args()
     
     logger = setup_logging()
     
+    # Show deprecation warning
+    logger.warning("⚠️  DEPRECATION NOTICE: Consider using setup_database.py for enhanced features")
+    
     try:
+        # Use unified setup if available and requested
+        if args.use_unified and UNIFIED_SETUP_AVAILABLE:
+            logger.info("🔄 Using unified database setup...")
+            unified_setup = UnifiedDatabaseSetup(db_path=args.db_path, enable_enhanced_schema=True)
+            success = unified_setup.setup_database(force_recreate=args.force_init)
+            
+            if success:
+                logger.info("🎉 Unified database setup completed successfully!")
+                logger.info("💡 For future use, run: python setup_database.py --setup --enhanced")
+                return 0
+            else:
+                logger.error("❌ Unified database setup failed!")
+                return 1
+        
+        # Fall back to legacy initialization
         if args.verify_only:
             logger.info("🔍 Verifying database schema...")
             success = verify_database_schema(args.db_path, logger)
@@ -419,6 +468,8 @@ def main():
         
         if success:
             logger.info("🎉 Database operation completed successfully!")
+            if not args.use_unified:
+                logger.info("💡 For enhanced features, consider using: python setup_database.py --setup --enhanced")
             return 0
         else:
             logger.error("❌ Database operation failed!")

@@ -321,7 +321,14 @@ class ConfigurationManager:
                 "database": {
                     "path": "src/python/data/automation_state.db",
                     "backup_enabled": True,
-                    "backup_interval": 3600
+                    "backup_interval": 3600,
+                    "enable_enhanced_schema": True,
+                    "auto_migrate": True,
+                    "legacy_paths": [
+                        "data/automation_state.db",
+                        "src/python/automation/data/automation_state.db",
+                        "automation_state.db"
+                    ]
                 },
                 "file_system": {
                     "control_files_dir": "src/python/control_files",
