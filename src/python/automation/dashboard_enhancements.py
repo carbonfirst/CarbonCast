@@ -68,7 +68,7 @@ class DashboardEnhancements:
     capabilities for the RDA automation system monitoring.
     """
     
-    def __init__(self, db_path: str = "./data/automation_state.db"):
+    def __init__(self, db_path: str = "src/python/data/automation_state.db"):
         """
         Initialize the Dashboard Enhancements.
         
@@ -586,7 +586,7 @@ class DashboardEnhancements:
             }
 
 
-def create_dashboard_enhancements(db_path: str = "./data/automation_state.db") -> DashboardEnhancements:
+def create_dashboard_enhancements(db_path: str = "src/python/data/automation_state.db") -> DashboardEnhancements:
     """
     Factory function to create Dashboard Enhancements.
     
@@ -614,7 +614,7 @@ if __name__ == "__main__":
                        help='Test dashboard metrics')
     parser.add_argument('--export-config', action='store_true',
                        help='Export dashboard configuration')
-    parser.add_argument('--db-path', default='./data/automation_state.db',
+    parser.add_argument('--db-path', default='src/python/data/automation_state.db',
                        help='Database path')
     
     args = parser.parse_args()

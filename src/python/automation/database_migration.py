@@ -38,10 +38,11 @@ class DatabaseMigrationManager:
         self.logger = self._setup_logging()
         self.migration_id = f"control_files_schema_fix_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         
-        # Define both database locations
+        # Define both database locations - updated to use standard path
         self.database_paths = [
-            "data/automation_state.db",
-            "src/python/automation/data/automation_state.db"
+            "src/python/data/automation_state.db",  # Standard path (primary)
+            "data/automation_state.db",             # Legacy path
+            "src/python/automation/data/automation_state.db"  # Old legacy path
         ]
         
         self.logger.info("Database Migration Manager initialized")
@@ -174,7 +175,11 @@ class DatabaseMigrationManager:
     
     def _add_missing_columns(self, conn: sqlite3.Connection, db_path: str) -> bool:
         """
-        Add missing columns to the control_files_tracking table.
+        Add missing columns and tables to fix data_sync errors.
+        
+        This method specifically addresses the issues reported in data_sync.py:
+        - Missing rda_requests table
+        - Missing request_index column in control_files_tracking table
         
         Args:
             conn: Database connection
@@ -182,6 +187,123 @@ class DatabaseMigrationManager:
             
         Returns:
             True if successful, False otherwise
+        """
+        try:
+            # First, ensure rda_requests table exists (critical for data_sync.py)
+            if not self._ensure_rda_requests_table(conn, db_path):
+                return False
+            
+            # Then, fix control_files_tracking table
+            if not self._fix_control_files_tracking_table(conn, db_path):
+                return False
+            
+            return True
+            
+        except Exception as e:
+            self.logger.error(f"❌ Error in migration process: {e}")
+            return False
+    
+    def _ensure_rda_requests_table(self, conn: sqlite3.Connection, db_path: str) -> bool:
+        """
+        Ensure the rda_requests table exists with all required columns.
+        
+        This table is critical for data_sync.py operations.
+        """
+        try:
+            table_name = "rda_requests"
+            
+            if not self._check_table_exists(conn, table_name):
+                self.logger.info(f"📋 Creating missing {table_name} table")
+                
+                # Create the rda_requests table with all required columns
+                create_sql = """
+                    CREATE TABLE rda_requests (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        request_id TEXT UNIQUE NOT NULL,
+                        control_file_path TEXT NOT NULL,
+                        region TEXT,
+                        variable_type TEXT,
+                        status TEXT DEFAULT 'submitted',
+                        submission_time TEXT,
+                        completion_time TEXT,
+                        download_time TEXT,
+                        error_message TEXT,
+                        retry_count INTEGER DEFAULT 0,
+                        download_directory TEXT,
+                        file_size INTEGER,
+                        processing_duration REAL,
+                        request_index INTEGER,
+                        dsid TEXT,
+                        date_rqst TEXT,
+                        date_ready TEXT,
+                        date_purge TEXT,
+                        location TEXT,
+                        ncar_contact TEXT,
+                        rinfo TEXT,
+                        subset_note TEXT,
+                        raw_response TEXT,
+                        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+                    )
+                """
+                conn.execute(create_sql)
+                
+                # Create indexes
+                conn.execute("CREATE INDEX IF NOT EXISTS idx_rda_requests_request_id ON rda_requests(request_id)")
+                conn.execute("CREATE INDEX IF NOT EXISTS idx_rda_requests_status ON rda_requests(status)")
+                conn.execute("CREATE INDEX IF NOT EXISTS idx_rda_requests_region ON rda_requests(region)")
+                
+                self.logger.info(f"✅ Created {table_name} table with all required columns")
+            else:
+                # Table exists, check for missing columns
+                missing_columns = []
+                required_columns = [
+                    ('request_index', 'INTEGER'),
+                    ('dsid', 'TEXT'),
+                    ('date_rqst', 'TEXT'),
+                    ('date_ready', 'TEXT'),
+                    ('date_purge', 'TEXT'),
+                    ('location', 'TEXT'),
+                    ('ncar_contact', 'TEXT'),
+                    ('rinfo', 'TEXT'),
+                    ('subset_note', 'TEXT'),
+                    ('raw_response', 'TEXT'),
+                    ('control_file_path', 'TEXT'),
+                    ('region', 'TEXT'),
+                    ('variable_type', 'TEXT')
+                ]
+                
+                for column_name, column_type in required_columns:
+                    if not self._check_column_exists(conn, table_name, column_name):
+                        missing_columns.append((column_name, column_type))
+                
+                # Add missing columns
+                for column_name, column_type in missing_columns:
+                    try:
+                        alter_sql = f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_type}"
+                        conn.execute(alter_sql)
+                        self.logger.info(f"✅ Added missing column {column_name} to {table_name}")
+                    except sqlite3.Error as e:
+                        if "duplicate column name" not in str(e).lower():
+                            self.logger.error(f"❌ Error adding column {column_name}: {e}")
+                            return False
+                
+                if missing_columns:
+                    self.logger.info(f"✅ Added {len(missing_columns)} missing columns to {table_name}")
+                else:
+                    self.logger.info(f"✅ {table_name} table schema is complete")
+            
+            return True
+            
+        except Exception as e:
+            self.logger.error(f"❌ Error ensuring rda_requests table: {e}")
+            return False
+    
+    def _fix_control_files_tracking_table(self, conn: sqlite3.Connection, db_path: str) -> bool:
+        """
+        Fix the control_files_tracking table to include missing columns.
+        
+        This specifically addresses the request_index column needed by data_sync.py.
         """
         try:
             table_name = "control_files_tracking"
@@ -197,14 +319,16 @@ class DatabaseMigrationManager:
             
             # Check which columns are missing
             missing_columns = []
+            required_columns = [
+                ("error_message", "TEXT"),
+                ("file_path", "TEXT"),  # Remove UNIQUE NOT NULL to avoid conflicts
+                ("request_index", "INTEGER")  # Critical for data_sync.py
+            ]
             
-            if not self._check_column_exists(conn, table_name, "error_message"):
-                missing_columns.append(("error_message", "TEXT"))
-                self.logger.info(f"📋 Column 'error_message' is missing from {table_name}")
-            
-            if not self._check_column_exists(conn, table_name, "file_path"):
-                missing_columns.append(("file_path", "TEXT UNIQUE NOT NULL"))
-                self.logger.info(f"📋 Column 'file_path' is missing from {table_name}")
+            for column_name, column_type in required_columns:
+                if not self._check_column_exists(conn, table_name, column_name):
+                    missing_columns.append((column_name, column_type))
+                    self.logger.info(f"📋 Column '{column_name}' is missing from {table_name}")
             
             if not missing_columns:
                 self.logger.info(f"✅ All required columns already exist in {table_name}")
@@ -213,29 +337,19 @@ class DatabaseMigrationManager:
             # Add missing columns
             for column_name, column_definition in missing_columns:
                 try:
-                    # For NOT NULL columns, we need to handle existing data
-                    if "NOT NULL" in column_definition:
-                        # First, add the column without NOT NULL constraint
-                        temp_definition = column_definition.replace(" NOT NULL", "")
-                        alter_sql = f"ALTER TABLE {table_name} ADD COLUMN {column_name} {temp_definition}"
-                        conn.execute(alter_sql)
-                        self.logger.info(f"✅ Added column {column_name} ({temp_definition})")
-                        
-                        # Update existing rows with a default value
-                        if column_name == "file_path":
-                            # Set file_path based on existing filename if available
-                            update_sql = f"""
-                                UPDATE {table_name} 
-                                SET {column_name} = COALESCE(filename, 'unknown_' || id || '.ctl')
-                                WHERE {column_name} IS NULL
-                            """
-                            conn.execute(update_sql)
-                            self.logger.info(f"✅ Updated existing rows with default {column_name} values")
-                    else:
-                        # Simple column addition
-                        alter_sql = f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_definition}"
-                        conn.execute(alter_sql)
-                        self.logger.info(f"✅ Added column {column_name} ({column_definition})")
+                    alter_sql = f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_definition}"
+                    conn.execute(alter_sql)
+                    self.logger.info(f"✅ Added column {column_name} ({column_definition})")
+                    
+                    # Set default values for existing rows if needed
+                    if column_name == "file_path":
+                        update_sql = f"""
+                            UPDATE {table_name}
+                            SET {column_name} = COALESCE(filename, 'control_files/' || region || '_' || variable_type || '_control.ctl')
+                            WHERE {column_name} IS NULL
+                        """
+                        conn.execute(update_sql)
+                        self.logger.info(f"✅ Updated existing rows with default {column_name} values")
                     
                 except sqlite3.Error as e:
                     if "duplicate column name" in str(e).lower():
@@ -250,7 +364,7 @@ class DatabaseMigrationManager:
             return True
             
         except Exception as e:
-            self.logger.error(f"❌ Error adding missing columns: {e}")
+            self.logger.error(f"❌ Error fixing control_files_tracking table: {e}")
             return False
     
     def _validate_migration(self, conn: sqlite3.Connection, db_path: str) -> bool:

@@ -329,7 +329,7 @@ class CircuitBreakerManager:
     circuit management capabilities.
     """
     
-    def __init__(self, db_path: str = "./data/automation_state.db",
+    def __init__(self, db_path: str = "src/python/data/automation_state.db",
                  default_config: Optional[CircuitBreakerConfig] = None):
         """
         Initialize circuit breaker manager.
@@ -790,7 +790,7 @@ class CircuitBreakerManager:
         return reset_count
 
 
-def create_circuit_breaker_manager(db_path: str = "./data/automation_state.db",
+def create_circuit_breaker_manager(db_path: str = "src/python/data/automation_state.db",
                                   config: Optional[CircuitBreakerConfig] = None) -> CircuitBreakerManager:
     """
     Factory function to create a Circuit Breaker Manager.
@@ -816,7 +816,7 @@ if __name__ == "__main__":
                        help='Show circuit breaker status')
     parser.add_argument('--reset-all', action='store_true',
                        help='Reset all circuit breakers')
-    parser.add_argument('--db-path', default='./data/automation_state.db',
+    parser.add_argument('--db-path', default='src/python/data/automation_state.db',
                        help='Database path')
     
     args = parser.parse_args()

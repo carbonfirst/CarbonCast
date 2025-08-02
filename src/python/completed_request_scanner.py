@@ -32,19 +32,19 @@ try:
 except ImportError as e:
     print(f"Warning: Could not import fix_completed_requests functionality: {e}")
     # Define fallback functions
-    def get_completed_requests_from_database(db_path: str = "./data/automation_state.db") -> List[Dict]:
+    def get_completed_requests_from_database(db_path: str = "src/python/data/automation_state.db") -> List[Dict]:
         return []
     
-    def download_all_completed_requests(db_path: str = "./data/automation_state.db"):
+    def download_all_completed_requests(db_path: str = "src/python/data/automation_state.db"):
         pass
     
-    def show_status(db_path: str = "./data/automation_state.db"):
+    def show_status(db_path: str = "src/python/data/automation_state.db"):
         print("Status functionality not available")
     
-    def verify_downloads(db_path: str = "./data/automation_state.db"):
+    def verify_downloads(db_path: str = "src/python/data/automation_state.db"):
         print("Verify downloads functionality not available")
     
-    def download_specific_requests(request_indices: List[str], db_path: str = "./data/automation_state.db"):
+    def download_specific_requests(request_indices: List[str], db_path: str = "src/python/data/automation_state.db"):
         pass
 
 
@@ -75,7 +75,7 @@ class CompletedRequestScanner:
     system while using the existing fix_completed_requests.py functionality.
     """
     
-    def __init__(self, db_path: str = "./data/automation_state.db"):
+    def __init__(self, db_path: str = "src/python/data/automation_state.db"):
         """
         Initialize the completed request scanner.
         
@@ -251,7 +251,7 @@ class CompletedRequestScanner:
             }
 
 
-def create_completed_request_scanner(db_path: str = "./data/automation_state.db") -> CompletedRequestScanner:
+def create_completed_request_scanner(db_path: str = "src/python/data/automation_state.db") -> CompletedRequestScanner:
     """
     Factory function to create a CompletedRequestScanner instance.
     

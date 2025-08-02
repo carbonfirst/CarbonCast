@@ -93,7 +93,7 @@ class ProcessingConfig:
     enable_completion_notifications: bool = True
     
     # Database settings
-    db_path: str = "data/automation_state.db"
+    db_path: str = "src/python/data/automation_state.db"
     
     # Resume settings
     resume_session_id: Optional[str] = None

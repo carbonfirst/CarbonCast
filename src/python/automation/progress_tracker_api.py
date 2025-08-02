@@ -89,7 +89,7 @@ class ProgressTrackerAPI:
     and comprehensive progress analytics.
     """
     
-    def __init__(self, db_path: str = "./data/automation_state.db", 
+    def __init__(self, db_path: str = "src/python/data/automation_state.db", 
                  control_files_path: str = "./control_files"):
         """
         Initialize the Progress Tracker API.
@@ -829,7 +829,7 @@ class ProgressTrackerAPI:
         }
 
 
-def create_progress_tracker_api(db_path: str = "./data/automation_state.db",
+def create_progress_tracker_api(db_path: str = "src/python/data/automation_state.db",
                                control_files_path: str = "./control_files") -> ProgressTrackerAPI:
     """
     Factory function to create a Progress Tracker API.
@@ -859,7 +859,7 @@ if __name__ == "__main__":
                        help='Test progress trends endpoint')
     parser.add_argument('--create-snapshot', action='store_true',
                        help='Create progress snapshot')
-    parser.add_argument('--db-path', default='./data/automation_state.db',
+    parser.add_argument('--db-path', default='src/python/data/automation_state.db',
                        help='Database path')
     parser.add_argument('--control-files-path', default='./control_files',
                        help='Control files directory path')

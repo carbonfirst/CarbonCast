@@ -146,7 +146,7 @@ class RetryQueueProcessor:
     rate limiting, and capacity management.
     """
     
-    def __init__(self, db_path: str = "./data/automation_state.db",
+    def __init__(self, db_path: str = "src/python/data/automation_state.db",
                  config: Optional[QueueProcessorConfig] = None):
         """
         Initialize the retry queue processor.
@@ -838,7 +838,7 @@ class RetryQueueProcessor:
             }
 
 
-def create_retry_queue_processor(db_path: str = "./data/automation_state.db",
+def create_retry_queue_processor(db_path: str = "src/python/data/automation_state.db",
                                config: Optional[QueueProcessorConfig] = None) -> RetryQueueProcessor:
     """
     Factory function to create a Retry Queue Processor.
@@ -864,7 +864,7 @@ if __name__ == "__main__":
                        help='Process a single batch')
     parser.add_argument('--status', action='store_true',
                        help='Show queue status')
-    parser.add_argument('--db-path', default='./data/automation_state.db',
+    parser.add_argument('--db-path', default='src/python/data/automation_state.db',
                        help='Database path')
     
     args = parser.parse_args()

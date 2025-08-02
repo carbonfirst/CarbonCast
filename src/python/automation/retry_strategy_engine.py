@@ -117,7 +117,7 @@ class RetryStrategyEngine:
     and eligibility based on error patterns, system state, and historical data.
     """
     
-    def __init__(self, db_path: str = "./data/automation_state.db",
+    def __init__(self, db_path: str = "src/python/data/automation_state.db",
                  config: Optional[StrategyConfig] = None):
         """
         Initialize the retry strategy engine.
@@ -689,7 +689,7 @@ class RetryStrategyEngine:
             }
 
 
-def create_retry_strategy_engine(db_path: str = "./data/automation_state.db",
+def create_retry_strategy_engine(db_path: str = "src/python/data/automation_state.db",
                                config: Optional[StrategyConfig] = None) -> RetryStrategyEngine:
     """
     Factory function to create a Retry Strategy Engine.
@@ -713,7 +713,7 @@ if __name__ == "__main__":
                        help='Test different retry strategies')
     parser.add_argument('--statistics', action='store_true',
                        help='Show strategy statistics')
-    parser.add_argument('--db-path', default='./data/automation_state.db',
+    parser.add_argument('--db-path', default='src/python/data/automation_state.db',
                        help='Database path')
     
     args = parser.parse_args()

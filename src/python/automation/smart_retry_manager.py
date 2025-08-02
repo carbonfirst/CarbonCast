@@ -53,7 +53,7 @@ from automation.error_manager import ErrorManager, create_error_manager
 class SmartRetryConfig:
     """Comprehensive configuration for smart retry system."""
     # Database configuration
-    db_path: str = "./data/automation_state.db"
+    db_path: str = "src/python/data/automation_state.db"
     
     # Component configurations
     strategy_config: Optional[StrategyConfig] = None
@@ -731,7 +731,7 @@ if __name__ == "__main__":
                        help='Test retry processing with sample request')
     parser.add_argument('--status', action='store_true',
                        help='Show system status')
-    parser.add_argument('--db-path', default='./data/automation_state.db',
+    parser.add_argument('--db-path', default='src/python/data/automation_state.db',
                        help='Database path')
     
     args = parser.parse_args()

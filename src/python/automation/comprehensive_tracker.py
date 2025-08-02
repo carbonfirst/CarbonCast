@@ -114,7 +114,7 @@ class ComprehensiveTracker:
     
     def __init__(self, 
                  control_files_dir: str = "./control_files",
-                 db_path: str = "./data/automation_state.db",
+                 db_path: str = "src/python/data/automation_state.db",
                  config: Optional[Dict] = None):
         """
         Initialize the comprehensive tracker.
@@ -1130,7 +1130,7 @@ class ComprehensiveTracker:
 
 
 def create_comprehensive_tracker(control_files_dir: str = "./control_files",
-                               db_path: str = "./data/automation_state.db",
+                               db_path: str = "src/python/data/automation_state.db",
                                config: Optional[Dict] = None) -> ComprehensiveTracker:
     """
     Factory function to create a ComprehensiveTracker instance.
@@ -1161,7 +1161,7 @@ if __name__ == "__main__":
                        help='Show comprehensive status')
     parser.add_argument('--control-files-dir', default='./control_files',
                        help='Control files directory')
-    parser.add_argument('--db-path', default='./data/automation_state.db',
+    parser.add_argument('--db-path', default='src/python/data/automation_state.db',
                        help='Database path')
     
     args = parser.parse_args()

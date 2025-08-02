@@ -72,7 +72,7 @@ class IntegratedBatchSystem:
         self.config = self.batch_system.config
         
         # Initialize status monitor for automatic error detection and retry
-        db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "automation_state.db")
+        db_path = "src/python/data/automation_state.db"
         self.status_monitor = create_status_monitor(
             db_path=db_path,
             batch_system=self.batch_system,
@@ -437,7 +437,7 @@ class IntegratedBatchSystem:
                 
                 # Get the correct path to the database file
                 current_dir = os.path.dirname(os.path.abspath(__file__))
-                db_path = os.path.join(current_dir, "data", "automation_state.db")
+                db_path = "src/python/data/automation_state.db"
                 
                 # Create enhanced dashboard instance
                 dashboard = create_dashboard(db_path)
@@ -731,7 +731,7 @@ class IntegratedBatchSystem:
             
             # Get the correct path to the database file
             current_dir = os.path.dirname(os.path.abspath(__file__))
-            db_path = os.path.join(current_dir, "data", "automation_state.db")
+            db_path = "src/python/data/automation_state.db"
             
             # Create enhanced dashboard instance
             dashboard = create_dashboard(db_path)

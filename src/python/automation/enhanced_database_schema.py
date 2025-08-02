@@ -249,7 +249,7 @@ class EnhancedDatabaseSchema:
         ]
     }
     
-    def __init__(self, db_path: str = "./data/automation_state.db"):
+    def __init__(self, db_path: str = "src/python/data/automation_state.db"):
         """
         Initialize the enhanced database schema manager.
         
@@ -567,7 +567,7 @@ class EnhancedDatabaseSchema:
             raise
 
 
-def create_enhanced_schema_manager(db_path: str = "./data/automation_state.db") -> EnhancedDatabaseSchema:
+def create_enhanced_schema_manager(db_path: str = "src/python/data/automation_state.db") -> EnhancedDatabaseSchema:
     """
     Factory function to create an Enhanced Database Schema Manager.
     
@@ -595,7 +595,7 @@ if __name__ == "__main__":
                        help='Optimize database')
     parser.add_argument('--backup', action='store_true',
                        help='Create database backup')
-    parser.add_argument('--db-path', default='./data/automation_state.db',
+    parser.add_argument('--db-path', default='src/python/data/automation_state.db',
                        help='Database path')
     
     args = parser.parse_args()

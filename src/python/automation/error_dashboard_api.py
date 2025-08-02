@@ -84,7 +84,7 @@ class ErrorDashboardAPI:
     and interactive error resolution tools.
     """
     
-    def __init__(self, db_path: str = "./data/automation_state.db"):
+    def __init__(self, db_path: str = "src/python/data/automation_state.db"):
         """
         Initialize the Error Dashboard API.
         
@@ -770,7 +770,7 @@ class ErrorDashboardAPI:
             }
 
 
-def create_error_dashboard_api(db_path: str = "./data/automation_state.db") -> ErrorDashboardAPI:
+def create_error_dashboard_api(db_path: str = "src/python/data/automation_state.db") -> ErrorDashboardAPI:
     """
     Factory function to create an Error Dashboard API.
     
@@ -798,7 +798,7 @@ if __name__ == "__main__":
                        help='Test error trends endpoint')
     parser.add_argument('--test-patterns', action='store_true',
                        help='Test error patterns endpoint')
-    parser.add_argument('--db-path', default='./data/automation_state.db',
+    parser.add_argument('--db-path', default='src/python/data/automation_state.db',
                        help='Database path')
     
     args = parser.parse_args()

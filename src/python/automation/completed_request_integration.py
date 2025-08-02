@@ -37,7 +37,7 @@ class CompletedRequestIntegration:
     by the normal batch workflow.
     """
     
-    def __init__(self, db_path: str = "./data/automation_state.db", 
+    def __init__(self, db_path: str = "src/python/data/automation_state.db", 
                  scan_interval_minutes: int = 30):
         """
         Initialize the integration component.
@@ -219,7 +219,7 @@ class CompletedRequestIntegration:
         self.logger.info("🔴 Completed request integration stopped")
 
 
-def create_completed_request_integration(db_path: str = "./data/automation_state.db",
+def create_completed_request_integration(db_path: str = "src/python/data/automation_state.db",
                                        scan_interval_minutes: int = 30) -> CompletedRequestIntegration:
     """
     Factory function to create a CompletedRequestIntegration instance.
@@ -248,7 +248,7 @@ def add_to_batch_automation_system(batch_system, scan_interval_minutes: int = 30
         scan_interval_minutes: How often to scan for completed requests
     """
     # Get database path from batch system
-    db_path = getattr(batch_system, 'db_path', './data/automation_state.db')
+    db_path = getattr(batch_system, 'db_path', 'src/python/data/automation_state.db')
     
     # Create integration component
     integration = create_completed_request_integration(db_path, scan_interval_minutes)
@@ -293,7 +293,7 @@ def add_to_integrated_batch_system(integrated_system, scan_interval_minutes: int
         scan_interval_minutes: How often to scan for completed requests
     """
     # Get database path
-    db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "automation_state.db")
+    db_path = "src/python/data/automation_state.db"
     
     # Create integration component
     integration = create_completed_request_integration(db_path, scan_interval_minutes)

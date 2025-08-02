@@ -57,6 +57,7 @@ try:
     from directory_utils import setup_directories
     from setup_database import UnifiedDatabaseSetup
     from check_database import DatabaseHealthChecker
+    from bulletproof_database_init import create_bulletproof_initializer
 except ImportError as e:
     print(f"❌ Error importing required modules: {e}")
     print("Please ensure you're running from the correct directory and all dependencies are installed.")
@@ -233,53 +234,194 @@ class RDAAutomationStarter:
     
     def _setup_and_check_database(self) -> bool:
         """
-        Set up and check database health.
+        Set up and check database health using bulletproof initialization.
+        
+        This method uses the bulletproof database initializer to ensure absolute
+        reliability and prevent any database-related startup failures.
         
         Returns:
             bool: True if database setup and health check passed, False otherwise.
         """
         try:
-            # Initialize database setup
-            print("      🔧 Setting up database...")
-            db_setup = UnifiedDatabaseSetup(enable_enhanced_schema=True)
+            print("      🛡️  Initializing bulletproof database system...")
             
-            # Run database setup
-            setup_success = db_setup.setup_database()
-            if not setup_success:
-                print("      ❌ Database setup failed")
-                self.logger.error("Database setup failed during prerequisites check")
-                return False
+            # Create bulletproof initializer
+            bulletproof_initializer = create_bulletproof_initializer(
+                enable_enhanced_schema=True
+            )
             
-            print("      ✅ Database setup completed")
+            # Run bulletproof initialization
+            print("      🔧 Running comprehensive database initialization...")
+            initialization_report = bulletproof_initializer.initialize_bulletproof_database()
             
-            # Run health check
-            print("      🔍 Running database health check...")
-            health_checker = DatabaseHealthChecker(check_enhanced=True)
-            health_report = health_checker.run_health_check()
-            
-            if health_report.overall_status == "critical":
-                print("      ❌ Database health check failed - critical issues found")
-                print("      💡 Check logs for detailed error information")
-                self.logger.error(f"Database health check failed: {len([r for r in health_report.results if r.status == 'fail'])} critical issues")
-                return False
-            elif health_report.overall_status == "issues":
-                print("      ⚠️  Database health check passed with warnings")
-                warning_count = len([r for r in health_report.results if r.status == 'warning'])
-                print(f"      💡 {warning_count} warnings found - system will continue")
-                self.logger.warning(f"Database health check found {warning_count} warnings")
+            # Check initialization results
+            if initialization_report.status == "success":
+                print("      ✅ Bulletproof database initialization completed successfully")
+                
+                # Show summary
+                validation_summary = {}
+                for result in initialization_report.validation_results:
+                    validation_summary[result.status] = validation_summary.get(result.status, 0) + 1
+                
+                print(f"      📊 Validation Summary:")
+                for status, count in validation_summary.items():
+                    icon = {"pass": "✅", "fail": "❌", "warning": "⚠️", "critical": "🚨", "info": "ℹ️"}.get(status, "❓")
+                    print(f"        {icon} {status.title()}: {count}")
+                
+                # Show operations performed
+                if initialization_report.operations_performed:
+                    print(f"      🔧 Operations: {len(initialization_report.operations_performed)} completed")
+                
+                # Show recovery actions if any
+                if initialization_report.recovery_actions:
+                    print(f"      🔄 Recovery Actions: {len(initialization_report.recovery_actions)} applied")
+                    for action in initialization_report.recovery_actions:
+                        print(f"        - {action}")
+                
+                # Show final health status
+                if initialization_report.final_health_check:
+                    health_status = initialization_report.final_health_check.get('overall_status', 'unknown')
+                    print(f"      🏥 Final Health Status: {health_status.upper()}")
+                
+                print(f"      📁 Database location: {initialization_report.database_path}")
+                print("      ✅ Database is bulletproof and ready for production use")
+                
+                return True
+                
             else:
-                print("      ✅ Database health check passed")
+                print("      ❌ CRITICAL: Bulletproof database initialization failed")
+                print("      💡 This is a fatal error that prevents system startup")
+                
+                # Log detailed error information
+                self.logger.error("FATAL: Bulletproof database initialization failed")
+                self.logger.error(f"Initialization ID: {initialization_report.initialization_id}")
+                
+                # Show errors encountered
+                if initialization_report.errors_encountered:
+                    print("      📋 Critical errors encountered:")
+                    for error in initialization_report.errors_encountered:
+                        print(f"        - {error}")
+                        self.logger.error(f"  Database Error: {error}")
+                
+                # Show validation failures
+                critical_failures = [r for r in initialization_report.validation_results if r.status == "critical"]
+                failures = [r for r in initialization_report.validation_results if r.status == "fail"]
+                
+                if critical_failures or failures:
+                    print("      📋 Validation failures:")
+                    for failure in critical_failures + failures:
+                        print(f"        - {failure.check_name}: {failure.message}")
+                        self.logger.error(f"  Validation Failure: {failure.check_name} - {failure.message}")
+                
+                # Show recommendations
+                if initialization_report.recommendations:
+                    print("      💡 Recommendations to fix issues:")
+                    for i, rec in enumerate(initialization_report.recommendations[:5], 1):  # Show top 5
+                        print(f"        {i}. {rec}")
+                
+                # Log full report for debugging
+                self.logger.error("Full initialization report logged for debugging")
+                bulletproof_initializer.print_initialization_report(initialization_report)
+                
+                return False
+                
+        except Exception as e:
+            print(f"      ❌ CRITICAL: Bulletproof database initialization error - {e}")
+            print("      💡 This is a fatal error that prevents system startup")
+            self.logger.error(f"FATAL: Bulletproof database initialization error: {e}")
+            self.logger.error("System cannot start due to database initialization failure")
+            return False
+    
+    def _verify_critical_tables(self, db_setup: 'UnifiedDatabaseSetup') -> bool:
+        """
+        Verify that all critical database tables exist.
+        
+        Args:
+            db_setup: The database setup instance
             
-            # Show database info
+        Returns:
+            bool: True if all critical tables exist, False otherwise
+        """
+        try:
             db_info = db_setup.get_database_info()
-            table_count = len(db_info.get('tables', {}))
-            print(f"      📊 Database ready with {table_count} tables")
+            tables = db_info.get('tables', {})
+            
+            # Critical tables that must exist
+            critical_tables = [
+                'rda_requests',
+                'control_files_tracking'
+            ]
+            
+            missing_tables = []
+            for table in critical_tables:
+                if table not in tables:
+                    missing_tables.append(table)
+            
+            if missing_tables:
+                self.logger.error(f"Critical tables missing: {missing_tables}")
+                print(f"        ❌ Missing critical tables: {', '.join(missing_tables)}")
+                return False
             
             return True
             
         except Exception as e:
-            print(f"      ❌ Database setup error: {e}")
-            self.logger.error(f"Database setup error during prerequisites: {e}")
+            self.logger.error(f"Error verifying critical tables: {e}")
+            return False
+    
+    def _verify_data_sync_requirements(self, db_setup: 'UnifiedDatabaseSetup') -> bool:
+        """
+        Verify that the database meets data sync requirements.
+        
+        This specifically checks for the tables and columns that data_sync.py needs.
+        
+        Args:
+            db_setup: The database setup instance
+            
+        Returns:
+            bool: True if data sync requirements are met, False otherwise
+        """
+        try:
+            with db_setup._get_db_connection() as conn:
+                cursor = conn.cursor()
+                
+                # Check rda_requests table has required columns
+                cursor.execute("PRAGMA table_info(rda_requests)")
+                rda_columns = {row['name'] for row in cursor.fetchall()}
+                
+                required_rda_columns = {
+                    'request_index', 'request_id', 'control_file_path', 'region',
+                    'variable_type', 'dsid', 'status', 'date_rqst', 'date_ready',
+                    'date_purge', 'location', 'ncar_contact', 'rinfo', 'subset_note',
+                    'raw_response'
+                }
+                
+                missing_rda_columns = required_rda_columns - rda_columns
+                if missing_rda_columns:
+                    self.logger.error(f"rda_requests table missing columns: {missing_rda_columns}")
+                    print(f"        ❌ rda_requests missing columns: {', '.join(missing_rda_columns)}")
+                    return False
+                
+                # Check control_files_tracking table has required columns
+                cursor.execute("PRAGMA table_info(control_files_tracking)")
+                control_columns = {row['name'] for row in cursor.fetchall()}
+                
+                required_control_columns = {
+                    'file_path', 'filename', 'region', 'variable_type', 'discovered_at',
+                    'request_index', 'request_id'
+                }
+                
+                missing_control_columns = required_control_columns - control_columns
+                if missing_control_columns:
+                    self.logger.error(f"control_files_tracking table missing columns: {missing_control_columns}")
+                    print(f"        ❌ control_files_tracking missing columns: {', '.join(missing_control_columns)}")
+                    return False
+                
+                print("      ✅ Data sync requirements verified")
+                return True
+                
+        except Exception as e:
+            self.logger.error(f"Error verifying data sync requirements: {e}")
+            print(f"        ❌ Error checking data sync requirements: {e}")
             return False
     
     def show_interactive_menu(self):
