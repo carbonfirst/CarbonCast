@@ -1,22 +1,28 @@
 {
   "automation": {
     "max_concurrent_requests": 10,
-    "check_interval_seconds": 300,
+    "check_interval_seconds": 60,
     "retry_attempts": 3,
-    "retry_delay_seconds": 60,
+    "retry_delay_seconds": 30,
     "download_timeout_seconds": 3600,
     "auto_purge_after_download": true,
     "auto_purge_failed_requests": true,
-    "purge_retry_attempts": 2,
-    "purge_retry_delay_seconds": 30,
-    "request_limit_safety_margin": 2,
+    "purge_retry_attempts": 3,
+    "purge_retry_delay_seconds": 15,
+    "request_limit_safety_margin": 0,
     "auto_upload_enabled": true,
-    "status_check_interval_seconds": 180
+    "status_check_interval_seconds": 60,
+    "completed_request_scan_interval_minutes": 2,
+    "aggressive_10_request_targeting": true,
+    "immediate_slot_filling": true,
+    "max_upload_batch_size": 10
   },
   "upload": {
     "dest_file": "./ds0841.1_control.ctl",
-    "rate_limit_delay": 1.0,
-    "auto_discover_incoming": true
+    "rate_limit_delay": 0.5,
+    "auto_discover_incoming": true,
+    "aggressive_upload_enabled": true,
+    "upload_on_any_available_slot": true
   },
   "directories": {
     "base_download_dir": "src/python/downloaded_files",
