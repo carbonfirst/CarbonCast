@@ -1,10 +1,202 @@
-#ignore virtual environment files
+# Python
 *.pyc
+*.pyo
+*.pyd
 __pycache__/
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
 venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+
 # Database files
 *.db
 *.sqlite
 *.sqlite3
+*.db-journal
+*.db-wal
+*.db-shm
 src/python/data/automation_state.db
+src/python/automation/data/automation_state.db
+
+# Metrics and history files
+metrics_history.json
+src/python/metrics_history.json
+*_metrics.json
+*_history.json
+
+# Database backups and migrations
 src/python/data/backups/
+src/python/automation/data/
+*.backup
+*.backup_*
+*backup_*
+*.bak
+
+# Log files and directories
+logs/
+*.log
+*.log.*
+log/
+logging/
+src/python/logs/
+src/python/automation/logs/
+
+# Data directories and user data
+data/
+downloaded_files/
+src/python/data/
+src/python/downloaded_files/
+incoming/
+src/python/incoming/
+
+# Results and reports
+results/
+reports/
+src/python/results/
+src/python/reports/
+*.json.bak
+*_summary.json
+*_report.json
+
+# Configuration and sensitive files
+config/local/
+config/production/
+config/development/
+*.env
+.env.*
+*.key
+*.pem
+*.p12
+*.pfx
+api_keys.txt
+secrets.txt
+tokens.txt
+credentials.json
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+*~
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+*.sublime-project
+*.sublime-workspace
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Cache directories
+.cache/
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+.coverage.*
+coverage.xml
+*.cover
+.hypothesis/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# PEP 582
+__pypackages__/
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# Control files (if they contain sensitive data)
+# Uncomment if control files should not be committed
+# control_files/
+# src/python/control_files/
+
+# Test configuration
+test_config/
+src/python/test_config/
+
+# Backup directories
+backups/
+src/python/src/
+
+# Crisis resolution data
+CRISIS_RESOLUTION/
+downloaded_files/CRISIS_RESOLUTION/
+src/python/downloaded_files/CRISIS_RESOLUTION/
+
+# Keep files (but ignore their parent directories if they have content)
+!.gitkeep
