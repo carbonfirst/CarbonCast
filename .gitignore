@@ -2,3 +2,9 @@
 *.pyc
 __pycache__/
 venv/
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+src/python/data/automation_state.db
+src/python/data/backups/
