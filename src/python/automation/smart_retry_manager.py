@@ -70,7 +70,7 @@ class SmartRetryConfig:
     rate_limit_window_size: int = 60
     
     # Capacity management
-    capacity_threshold: int = 8
+    capacity_threshold: int = 9
     capacity_check_interval: int = 30
     
     # Error classification

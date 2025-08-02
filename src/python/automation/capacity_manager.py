@@ -38,9 +38,9 @@ from upload_files import submit_batch_files, discover_control_files
 class CapacityLevel(Enum):
     """Enumeration for capacity levels."""
     NORMAL = "normal"          # 0-6 requests
-    APPROACHING = "approaching" # 7-8 requests
-    CRITICAL = "critical"      # 9 requests
-    CRISIS = "crisis"          # 10 requests (at limit)
+    APPROACHING = "approaching" # 7-9 requests
+    CRITICAL = "critical"      # 10 requests
+    CRISIS = "crisis"          # 10+ requests (at/over limit)
 
 
 class PriorityLevel(Enum):
@@ -57,7 +57,7 @@ class CapacityConfig:
     """Configuration for capacity management."""
     normal_threshold: int = 6
     approaching_threshold: int = 7
-    critical_threshold: int = 9
+    critical_threshold: int = 10
     crisis_threshold: int = 10
     monitoring_interval: int = 60  # 1 minute
     crisis_resolution_timeout: int = 1800  # 30 minutes
@@ -409,7 +409,7 @@ class CapacityManager:
         return actions
     
     def _execute_approaching_strategy(self, capacity_status: CapacityStatus) -> List[CapacityAction]:
-        """Execute approaching strategy when at 7-8 requests."""
+        """Execute approaching strategy when at 7-9 requests."""
         actions = []
         
         self.logger.info(f"📊 CAPACITY APPROACHING: {capacity_status.total_requests}/10 requests active")

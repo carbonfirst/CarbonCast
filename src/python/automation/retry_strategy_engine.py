@@ -105,7 +105,7 @@ class StrategyConfig:
     max_jitter: int = 30
     success_threshold: float = 0.3
     eligibility_threshold: float = 0.5
-    capacity_threshold: int = 8
+    capacity_threshold: int = 9
     rate_limit_factor: float = 1.5
     adaptive_learning_rate: float = 0.1
     fibonacci_max_index: int = 10
