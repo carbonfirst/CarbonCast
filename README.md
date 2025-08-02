@@ -457,25 +457,6 @@ curl http://localhost:5001/api/status
 curl http://localhost:5001/api/regional-summary
 ```
 
-## 📈 Performance & Scalability
-
-### Recommended Settings
-
-| Batch Size | Max Concurrent | Check Interval | Use Case |
-|------------|----------------|----------------|----------|
-| < 50 files | 5 requests | 300s | Small batches |
-| 50-200 files | 7 requests | 240s | Medium batches |
-| 200+ files | 10 requests | 180s | Large batches |
-
-### System Requirements
-
-| Component | Minimum | Recommended | Large Scale |
-|-----------|---------|-------------|-------------|
-| **CPU** | 2 cores | 4 cores | 8+ cores |
-| **RAM** | 2GB | 4GB | 8GB+ |
-| **Disk** | 10GB | 50GB | 200GB+ |
-| **Network** | 10 Mbps | 50 Mbps | 100 Mbps+ |
-
 ### Performance Monitoring
 
 ```bash
@@ -484,34 +465,6 @@ python automation/capacity_manager.py --analytics
 python automation/sequential_file_processor.py --status
 python automation/smart_retry_manager.py --status
 ```
-
-## 🤝 Contributing
-
-We welcome contributions! Here's how to get started:
-
-### Development Setup
-```bash
-# Clone and setup development environment
-git clone <repository-url>
-cd CarbonCast
-python -m venv dev_env
-source dev_env/bin/activate
-pip install -r src/python/requirements.txt
-
-# Install development tools
-pip install black flake8 pytest mypy
-
-# Run tests
-cd src/python
-python test_date_manager.py
-```
-
-### Contribution Guidelines
-1. **Fork the repository**
-2. **Create a feature branch**: `git checkout -b feature/amazing-feature`
-3. **Make your changes** following coding standards
-4. **Add tests** for new functionality
-5. **Submit a pull request**
 
 ## 🆘 Support & Contact
 
