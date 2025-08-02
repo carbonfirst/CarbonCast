@@ -777,10 +777,9 @@ class ProgressTrackerAPI:
         """Get display name for a weather variable."""
         variable_names = {
             'dswrf': 'Downward Solar Radiation Flux',
-            'wind': 'Wind Speed',
-            'rain': 'Precipitation',
-            'temp': 'Temperature',
+            'ugrd_vgrd': 'Wind Speed',
             'apcp': 'Accumulated Precipitation',
+            'tmp_dpt': 'Temperature',
             'ugrd': 'U-Component Wind',
             'vgrd': 'V-Component Wind'
         }

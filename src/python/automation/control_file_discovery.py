@@ -90,19 +90,17 @@ class ControlFileDiscovery:
         # Variable type mappings for standardization
         self.variable_type_mappings = {
             'dswrf': 'solar_radiation',
-            'wind': 'wind_speed',
-            'rain': 'precipitation',
-            'temp': 'temperature',
-            'apcp': 'precipitation'
+            'ugrd_vgrd': 'wind_speed',
+            'apcp': 'precipitation',
+            'tmp_dpt': 'temperature'
         }
         
         # Priority mappings for different variable types
         self.variable_priorities = {
             'dswrf': 1,      # Solar radiation - highest priority
-            'wind': 2,       # Wind speed
-            'temp': 3,       # Temperature
-            'rain': 4,       # Precipitation
-            'apcp': 4        # Precipitation (alternative name)
+            'ugrd_vgrd': 2,  # Wind speed
+            'tmp_dpt': 3,    # Temperature
+            'apcp': 4        # Precipitation
         }
         
         self.logger.info("Control File Discovery initialized")
@@ -158,7 +156,7 @@ class ControlFileDiscovery:
             validation_errors.append(f"Invalid variable type format: {variable_type}")
         
         # Check if variable type is recognized
-        known_variables = ['dswrf', 'wind', 'rain', 'temp', 'apcp']
+        known_variables = ['dswrf', 'ugrd_vgrd', 'apcp', 'tmp_dpt']
         if variable_type not in known_variables:
             validation_errors.append(f"Unknown variable type: {variable_type}")
         
@@ -269,10 +267,9 @@ class ControlFileDiscovery:
         # Base processing time estimates (in hours)
         base_times = {
             'dswrf': 2.0,    # Solar radiation data
-            'wind': 1.5,     # Wind data
-            'temp': 1.0,     # Temperature data
-            'rain': 1.8,     # Precipitation data
-            'apcp': 1.8      # Precipitation data (alternative)
+            'ugrd_vgrd': 1.5, # Wind data
+            'tmp_dpt': 1.0,  # Temperature data
+            'apcp': 1.8      # Precipitation data
         }
         
         base_time = base_times.get(variable_type, 2.0)

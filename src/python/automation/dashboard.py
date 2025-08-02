@@ -1391,11 +1391,11 @@ class EnhancedRDADashboard:
                                     if 'dswrf' in file_lower or 'dswrf' in dir_name or 'solar' in dir_name:
                                         variable_breakdown['dswrf'] += 1
                                     elif 'wind' in file_lower or 'wind' in dir_name or 'ugrd' in file_lower or 'vgrd' in file_lower:
-                                        variable_breakdown['wind'] += 1
+                                        variable_breakdown['ugrd_vgrd'] += 1
                                     elif 'rain' in file_lower or 'rain' in dir_name or 'apcp' in file_lower or 'precip' in dir_name:
-                                        variable_breakdown['rain'] += 1
+                                        variable_breakdown['apcp'] += 1
                                     elif 'temp' in file_lower or 'temp' in dir_name or 'tmp' in file_lower:
-                                        variable_breakdown['temp'] += 1
+                                        variable_breakdown['tmp_dpt'] += 1
                                     else:
                                         variable_breakdown['unknown'] += 1
                         

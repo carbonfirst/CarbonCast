@@ -553,11 +553,11 @@ class EnhancedUnknownRegionResolver:
         if any(term in note_lower for term in ['solar', 'radiation', 'dswrf', 'shortwave']):
             return "dswrf"
         elif any(term in note_lower for term in ['wind', 'ugrd', 'vgrd', 'u-component', 'v-component']):
-            return "wind"
+            return "ugrd_vgrd"
         elif any(term in note_lower for term in ['rain', 'precip', 'apcp', 'precipitation']):
-            return "rain"
+            return "apcp"
         elif any(term in note_lower for term in ['temp', 'temperature', 'tmp', 'dewpoint']):
-            return "temp"
+            return "tmp_dpt"
         else:
             return "unknown"
     

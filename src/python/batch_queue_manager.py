@@ -161,19 +161,19 @@ class IntelligentQueueManager:
             
             # Estimate size and duration based on variable type
             size_estimates = {
-                'dswrf': 2.5,  # Solar data tends to be larger
-                'wind': 3.0,   # Wind components (U+V) are larger
-                'temp': 1.5,   # Temperature data is moderate
-                'rain': 1.0,   # Precipitation data is smaller
-                'unknown': 2.0  # Default estimate
+                'dswrf': 2.5,     # Solar data tends to be larger
+                'ugrd_vgrd': 3.0, # Wind components (U+V) are larger
+                'tmp_dpt': 1.5,   # Temperature data is moderate
+                'apcp': 1.0,      # Precipitation data is smaller
+                'unknown': 2.0    # Default estimate
             }
             
             duration_estimates = {
-                'dswrf': 3.0,  # Solar processing takes longer
-                'wind': 4.0,   # Wind processing is most complex
-                'temp': 2.0,   # Temperature is moderate
-                'rain': 1.5,   # Precipitation is fastest
-                'unknown': 2.5  # Default estimate
+                'dswrf': 3.0,     # Solar processing takes longer
+                'ugrd_vgrd': 4.0, # Wind processing is most complex
+                'tmp_dpt': 2.0,   # Temperature is moderate
+                'apcp': 1.5,      # Precipitation is fastest
+                'unknown': 2.5    # Default estimate
             }
             
             # Determine priority based on region importance and variable type

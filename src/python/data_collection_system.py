@@ -334,11 +334,11 @@ class RDADataCollector:
         if any(term in variable_lower for term in ['solar', 'radiation', 'dswrf', 'shortwave']):
             return "dswrf"
         elif any(term in variable_lower for term in ['wind', 'ugrd', 'vgrd']):
-            return "wind"
+            return "ugrd_vgrd"
         elif any(term in variable_lower for term in ['rain', 'precip', 'apcp']):
-            return "rain"
+            return "apcp"
         elif any(term in variable_lower for term in ['temp', 'temperature', 'tmp']):
-            return "temp"
+            return "tmp_dpt"
         else:
             return "unknown"
     

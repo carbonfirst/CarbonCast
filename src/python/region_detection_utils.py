@@ -277,11 +277,11 @@ def extract_variable_from_request(request_data: Dict) -> str:
         if any(term in text_content for term in ['solar', 'radiation', 'dswrf', 'shortwave']):
             return "dswrf"
         elif any(term in text_content for term in ['wind', 'ugrd', 'vgrd']):
-            return "wind"
+            return "ugrd_vgrd"
         elif any(term in text_content for term in ['rain', 'precip', 'apcp']):
-            return "rain"
+            return "apcp"
         elif any(term in text_content for term in ['temp', 'temperature', 'tmp']):
-            return "temp"
+            return "tmp_dpt"
         
         return "unknown"
         
@@ -309,11 +309,11 @@ def extract_variable_from_subset_note(subset_note: str) -> str:
     if any(term in note_lower for term in ['downward shortwave radiation flux', 'solar', 'radiation', 'dswrf', 'shortwave']):
         return "dswrf"
     elif any(term in note_lower for term in ['wind', 'ugrd', 'vgrd', 'u-component', 'v-component']):
-        return "wind"
+        return "ugrd_vgrd"
     elif any(term in note_lower for term in ['total precipitation', 'rain', 'precip', 'apcp']):
-        return "rain"
+        return "apcp"
     elif any(term in note_lower for term in ['temperature', 'temp', 'tmp']):
-        return "temp"
+        return "tmp_dpt"
     else:
         return "unknown"
 

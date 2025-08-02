@@ -217,7 +217,7 @@ class EnhancedFileOrganizationManager:
                     'shortwave', 'solar', 'radiation flux', 'surface solar',
                     'downward solar', 'sw radiation', 'solar irradiance'
                 ],
-                'aliases': ['solar', 'radiation', 'dswrf'],
+                'aliases': ['dswrf'],
                 'priority': 1
             },
             'ugrd_vgrd': {
@@ -226,7 +226,7 @@ class EnhancedFileOrganizationManager:
                     'wind speed', 'wind direction', 'wind velocity',
                     '10 m wind', 'surface wind', 'wind vector'
                 ],
-                'aliases': ['wind', 'ugrd', 'vgrd', 'ugrd_vgrd'],
+                'aliases': ['ugrd_vgrd'],
                 'priority': 1
             },
             'apcp': {
@@ -235,7 +235,7 @@ class EnhancedFileOrganizationManager:
                     'accumulation', 'precip', 'rainfall', 'precipitation rate',
                     'convective precipitation', 'large scale precipitation'
                 ],
-                'aliases': ['rain', 'precip', 'apcp'],
+                'aliases': ['apcp'],
                 'priority': 1
             },
             'tmp_dpt': {
@@ -244,7 +244,7 @@ class EnhancedFileOrganizationManager:
                     '2 m', 'surface temperature', '2m temperature',
                     'air temperature', 'ambient temperature', 'dpt'
                 ],
-                'aliases': ['temp', 'tmp', 'temperature', 'tmp_dpt', 'dpt'],
+                'aliases': ['tmp_dpt'],
                 'priority': 1
             }
         }

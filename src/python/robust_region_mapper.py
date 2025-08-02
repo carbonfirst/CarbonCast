@@ -144,9 +144,9 @@ class RobustRegionMapper:
         # Variable mapping patterns
         self.variable_patterns = {
             'dswrf': ['dswrf', 'downward shortwave radiation', 'solar radiation', 'shortwave', 'solar'],
-            'wind': ['wind', 'ugrd', 'vgrd', 'u-component', 'v-component', 'u grd', 'v grd'],
-            'rain': ['rain', 'apcp', 'precipitation', 'precip', 'a pcp', 'total precipitation'],
-            'temp': ['temp', 'tmp', 'temperature', 'dpt', 'tmp/dpt', 'dewpoint']
+            'ugrd_vgrd': ['wind', 'ugrd', 'vgrd', 'u-component', 'v-component', 'u grd', 'v grd'],
+            'apcp': ['rain', 'apcp', 'precipitation', 'precip', 'a pcp', 'total precipitation'],
+            'tmp_dpt': ['temp', 'tmp', 'temperature', 'dpt', 'tmp/dpt', 'dewpoint']
         }
         
         # Fuzzy matching tolerances (in degrees)
