@@ -14,7 +14,6 @@ Get up and running in 5 minutes with the user-friendly automation starter:
 ```bash
 # 1. Clone and setup
 git clone <repository-url>
-cd rda-apps-clients
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
