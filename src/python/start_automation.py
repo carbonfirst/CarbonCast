@@ -47,6 +47,7 @@ import argparse
 import webbrowser
 from pathlib import Path
 from datetime import datetime
+from typing import List, Optional
 
 # Add current directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -54,6 +55,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 try:
     from batch_automation_integrated import IntegratedBatchSystem
     from automation.dashboard import create_dashboard
+    from automation.date_manager import DateManager, DateValidationError, create_date_manager
     from directory_utils import setup_directories
     from setup_database import UnifiedDatabaseSetup
     from check_database import DatabaseHealthChecker
@@ -456,6 +458,321 @@ class RDAAutomationStarter:
                 print("\n👋 Goodbye!")
                 sys.exit(0)
     
+    def _get_control_files(self) -> List[str]:
+        """Get list of control files."""
+        control_files_dir = Path("control_files")
+        if not control_files_dir.exists():
+            return []
+        
+        return [str(f) for f in control_files_dir.glob("*.ctl")]
+    
+    def _get_current_date_range(self) -> str:
+        """Get current date range from control files."""
+        try:
+            date_manager = create_date_manager()
+            control_files = self._get_control_files()
+            
+            if not control_files:
+                return "No control files found"
+            
+            # Check first control file for current date
+            current_date = date_manager.extract_date_from_ctl(control_files[0])
+            if current_date:
+                # Try to parse and format nicely
+                try:
+                    date_range = date_manager.parse_date_range_string(current_date)
+                    return date_range.to_readable_format()
+                except:
+                    return current_date
+            else:
+                return "No date found in control files"
+                
+        except Exception as e:
+            self.logger.warning(f"Error getting current date range: {e}")
+            return "Unable to determine current date range"
+    
+    def _should_prompt_for_dates(self) -> bool:
+        """Check if we should prompt for date selection."""
+        # Always prompt for date selection in automation modes
+        # This can be made configurable later
+        return True
+    
+    def _prompt_yes_no(self, message: str) -> bool:
+        """Prompt user for yes/no response."""
+        while True:
+            try:
+                response = input(message).strip().lower()
+                if response in ['y', 'yes']:
+                    return True
+                elif response in ['n', 'no', '']:
+                    return False
+                else:
+                    print("Please enter 'y' for yes or 'n' for no.")
+            except KeyboardInterrupt:
+                print("\n👋 Goodbye!")
+                sys.exit(0)
+    
+    def _prompt_date_selection(self, date_manager: DateManager) -> Optional['DateRange']:
+        """
+        Interactive date selection prompt.
+        
+        Args:
+            date_manager: DateManager instance
+            
+        Returns:
+            DateRange object or None if user chooses to keep current dates
+        """
+        # Show current date range
+        current_dates = self._get_current_date_range()
+        print(f"\n📅 Current date range: {current_dates}")
+        
+        print("\n🗓️  Date Range Selection")
+        print("=" * 50)
+        print("Choose how to specify your date range:")
+        print("  1. 📝 Enter custom date range")
+        print("  2. 📋 Use preset options")
+        print("  3. ⏭️  Keep current dates (skip update)")
+        
+        while True:
+            try:
+                choice = input("\nYour choice (1-3): ").strip()
+                
+                if choice == "1":
+                    return self._prompt_custom_date_range(date_manager)
+                elif choice == "2":
+                    return self._prompt_preset_dates(date_manager)
+                elif choice == "3":
+                    print("📅 Keeping current date ranges")
+                    return None
+                else:
+                    print("❌ Invalid choice. Please enter 1, 2, or 3.")
+                    
+            except KeyboardInterrupt:
+                print("\n👋 Goodbye!")
+                sys.exit(0)
+    
+    def _prompt_custom_date_range(self, date_manager: DateManager) -> Optional['DateRange']:
+        """
+        Prompt for custom date range with validation.
+        
+        Args:
+            date_manager: DateManager instance
+            
+        Returns:
+            DateRange object or None if user cancels
+        """
+        print("\n📝 Custom Date Range Entry")
+        print("=" * 40)
+        print("Enter your date range in any of these formats:")
+        print("  • 2023-01-01 to 2023-12-31  (ISO format)")
+        print("  • January 2023 to December 2023  (Natural language)")
+        print("  • 2023  (Full year)")
+        print("  • Q1 2024  (Quarter)")
+        print("  • 2023-06  (Single month)")
+        print("  • last 6 months  (Relative)")
+        print("  • last 30 days  (Relative)")
+        print("\n💡 Tip: Type 'help' for more examples or 'cancel' to go back")
+        
+        while True:
+            try:
+                user_input = input("\n📅 Date range: ").strip()
+                
+                if user_input.lower() == 'cancel':
+                    return None
+                elif user_input.lower() == 'help':
+                    self._show_date_format_help()
+                    continue
+                elif not user_input:
+                    print("❌ Please enter a date range or 'cancel' to go back.")
+                    continue
+                
+                try:
+                    # Parse the date range
+                    date_range = date_manager.parse_date_range_string(user_input)
+                    
+                    # Validate the date range
+                    validation_result = date_manager.get_validation_result(date_range)
+                    
+                    # Show parsed result
+                    print(f"\n✅ Parsed successfully:")
+                    print(f"   📅 Date range: {date_range.to_readable_format()}")
+                    print(f"   📊 Duration: {date_range.duration_days()} days")
+                    print(f"   🔧 CTL format: {date_range.to_ctl_format()}")
+                    print(f"   📝 Format used: {date_range.format_used.value}")
+                    
+                    # Show validation issues
+                    if not validation_result.is_valid:
+                        print(f"\n❌ Validation issues:")
+                        for issue in validation_result.issues:
+                            print(f"   • {issue}")
+                        
+                        if not self._prompt_yes_no("Continue anyway? (y/N): "):
+                            continue
+                    
+                    # Show warnings
+                    if validation_result.warnings:
+                        print(f"\n⚠️  Warnings:")
+                        for warning in validation_result.warnings:
+                            print(f"   • {warning}")
+                    
+                    # Confirm with user
+                    if self._prompt_yes_no(f"\nConfirm this date range? (Y/n): "):
+                        return date_range
+                    else:
+                        print("Please try again with a different date range.")
+                        
+                except DateValidationError as e:
+                    print(f"\n❌ Error parsing date range: {e}")
+                    print("Please try again with a different format.")
+                    
+            except KeyboardInterrupt:
+                print("\n👋 Goodbye!")
+                sys.exit(0)
+    
+    def _prompt_preset_dates(self, date_manager: DateManager) -> Optional['DateRange']:
+        """
+        Prompt for preset date options.
+        
+        Args:
+            date_manager: DateManager instance
+            
+        Returns:
+            DateRange object or None if user cancels
+        """
+        print("\n📋 Preset Date Options")
+        print("=" * 30)
+        
+        suggestions = date_manager.get_date_suggestions()
+        
+        # Display options
+        options = list(suggestions.items())
+        for i, (name, date_str) in enumerate(options, 1):
+            display_name = name.replace('_', ' ').title()
+            print(f"  {i:2d}. {display_name}: {date_str}")
+        
+        print(f"  {len(options) + 1:2d}. ⏭️  Cancel (go back)")
+        
+        while True:
+            try:
+                choice = input(f"\nSelect option (1-{len(options) + 1}): ").strip()
+                
+                try:
+                    choice_num = int(choice)
+                    if choice_num == len(options) + 1:
+                        return None
+                    elif 1 <= choice_num <= len(options):
+                        selected_name, selected_date_str = options[choice_num - 1]
+                        
+                        try:
+                            # Parse the selected preset
+                            date_range = date_manager.parse_date_range_string(selected_date_str)
+                            
+                            print(f"\n✅ Selected: {selected_name.replace('_', ' ').title()}")
+                            print(f"   📅 Date range: {date_range.to_readable_format()}")
+                            print(f"   📊 Duration: {date_range.duration_days()} days")
+                            
+                            # Validate
+                            validation_result = date_manager.get_validation_result(date_range)
+                            if validation_result.warnings:
+                                print(f"\n⚠️  Warnings:")
+                                for warning in validation_result.warnings:
+                                    print(f"   • {warning}")
+                            
+                            if self._prompt_yes_no(f"\nConfirm this selection? (Y/n): "):
+                                return date_range
+                            else:
+                                print("Please make another selection.")
+                                
+                        except DateValidationError as e:
+                            print(f"❌ Error with preset '{selected_name}': {e}")
+                            print("Please select a different option.")
+                    else:
+                        print(f"❌ Invalid choice. Please enter 1-{len(options) + 1}.")
+                        
+                except ValueError:
+                    print(f"❌ Invalid input. Please enter a number 1-{len(options) + 1}.")
+                    
+            except KeyboardInterrupt:
+                print("\n👋 Goodbye!")
+                sys.exit(0)
+    
+    def _show_date_format_help(self):
+        """Show detailed help for date formats."""
+        print("\n📚 Date Format Help")
+        print("=" * 50)
+        print("Supported date range formats:")
+        print()
+        print("📅 ISO Date Ranges:")
+        print("   • 2023-01-01 to 2023-12-31")
+        print("   • 2024-06-15 to 2024-08-30")
+        print()
+        print("📝 Natural Language:")
+        print("   • January 2023 to December 2023")
+        print("   • June 2024 to August 2024")
+        print()
+        print("🗓️  Shorthand Formats:")
+        print("   • 2023  (entire year 2023)")
+        print("   • Q1 2024  (first quarter of 2024)")
+        print("   • Q4 2023  (fourth quarter of 2023)")
+        print("   • 2023-06  (entire month of June 2023)")
+        print("   • June 2023  (entire month of June 2023)")
+        print()
+        print("⏰ Relative Dates:")
+        print("   • last 30 days")
+        print("   • last 6 months")
+        print("   • last 1 year")
+        print()
+        print("🔧 Technical Format (CTL):")
+        print("   • 202301010000/to/202312310000")
+        print()
+    
+    def _update_control_file_dates(self, date_manager: DateManager, date_range: 'DateRange') -> bool:
+        """
+        Update control files with new date range.
+        
+        Args:
+            date_manager: DateManager instance
+            date_range: New date range to apply
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            control_files = self._get_control_files()
+            
+            if not control_files:
+                print("❌ No control files found to update")
+                return False
+            
+            print(f"\n🔄 Updating {len(control_files)} control files...")
+            print(f"   📅 New date range: {date_range.to_readable_format()}")
+            print(f"   🔧 CTL format: {date_range.to_ctl_format()}")
+            
+            # Perform batch update
+            result = date_manager.batch_modify_ctl_files(control_files, date_range)
+            
+            if result.success:
+                print(f"✅ Successfully updated {result.files_updated} control files")
+                
+                # Show any warnings from individual file updates
+                failed_files = [fr for fr in result.file_results if not fr.success]
+                if failed_files:
+                    print(f"⚠️  {len(failed_files)} files had issues:")
+                    for file_result in failed_files[:5]:  # Show first 5 failures
+                        print(f"   • {Path(file_result.file_path).name}: {file_result.error_message}")
+                    if len(failed_files) > 5:
+                        print(f"   • ... and {len(failed_files) - 5} more files")
+                
+                return True
+            else:
+                print(f"❌ Update failed: {result.error_message}")
+                return False
+                
+        except Exception as e:
+            print(f"❌ Error updating control files: {e}")
+            self.logger.error(f"Error updating control files: {e}")
+            return False
+    
     def start_full_automation(self):
         """
         Start full automation with enhanced dashboard.
@@ -465,6 +782,8 @@ class RDAAutomationStarter:
         operational mode for continuous automation.
         
         The method:
+            - Prompts for date range selection
+            - Updates control files with new dates
             - Initializes the IntegratedBatchSystem
             - Starts the dashboard with automatic browser opening
             - Begins continuous request processing
@@ -478,10 +797,26 @@ class RDAAutomationStarter:
         print("="*60)
         
         try:
+            # NEW: Date range selection step
+            if self._should_prompt_for_dates():
+                date_manager = create_date_manager()
+                date_range = self._prompt_date_selection(date_manager)
+                
+                if date_range:
+                    print(f"\n📅 Updating control files with date range: {date_range.original_input}")
+                    
+                    if self._update_control_file_dates(date_manager, date_range):
+                        print("✅ Control files updated successfully")
+                    else:
+                        print("❌ Date update failed, aborting automation")
+                        return
+                else:
+                    print("📅 Using existing date ranges in control files")
+            
             # Initialize system
             self.system = IntegratedBatchSystem()
             
-            print("📊 Dashboard will start automatically with browser opening")
+            print("\n📊 Dashboard will start automatically with browser opening")
             print("🔄 Processing will begin after dashboard initialization")
             print("⏹️  Press Ctrl+C to stop gracefully")
             print("="*60)
@@ -551,6 +886,7 @@ class RDAAutomationStarter:
         continuing where the system left off after an interruption.
         
         The method:
+            - Optionally prompts for date range updates
             - Initializes the system with state recovery
             - Starts the dashboard for monitoring
             - Resumes processing from the saved state
@@ -564,10 +900,25 @@ class RDAAutomationStarter:
         print("="*60)
         
         try:
+            # NEW: Optional date update prompt
+            if self._prompt_yes_no("📅 Update date ranges before resuming? (y/N): "):
+                date_manager = create_date_manager()
+                date_range = self._prompt_date_selection(date_manager)
+                
+                if date_range:
+                    print(f"\n📅 Updating control files with date range: {date_range.original_input}")
+                    
+                    if self._update_control_file_dates(date_manager, date_range):
+                        print("✅ Control files updated successfully")
+                    else:
+                        print("❌ Date update failed, continuing with existing dates")
+                else:
+                    print("📅 Keeping existing date ranges")
+            
             # Initialize system
             self.system = IntegratedBatchSystem()
             
-            print("📊 Dashboard will start automatically")
+            print("\n📊 Dashboard will start automatically")
             print("🔄 Processing will resume from saved state")
             print("⏹️  Press Ctrl+C to stop gracefully")
             print("="*60)
@@ -591,9 +942,10 @@ class RDAAutomationStarter:
         
         Displays comprehensive information about the current state of
         the RDA automation system including request counts, processing
-        status, and system health.
+        status, system health, and current date ranges.
         
         The method:
+            - Shows current date ranges in control files
             - Initializes the system for status checking
             - Retrieves and displays current status information
             - Provides guidance for accessing detailed monitoring
@@ -605,13 +957,44 @@ class RDAAutomationStarter:
         print("="*60)
         
         try:
+            # Show current date range information
+            print("📅 Current Date Range Information:")
+            current_dates = self._get_current_date_range()
+            print(f"   {current_dates}")
+            
+            control_files = self._get_control_files()
+            if control_files:
+                print(f"   📁 Control files: {len(control_files)} files found")
+                
+                # Sample a few files to show date consistency
+                date_manager = create_date_manager()
+                sample_files = control_files[:3]  # Check first 3 files
+                dates_found = set()
+                
+                for file_path in sample_files:
+                    date_str = date_manager.extract_date_from_ctl(file_path)
+                    if date_str:
+                        dates_found.add(date_str)
+                
+                if len(dates_found) == 1:
+                    print("   ✅ All sampled files have consistent dates")
+                elif len(dates_found) > 1:
+                    print(f"   ⚠️  Found {len(dates_found)} different date ranges in files")
+                    print("   💡 Consider updating dates for consistency")
+            else:
+                print("   ❌ No control files found")
+            
+            print()
+            
             # Initialize system
             self.system = IntegratedBatchSystem()
             
             # Show status
             self.system.show_status()
             
-            print("\n💡 Tip: Use dashboard mode to see detailed real-time status")
+            print("\n💡 Tips:")
+            print("   • Use dashboard mode to see detailed real-time status")
+            print("   • Use 'Start full automation' to update dates and begin processing")
             
         except Exception as e:
             print(f"❌ Error getting status: {e}")

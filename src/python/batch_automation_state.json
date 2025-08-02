@@ -261,7 +261,7 @@
     "region": "UNKNOWN",
     "variable_type": "unknown",
     "download_directory": null,
-    "error_message": null,
+    "error_message": "Request limit reached (10/10) - Crisis resolution failed",
     "retry_count": 0,
     "last_check_time": null
   },
@@ -401,7 +401,7 @@
     "region": "UNKNOWN",
     "variable_type": "unknown",
     "download_directory": null,
-    "error_message": null,
+    "error_message": "Request limit reached (10/10) - Crisis resolution failed",
     "retry_count": 0,
     "last_check_time": null
   },
@@ -576,14 +576,14 @@
   "control_files/MISO_dswrf_control.ctl": {
     "control_file": "control_files/MISO_dswrf_control.ctl",
     "request_id": null,
-    "status": "pending",
+    "status": "failed",
     "submission_time": null,
     "completion_time": null,
     "download_time": null,
     "region": "UNKNOWN",
     "variable_type": "unknown",
     "download_directory": null,
-    "error_message": null,
+    "error_message": "Submission failed: {'status': 'ok', 'http_response': 200, 'error_messages': [], 'data': {'request_id': '804913'}, 'contact': 'rdahelp@ucar.edu'}",
     "retry_count": 0,
     "last_check_time": null
   },
@@ -1591,7 +1591,7 @@
     "region": "UNKNOWN",
     "variable_type": "unknown",
     "download_directory": null,
-    "error_message": null,
+    "error_message": "Request limit reached (10/10) - Crisis resolution failed",
     "retry_count": 0,
     "last_check_time": null
   },
@@ -1801,7 +1801,7 @@
     "region": "UNKNOWN",
     "variable_type": "unknown",
     "download_directory": null,
-    "error_message": null,
+    "error_message": "Request limit reached (10/10) - Crisis resolution failed",
     "retry_count": 0,
     "last_check_time": null
   },
@@ -1885,7 +1885,7 @@
     "region": "UNKNOWN",
     "variable_type": "unknown",
     "download_directory": null,
-    "error_message": null,
+    "error_message": "Request limit reached (10/10) - Crisis resolution failed",
     "retry_count": 0,
     "last_check_time": null
   },
@@ -2375,7 +2375,7 @@
     "region": "UNKNOWN",
     "variable_type": "unknown",
     "download_directory": null,
-    "error_message": null,
+    "error_message": "Request limit reached (10/10) - Crisis resolution failed",
     "retry_count": 0,
     "last_check_time": null
   },
@@ -2585,7 +2585,7 @@
     "region": "UNKNOWN",
     "variable_type": "unknown",
     "download_directory": null,
-    "error_message": null,
+    "error_message": "Request limit reached (10/10) - Crisis resolution failed",
     "retry_count": 0,
     "last_check_time": null
   },
@@ -2781,7 +2781,7 @@
     "region": "UNKNOWN",
     "variable_type": "unknown",
     "download_directory": null,
-    "error_message": null,
+    "error_message": "Request limit reached (10/10) - Crisis resolution failed",
     "retry_count": 0,
     "last_check_time": null
   },
@@ -3012,14 +3012,14 @@
   "control_files/CISO_dswrf_control.ctl": {
     "control_file": "control_files/CISO_dswrf_control.ctl",
     "request_id": null,
-    "status": "pending",
+    "status": "failed",
     "submission_time": null,
     "completion_time": null,
     "download_time": null,
     "region": "UNKNOWN",
     "variable_type": "unknown",
     "download_directory": null,
-    "error_message": null,
+    "error_message": "Submission failed: {'status': 'ok', 'http_response': 200, 'error_messages': [], 'data': {'request_id': '804914'}, 'contact': 'rdahelp@ucar.edu'}",
     "retry_count": 0,
     "last_check_time": null
   },
