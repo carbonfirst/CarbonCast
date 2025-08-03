@@ -357,6 +357,10 @@
                 <div class="metric-label">Processing</div>
             </div>
             <div class="metric-card">
+                <div class="metric-value" id="purgedRequests">-</div>
+                <div class="metric-label">Purged Requests</div>
+            </div>
+            <div class="metric-card">
                 <div class="metric-value" id="unknownRegions">-</div>
                 <div class="metric-label">Unknown Regions</div>
             </div>
@@ -367,6 +371,19 @@
             <div class="metric-card">
                 <div class="metric-value" id="uniqueRegions">-</div>
                 <div class="metric-label">Active Regions</div>
+            </div>
+        </div>
+        
+        <!-- Error Summary Section -->
+        <div class="table-container" style="margin-top: 30px;">
+            <div class="table-header">
+                <h3>⚠️ Error Summary</h3>
+                <div>
+                    <button class="btn btn-secondary" onclick="refreshErrorSummary()">🔄 Refresh</button>
+                </div>
+            </div>
+            <div id="errorSummaryContent">
+                <div style="text-align: center; padding: 40px;">Loading error summary...</div>
             </div>
         </div>
     </div>
@@ -835,7 +852,8 @@
             document.getElementById('totalRequests').textContent = overview.total_requests || 0;
             document.getElementById('completedRequests').textContent = overview.completed_requests || 0;
             document.getElementById('processingRequests').textContent = (overview.processing_requests || 0) + (overview.queued_requests || 0);
-            document.getElementById('successRate').textContent = (overview.success_rate || 0).toFixed(1) + '%';
+            document.getElementById('purgedRequests').textContent = overview.purged_requests || 0;
+            document.getElementById('successRate').textContent = (overview.completion_rate || overview.success_rate || 0).toFixed(1) + '%';
             document.getElementById('uniqueRegions').textContent = overview.unique_regions || 0;
         }
         
@@ -1079,11 +1097,76 @@
             }
         }
         
+        async function refreshErrorSummary() {
+            try {
+                const response = await fetch('/api/error-tracking/summary');
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                updateErrorSummaryDisplay(data);
+                
+            } catch (error) {
+                console.error('Error refreshing error summary:', error);
+                document.getElementById('errorSummaryContent').innerHTML =
+                    `<div class="alert alert-danger">Error loading error summary: ${error.message}</div>`;
+            }
+        }
+        
+        function updateErrorSummaryDisplay(data) {
+            const container = document.getElementById('errorSummaryContent');
+            const summary = data.summary || {};
+            
+            const html = `
+                <div class="metrics-grid" style="margin: 20px;">
+                    <div class="metric-card">
+                        <div class="metric-value" style="color: #dc3545;">${summary.total_errors || 0}</div>
+                        <div class="metric-label">Total Errors</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" style="color: #fd7e14;">${summary.active_errors || 0}</div>
+                        <div class="metric-label">Active Errors</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" style="color: #28a745;">${summary.resolved_errors || 0}</div>
+                        <div class="metric-label">Resolved</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" style="color: #dc3545;">${summary.critical_errors || 0}</div>
+                        <div class="metric-label">Critical</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" style="color: #6f42c1;">${summary.error_rate_24h || 0}</div>
+                        <div class="metric-label">Errors/Hour (24h)</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" style="color: #20c997;">${summary.resolution_rate || 0}%</div>
+                        <div class="metric-label">Resolution Rate</div>
+                    </div>
+                </div>
+                <div style="padding: 20px;">
+                    <div class="alert alert-info">
+                        <strong>Most Common Error:</strong> ${summary.most_common_error_type || 'None'}<br>
+                        <strong>Most Affected Region:</strong> ${summary.most_affected_region || 'None'}<br>
+                        <strong>Average Resolution Time:</strong> ${summary.average_resolution_time_hours || 0} hours
+                    </div>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+        
         // Initialize dashboard
         document.addEventListener('DOMContentLoaded', function() {
             refreshData();
+            refreshErrorSummary();
             // Auto-refresh every 30 seconds
-            setInterval(refreshData, 30000);
+            setInterval(() => {
+                refreshData();
+                refreshErrorSummary();
+            }, 30000);
         });
     </script>
 </body>

@@ -188,11 +188,21 @@ class EnhancedRDADashboard:
             self.logger.warning(f"Could not initialize enhanced monitoring APIs: {e}")
             # Create minimal fallback APIs
             self.error_dashboard_api = type('ErrorDashboardAPI', (), {
-                'get_error_summary': lambda: {'error': 'API not available'},
-                'get_live_error_feed': lambda **kwargs: {'errors': [], 'error': 'API not available'},
-                'get_regional_error_health': lambda: {'regional_health': [], 'error': 'API not available'},
-                'get_error_trends': lambda **kwargs: {'trends': [], 'error': 'API not available'},
-                'get_retry_queue_status': lambda: {'queue_status': {}, 'error': 'API not available'}
+                'get_error_summary': lambda time_window=24: {'summary': {
+                    'total_errors': 0,
+                    'active_errors': 0,
+                    'resolved_errors': 0,
+                    'critical_errors': 0,
+                    'error_rate_24h': 0.0,
+                    'most_common_error_type': 'None',
+                    'most_affected_region': 'None',
+                    'resolution_rate': 0.0,
+                    'average_resolution_time_hours': 0.0
+                }, 'generated_at': datetime.now().isoformat()},
+                'get_live_error_feed': lambda **kwargs: {'errors': [], 'total_count': 0, 'generated_at': datetime.now().isoformat()},
+                'get_regional_error_health': lambda: {'regional_health': [], 'total_regions': 0, 'generated_at': datetime.now().isoformat()},
+                'get_error_trends': lambda **kwargs: {'trends': [], 'analysis': {}, 'generated_at': datetime.now().isoformat()},
+                'get_retry_queue_status': lambda: {'queue_status': {}, 'generated_at': datetime.now().isoformat()}
             })()
             self.progress_tracker_api = type('ProgressTrackerAPI', (), {
                 'get_overall_progress': lambda: {'progress': {}, 'error': 'API not available'},
@@ -1047,7 +1057,7 @@ class EnhancedRDADashboard:
     def get_dashboard_summary(self) -> Dict[str, Any]:
         """
         Get comprehensive dashboard summary with all key metrics from rda_requests and real-time sync status.
-        Enhanced with progress tracking data.
+        Enhanced with progress tracking data and error tracking integration.
         
         Returns:
             Dictionary containing dashboard summary data with freshness information and progress tracking
@@ -1064,7 +1074,7 @@ class EnhancedRDADashboard:
                         COUNT(CASE WHEN LOWER(r.status) LIKE '%queued%' THEN 1 END) as queued,
                         COUNT(CASE WHEN LOWER(r.status) = 'processing' THEN 1 END) as processing,
                         COUNT(CASE WHEN LOWER(r.status) = 'completed' THEN 1 END) as completed,
-                        COUNT(CASE WHEN LOWER(r.status) LIKE '%purge%' THEN 1 END) as purged,
+                        COUNT(CASE WHEN LOWER(r.status) LIKE '%purge%' OR r.date_purge IS NOT NULL THEN 1 END) as purged,
                         COUNT(DISTINCT COALESCE(cf.region, 'UNKNOWN')) as unique_regions,
                         COUNT(DISTINCT COALESCE(cf.variable_type, 'unknown')) as unique_variables,
                         COUNT(DISTINCT r.dsid) as unique_datasets
@@ -1088,6 +1098,10 @@ class EnhancedRDADashboard:
             # Calculate completion rate (excluding purged as they're not "successful")
             active_requests = total - purged
             completion_rate = (completed / active_requests * 100) if active_requests > 0 else 0
+            
+            # Calculate success rate (completed vs total processed)
+            processed_requests = completed + purged
+            success_rate = (completed / processed_requests * 100) if processed_requests > 0 else 0
             
             # Get status distribution for the fresh data
             status_distribution = {}
@@ -1116,6 +1130,14 @@ class EnhancedRDADashboard:
             freshness_info = self._get_data_freshness_info()
             sync_metrics = self.real_time_sync.get_sync_metrics()
             
+            # Get error summary from ErrorDashboardAPI if available
+            error_summary = {}
+            try:
+                if hasattr(self, 'error_dashboard_api') and self.error_dashboard_api:
+                    error_summary = self.error_dashboard_api.get_error_summary(24)
+            except Exception as e:
+                self.logger.debug(f"Could not get error summary: {e}")
+            
             return {
                 'overview': {
                     'total_requests': total,
@@ -1124,11 +1146,13 @@ class EnhancedRDADashboard:
                     'completed_requests': completed,
                     'purged_requests': purged,
                     'completion_rate': completion_rate,
+                    'success_rate': success_rate,
                     'progress_percentage': progress_percentage,
                     'unique_regions': stats['unique_regions'],
                     'unique_variables': stats['unique_variables'],
                     'unique_datasets': stats['unique_datasets']
                 },
+                'error_summary': error_summary,
                 'progress_tracking': {
                     'files_done': files_done,
                     'files_remaining': files_remaining,
