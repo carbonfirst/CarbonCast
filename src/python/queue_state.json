@@ -1,14 +1,14 @@
 {
   "priority_queue": [
     {
-      "control_file": "control_files/BANC_dswrf_control.ctl",
+      "control_file": "control_files/PL_dswrf_control.ctl",
       "priority": "HIGH",
       "estimated_size_gb": 2.5,
       "estimated_duration_hours": 3.0,
       "dependencies": [],
-      "region_group": "BANC",
+      "region_group": "PL",
       "variable_group": "dswrf",
-      "queue_time": "2025-08-02T21:06:21.892849"
+      "queue_time": "2025-08-03T04:00:03.225106"
     },
     {
       "control_file": "control_files/TIDC_dswrf_control.ctl",
@@ -21,14 +21,14 @@
       "queue_time": "2025-08-02T04:35:56.460548"
     },
     {
-      "control_file": "control_files/GCPD_rain_control.ctl",
+      "control_file": "control_files/AL_temp_control.ctl",
       "priority": "NORMAL",
-      "estimated_size_gb": 1.0,
-      "estimated_duration_hours": 1.5,
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
       "dependencies": [],
-      "region_group": "GCPD",
-      "variable_group": "rain",
-      "queue_time": "2025-08-02T04:35:56.462890"
+      "region_group": "AL",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.456550"
     },
     {
       "control_file": "control_files/GR_dswrf_control.ctl",
@@ -61,14 +61,14 @@
       "queue_time": "2025-08-02T04:35:56.462425"
     },
     {
-      "control_file": "control_files/AZPS_rain_control.ctl",
+      "control_file": "control_files/SOCO_wind_control.ctl",
       "priority": "NORMAL",
-      "estimated_size_gb": 1.0,
-      "estimated_duration_hours": 1.5,
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
       "dependencies": [],
-      "region_group": "AZPS",
-      "variable_group": "rain",
-      "queue_time": "2025-08-02T04:35:56.459426"
+      "region_group": "SOCO",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.464429"
     },
     {
       "control_file": "control_files/HU_dswrf_control.ctl",
@@ -131,24 +131,24 @@
       "queue_time": "2025-08-02T04:35:56.463749"
     },
     {
-      "control_file": "control_files/LGEE_temp_control.ctl",
-      "priority": "NORMAL",
-      "estimated_size_gb": 1.5,
-      "estimated_duration_hours": 2.0,
-      "dependencies": [],
-      "region_group": "LGEE",
-      "variable_group": "temp",
-      "queue_time": "2025-08-02T04:35:56.460253"
-    },
-    {
-      "control_file": "control_files/HR_rain_control.ctl",
+      "control_file": "control_files/GR_rain_control.ctl",
       "priority": "NORMAL",
       "estimated_size_gb": 1.0,
       "estimated_duration_hours": 1.5,
       "dependencies": [],
-      "region_group": "HR",
+      "region_group": "GR",
       "variable_group": "rain",
-      "queue_time": "2025-08-02T04:35:56.463944"
+      "queue_time": "2025-08-02T04:35:56.459938"
+    },
+    {
+      "control_file": "control_files/RO_temp_control.ctl",
+      "priority": "NORMAL",
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
+      "dependencies": [],
+      "region_group": "RO",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.458243"
     },
     {
       "control_file": "control_files/ISNE_temp_control.ctl",
@@ -271,24 +271,24 @@
       "queue_time": "2025-08-02T04:35:56.463717"
     },
     {
-      "control_file": "control_files/GR_rain_control.ctl",
+      "control_file": "control_files/HR_rain_control.ctl",
       "priority": "NORMAL",
       "estimated_size_gb": 1.0,
       "estimated_duration_hours": 1.5,
       "dependencies": [],
-      "region_group": "GR",
+      "region_group": "HR",
       "variable_group": "rain",
-      "queue_time": "2025-08-02T04:35:56.459938"
+      "queue_time": "2025-08-02T04:35:56.463944"
     },
     {
-      "control_file": "control_files/GCPD_temp_control.ctl",
+      "control_file": "control_files/EE_wind_control.ctl",
       "priority": "NORMAL",
-      "estimated_size_gb": 1.5,
-      "estimated_duration_hours": 2.0,
+      "estimated_size_gb": 3.0,
+      "estimated_duration_hours": 4.0,
       "dependencies": [],
-      "region_group": "GCPD",
-      "variable_group": "temp",
-      "queue_time": "2025-08-02T04:35:56.464036"
+      "region_group": "EE",
+      "variable_group": "wind",
+      "queue_time": "2025-08-02T04:35:56.460097"
     },
     {
       "control_file": "control_files/TEC_temp_control.ctl",
@@ -301,14 +301,14 @@
       "queue_time": "2025-08-02T04:35:56.458201"
     },
     {
-      "control_file": "control_files/PGE_wind_control.ctl",
+      "control_file": "control_files/NL_rain_control.ctl",
       "priority": "NORMAL",
-      "estimated_size_gb": 3.0,
-      "estimated_duration_hours": 4.0,
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
       "dependencies": [],
-      "region_group": "PGE",
-      "variable_group": "wind",
-      "queue_time": "2025-08-02T04:35:56.463414"
+      "region_group": "NL",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.463265"
     },
     {
       "control_file": "control_files/TAL_dswrf_control.ctl",
@@ -561,14 +561,14 @@
       "queue_time": "2025-08-02T04:35:56.458079"
     },
     {
-      "control_file": "control_files/FI_wind_control.ctl",
+      "control_file": "control_files/PGE_wind_control.ctl",
       "priority": "NORMAL",
       "estimated_size_gb": 3.0,
       "estimated_duration_hours": 4.0,
       "dependencies": [],
-      "region_group": "FI",
+      "region_group": "PGE",
       "variable_group": "wind",
-      "queue_time": "2025-08-02T04:35:56.456885"
+      "queue_time": "2025-08-02T04:35:56.463414"
     },
     {
       "control_file": "control_files/FI_rain_control.ctl",
@@ -581,14 +581,14 @@
       "queue_time": "2025-08-02T04:35:56.462765"
     },
     {
-      "control_file": "control_files/PACE_rain_control.ctl",
+      "control_file": "control_files/GCPD_temp_control.ctl",
       "priority": "NORMAL",
-      "estimated_size_gb": 1.0,
-      "estimated_duration_hours": 1.5,
+      "estimated_size_gb": 1.5,
+      "estimated_duration_hours": 2.0,
       "dependencies": [],
-      "region_group": "PACE",
-      "variable_group": "rain",
-      "queue_time": "2025-08-02T04:35:56.456382"
+      "region_group": "GCPD",
+      "variable_group": "temp",
+      "queue_time": "2025-08-02T04:35:56.464036"
     },
     {
       "control_file": "control_files/NEVP_temp_control.ctl",
@@ -621,14 +621,14 @@
       "queue_time": "2025-08-02T04:35:56.457188"
     },
     {
-      "control_file": "control_files/AL_temp_control.ctl",
+      "control_file": "control_files/LGEE_temp_control.ctl",
       "priority": "NORMAL",
       "estimated_size_gb": 1.5,
       "estimated_duration_hours": 2.0,
       "dependencies": [],
-      "region_group": "AL",
+      "region_group": "LGEE",
       "variable_group": "temp",
-      "queue_time": "2025-08-02T04:35:56.456550"
+      "queue_time": "2025-08-02T04:35:56.460253"
     },
     {
       "control_file": "control_files/IE_rain_control.ctl",
@@ -1131,34 +1131,34 @@
       "queue_time": "2025-08-02T04:35:56.459379"
     },
     {
-      "control_file": "control_files/NL_rain_control.ctl",
+      "control_file": "control_files/AZPS_rain_control.ctl",
       "priority": "NORMAL",
       "estimated_size_gb": 1.0,
       "estimated_duration_hours": 1.5,
       "dependencies": [],
-      "region_group": "NL",
+      "region_group": "AZPS",
       "variable_group": "rain",
-      "queue_time": "2025-08-02T04:35:56.463265"
+      "queue_time": "2025-08-02T04:35:56.459426"
     },
     {
-      "control_file": "control_files/RO_temp_control.ctl",
+      "control_file": "control_files/WALC_temp_control.ctl",
       "priority": "NORMAL",
       "estimated_size_gb": 1.5,
       "estimated_duration_hours": 2.0,
       "dependencies": [],
-      "region_group": "RO",
+      "region_group": "WALC",
       "variable_group": "temp",
-      "queue_time": "2025-08-02T04:35:56.458243"
+      "queue_time": "2025-08-02T04:35:56.464129"
     },
     {
-      "control_file": "control_files/EE_wind_control.ctl",
+      "control_file": "control_files/PACE_rain_control.ctl",
       "priority": "NORMAL",
-      "estimated_size_gb": 3.0,
-      "estimated_duration_hours": 4.0,
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
       "dependencies": [],
-      "region_group": "EE",
-      "variable_group": "wind",
-      "queue_time": "2025-08-02T04:35:56.460097"
+      "region_group": "PACE",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.456382"
     },
     {
       "control_file": "control_files/RS_temp_control.ctl",
@@ -1181,14 +1181,14 @@
       "queue_time": "2025-08-02T04:35:56.457099"
     },
     {
-      "control_file": "control_files/WALC_temp_control.ctl",
+      "control_file": "control_files/GCPD_rain_control.ctl",
       "priority": "NORMAL",
-      "estimated_size_gb": 1.5,
-      "estimated_duration_hours": 2.0,
+      "estimated_size_gb": 1.0,
+      "estimated_duration_hours": 1.5,
       "dependencies": [],
-      "region_group": "WALC",
-      "variable_group": "temp",
-      "queue_time": "2025-08-02T04:35:56.464129"
+      "region_group": "GCPD",
+      "variable_group": "rain",
+      "queue_time": "2025-08-02T04:35:56.462890"
     },
     {
       "control_file": "control_files/FPC_rain_control.ctl",
@@ -1261,14 +1261,14 @@
       "queue_time": "2025-08-02T04:35:56.459688"
     },
     {
-      "control_file": "control_files/SOCO_wind_control.ctl",
+      "control_file": "control_files/FI_wind_control.ctl",
       "priority": "NORMAL",
       "estimated_size_gb": 3.0,
       "estimated_duration_hours": 4.0,
       "dependencies": [],
-      "region_group": "SOCO",
+      "region_group": "FI",
       "variable_group": "wind",
-      "queue_time": "2025-08-02T04:35:56.464429"
+      "queue_time": "2025-08-02T04:35:56.456885"
     },
     {
       "control_file": "control_files/DOPD_rain_control.ctl",
@@ -2285,206 +2285,6 @@
   "completed_queue": [],
   "failed_queue": [
     {
-      "control_file": "control_files/DE_dswrf_control.ctl",
-      "priority": "HIGH",
-      "estimated_size_gb": 2.5,
-      "estimated_duration_hours": 3.0,
-      "dependencies": [],
-      "region_group": "DE",
-      "variable_group": "dswrf",
-      "queue_time": "2025-08-02T04:35:56.461188"
-    },
-    {
-      "control_file": "control_files/RO_dswrf_control.ctl",
-      "priority": "HIGH",
-      "estimated_size_gb": 2.5,
-      "estimated_duration_hours": 3.0,
-      "dependencies": [],
-      "region_group": "RO",
-      "variable_group": "dswrf",
-      "queue_time": "2025-08-02T04:35:56.457595"
-    },
-    {
-      "control_file": "control_files/CH_dswrf_control.ctl",
-      "priority": "HIGH",
-      "estimated_size_gb": 2.5,
-      "estimated_duration_hours": 3.0,
-      "dependencies": [],
-      "region_group": "CH",
-      "variable_group": "dswrf",
-      "queue_time": "2025-08-02T04:35:56.458692"
-    },
-    {
-      "control_file": "control_files/DOPD_dswrf_control.ctl",
-      "priority": "HIGH",
-      "estimated_size_gb": 2.5,
-      "estimated_duration_hours": 3.0,
-      "dependencies": [],
-      "region_group": "DOPD",
-      "variable_group": "dswrf",
-      "queue_time": "2025-08-02T04:35:56.461024"
-    },
-    {
-      "control_file": "control_files/PL_dswrf_control.ctl",
-      "priority": "HIGH",
-      "estimated_size_gb": 2.5,
-      "estimated_duration_hours": 3.0,
-      "dependencies": [],
-      "region_group": "PL",
-      "variable_group": "dswrf",
-      "queue_time": "2025-08-02T04:35:56.461052"
-    },
-    {
-      "control_file": "control_files/MISO_temp_control.ctl",
-      "priority": "HIGH",
-      "estimated_size_gb": 1.5,
-      "estimated_duration_hours": 2.0,
-      "dependencies": [],
-      "region_group": "MISO",
-      "variable_group": "temp",
-      "queue_time": "2025-08-02T04:35:56.460972"
-    },
-    {
-      "control_file": "control_files/SK_dswrf_control.ctl",
-      "priority": "HIGH",
-      "estimated_size_gb": 2.5,
-      "estimated_duration_hours": 3.0,
-      "dependencies": [],
-      "region_group": "SK",
-      "variable_group": "dswrf",
-      "queue_time": "2025-08-02T04:35:56.460754"
-    },
-    {
-      "control_file": "control_files/SI_dswrf_control.ctl",
-      "priority": "HIGH",
-      "estimated_size_gb": 2.5,
-      "estimated_duration_hours": 3.0,
-      "dependencies": [],
-      "region_group": "SI",
-      "variable_group": "dswrf",
-      "queue_time": "2025-08-02T04:35:56.460808"
-    },
-    {
-      "control_file": "control_files/AZPS_dswrf_control.ctl",
-      "priority": "HIGH",
-      "estimated_size_gb": 2.5,
-      "estimated_duration_hours": 3.0,
-      "dependencies": [],
-      "region_group": "AZPS",
-      "variable_group": "dswrf",
-      "queue_time": "2025-08-02T04:35:56.460834"
-    },
-    {
-      "control_file": "control_files/TEC_dswrf_control.ctl",
-      "priority": "HIGH",
-      "estimated_size_gb": 2.5,
-      "estimated_duration_hours": 3.0,
-      "dependencies": [],
-      "region_group": "TEC",
-      "variable_group": "dswrf",
-      "queue_time": "2025-08-02T04:35:56.458540"
-    },
-    {
-      "control_file": "control_files/MISO_dswrf_control.ctl",
-      "priority": "URGENT",
-      "estimated_size_gb": 2.5,
-      "estimated_duration_hours": 3.0,
-      "dependencies": [],
-      "region_group": "MISO",
-      "variable_group": "dswrf",
-      "queue_time": "2025-08-02T13:50:47.426371"
-    },
-    {
-      "control_file": "control_files/CISO_dswrf_control.ctl",
-      "priority": "URGENT",
-      "estimated_size_gb": 2.5,
-      "estimated_duration_hours": 3.0,
-      "dependencies": [],
-      "region_group": "CISO",
-      "variable_group": "dswrf",
-      "queue_time": "2025-08-02T13:50:47.426550"
-    },
-    {
-      "control_file": "control_files/PJM_dswrf_control.ctl",
-      "priority": "URGENT",
-      "estimated_size_gb": 2.5,
-      "estimated_duration_hours": 3.0,
-      "dependencies": [],
-      "region_group": "PJM",
-      "variable_group": "dswrf",
-      "queue_time": "2025-08-02T13:50:47.426996"
-    },
-    {
-      "control_file": "control_files/ERCOT_dswrf_control.ctl",
-      "priority": "URGENT",
-      "estimated_size_gb": 2.5,
-      "estimated_duration_hours": 3.0,
-      "dependencies": [],
-      "region_group": "ERCOT",
-      "variable_group": "dswrf",
-      "queue_time": "2025-08-02T13:50:47.427676"
-    },
-    {
-      "control_file": "control_files/ISNE_dswrf_control.ctl",
-      "priority": "URGENT",
-      "estimated_size_gb": 2.5,
-      "estimated_duration_hours": 3.0,
-      "dependencies": [],
-      "region_group": "ISNE",
-      "variable_group": "dswrf",
-      "queue_time": "2025-08-02T13:50:47.428130"
-    },
-    {
-      "control_file": "control_files/PJM_temp_control.ctl",
-      "priority": "HIGH",
-      "estimated_size_gb": 1.5,
-      "estimated_duration_hours": 2.0,
-      "dependencies": [],
-      "region_group": "PJM",
-      "variable_group": "temp",
-      "queue_time": "2025-08-02T04:35:56.458563"
-    },
-    {
-      "control_file": "control_files/GCPD_dswrf_control.ctl",
-      "priority": "HIGH",
-      "estimated_size_gb": 2.5,
-      "estimated_duration_hours": 3.0,
-      "dependencies": [],
-      "region_group": "GCPD",
-      "variable_group": "dswrf",
-      "queue_time": "2025-08-02T13:50:47.426720"
-    },
-    {
-      "control_file": "control_files/EE_dswrf_control.ctl",
-      "priority": "HIGH",
-      "estimated_size_gb": 2.5,
-      "estimated_duration_hours": 3.0,
-      "dependencies": [],
-      "region_group": "EE",
-      "variable_group": "dswrf",
-      "queue_time": "2025-08-02T13:50:47.427453"
-    },
-    {
-      "control_file": "control_files/DUK_dswrf_control.ctl",
-      "priority": "HIGH",
-      "estimated_size_gb": 2.5,
-      "estimated_duration_hours": 3.0,
-      "dependencies": [],
-      "region_group": "DUK",
-      "variable_group": "dswrf",
-      "queue_time": "2025-08-02T13:50:47.426764"
-    },
-    {
-      "control_file": "control_files/GB_dswrf_control.ctl",
-      "priority": "HIGH",
-      "estimated_size_gb": 2.5,
-      "estimated_duration_hours": 3.0,
-      "dependencies": [],
-      "region_group": "GB",
-      "variable_group": "dswrf",
-      "queue_time": "2025-08-02T13:50:47.426811"
-    },
-    {
       "control_file": "control_files/IT_dswrf_control.ctl",
       "priority": "HIGH",
       "estimated_size_gb": 2.5,
@@ -2783,6 +2583,206 @@
       "region_group": "PACE",
       "variable_group": "dswrf",
       "queue_time": "2025-08-02T21:06:21.892513"
+    },
+    {
+      "control_file": "control_files/BANC_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "BANC",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-02T21:06:21.892849"
+    },
+    {
+      "control_file": "control_files/TVA_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "TVA",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-03T03:46:54.041817"
+    },
+    {
+      "control_file": "control_files/NEVP_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "NEVP",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-03T03:46:54.041931"
+    },
+    {
+      "control_file": "control_files/ISNE_rain_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.0,
+      "estimated_duration_hours": 2.5,
+      "dependencies": [],
+      "region_group": "ISNE",
+      "variable_group": "rain",
+      "queue_time": "2025-08-03T03:46:54.042076"
+    },
+    {
+      "control_file": "control_files/ERCOT_rain_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.0,
+      "estimated_duration_hours": 2.5,
+      "dependencies": [],
+      "region_group": "ERCOT",
+      "variable_group": "rain",
+      "queue_time": "2025-08-03T03:46:54.042344"
+    },
+    {
+      "control_file": "control_files/IPCO_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "IPCO",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-03T03:46:54.043502"
+    },
+    {
+      "control_file": "control_files/PNM_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "PNM",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-03T03:46:54.043695"
+    },
+    {
+      "control_file": "control_files/SC_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "SC",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-03T03:46:54.043555"
+    },
+    {
+      "control_file": "control_files/CZ_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "CZ",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-03T03:46:54.042471"
+    },
+    {
+      "control_file": "control_files/FR_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "FR",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-03T03:46:54.042561"
+    },
+    {
+      "control_file": "control_files/CISO_rain_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.0,
+      "estimated_duration_hours": 2.5,
+      "dependencies": [],
+      "region_group": "CISO",
+      "variable_group": "rain",
+      "queue_time": "2025-08-03T03:46:54.042713"
+    },
+    {
+      "control_file": "control_files/DOPD_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "DOPD",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-03T04:00:03.224167"
+    },
+    {
+      "control_file": "control_files/MISO_temp_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.0,
+      "estimated_duration_hours": 2.5,
+      "dependencies": [],
+      "region_group": "MISO",
+      "variable_group": "temp",
+      "queue_time": "2025-08-03T04:00:03.224223"
+    },
+    {
+      "control_file": "control_files/AZPS_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "AZPS",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-03T04:00:03.224513"
+    },
+    {
+      "control_file": "control_files/SK_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "SK",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-03T04:00:03.224559"
+    },
+    {
+      "control_file": "control_files/TEC_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "TEC",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-03T04:00:03.225248"
+    },
+    {
+      "control_file": "control_files/SI_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "SI",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-03T04:00:03.225448"
+    },
+    {
+      "control_file": "control_files/RO_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "RO",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-03T04:00:03.225290"
+    },
+    {
+      "control_file": "control_files/CH_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "CH",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-03T04:00:03.224751"
+    },
+    {
+      "control_file": "control_files/DE_dswrf_control.ctl",
+      "priority": "HIGH",
+      "estimated_size_gb": 2.5,
+      "estimated_duration_hours": 3.0,
+      "dependencies": [],
+      "region_group": "DE",
+      "variable_group": "dswrf",
+      "queue_time": "2025-08-03T04:00:03.224824"
     }
   ]
 }

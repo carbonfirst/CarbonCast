@@ -659,6 +659,161 @@ class EnhancedRDADashboard:
             days = processing_time_hours / 24
             return f"{days:.1f} days"
     
+    def _calculate_completion_trend(self, completion_dates: List[str]) -> Dict[str, Any]:
+        """
+        Calculate completion trend from a list of completion dates.
+        
+        Args:
+            completion_dates: List of completion date strings
+            
+        Returns:
+            Dictionary with trend information
+        """
+        if not completion_dates:
+            return {
+                'trend_type': 'no_data',
+                'requests_per_day': 0.0,
+                'total_days': 0,
+                'peak_day': None,
+                'trend_direction': 'stable'
+            }
+        
+        try:
+            # Parse dates and count by day
+            from collections import defaultdict
+            daily_counts = defaultdict(int)
+            
+            for date_str in completion_dates:
+                if date_str:
+                    parsed_date = self._safe_parse_datetime(date_str, 'completion_date')
+                    if parsed_date:
+                        day_key = parsed_date.strftime('%Y-%m-%d')
+                        daily_counts[day_key] += 1
+            
+            if not daily_counts:
+                return {
+                    'trend_type': 'no_valid_dates',
+                    'requests_per_day': 0.0,
+                    'total_days': 0,
+                    'peak_day': None,
+                    'trend_direction': 'stable'
+                }
+            
+            # Calculate statistics
+            total_days = len(daily_counts)
+            total_requests = sum(daily_counts.values())
+            requests_per_day = total_requests / total_days if total_days > 0 else 0.0
+            
+            # Find peak day
+            peak_day = max(daily_counts.items(), key=lambda x: x[1])
+            
+            # Determine trend direction (simple linear trend)
+            sorted_days = sorted(daily_counts.items())
+            if len(sorted_days) >= 3:
+                first_half = sorted_days[:len(sorted_days)//2]
+                second_half = sorted_days[len(sorted_days)//2:]
+                
+                first_avg = sum(count for _, count in first_half) / len(first_half)
+                second_avg = sum(count for _, count in second_half) / len(second_half)
+                
+                if second_avg > first_avg * 1.2:
+                    trend_direction = 'increasing'
+                elif second_avg < first_avg * 0.8:
+                    trend_direction = 'decreasing'
+                else:
+                    trend_direction = 'stable'
+            else:
+                trend_direction = 'insufficient_data'
+            
+            return {
+                'trend_type': 'calculated',
+                'requests_per_day': requests_per_day,
+                'total_days': total_days,
+                'peak_day': {
+                    'date': peak_day[0],
+                    'count': peak_day[1]
+                },
+                'trend_direction': trend_direction,
+                'daily_breakdown': dict(daily_counts)
+            }
+            
+        except Exception as e:
+            self.logger.error(f"Error calculating completion trend: {e}")
+            return {
+                'trend_type': 'error',
+                'requests_per_day': 0.0,
+                'total_days': 0,
+                'peak_day': None,
+                'trend_direction': 'unknown',
+                'error': str(e)
+            }
+    
+    def _calculate_date_span_days(self, start_date: str, end_date: str) -> Optional[int]:
+        """
+        Calculate the number of days between two date strings.
+        
+        Args:
+            start_date: Start date string
+            end_date: End date string
+            
+        Returns:
+            Number of days between dates, or None if calculation fails
+        """
+        if not start_date or not end_date:
+            return None
+        
+        try:
+            start_dt = self._safe_parse_datetime(start_date, 'start_date')
+            end_dt = self._safe_parse_datetime(end_date, 'end_date')
+            
+            if start_dt and end_dt:
+                delta = end_dt - start_dt
+                return delta.days
+            
+            return None
+            
+        except Exception as e:
+            self.logger.error(f"Error calculating date span: {e}")
+            return None
+    
+    def _analyze_completion_trend(self, formatted_trends: List[Dict[str, Any]]) -> str:
+        """
+        Analyze completion trend direction from formatted trend data.
+        
+        Args:
+            formatted_trends: List of formatted trend dictionaries
+            
+        Returns:
+            Trend direction string: 'increasing', 'decreasing', 'stable', or 'insufficient_data'
+        """
+        if not formatted_trends or len(formatted_trends) < 3:
+            return 'insufficient_data'
+        
+        try:
+            # Sort trends by date to ensure chronological order
+            sorted_trends = sorted(formatted_trends, key=lambda x: x['date'])
+            
+            # Calculate simple linear trend using first and last values
+            first_half = sorted_trends[:len(sorted_trends)//2]
+            second_half = sorted_trends[len(sorted_trends)//2:]
+            
+            first_avg = sum(t['daily_completions'] for t in first_half) / len(first_half)
+            second_avg = sum(t['daily_completions'] for t in second_half) / len(second_half)
+            
+            # Determine trend direction with threshold
+            change_ratio = second_avg / first_avg if first_avg > 0 else 1.0
+            
+            if change_ratio > 1.2:  # 20% increase
+                return 'increasing'
+            elif change_ratio < 0.8:  # 20% decrease
+                return 'decreasing'
+            else:
+                return 'stable'
+                
+        except Exception as e:
+            self.logger.error(f"Error analyzing completion trend: {e}")
+            return 'unknown'
+    
     def get_current_requests(self, status_filter: Optional[str] = None,
                            region_filter: Optional[str] = None,
                            variable_filter: Optional[str] = None) -> List[Dict[str, Any]]:
@@ -1483,54 +1638,210 @@ class EnhancedRDADashboard:
         
         @self.app.route('/api/completed-regions')
         def api_completed_regions():
-            """API endpoint for completed regions data using database-first approach with filesystem verification."""
+            """Enhanced API endpoint for completed regions data with pagination, filtering, and detailed metadata."""
             try:
-                self.logger.info("DEBUG: /api/completed-regions endpoint called")
+                self.logger.info("DEBUG: Enhanced /api/completed-regions endpoint called")
                 # Trigger sync if needed for fresh data
                 self._trigger_sync_if_needed("get_completed_regions")
                 
-                completed_regions = []
-                total_downloaded_files = 0
+                # Parse query parameters for pagination and filtering
+                page = request.args.get('page', 1, type=int)
+                per_page = min(request.args.get('per_page', 50, type=int), 200)  # Max 200 per page
+                region_filter = request.args.get('region')
+                variable_filter = request.args.get('variable')
+                date_from = request.args.get('date_from')  # Format: YYYY-MM-DD
+                date_to = request.args.get('date_to')      # Format: YYYY-MM-DD
+                sort_by = request.args.get('sort_by', 'completion_time')  # completion_time, region, variable, processing_time
+                sort_order = request.args.get('sort_order', 'desc')  # asc, desc
+                include_details = request.args.get('include_details', 'true').lower() == 'true'
                 
-                # Query database for completed requests with proper metadata AND full detailed information
+                # Enhanced parameter validation with detailed error messages
+                validation_errors = []
+                
+                if page < 1:
+                    validation_errors.append('Page must be >= 1')
+                if page > 10000:  # Reasonable upper limit
+                    validation_errors.append('Page must be <= 10000')
+                    
+                if per_page < 1:
+                    validation_errors.append('per_page must be >= 1')
+                if per_page > 200:  # Already enforced above, but explicit validation
+                    validation_errors.append('per_page must be <= 200')
+                    
+                valid_sort_options = ['completion_time', 'region', 'variable', 'processing_time', 'file_count']
+                if sort_by not in valid_sort_options:
+                    validation_errors.append(f'Invalid sort_by parameter. Valid options: {", ".join(valid_sort_options)}')
+                    
+                if sort_order not in ['asc', 'desc']:
+                    validation_errors.append('Invalid sort_order parameter. Valid options: asc, desc')
+                
+                # Validate date formats if provided
+                if date_from:
+                    try:
+                        datetime.strptime(date_from, '%Y-%m-%d')
+                    except ValueError:
+                        validation_errors.append('Invalid date_from format. Use YYYY-MM-DD')
+                
+                if date_to:
+                    try:
+                        datetime.strptime(date_to, '%Y-%m-%d')
+                    except ValueError:
+                        validation_errors.append('Invalid date_to format. Use YYYY-MM-DD')
+                
+                # Validate date range logic
+                if date_from and date_to:
+                    try:
+                        from_date = datetime.strptime(date_from, '%Y-%m-%d')
+                        to_date = datetime.strptime(date_to, '%Y-%m-%d')
+                        if from_date > to_date:
+                            validation_errors.append('date_from must be earlier than or equal to date_to')
+                        
+                        # Check for reasonable date range (not more than 5 years)
+                        if (to_date - from_date).days > 1825:  # 5 years
+                            validation_errors.append('Date range cannot exceed 5 years')
+                    except ValueError:
+                        pass  # Already caught above
+                
+                # Return validation errors if any
+                if validation_errors:
+                    return jsonify({
+                        'error': 'Validation failed',
+                        'validation_errors': validation_errors,
+                        'timestamp': datetime.now().isoformat()
+                    }), 400
+                
+                # Build dynamic query with filters
+                base_query = """
+                    SELECT
+                        r.id,
+                        r.request_id,
+                        r.request_index,
+                        r.region,
+                        r.variable_type,
+                        r.status,
+                        r.date_rqst,
+                        r.date_ready,
+                        r.date_purge,
+                        r.completion_time,
+                        r.download_time,
+                        r.download_directory,
+                        r.file_size,
+                        r.processing_duration,
+                        r.rinfo,
+                        r.subset_note,
+                        r.raw_response,
+                        r.dsid,
+                        r.location,
+                        r.ncar_contact,
+                        cf.region as cf_region,
+                        cf.variable_type as cf_variable_type,
+                        cf.filename as cf_filename
+                    FROM rda_requests r
+                    LEFT JOIN control_files_tracking cf ON r.request_index = cf.request_index
+                    WHERE (LOWER(r.status) IN ('completed', 'ready', 'online') OR r.date_ready IS NOT NULL)
+                """
+                
+                query_params = []
+                
+                # Add filters
+                if region_filter:
+                    base_query += " AND (COALESCE(cf.region, r.region) = ? OR COALESCE(cf.region, r.region) LIKE ?)"
+                    query_params.extend([region_filter, f"%{region_filter}%"])
+                
+                if variable_filter:
+                    base_query += " AND (COALESCE(cf.variable_type, r.variable_type) = ? OR COALESCE(cf.variable_type, r.variable_type) LIKE ?)"
+                    query_params.extend([variable_filter, f"%{variable_filter}%"])
+                
+                if date_from:
+                    try:
+                        # Validate date format
+                        datetime.strptime(date_from, '%Y-%m-%d')
+                        base_query += " AND DATE(COALESCE(r.completion_time, r.date_ready)) >= ?"
+                        query_params.append(date_from)
+                    except ValueError:
+                        return jsonify({'error': 'Invalid date_from format. Use YYYY-MM-DD'}), 400
+                
+                if date_to:
+                    try:
+                        # Validate date format
+                        datetime.strptime(date_to, '%Y-%m-%d')
+                        base_query += " AND DATE(COALESCE(r.completion_time, r.date_ready)) <= ?"
+                        query_params.append(date_to)
+                    except ValueError:
+                        return jsonify({'error': 'Invalid date_to format. Use YYYY-MM-DD'}), 400
+                
+                # Add sorting
+                sort_column_map = {
+                    'completion_time': 'COALESCE(r.completion_time, r.date_ready)',
+                    'region': 'COALESCE(cf.region, r.region)',
+                    'variable': 'COALESCE(cf.variable_type, r.variable_type)',
+                    'processing_time': 'r.processing_duration',
+                    'file_count': 'r.file_size'
+                }
+                
+                sort_column = sort_column_map.get(sort_by, 'COALESCE(r.completion_time, r.date_ready)')
+                base_query += f" ORDER BY {sort_column} {sort_order.upper()}"
+                
+                # Get total count for pagination
+                count_query = f"""
+                    SELECT COUNT(*) as total
+                    FROM rda_requests r
+                    LEFT JOIN control_files_tracking cf ON r.request_index = cf.request_index
+                    WHERE (LOWER(r.status) IN ('completed', 'ready', 'online') OR r.date_ready IS NOT NULL)
+                """
+                
+                # Apply same filters to count query
+                count_params = []
+                if region_filter:
+                    count_query += " AND (COALESCE(cf.region, r.region) = ? OR COALESCE(cf.region, r.region) LIKE ?)"
+                    count_params.extend([region_filter, f"%{region_filter}%"])
+                
+                if variable_filter:
+                    count_query += " AND (COALESCE(cf.variable_type, r.variable_type) = ? OR COALESCE(cf.variable_type, r.variable_type) LIKE ?)"
+                    count_params.extend([variable_filter, f"%{variable_filter}%"])
+                
+                if date_from:
+                    count_query += " AND DATE(COALESCE(r.completion_time, r.date_ready)) >= ?"
+                    count_params.append(date_from)
+                
+                if date_to:
+                    count_query += " AND DATE(COALESCE(r.completion_time, r.date_ready)) <= ?"
+                    count_params.append(date_to)
+                
+                # Execute queries
                 with self._get_db_connection() as conn:
-                    cursor = conn.execute("""
-                        SELECT
-                            r.id,
-                            r.request_id,
-                            r.request_index,
-                            r.region,
-                            r.variable_type,
-                            r.status,
-                            r.date_rqst,
-                            r.date_ready,
-                            r.date_purge,
-                            r.completion_time,
-                            r.download_time,
-                            r.download_directory,
-                            r.file_size,
-                            r.processing_duration,
-                            r.rinfo,
-                            r.subset_note,
-                            r.raw_response,
-                            r.dsid,
-                            r.location,
-                            r.ncar_contact,
-                            cf.region as cf_region,
-                            cf.variable_type as cf_variable_type,
-                            cf.filename as cf_filename
-                        FROM rda_requests r
-                        LEFT JOIN control_files_tracking cf ON r.request_index = cf.request_index
-                        WHERE LOWER(r.status) IN ('completed', 'ready', 'online')
-                           OR r.date_ready IS NOT NULL
-                        ORDER BY r.completion_time DESC, r.date_ready DESC
-                    """)
+                    # Get total count
+                    cursor = conn.execute(count_query, count_params)
+                    total_count = cursor.fetchone()['total']
+                    
+                    # Get paginated results
+                    offset = (page - 1) * per_page
+                    paginated_query = base_query + f" LIMIT ? OFFSET ?"
+                    query_params.extend([per_page, offset])
+                    
+                    cursor = conn.execute(paginated_query, query_params)
                     completed_requests = cursor.fetchall()
                 
                 if not completed_requests:
                     self.logger.info("DEBUG: No completed requests found in database")
                     return jsonify({
                         'completed_regions': [],
+                        'pagination': {
+                            'page': page,
+                            'per_page': per_page,
+                            'total_count': 0,
+                            'total_pages': 0,
+                            'has_next': False,
+                            'has_prev': False
+                        },
+                        'filters': {
+                            'region': region_filter,
+                            'variable': variable_filter,
+                            'date_from': date_from,
+                            'date_to': date_to,
+                            'sort_by': sort_by,
+                            'sort_order': sort_order
+                        },
                         'statistics': {
                             'total_completed_requests': 0,
                             'total_downloaded_files': 0,
@@ -1541,10 +1852,19 @@ class EnhancedRDADashboard:
                             'avg_processing_hours': 0.0
                         },
                         'timestamp': datetime.now().isoformat(),
-                        'data_source': 'database_with_filesystem_verification'
+                        'data_source': 'enhanced_database_with_pagination_and_filtering'
                     })
                 
-                # Group completed requests by region
+                # Calculate pagination info
+                total_pages = (total_count + per_page - 1) // per_page
+                has_next = page < total_pages
+                has_prev = page > 1
+                
+                # Process completed requests with enhanced metadata
+                completed_regions = []
+                total_downloaded_files = 0
+                
+                # Group completed requests by region for better organization
                 from collections import defaultdict
                 region_data = defaultdict(lambda: {
                     'requests': [],
@@ -1555,43 +1875,45 @@ class EnhancedRDADashboard:
                     'processing_times': [],
                     'first_completion': None,
                     'last_completion': None,
-                    'download_directories': set()
+                    'download_directories': set(),
+                    'completion_dates': []
                 })
                 
-                for request in completed_requests:
+                for request_item in completed_requests:
                     # Get region name (prioritize control_files_tracking, then rda_requests, then extract from rinfo)
-                    region = request['cf_region'] or request['region'] or self._extract_region_from_rinfo(request['rinfo']) or 'UNKNOWN'
+                    region = request_item['cf_region'] or request_item['region'] or self._extract_region_from_rinfo(request_item['rinfo']) or 'UNKNOWN'
                     
                     # Get variable type (prioritize control_files_tracking, then rda_requests, then extract from subset_note)
-                    variable_type = request['cf_variable_type'] or request['variable_type'] or self._extract_variable_from_subset_note(request['subset_note']) or 'unknown'
+                    variable_type = request_item['cf_variable_type'] or request_item['variable_type'] or self._extract_variable_from_subset_note(request_item['subset_note']) or 'unknown'
                     
                     # Add to region data
                     region_info = region_data[region]
-                    region_info['requests'].append(request)
+                    region_info['requests'].append(request_item)
                     region_info['variable_breakdown'][variable_type] += 1
                     region_info['total_requests'] += 1
                     
-                    # Track file information
-                    if request['file_size']:
-                        region_info['total_file_size'] += request['file_size']
+                    # Track file information with enhanced metadata
+                    if request_item['file_size']:
+                        region_info['total_file_size'] += request_item['file_size']
                     
-                    # Track processing times
-                    if request['processing_duration']:
-                        region_info['processing_times'].append(request['processing_duration'])
+                    # Track processing times with validation
+                    if request_item['processing_duration'] and request_item['processing_duration'] > 0:
+                        region_info['processing_times'].append(request_item['processing_duration'])
                     
-                    # Track completion times
-                    completion_time = request['completion_time'] or request['date_ready']
+                    # Track completion times with enhanced timeline tracking
+                    completion_time = request_item['completion_time'] or request_item['date_ready']
                     if completion_time:
+                        region_info['completion_dates'].append(completion_time)
                         if not region_info['first_completion'] or completion_time < region_info['first_completion']:
                             region_info['first_completion'] = completion_time
                         if not region_info['last_completion'] or completion_time > region_info['last_completion']:
                             region_info['last_completion'] = completion_time
                     
                     # Track download directories
-                    if request['download_directory']:
-                        region_info['download_directories'].add(request['download_directory'])
+                    if request_item['download_directory']:
+                        region_info['download_directories'].add(request_item['download_directory'])
                 
-                # Process each region and verify filesystem downloads
+                # Process each region with enhanced metadata and filesystem verification
                 for region, info in region_data.items():
                     # Count actual downloaded files by checking filesystem
                     downloaded_file_count = 0
@@ -1627,24 +1949,31 @@ class EnhancedRDADashboard:
                     info['downloaded_files'] = downloaded_file_count
                     info['has_actual_downloads'] = has_actual_downloads
                     
-                    # Calculate statistics
+                    # Calculate enhanced statistics
                     success_rate = 100.0  # All requests in this query are completed
                     completion_percentage = 100.0  # All requests are completed
                     
-                    # Calculate average processing time
+                    # Calculate average processing time with validation
                     avg_processing_time = 0.0
+                    median_processing_time = 0.0
                     if info['processing_times']:
                         avg_processing_time = sum(info['processing_times']) / len(info['processing_times'])
+                        sorted_times = sorted(info['processing_times'])
+                        n = len(sorted_times)
+                        median_processing_time = sorted_times[n//2] if n % 2 == 1 else (sorted_times[n//2-1] + sorted_times[n//2]) / 2
                     
                     # Get most common variable
                     most_common_variable = 'unknown'
                     if info['variable_breakdown']:
                         most_common_variable = max(info['variable_breakdown'].items(), key=lambda x: x[1])[0]
                     
+                    # Calculate completion trends (requests per day)
+                    completion_trend = self._calculate_completion_trend(info['completion_dates'])
+                    
                     # Format region name for display
                     region_name = region.replace('_', ' ').title() if region != 'UNKNOWN' else 'Unknown Region'
                     
-                    # Create region summary
+                    # Create enhanced region summary with comprehensive metadata
                     region_summary = {
                         'region': region,
                         'region_name': region_name,
@@ -1655,114 +1984,375 @@ class EnhancedRDADashboard:
                         'completion_percentage': completion_percentage,
                         'variable_breakdown': dict(info['variable_breakdown']),
                         'most_common_variable': most_common_variable,
-                        'average_processing_time_hours': avg_processing_time,
-                        'total_file_size_bytes': info['total_file_size'],
-                        'first_completion': info['first_completion'],
-                        'last_completion': info['last_completion'],
-                        'has_actual_downloads': has_actual_downloads,
-                        'download_directories': list(info['download_directories']),
-                        'sample_requests': [
+                        'processing_time_stats': {
+                            'average_hours': avg_processing_time,
+                            'median_hours': median_processing_time,
+                            'min_hours': min(info['processing_times']) if info['processing_times'] else 0,
+                            'max_hours': max(info['processing_times']) if info['processing_times'] else 0,
+                            'total_samples': len(info['processing_times'])
+                        },
+                        'file_stats': {
+                            'total_size_bytes': info['total_file_size'],
+                            'total_size_mb': info['total_file_size'] / (1024 * 1024) if info['total_file_size'] else 0,
+                            'average_size_bytes': info['total_file_size'] / info['total_requests'] if info['total_requests'] > 0 else 0
+                        },
+                        'timeline': {
+                            'first_completion': info['first_completion'],
+                            'last_completion': info['last_completion'],
+                            'completion_span_days': self._calculate_date_span_days(info['first_completion'], info['last_completion']),
+                            'completion_trend': completion_trend
+                        },
+                        'download_info': {
+                            'has_actual_downloads': has_actual_downloads,
+                            'download_directories': list(info['download_directories']),
+                            'directory_count': len(info['download_directories'])
+                        }
+                    }
+                    
+                    # Add detailed requests only if requested (to reduce response size)
+                    if include_details:
+                        region_summary['sample_requests'] = [
                             {
-                                'request_id': req['request_id'],
-                                'request_index': req['request_index'],
-                                'variable_type': req['cf_variable_type'] or req['variable_type'] or 'unknown',
-                                'completion_time': req['completion_time'] or req['date_ready'],
-                                'file_size': req['file_size']
+                                'request_id': req_item['request_id'],
+                                'request_index': req_item['request_index'],
+                                'variable_type': req_item['cf_variable_type'] or req_item['variable_type'] or 'unknown',
+                                'completion_time': req_item['completion_time'] or req_item['date_ready'],
+                                'file_size': req_item['file_size'],
+                                'processing_duration': req_item['processing_duration']
                             }
-                            for req in info['requests'][:3]  # Show first 3 requests as samples
-                        ],
-                        # NEW: Include detailed request information for expandable view
-                        'detailed_requests': [
+                            for req_item in info['requests'][:5]  # Show first 5 requests as samples
+                        ]
+                        
+                        region_summary['detailed_requests'] = [
                             {
-                                'id': req['id'],
-                                'request_id': req['request_id'],
-                                'request_index': req['request_index'],
-                                'dsid': req['dsid'],
-                                'status': req['status'],
-                                'date_rqst': req['date_rqst'],
-                                'date_ready': req['date_ready'],
-                                'date_purge': req['date_purge'],
-                                'location': req['location'],
-                                'ncar_contact': req['ncar_contact'],
-                                'rinfo': req['rinfo'],
-                                'subset_note': req['subset_note'],
-                                'region': req['cf_region'] or req['region'] or self._extract_region_from_rinfo(req['rinfo']) or 'UNKNOWN',
-                                'variable_type': req['cf_variable_type'] or req['variable_type'] or self._extract_variable_from_subset_note(req['subset_note']) or 'unknown',
-                                'processing_time_hours': req['processing_duration'],
-                                'completion_time': req['completion_time'] or req['date_ready'],
-                                'file_size': req['file_size'],
-                                'download_directory': req['download_directory'],
+                                'id': req_item['id'],
+                                'request_id': req_item['request_id'],
+                                'request_index': req_item['request_index'],
+                                'dsid': req_item['dsid'],
+                                'status': req_item['status'],
+                                'date_rqst': req_item['date_rqst'],
+                                'date_ready': req_item['date_ready'],
+                                'date_purge': req_item['date_purge'],
+                                'location': req_item['location'],
+                                'ncar_contact': req_item['ncar_contact'],
+                                'rinfo': req_item['rinfo'],
+                                'subset_note': req_item['subset_note'],
+                                'region': req_item['cf_region'] or req_item['region'] or self._extract_region_from_rinfo(req_item['rinfo']) or 'UNKNOWN',
+                                'variable_type': req_item['cf_variable_type'] or req_item['variable_type'] or self._extract_variable_from_subset_note(req_item['subset_note']) or 'unknown',
+                                'processing_time_hours': req_item['processing_duration'],
+                                'completion_time': req_item['completion_time'] or req_item['date_ready'],
+                                'file_size': req_item['file_size'],
+                                'download_directory': req_item['download_directory'],
                                 # Parse raw_response JSON to get complete get_status data
-                                'complete_status_data': json.loads(req['raw_response']) if req['raw_response'] else {},
-                                'subset_info': json.loads(req['raw_response']).get('subset_info', {}) if req['raw_response'] else {},
-                                'NCAR_contact': json.loads(req['raw_response']).get('NCAR_contact', req['ncar_contact']) if req['raw_response'] else req['ncar_contact'],
+                                'complete_status_data': json.loads(req_item['raw_response']) if req_item['raw_response'] else {},
+                                'subset_info': json.loads(req_item['raw_response']).get('subset_info', {}) if req_item['raw_response'] else {},
+                                'NCAR_contact': json.loads(req_item['raw_response']).get('NCAR_contact', req_item['ncar_contact']) if req_item['raw_response'] else req_item['ncar_contact'],
                                 # Parsed rinfo parameters for easy display
-                                'rinfo_params': self._parse_rinfo_parameters(req['rinfo']),
+                                'rinfo_params': self._parse_rinfo_parameters(req_item['rinfo']),
                                 # Formatted subset details
                                 'formatted_subset_info': self._format_subset_info(
-                                    json.loads(req['raw_response']).get('subset_info', {}) if req['raw_response'] else {},
-                                    req['rinfo']
+                                    json.loads(req_item['raw_response']).get('subset_info', {}) if req_item['raw_response'] else {},
+                                    req_item['rinfo']
                                 ),
                                 # Enhanced timeline information
                                 'timeline': {
-                                    'requested': req['date_rqst'],
-                                    'ready': req['date_ready'],
-                                    'purge': req['date_purge'],
-                                    'processing_time_hours': req['processing_duration'],
-                                    'processing_time_display': self._format_processing_time_display(req['processing_duration']),
-                                    'status': req['status']
+                                    'requested': req_item['date_rqst'],
+                                    'ready': req_item['date_ready'],
+                                    'purge': req_item['date_purge'],
+                                    'processing_time_hours': req_item['processing_duration'],
+                                    'processing_time_display': self._format_processing_time_display(req_item['processing_duration']),
+                                    'status': req_item['status']
                                 }
                             }
-                            for req in info['requests']  # Include ALL requests with full details
+                            for req_item in info['requests']  # Include ALL requests with full details
                         ]
-                    }
                     
-                    self.logger.info(f"DEBUG: Created region summary for {region}: {region_summary}")
+                    self.logger.info(f"DEBUG: Created enhanced region summary for {region}: {len(info['requests'])} requests")
                     completed_regions.append(region_summary)
                     total_downloaded_files += downloaded_file_count
                 
-                # Sort regions by number of downloaded files (descending)
-                completed_regions.sort(key=lambda x: x['downloaded_files'], reverse=True)
+                # Sort regions based on the requested sort order
+                if sort_by == 'region':
+                    completed_regions.sort(key=lambda x: x['region'], reverse=(sort_order == 'desc'))
+                elif sort_by == 'variable':
+                    completed_regions.sort(key=lambda x: x['most_common_variable'], reverse=(sort_order == 'desc'))
+                elif sort_by == 'processing_time':
+                    completed_regions.sort(key=lambda x: x['processing_time_stats']['average_hours'], reverse=(sort_order == 'desc'))
+                elif sort_by == 'file_count':
+                    completed_regions.sort(key=lambda x: x['downloaded_files'], reverse=(sort_order == 'desc'))
+                else:  # Default: completion_time
+                    completed_regions.sort(key=lambda x: x['timeline']['last_completion'] or '', reverse=(sort_order == 'desc'))
                 
-                # Calculate overall statistics
+                # Calculate comprehensive statistics
                 unique_regions = len(completed_regions)
-                regions_with_downloads = sum(1 for region in completed_regions if region['has_actual_downloads'])
+                regions_with_downloads = sum(1 for region in completed_regions if region['download_info']['has_actual_downloads'])
                 
                 # Count unique variables
                 unique_variables = set()
                 for region in completed_regions:
                     unique_variables.update(region['variable_breakdown'].keys())
                 
-                # Calculate download completion rate
+                # Calculate enhanced statistics
                 download_completion_rate = (regions_with_downloads / unique_regions * 100) if unique_regions > 0 else 0.0
                 
-                # Calculate average processing hours
+                # Calculate processing time statistics
                 all_processing_times = []
                 for region in completed_regions:
-                    if region['average_processing_time_hours'] > 0:
-                        all_processing_times.append(region['average_processing_time_hours'])
+                    if region['processing_time_stats']['average_hours'] > 0:
+                        all_processing_times.append(region['processing_time_stats']['average_hours'])
                 
                 avg_processing_hours = sum(all_processing_times) / len(all_processing_times) if all_processing_times else 0.0
                 
+                # Calculate file size statistics
+                total_file_size = sum(region['file_stats']['total_size_bytes'] for region in completed_regions)
+                
+                # Build comprehensive response
                 result = {
                     'completed_regions': completed_regions,
+                    'pagination': {
+                        'page': page,
+                        'per_page': per_page,
+                        'total_count': total_count,
+                        'total_pages': total_pages,
+                        'has_next': has_next,
+                        'has_prev': has_prev,
+                        'showing_count': len(completed_requests)
+                    },
+                    'filters': {
+                        'region': region_filter,
+                        'variable': variable_filter,
+                        'date_from': date_from,
+                        'date_to': date_to,
+                        'sort_by': sort_by,
+                        'sort_order': sort_order,
+                        'include_details': include_details
+                    },
                     'statistics': {
-                        'total_completed_requests': sum(region['total_requests'] for region in completed_regions),
-                        'total_downloaded_files': total_downloaded_files,
-                        'unique_regions': unique_regions,
-                        'unique_variables': len(unique_variables),
-                        'regions_with_downloads': regions_with_downloads,
-                        'download_completion_rate': download_completion_rate,
-                        'avg_processing_hours': avg_processing_hours
+                        'filtered_results': {
+                            'total_completed_requests': sum(region['total_requests'] for region in completed_regions),
+                            'total_downloaded_files': total_downloaded_files,
+                            'unique_regions': unique_regions,
+                            'unique_variables': len(unique_variables),
+                            'regions_with_downloads': regions_with_downloads,
+                            'download_completion_rate': download_completion_rate,
+                            'avg_processing_hours': avg_processing_hours,
+                            'total_file_size_bytes': total_file_size,
+                            'total_file_size_gb': total_file_size / (1024**3) if total_file_size > 0 else 0
+                        },
+                        'overall_totals': {
+                            'total_in_database': total_count,
+                            'showing_in_page': len(completed_requests)
+                        }
+                    },
+                    'metadata': {
+                        'query_performance': {
+                            'total_count_query_time': 'measured_in_ms',  # Could add actual timing
+                            'data_query_time': 'measured_in_ms'
+                        },
+                        'data_freshness': self._get_data_freshness_info(),
+                        'include_details': include_details
                     },
                     'timestamp': datetime.now().isoformat(),
-                    'data_source': 'database_with_filesystem_verification'
+                    'data_source': 'enhanced_database_with_pagination_and_filtering'
                 }
-                self.logger.info(f"DEBUG: Returning completed regions data: {len(completed_regions)} regions")
+                
+                self.logger.info(f"DEBUG: Returning enhanced completed regions data: {len(completed_regions)} regions, page {page}/{total_pages}")
                 return jsonify(result)
                 
             except Exception as e:
                 self.logger.error(f"Error getting completed regions from database: {e}")
+                return jsonify({'error': str(e)}), 500
+        
+        @self.app.route('/api/completed-regions/summary')
+        def api_completed_regions_summary():
+            """New API endpoint for completed regions summary with statistics and trends."""
+            try:
+                self.logger.info("DEBUG: /api/completed-regions/summary endpoint called")
+                # Trigger sync if needed for fresh data
+                self._trigger_sync_if_needed("get_completed_regions_summary")
+                
+                # Get comprehensive statistics from completed requests
+                with self._get_db_connection() as conn:
+                    # Overall completion statistics
+                    cursor = conn.execute("""
+                        SELECT
+                            COUNT(*) as total_completed_requests,
+                            COUNT(DISTINCT COALESCE(cf.region, r.region, 'UNKNOWN')) as total_regions_completed,
+                            COUNT(DISTINCT COALESCE(cf.variable_type, r.variable_type, 'unknown')) as total_variables_completed,
+                            MIN(COALESCE(r.completion_time, r.date_ready)) as earliest_completion,
+                            MAX(COALESCE(r.completion_time, r.date_ready)) as latest_completion,
+                            AVG(r.processing_duration) as avg_processing_hours,
+                            SUM(r.file_size) as total_file_size_bytes
+                        FROM rda_requests r
+                        LEFT JOIN control_files_tracking cf ON r.request_index = cf.request_index
+                        WHERE (LOWER(r.status) IN ('completed', 'ready', 'online') OR r.date_ready IS NOT NULL)
+                    """)
+                    overall_stats = cursor.fetchone()
+                    
+                    # Most frequently completed region/variable combinations
+                    cursor = conn.execute("""
+                        SELECT
+                            COALESCE(cf.region, r.region, 'UNKNOWN') as region,
+                            COALESCE(cf.variable_type, r.variable_type, 'unknown') as variable_type,
+                            COUNT(*) as completion_count,
+                            AVG(r.processing_duration) as avg_processing_time,
+                            MAX(COALESCE(r.completion_time, r.date_ready)) as last_completion
+                        FROM rda_requests r
+                        LEFT JOIN control_files_tracking cf ON r.request_index = cf.request_index
+                        WHERE (LOWER(r.status) IN ('completed', 'ready', 'online') OR r.date_ready IS NOT NULL)
+                        GROUP BY COALESCE(cf.region, r.region, 'UNKNOWN'), COALESCE(cf.variable_type, r.variable_type, 'unknown')
+                        ORDER BY completion_count DESC
+                        LIMIT 10
+                    """)
+                    frequent_combinations = cursor.fetchall()
+                    
+                    # Recent completion trends (last 30 days)
+                    cursor = conn.execute("""
+                        SELECT
+                            DATE(COALESCE(r.completion_time, r.date_ready)) as completion_date,
+                            COUNT(*) as daily_completions,
+                            COUNT(DISTINCT COALESCE(cf.region, r.region, 'UNKNOWN')) as regions_completed,
+                            AVG(r.processing_duration) as avg_processing_time
+                        FROM rda_requests r
+                        LEFT JOIN control_files_tracking cf ON r.request_index = cf.request_index
+                        WHERE (LOWER(r.status) IN ('completed', 'ready', 'online') OR r.date_ready IS NOT NULL)
+                            AND DATE(COALESCE(r.completion_time, r.date_ready)) >= DATE('now', '-30 days')
+                        GROUP BY DATE(COALESCE(r.completion_time, r.date_ready))
+                        ORDER BY completion_date DESC
+                    """)
+                    recent_trends = cursor.fetchall()
+                    
+                    # Performance metrics by region
+                    cursor = conn.execute("""
+                        SELECT
+                            COALESCE(cf.region, r.region, 'UNKNOWN') as region,
+                            COUNT(*) as total_completions,
+                            AVG(r.processing_duration) as avg_processing_time,
+                            MIN(r.processing_duration) as min_processing_time,
+                            MAX(r.processing_duration) as max_processing_time,
+                            SUM(r.file_size) as total_file_size,
+                            COUNT(DISTINCT COALESCE(cf.variable_type, r.variable_type, 'unknown')) as variables_count
+                        FROM rda_requests r
+                        LEFT JOIN control_files_tracking cf ON r.request_index = cf.request_index
+                        WHERE (LOWER(r.status) IN ('completed', 'ready', 'online') OR r.date_ready IS NOT NULL)
+                            AND r.processing_duration IS NOT NULL
+                        GROUP BY COALESCE(cf.region, r.region, 'UNKNOWN')
+                        ORDER BY total_completions DESC
+                    """)
+                    regional_performance = cursor.fetchall()
+                
+                # Calculate completion timeline span
+                timeline_span_days = None
+                if overall_stats['earliest_completion'] and overall_stats['latest_completion']:
+                    timeline_span_days = self._calculate_date_span_days(
+                        overall_stats['earliest_completion'],
+                        overall_stats['latest_completion']
+                    )
+                
+                # Calculate completion rate (completions per day)
+                completion_rate_per_day = 0.0
+                if timeline_span_days and timeline_span_days > 0:
+                    completion_rate_per_day = overall_stats['total_completed_requests'] / timeline_span_days
+                
+                # Format frequent combinations
+                formatted_combinations = []
+                for combo in frequent_combinations:
+                    formatted_combinations.append({
+                        'region': combo['region'],
+                        'variable_type': combo['variable_type'],
+                        'variable_display_name': self._get_variable_display_name(combo['variable_type']),
+                        'completion_count': combo['completion_count'],
+                        'avg_processing_time_hours': combo['avg_processing_time'] or 0.0,
+                        'avg_processing_time_display': self._format_processing_time_display(combo['avg_processing_time']),
+                        'last_completion': combo['last_completion']
+                    })
+                
+                # Format recent trends
+                formatted_trends = []
+                for trend in recent_trends:
+                    formatted_trends.append({
+                        'date': trend['completion_date'],
+                        'daily_completions': trend['daily_completions'],
+                        'regions_completed': trend['regions_completed'],
+                        'avg_processing_time_hours': trend['avg_processing_time'] or 0.0,
+                        'avg_processing_time_display': self._format_processing_time_display(trend['avg_processing_time'])
+                    })
+                
+                # Format regional performance
+                formatted_regional_performance = []
+                for region in regional_performance:
+                    formatted_regional_performance.append({
+                        'region': region['region'],
+                        'region_name': region['region'].replace('_', ' ').title() if region['region'] != 'UNKNOWN' else 'Unknown Region',
+                        'total_completions': region['total_completions'],
+                        'performance_metrics': {
+                            'avg_processing_time_hours': region['avg_processing_time'] or 0.0,
+                            'min_processing_time_hours': region['min_processing_time'] or 0.0,
+                            'max_processing_time_hours': region['max_processing_time'] or 0.0,
+                            'avg_processing_time_display': self._format_processing_time_display(region['avg_processing_time']),
+                            'processing_time_range': f"{self._format_processing_time_display(region['min_processing_time'])} - {self._format_processing_time_display(region['max_processing_time'])}"
+                        },
+                        'file_metrics': {
+                            'total_file_size_bytes': region['total_file_size'] or 0,
+                            'total_file_size_mb': (region['total_file_size'] or 0) / (1024 * 1024),
+                            'avg_file_size_bytes': (region['total_file_size'] or 0) / region['total_completions'] if region['total_completions'] > 0 else 0
+                        },
+                        'variables_count': region['variables_count']
+                    })
+                
+                # Calculate success rates and trends
+                success_rate = 100.0  # All requests in this query are completed
+                
+                # Build comprehensive summary response
+                summary_response = {
+                    'overall_statistics': {
+                        'total_completed_requests': overall_stats['total_completed_requests'],
+                        'total_regions_completed': overall_stats['total_regions_completed'],
+                        'total_variables_completed': overall_stats['total_variables_completed'],
+                        'success_rate': success_rate,
+                        'timeline': {
+                            'earliest_completion': overall_stats['earliest_completion'],
+                            'latest_completion': overall_stats['latest_completion'],
+                            'timeline_span_days': timeline_span_days,
+                            'completion_rate_per_day': completion_rate_per_day
+                        },
+                        'performance_summary': {
+                            'avg_processing_hours': overall_stats['avg_processing_hours'] or 0.0,
+                            'avg_processing_display': self._format_processing_time_display(overall_stats['avg_processing_hours']),
+                            'total_file_size_bytes': overall_stats['total_file_size_bytes'] or 0,
+                            'total_file_size_gb': (overall_stats['total_file_size_bytes'] or 0) / (1024**3)
+                        }
+                    },
+                    'completion_trends': {
+                        'recent_activity': formatted_trends,
+                        'trend_analysis': {
+                            'total_days_analyzed': len(formatted_trends),
+                            'avg_daily_completions': sum(t['daily_completions'] for t in formatted_trends) / len(formatted_trends) if formatted_trends else 0,
+                            'peak_day': max(formatted_trends, key=lambda x: x['daily_completions']) if formatted_trends else None,
+                            'trend_direction': self._analyze_completion_trend(formatted_trends)
+                        }
+                    },
+                    'most_frequent_combinations': formatted_combinations,
+                    'regional_performance': formatted_regional_performance,
+                    'performance_insights': {
+                        'fastest_region': min(formatted_regional_performance, key=lambda x: x['performance_metrics']['avg_processing_time_hours']) if formatted_regional_performance else None,
+                        'most_active_region': max(formatted_regional_performance, key=lambda x: x['total_completions']) if formatted_regional_performance else None,
+                        'largest_files_region': max(formatted_regional_performance, key=lambda x: x['file_metrics']['total_file_size_bytes']) if formatted_regional_performance else None
+                    },
+                    'metadata': {
+                        'data_freshness': self._get_data_freshness_info(),
+                        'analysis_scope': 'all_completed_requests',
+                        'recent_trends_days': 30
+                    },
+                    'timestamp': datetime.now().isoformat(),
+                    'data_source': 'comprehensive_database_analysis'
+                }
+                
+                self.logger.info(f"DEBUG: Returning completed regions summary: {overall_stats['total_completed_requests']} total completions")
+                return jsonify(summary_response)
+                
+            except Exception as e:
+                self.logger.error(f"Error getting completed regions summary: {e}")
                 return jsonify({'error': str(e)}), 500
         
         @self.app.route('/api/resolution-details/<request_id>')

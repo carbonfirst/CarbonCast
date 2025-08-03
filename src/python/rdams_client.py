@@ -26,6 +26,20 @@ import json
 import argparse
 import codecs
 import pdb
+import time
+import logging
+from typing import Optional, Dict, Any, Tuple
+from datetime import datetime
+
+# Import rate limiting components if available
+try:
+    from automation.rate_limiter import RateLimiter, RateLimitConfig, create_rate_limiter
+    from automation.error_handler import ErrorHandler, ErrorHandlingConfig, create_error_handler
+    from automation.request_throttler import RequestThrottler, ThrottlingConfig, create_request_throttler
+    RATE_LIMITING_AVAILABLE = True
+except ImportError:
+    RATE_LIMITING_AVAILABLE = False
+    print("Rate limiting components not available - running in basic mode")
 
 
 BASE_URL = 'https://rda.ucar.edu/api/'
@@ -36,6 +50,300 @@ try:
     input = raw_input
 except NameError:
     pass
+
+
+class RateLimitedRDAMSClient:
+    """
+    Rate-limited RDAMS client that integrates with the comprehensive rate limiting system.
+    
+    This client provides intelligent request management, error handling, and throttling
+    for all RDAMS API interactions to ensure compliance with API limits and maximize
+    efficiency.
+    """
+    
+    def __init__(self,
+                 enable_rate_limiting: bool = True,
+                 enable_error_handling: bool = True,
+                 enable_request_throttling: bool = True,
+                 config: Optional[Dict[str, Any]] = None):
+        """
+        Initialize the rate-limited RDAMS client.
+        
+        Args:
+            enable_rate_limiting: Enable intelligent rate limiting
+            enable_error_handling: Enable comprehensive error handling
+            enable_request_throttling: Enable request throttling and queuing
+            config: Optional configuration dictionary
+        """
+        self.logger = self._setup_logging()
+        self.config = config or self._get_default_config()
+        
+        # Initialize rate limiting components if available
+        self.rate_limiter = None
+        self.error_handler = None
+        self.request_throttler = None
+        
+        if RATE_LIMITING_AVAILABLE:
+            if enable_rate_limiting:
+                self.rate_limiter = self._create_rate_limiter()
+            
+            if enable_error_handling:
+                self.error_handler = self._create_error_handler()
+            
+            if enable_request_throttling:
+                self.request_throttler = self._create_request_throttler()
+            
+            # Set up integrations
+            self._setup_integrations()
+        
+        self.logger.info(f"RateLimitedRDAMSClient initialized (rate_limiting={enable_rate_limiting})")
+    
+    def _setup_logging(self) -> logging.Logger:
+        """Set up logging for the RDAMS client."""
+        logger = logging.getLogger('rdams_client.rate_limited')
+        
+        if not logger.handlers:
+            handler = logging.StreamHandler()
+            formatter = logging.Formatter(
+                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+            )
+            handler.setFormatter(formatter)
+            logger.addHandler(handler)
+            logger.setLevel(logging.INFO)
+        
+        return logger
+    
+    def _get_default_config(self) -> Dict[str, Any]:
+        """Get default configuration for rate-limited client."""
+        return {
+            "requests_per_minute": 10,
+            "requests_per_hour": 600,
+            "adaptive_rate_limiting": True,
+            "circuit_breaker_enabled": True,
+            "max_retries": 3,
+            "base_retry_delay": 60.0,
+            "max_retry_delay": 1800.0,
+            "request_timeout": 300.0,
+            "throttling_enabled": True,
+            "max_queue_size": 100
+        }
+    
+    def _create_rate_limiter(self) -> RateLimiter:
+        """Create rate limiter for RDAMS API."""
+        rate_config = RateLimitConfig(
+            requests_per_minute=self.config["requests_per_minute"],
+            requests_per_hour=self.config["requests_per_hour"],
+            adaptive_enabled=self.config["adaptive_rate_limiting"],
+            circuit_breaker_enabled=self.config["circuit_breaker_enabled"],
+            failure_threshold=5,
+            recovery_timeout_seconds=300
+        )
+        return create_rate_limiter(rate_config)
+    
+    def _create_error_handler(self) -> ErrorHandler:
+        """Create error handler for RDAMS API."""
+        error_config = ErrorHandlingConfig(
+            default_max_retries=self.config["max_retries"],
+            rate_limit_base_delay=self.config["base_retry_delay"],
+            rate_limit_max_delay=self.config["max_retry_delay"],
+            circuit_breaker_enabled=self.config["circuit_breaker_enabled"],
+            graceful_degradation_enabled=True,
+            pattern_recognition_enabled=True
+        )
+        return create_error_handler(error_config)
+    
+    def _create_request_throttler(self) -> RequestThrottler:
+        """Create request throttler for RDAMS API."""
+        throttle_config = ThrottlingConfig(
+            max_queue_size=self.config["max_queue_size"],
+            max_concurrent_requests=3,  # Conservative for RDAMS
+            default_timeout_seconds=self.config["request_timeout"],
+            adaptive_throttling=True,
+            rate_limiter_integration=True,
+            error_handler_integration=True,
+            min_request_interval_seconds=6.0,  # 10 req/min = 6s interval
+            max_request_interval_seconds=60.0
+        )
+        return create_request_throttler(throttle_config)
+    
+    def _setup_integrations(self):
+        """Set up integrations between rate limiting components."""
+        if self.error_handler and self.rate_limiter:
+            self.error_handler.set_integrations(rate_limiter=self.rate_limiter)
+        
+        if self.request_throttler and (self.rate_limiter or self.error_handler):
+            self.request_throttler.set_integrations(
+                rate_limiter=self.rate_limiter,
+                error_handler=self.error_handler
+            )
+        
+        if self.request_throttler:
+            self.request_throttler.start()
+    
+    def make_request(self,
+                    method: str,
+                    url: str,
+                    **kwargs) -> requests.Response:
+        """
+        Make a rate-limited request to the RDAMS API.
+        
+        Args:
+            method: HTTP method (GET, POST, etc.)
+            url: Request URL
+            **kwargs: Additional arguments for requests
+            
+        Returns:
+            Response object
+            
+        Raises:
+            Exception: If request fails after all retries
+        """
+        if not RATE_LIMITING_AVAILABLE or not self.rate_limiter:
+            # Fallback to direct request
+            return self._make_direct_request(method, url, **kwargs)
+        
+        # Check rate limits
+        can_request, wait_time = self.rate_limiter.can_make_request()
+        if not can_request:
+            self.logger.warning(f"Rate limit hit, waiting {wait_time:.1f}s")
+            time.sleep(wait_time)
+        
+        # Acquire rate limiter slot
+        if not self.rate_limiter.acquire_request_slot():
+            raise Exception("Unable to acquire rate limiter slot")
+        
+        try:
+            start_time = time.time()
+            response = self._make_direct_request(method, url, **kwargs)
+            end_time = time.time()
+            
+            # Record successful request
+            self.rate_limiter.record_request_result(
+                success=True,
+                response_time=end_time - start_time,
+                status_code=response.status_code
+            )
+            
+            return response
+            
+        except Exception as e:
+            # Record failed request
+            status_code = getattr(e, 'response', {}).get('status_code', 500)
+            self.rate_limiter.record_request_result(
+                success=False,
+                response_time=time.time() - start_time if 'start_time' in locals() else 0,
+                status_code=status_code,
+                error_type=type(e).__name__
+            )
+            
+            # Handle error with error handler
+            if self.error_handler:
+                action, params = self.error_handler.handle_error(
+                    e,
+                    context={
+                        'method': method,
+                        'url': url,
+                        'status_code': status_code
+                    }
+                )
+                
+                if action.name == 'RETRY' and params.get('delay', 0) > 0:
+                    self.logger.info(f"Retrying request after {params['delay']:.1f}s")
+                    time.sleep(params['delay'])
+                    return self.make_request(method, url, **kwargs)
+            
+            raise e
+    
+    def _make_direct_request(self, method: str, url: str, **kwargs) -> requests.Response:
+        """Make a direct request without rate limiting."""
+        method = method.upper()
+        
+        if method == 'GET':
+            response = requests.get(url, **kwargs)
+        elif method == 'POST':
+            response = requests.post(url, **kwargs)
+        elif method == 'DELETE':
+            response = requests.delete(url, **kwargs)
+        elif method == 'PUT':
+            response = requests.put(url, **kwargs)
+        else:
+            raise ValueError(f"Unsupported HTTP method: {method}")
+        
+        # Check for rate limit responses
+        if response.status_code == 429:
+            retry_after = response.headers.get('Retry-After', '60')
+            try:
+                wait_time = float(retry_after)
+            except ValueError:
+                wait_time = 60.0
+            
+            raise requests.exceptions.HTTPError(
+                f"429 Too Many Requests - Retry after {wait_time}s",
+                response=response
+            )
+        
+        # Raise for other HTTP errors
+        response.raise_for_status()
+        return response
+    
+    def get_status(self) -> Dict[str, Any]:
+        """Get status of rate limiting components."""
+        status = {
+            "rate_limiting_available": RATE_LIMITING_AVAILABLE,
+            "components": {
+                "rate_limiter": self.rate_limiter is not None,
+                "error_handler": self.error_handler is not None,
+                "request_throttler": self.request_throttler is not None
+            }
+        }
+        
+        if self.rate_limiter:
+            status["rate_limiter_status"] = self.rate_limiter.get_status().__dict__
+        
+        if self.error_handler:
+            status["error_statistics"] = self.error_handler.get_error_statistics()
+        
+        if self.request_throttler:
+            status["throttler_metrics"] = self.request_throttler.get_metrics()
+        
+        return status
+    
+    def cleanup(self):
+        """Clean up rate limiting components."""
+        if self.request_throttler:
+            self.request_throttler.stop()
+        
+        self.logger.info("RateLimitedRDAMSClient cleaned up")
+
+
+# Global rate-limited client instance
+_rate_limited_client: Optional[RateLimitedRDAMSClient] = None
+
+
+def get_rate_limited_client() -> RateLimitedRDAMSClient:
+    """Get or create the global rate-limited client instance."""
+    global _rate_limited_client
+    
+    if _rate_limited_client is None:
+        _rate_limited_client = RateLimitedRDAMSClient()
+    
+    return _rate_limited_client
+
+
+def enable_rate_limiting(enable: bool = True):
+    """Enable or disable rate limiting for all RDAMS requests."""
+    global _rate_limited_client
+    
+    if enable and RATE_LIMITING_AVAILABLE:
+        _rate_limited_client = RateLimitedRDAMSClient(
+            enable_rate_limiting=True,
+            enable_error_handling=True,
+            enable_request_throttling=True
+        )
+        print("✅ Rate limiting enabled for RDAMS client")
+    else:
+        _rate_limited_client = None
+        print("❌ Rate limiting disabled for RDAMS client")
 
 def query(args=None):
     """Perform a query based on command line like arguments.
@@ -288,7 +596,7 @@ def get_authentication(token_file=DEFAULT_AUTH_FILE):
 
 
 def get_summary(ds):
-    """Returns summary of dataset.
+    """Returns summary of dataset with rate limiting.
 
     Args:
         ds (str): Datset id. e.g. 'ds083.2'
@@ -300,13 +608,25 @@ def get_summary(ds):
     url += ds
 
     token = get_authentication()
+    
+    # Use rate-limited client if available
+    client = get_rate_limited_client()
+    if client and RATE_LIMITING_AVAILABLE:
+        try:
+            ret = client.make_request('GET', encode_url(url, token))
+            check_status(ret)
+            return ret.json()
+        except Exception as e:
+            # Fallback to direct request
+            print(f"Rate-limited request failed, falling back: {e}")
+    
+    # Fallback to original implementation
     ret = requests.get(encode_url(url,token))
-
     check_status(ret)
     return ret.json()
 
 def get_metadata(ds):
-    """Return metadata of dataset.
+    """Return metadata of dataset with rate limiting.
 
     Args:
         ds (str): Datset id. e.g. 'ds083.2'
@@ -318,8 +638,19 @@ def get_metadata(ds):
     url += ds
 
     token = get_authentication()
+    
+    # Use rate-limited client if available
+    client = get_rate_limited_client()
+    if client and RATE_LIMITING_AVAILABLE:
+        try:
+            ret = client.make_request('GET', encode_url(url, token))
+            check_status(ret)
+            return ret.json()
+        except Exception as e:
+            print(f"Rate-limited request failed, falling back: {e}")
+    
+    # Fallback to original implementation
     ret = requests.get(encode_url(url,token))
-
     check_status(ret)
     return ret.json()
 
@@ -341,7 +672,7 @@ def get_all_params(ds):
 
 
 def get_param_summary(ds):
-    """Return summary of parameters for a dataset.
+    """Return summary of parameters for a dataset with rate limiting.
 
     Args:
         ds (str): Datset id. e.g. 'ds083.2'
@@ -353,8 +684,19 @@ def get_param_summary(ds):
     url += ds
 
     token = get_authentication()
+    
+    # Use rate-limited client if available
+    client = get_rate_limited_client()
+    if client and RATE_LIMITING_AVAILABLE:
+        try:
+            ret = client.make_request('GET', encode_url(url, token))
+            check_status(ret)
+            return ret.json()
+        except Exception as e:
+            print(f"Rate-limited request failed, falling back: {e}")
+    
+    # Fallback to original implementation
     ret = requests.get(encode_url(url,token))
-
     check_status(ret)
     return ret.json()
 
@@ -406,7 +748,7 @@ def submit(control_file_name):
 
 
 def get_status(request_idx=None):
-    """Get status of request.
+    """Get status of request with rate limiting.
     If request_ix not provided, get all open requests
 
     Args:
@@ -420,10 +762,20 @@ def get_status(request_idx=None):
     url = BASE_URL + 'status/'
     url += str(request_idx)
 
-
     token = get_authentication()
+    
+    # Use rate-limited client if available
+    client = get_rate_limited_client()
+    if client and RATE_LIMITING_AVAILABLE:
+        try:
+            ret = client.make_request('GET', encode_url(url, token))
+            check_status(ret)
+            return ret.json()
+        except Exception as e:
+            print(f"Rate-limited request failed, falling back: {e}")
+    
+    # Fallback to original implementation
     ret = requests.get(encode_url(url,token))
-
     check_status(ret)
     return ret.json()
 

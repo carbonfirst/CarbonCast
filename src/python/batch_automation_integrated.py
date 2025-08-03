@@ -33,6 +33,10 @@ from batch_monitor import BatchMonitor
 from automation.status_monitor import StatusMonitor, create_status_monitor
 from automation.comprehensive_tracker import ComprehensiveTracker, create_comprehensive_tracker
 from automation.completed_request_integration import CompletedRequestIntegration, create_completed_request_integration
+from automation.enhanced_monitoring_integration import EnhancedMonitoringIntegration, create_enhanced_monitoring_integration
+from automation.dynamic_trigger_system import DynamicTriggerSystem, create_dynamic_trigger_system
+from automation.batch_optimizer import BatchOptimizer, create_batch_optimizer
+from automation.capacity_manager import CapacityManager, create_capacity_manager
 from directory_utils import setup_directories
 
 # Import upload_files functionality for auto-upload integration
@@ -94,6 +98,18 @@ class IntegratedBatchSystem:
             scan_interval_minutes=scan_interval_minutes
         )
         
+        # Initialize enhanced monitoring integration with dynamic triggering
+        self.enhanced_monitoring_integration = None
+        self.dynamic_trigger_system = None
+        self.batch_optimizer = None
+        self.capacity_manager_enhanced = None
+        
+        # Check if dynamic batch processing is enabled
+        dynamic_enabled = self.config.get('automation', {}).get('dynamic_batch_processing_enabled', True)
+        if dynamic_enabled:
+            self.logger.info("🚀 Initializing dynamic batch processing components...")
+            self._initialize_dynamic_components(db_path)
+        
         # System state
         self.running = False
         self.web_dashboard_thread = None
@@ -129,6 +145,112 @@ class IntegratedBatchSystem:
         logger.addHandler(file_handler)
         
         return logger
+    
+    def _initialize_dynamic_components(self, db_path: str):
+        """Initialize dynamic batch processing components."""
+        try:
+            # Create enhanced capacity manager
+            from automation.capacity_manager import CapacityConfig
+            capacity_config = CapacityConfig(
+                enable_upload_automation=self.config.get('automation', {}).get('auto_upload_enabled', True),
+                upload_batch_size=self.config.get('automation', {}).get('max_upload_batch_size', 10),
+                upload_rate_limit_delay=self.config.get('upload', {}).get('rate_limit_delay', 0.5),
+                control_files_dir=self.config.get('directories', {}).get('control_files_dir', './control_files')
+            )
+            self.capacity_manager_enhanced = create_capacity_manager(config=capacity_config, db_path=db_path)
+            
+            # Create enhanced monitoring integration
+            self.enhanced_monitoring_integration = create_enhanced_monitoring_integration()
+            
+            # Connect components to enhanced monitoring
+            self.enhanced_monitoring_integration.connect_batch_system(self.batch_system)
+            self.enhanced_monitoring_integration.connect_capacity_manager(self.capacity_manager_enhanced)
+            self.enhanced_monitoring_integration.connect_status_monitor(self.status_monitor)
+            self.enhanced_monitoring_integration.connect_queue_manager(self.queue_manager)
+            
+            # Create dynamic trigger system
+            self.dynamic_trigger_system = create_dynamic_trigger_system(
+                enhanced_monitor=self.enhanced_monitoring_integration.enhanced_monitor,
+                capacity_manager=self.capacity_manager_enhanced,
+                event_dispatcher=self.enhanced_monitoring_integration.event_dispatcher
+            )
+            
+            # Set integration components for dynamic trigger system
+            self.dynamic_trigger_system.set_integration_components(
+                batch_system=self.batch_system,
+                queue_manager=self.queue_manager
+            )
+            
+            # Create batch optimizer
+            from automation.batch_optimizer import OptimizationConfig
+            optimizer_config = OptimizationConfig(
+                target_utilization=0.9,  # Target 90% of 10-request capacity
+                optimization_interval=self.config.get('automation', {}).get('check_interval_seconds', 60),
+                learning_enabled=True
+            )
+            self.batch_optimizer = create_batch_optimizer(
+                config=optimizer_config,
+                capacity_manager=self.capacity_manager_enhanced,
+                enhanced_monitor=self.enhanced_monitoring_integration.enhanced_monitor,
+                dynamic_trigger=self.dynamic_trigger_system
+            )
+            
+            # Set integration components for batch optimizer
+            self.batch_optimizer.set_integration_components(
+                batch_system=self.batch_system,
+                queue_manager=self.queue_manager
+            )
+            
+            # Add processing callbacks
+            self.dynamic_trigger_system.add_processing_callback(self._handle_dynamic_trigger_callback)
+            
+            self.logger.info("✅ Dynamic batch processing components initialized successfully")
+            
+        except Exception as e:
+            self.logger.error(f"❌ Failed to initialize dynamic components: {e}")
+            # Continue without dynamic components
+            self.enhanced_monitoring_integration = None
+            self.dynamic_trigger_system = None
+            self.batch_optimizer = None
+            self.capacity_manager_enhanced = None
+    
+    def _handle_dynamic_trigger_callback(self, trigger_event, success: bool):
+        """Handle callbacks from dynamic trigger system."""
+        try:
+            batch_size = trigger_event.batch_calculation.recommended_batch_size
+            trigger_type = trigger_event.trigger_type.value
+            
+            if success:
+                self.logger.info(f"✅ Dynamic trigger executed successfully: {trigger_type} "
+                               f"(batch size: {batch_size})")
+                
+                # Record performance for batch optimizer
+                if self.batch_optimizer and batch_size > 0:
+                    # Estimate processing time and success rate (simplified)
+                    processing_time = batch_size * 2.0  # rough estimate
+                    success_rate = 0.9  # assume high success rate for successful triggers
+                    
+                    self.batch_optimizer.record_performance(
+                        batch_size=batch_size,
+                        processing_time=processing_time,
+                        success_rate=success_rate,
+                        strategy=trigger_event.batch_calculation.calculation_strategy
+                    )
+            else:
+                self.logger.warning(f"⚠️ Dynamic trigger failed: {trigger_type} "
+                                  f"(batch size: {batch_size})")
+                
+                # Record failure for batch optimizer
+                if self.batch_optimizer and batch_size > 0:
+                    self.batch_optimizer.record_performance(
+                        batch_size=batch_size,
+                        processing_time=0.0,
+                        success_rate=0.0,
+                        strategy=trigger_event.batch_calculation.calculation_strategy
+                    )
+            
+        except Exception as e:
+            self.logger.error(f"❌ Error in dynamic trigger callback: {e}")
     
     def _signal_handler(self, signum, frame):
         """Handle shutdown signals gracefully."""
@@ -176,6 +298,23 @@ class IntegratedBatchSystem:
             
             # Start completed request integration
             self.completed_request_integration.start_integration()
+            
+            # Start enhanced monitoring and dynamic trigger system if available
+            if self.enhanced_monitoring_integration:
+                self.logger.info("🚀 Starting enhanced monitoring integration...")
+                self.enhanced_monitoring_integration.start_integration()
+                
+                if self.dynamic_trigger_system:
+                    self.logger.info("🎯 Starting dynamic trigger system...")
+                    self.dynamic_trigger_system.start_system()
+                
+                if self.batch_optimizer:
+                    self.logger.info("📊 Starting batch optimizer monitoring...")
+                    self.batch_optimizer.start_optimization_monitoring()
+                
+                if self.capacity_manager_enhanced:
+                    self.logger.info("⚡ Starting enhanced capacity monitoring...")
+                    self.capacity_manager_enhanced.start_capacity_monitoring()
             
             # Start web dashboard in background - ALWAYS for all automation commands
             self._start_web_dashboard_background()
@@ -929,6 +1068,73 @@ class IntegratedBatchSystem:
         except Exception as e:
             print(f"Error getting completed request integration summary: {e}")
     
+    def _print_dynamic_batch_processing_summary(self):
+        """Print dynamic batch processing summary."""
+        try:
+            print("\n" + "-"*60)
+            print("DYNAMIC BATCH PROCESSING")
+            print("-"*60)
+            
+            if not self.enhanced_monitoring_integration:
+                print("Dynamic batch processing: Disabled")
+                return
+            
+            # Enhanced monitoring status
+            integration_status = self.enhanced_monitoring_integration.get_integration_status()
+            print(f"Enhanced Monitoring: {'Active' if integration_status.get('integration_active', False) else 'Inactive'}")
+            
+            # Dynamic trigger system status
+            if self.dynamic_trigger_system:
+                trigger_status = self.dynamic_trigger_system.get_system_status()
+                print(f"Dynamic Triggers: {'Active' if trigger_status.get('system_active', False) else 'Inactive'}")
+                
+                stats = trigger_status.get('statistics', {})
+                print(f"Total Triggers Fired: {stats.get('total_triggers_fired', 0)}")
+                print(f"Successful Triggers: {stats.get('successful_triggers', 0)}")
+                print(f"Average Response Time: {stats.get('average_response_time', 0):.2f}s")
+                
+                # Show trigger type distribution
+                triggers_by_type = stats.get('triggers_by_type', {})
+                if triggers_by_type:
+                    top_triggers = sorted(triggers_by_type.items(), key=lambda x: x[1], reverse=True)[:3]
+                    print(f"Top Trigger Types: {', '.join([f'{t}({c})' for t, c in top_triggers])}")
+            else:
+                print("Dynamic Triggers: Not initialized")
+            
+            # Batch optimizer status
+            if self.batch_optimizer:
+                optimizer_analytics = self.batch_optimizer.get_optimization_analytics()
+                if 'error' not in optimizer_analytics:
+                    perf_summary = optimizer_analytics.get('performance_summary', {})
+                    print(f"Batch Optimizer: Active")
+                    print(f"Average Batch Size: {perf_summary.get('average_batch_size', 0):.1f}")
+                    print(f"Average Success Rate: {perf_summary.get('average_success_rate', 0):.1%}")
+                    print(f"Current Strategy: {optimizer_analytics.get('current_strategy', 'unknown')}")
+                else:
+                    print("Batch Optimizer: Error getting analytics")
+            else:
+                print("Batch Optimizer: Not initialized")
+            
+            # Enhanced capacity manager status
+            if self.capacity_manager_enhanced:
+                capacity_analytics = self.capacity_manager_enhanced.get_capacity_analytics()
+                if 'error' not in capacity_analytics:
+                    current_status = capacity_analytics.get('current_status')
+                    if current_status:
+                        print(f"Enhanced Capacity: {current_status.get('total_requests', 0)}/10 requests")
+                        print(f"Capacity Level: {current_status.get('capacity_level', 'unknown')}")
+                    
+                    monitoring_stats = capacity_analytics.get('monitoring_statistics', {})
+                    print(f"Capacity Monitoring Cycles: {monitoring_stats.get('total_monitoring_cycles', 0)}")
+                    print(f"Crisis Episodes: {monitoring_stats.get('crisis_episodes', 0)}")
+                else:
+                    print("Enhanced Capacity: Error getting analytics")
+            else:
+                print("Enhanced Capacity: Not initialized")
+            
+        except Exception as e:
+            print(f"Error getting dynamic batch processing summary: {e}")
+    
     def generate_comprehensive_coverage_report(self):
         """Generate and return comprehensive coverage report."""
         try:
@@ -969,6 +1175,23 @@ class IntegratedBatchSystem:
         
         self.running = False
         
+        # Stop dynamic components first
+        if self.enhanced_monitoring_integration:
+            self.logger.info("🛑 Stopping enhanced monitoring integration...")
+            self.enhanced_monitoring_integration.stop_integration()
+        
+        if self.dynamic_trigger_system:
+            self.logger.info("🛑 Stopping dynamic trigger system...")
+            self.dynamic_trigger_system.stop_system()
+        
+        if self.batch_optimizer:
+            self.logger.info("🛑 Stopping batch optimizer...")
+            self.batch_optimizer.stop_optimization_monitoring()
+        
+        if self.capacity_manager_enhanced:
+            self.logger.info("🛑 Stopping enhanced capacity manager...")
+            self.capacity_manager_enhanced.stop_capacity_monitoring()
+        
         # Stop status monitoring
         if hasattr(self.status_monitor, 'monitoring_active'):
             self.status_monitor.stop_monitoring()
@@ -984,6 +1207,16 @@ class IntegratedBatchSystem:
         # Save all states
         self.batch_system._save_state()
         self.queue_manager._save_queue_state()
+        
+        # Cleanup dynamic components
+        if self.enhanced_monitoring_integration:
+            self.enhanced_monitoring_integration.cleanup()
+        
+        if self.dynamic_trigger_system:
+            self.dynamic_trigger_system.cleanup()
+        
+        if self.batch_optimizer:
+            self.batch_optimizer.cleanup()
         
         # Shutdown executor
         if hasattr(self.batch_system, 'executor'):

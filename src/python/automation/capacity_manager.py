@@ -22,7 +22,7 @@ import time
 import logging
 import threading
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Tuple
+from typing import Dict, List, Optional, Any, Tuple, Callable
 from dataclasses import dataclass, asdict
 from enum import Enum
 from pathlib import Path
@@ -143,6 +143,15 @@ class CapacityManager:
         # Threading
         self.capacity_lock = threading.Lock()
         
+        # Dynamic system integration
+        self.dynamic_trigger_system = None
+        self.batch_optimizer = None
+        self.enhanced_monitor = None
+        
+        # Dynamic triggering callbacks
+        self.capacity_change_callbacks: List[Callable] = []
+        self.trigger_callbacks: List[Callable] = []
+        
         self.logger.info("Capacity Manager initialized")
     
     def _setup_logging(self) -> logging.Logger:
@@ -159,6 +168,72 @@ class CapacityManager:
             logger.setLevel(logging.INFO)
             
         return logger
+    
+    def set_dynamic_integration_components(self,
+                                         dynamic_trigger_system=None,
+                                         batch_optimizer=None,
+                                         enhanced_monitor=None):
+        """
+        Set dynamic system integration components.
+        
+        Args:
+            dynamic_trigger_system: DynamicTriggerSystem instance
+            batch_optimizer: BatchOptimizer instance
+            enhanced_monitor: EnhancedRequestMonitor instance
+        """
+        self.dynamic_trigger_system = dynamic_trigger_system
+        self.batch_optimizer = batch_optimizer
+        self.enhanced_monitor = enhanced_monitor
+        
+        self.logger.info("✅ Dynamic integration components configured for capacity manager")
+    
+    def add_capacity_change_callback(self, callback: Callable):
+        """
+        Add a callback for capacity changes.
+        
+        Args:
+            callback: Function to call with (previous_count, current_count, capacity_level)
+        """
+        self.capacity_change_callbacks.append(callback)
+        self.logger.info("✅ Capacity change callback added")
+    
+    def add_trigger_callback(self, callback: Callable):
+        """
+        Add a callback for trigger events.
+        
+        Args:
+            callback: Function to call with (trigger_type, action_taken, success)
+        """
+        self.trigger_callbacks.append(callback)
+        self.logger.info("✅ Trigger callback added")
+    
+    def _notify_capacity_change(self, previous_status: CapacityStatus, current_status: CapacityStatus):
+        """Notify callbacks of capacity changes."""
+        try:
+            if previous_status and current_status:
+                if previous_status.total_requests != current_status.total_requests:
+                    for callback in self.capacity_change_callbacks:
+                        try:
+                            callback(
+                                previous_status.total_requests,
+                                current_status.total_requests,
+                                current_status.capacity_level
+                            )
+                        except Exception as e:
+                            self.logger.error(f"❌ Error in capacity change callback: {e}")
+        except Exception as e:
+            self.logger.error(f"❌ Error notifying capacity change: {e}")
+    
+    def _notify_trigger_event(self, trigger_type: str, action_taken: str, success: bool):
+        """Notify callbacks of trigger events."""
+        try:
+            for callback in self.trigger_callbacks:
+                try:
+                    callback(trigger_type, action_taken, success)
+                except Exception as e:
+                    self.logger.error(f"❌ Error in trigger callback: {e}")
+        except Exception as e:
+            self.logger.error(f"❌ Error notifying trigger event: {e}")
     
     def get_current_capacity_status(self) -> CapacityStatus:
         """

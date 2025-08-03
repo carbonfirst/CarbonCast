@@ -95,13 +95,6 @@ The automation starter will:
 
 ## 📋 System Requirements
 
-### Minimum Requirements
-- **Python 3.8+** with pip package manager
-- **RDA Account** with valid authentication token
-- **4GB+ RAM** recommended for large batch processing
-- **Stable Internet Connection** for RDA API access
-- **10GB+ Disk Space** for downloads and logs
-
 ### Dependencies
 
 **⚠️ IMPORTANT:** Always use the root [`requirements.txt`](requirements.txt) for installation.

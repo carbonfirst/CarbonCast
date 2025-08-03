@@ -15,14 +15,110 @@
     "completed_request_scan_interval_minutes": 2,
     "aggressive_10_request_targeting": true,
     "immediate_slot_filling": true,
-    "max_upload_batch_size": 10
+    "max_upload_batch_size": 10,
+    "dynamic_batch_processing_enabled": true,
+    "dynamic_trigger_response_time_ms": 500,
+    "batch_optimization_enabled": true,
+    "enhanced_monitoring_enabled": true
+  },
+  "rate_limiting": {
+    "enabled": true,
+    "requests_per_minute": 10,
+    "requests_per_hour": 600,
+    "burst_allowance": 5,
+    "adaptive_enabled": true,
+    "min_requests_per_minute": 5,
+    "max_requests_per_minute": 60,
+    "adaptation_factor": 0.1,
+    "circuit_breaker_enabled": true,
+    "failure_threshold": 5,
+    "recovery_timeout_seconds": 300,
+    "half_open_max_calls": 3,
+    "base_backoff_seconds": 1.0,
+    "max_backoff_seconds": 300.0,
+    "backoff_multiplier": 2.0,
+    "jitter_enabled": true,
+    "monitoring_window_minutes": 15,
+    "health_check_interval_seconds": 60
+  },
+  "error_handling": {
+    "enabled": true,
+    "default_max_retries": 3,
+    "default_base_delay": 1.0,
+    "default_max_delay": 300.0,
+    "retry_jitter_enabled": true,
+    "rate_limit_base_delay": 60.0,
+    "rate_limit_max_delay": 1800.0,
+    "rate_limit_backoff_multiplier": 1.5,
+    "circuit_breaker_enabled": true,
+    "error_threshold_for_circuit": 5,
+    "error_tracking_window_minutes": 60,
+    "alert_threshold_errors_per_minute": 10,
+    "pattern_recognition_enabled": true,
+    "graceful_degradation_enabled": true,
+    "degradation_timeout_seconds": 300
+  },
+  "request_throttling": {
+    "enabled": true,
+    "max_queue_size": 1000,
+    "max_concurrent_requests": 5,
+    "default_timeout_seconds": 300.0,
+    "throttle_mode": "balanced",
+    "adaptive_throttling": true,
+    "min_request_interval_seconds": 1.0,
+    "max_request_interval_seconds": 60.0,
+    "priority_boost_threshold_minutes": 30,
+    "emergency_queue_size_limit": 50,
+    "rate_limiter_integration": true,
+    "error_handler_integration": true,
+    "circuit_breaker_respect": true,
+    "performance_tracking_enabled": true,
+    "queue_health_monitoring": true,
+    "alert_on_queue_full": true
   },
   "upload": {
     "dest_file": "./ds0841.1_control.ctl",
     "rate_limit_delay": 0.5,
     "auto_discover_incoming": true,
     "aggressive_upload_enabled": true,
-    "upload_on_any_available_slot": true
+    "upload_on_any_available_slot": true,
+    "dynamic_upload_optimization": true
+  },
+  "dynamic_batch_processing": {
+    "enabled": true,
+    "trigger_system": {
+      "enabled": true,
+      "response_time_target_ms": 500,
+      "max_concurrent_triggers": 3,
+      "trigger_cooldown_seconds": 30,
+      "emergency_mode_enabled": true
+    },
+    "batch_optimizer": {
+      "enabled": true,
+      "strategy": "adaptive",
+      "mode": "balanced",
+      "target_utilization": 0.9,
+      "optimization_interval_seconds": 30,
+      "learning_enabled": true,
+      "predictive_window_seconds": 300,
+      "risk_tolerance": 0.7
+    },
+    "enhanced_monitoring": {
+      "enabled": true,
+      "adaptive_intervals": true,
+      "base_interval_seconds": 15,
+      "min_interval_seconds": 5,
+      "max_interval_seconds": 60,
+      "event_system_enabled": true
+    },
+    "capacity_management": {
+      "enhanced_mode": true,
+      "crisis_resolution_timeout_seconds": 1800,
+      "aggressive_processing_enabled": true,
+      "auto_purge_completed": true,
+      "auto_purge_errors": true,
+      "priority_boost_at_critical": true
+    }
   },
   "directories": {
     "base_download_dir": "src/python/downloaded_files",
