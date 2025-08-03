@@ -28,8 +28,8 @@ CarbonCast is a sophisticated **Enhanced RDA (Research Data Archive) Automation 
 
 - **200+ Control Files**: Comprehensive processing across 85+ regions
 - **90+ Regions**: US grid operators (ERCOT, CISO, PJM, MISO, NYISO, etc.) + European countries  
-- **Weather Variables**: Solar radiation (dswrf), wind, temperature, precipitation
-- **File Organization**: Automatic `REGION_NAME/weather_variable/` structure
+- **Weather Variables**: Solar radiation (dswrf), wind components (ugrd_vgrd), temperature/dewpoint (tmp_dpt), precipitation (apcp)
+- **File Organization**: Automatic `REGION_NAME/meteorological_variable/` structure using standardized codes
 - **Data Sources**: NCEP GFS 0.25° Global Forecast Grids and more
 
 ## 🚀 Quick Start
@@ -269,27 +269,44 @@ export RDA_DEBUG_MODE="false"
 
 ## 📁 File Organization
 
-Downloaded files are automatically organized in a hierarchical structure:
+Downloaded files are automatically organized in a hierarchical structure using **standardized meteorological variable names**:
 
 ```
 downloaded_files/
 ├── CISO/                    # California ISO
-│   ├── dswrf/              # Solar radiation data
+│   ├── dswrf/              # Downward Shortwave Radiation Flux (solar radiation)
 │   │   ├── request_123456/
 │   │   │   ├── data_file_1.nc
 │   │   │   └── data_file_2.nc
 │   │   └── request_789012/
-│   ├── wind/               # Wind data
-│   └── temp/               # Temperature data
+│   ├── ugrd_vgrd/          # U and V Wind Components (wind data)
+│   └── tmp_dpt/            # Temperature and Dewpoint
 ├── ERCOT/                  # Electric Reliability Council of Texas
-│   ├── rain/               # Precipitation data
-│   └── wind/
+│   ├── apcp/               # Accumulated Precipitation
+│   └── ugrd_vgrd/          # U and V Wind Components
 ├── PJM/                    # PJM Interconnection
-│   ├── temp/
-│   └── dswrf/
+│   ├── tmp_dpt/            # Temperature and Dewpoint
+│   └── dswrf/              # Downward Shortwave Radiation Flux
 └── UNKNOWN/                # Fallback for undetected regions
     └── unknown/            # Fallback for undetected variables
 ```
+
+### 🌡️ Meteorological Variable Codes
+
+The system uses standardized meteorological variable codes for consistent file organization:
+
+| Code | Full Name | Description | Data Type |
+|------|-----------|-------------|-----------|
+| **`dswrf`** | Downward Shortwave Radiation Flux | Solar radiation reaching Earth's surface | Solar energy data |
+| **`ugrd_vgrd`** | U and V Wind Components | Horizontal wind velocity components (east-west & north-south) | Wind speed and direction |
+| **`apcp`** | Accumulated Precipitation | Total precipitation over time period | Rainfall/snowfall data |
+| **`tmp_dpt`** | Temperature and Dewpoint | Air temperature and dewpoint temperature | Temperature and humidity |
+
+These standardized codes ensure:
+- **Consistent naming** across all regions and datasets
+- **Professional meteorological terminology** following NCEP/NCAR conventions
+- **Easy identification** of data types for automated processing
+- **Compatibility** with meteorological analysis tools and workflows
 
 ### Region Detection
 
