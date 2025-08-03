@@ -2817,10 +2817,6 @@ class EnhancedRDADashboard:
             <div class="metric-label">Purged</div>
         </div>
         <div class="metric-card">
-            <div class="metric-value" id="successRate">-</div>
-            <div class="metric-label">Success Rate</div>
-        </div>
-        <div class="metric-card">
             <div class="metric-value" id="uniqueRegions">-</div>
             <div class="metric-label">Active Regions</div>
         </div>
@@ -2941,7 +2937,6 @@ class EnhancedRDADashboard:
             document.getElementById('completedRequests').textContent = overview.completed_requests || 0;
             document.getElementById('processingRequests').textContent = (overview.processing_requests || 0) + (overview.queued_requests || 0);
             document.getElementById('failedRequests').textContent = overview.purged_requests || 0;
-            document.getElementById('successRate').textContent = (overview.success_rate || 0).toFixed(1) + '%';
             document.getElementById('uniqueRegions').textContent = overview.unique_regions || 0;
         }
         
