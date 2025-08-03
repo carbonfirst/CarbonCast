@@ -180,13 +180,13 @@
         }
         
         .request-details {
-            display: none;
+            display: none !important;
             border-top: 1px solid #eee;
             padding: 20px;
             background: #f9f9f9;
         }
         .request-details.expanded {
-            display: block;
+            display: block !important;
         }
         
         .details-grid {
@@ -514,38 +514,114 @@
             return names[cleanParam] || param.replace(/_/g, ' ').toUpperCase();
         }
         
+        function sanitizeId(id) {
+            // Simplified and more reliable ID sanitization
+            if (!id || typeof id !== 'string') {
+                return 'unknown_' + Date.now();
+            }
+            
+            // Clean the ID by replacing non-alphanumeric characters with underscores
+            let cleanId = id.replace(/[^a-zA-Z0-9]/g, '_').replace(/_{2,}/g, '_').replace(/^_+|_+$/g, '');
+            
+            // Only add 'id_' prefix if it doesn't already start with 'id_'
+            if (!cleanId.startsWith('id_')) {
+                cleanId = 'id_' + cleanId;
+            }
+            
+            return cleanId;
+        }
+        
         function toggleRequestDetails(requestId) {
             console.log('DEBUG: toggleRequestDetails called for:', requestId);
-            const card = document.getElementById(`card-${requestId}`);
-            const details = document.getElementById(`details-${requestId}`);
-            const icon = document.getElementById(`icon-${requestId}`);
+            
+            // Sanitize the request ID for DOM selection
+            const sanitizedId = sanitizeId(requestId);
+            console.log('DEBUG: Sanitized ID:', sanitizedId);
+            
+            const card = document.getElementById(`card-${sanitizedId}`);
+            const details = document.getElementById(`details-${sanitizedId}`);
+            const icon = document.getElementById(`icon-${sanitizedId}`);
             
             console.log('DEBUG: Elements found:', {
+                originalId: requestId,
+                sanitizedId: sanitizedId,
                 card: !!card,
                 details: !!details,
                 icon: !!icon,
                 detailsContent: details ? details.innerHTML.length : 0
             });
             
-            if (details && details.classList.contains('expanded')) {
+            // Error handling for missing DOM elements
+            if (!card) {
+                console.error('DEBUG: Card element not found for ID:', sanitizedId);
+                return;
+            }
+            
+            if (!details) {
+                console.error('DEBUG: Details element not found for ID:', sanitizedId);
+                return;
+            }
+            
+            if (!icon) {
+                console.warn('DEBUG: Icon element not found for ID:', sanitizedId);
+            }
+            
+            // Enhanced toggle with explicit display management and fallback
+            const isCurrentlyExpanded = details.classList.contains('expanded') ||
+                                      details.style.display === 'block' ||
+                                      getComputedStyle(details).display === 'block';
+            
+            if (isCurrentlyExpanded) {
+                // Collapse: Remove classes and explicitly hide
                 details.classList.remove('expanded');
                 card.classList.remove('expanded');
-                icon.classList.remove('expanded');
+                if (icon) icon.classList.remove('expanded');
+                
+                // Explicit display management as fallback
+                details.style.display = 'none';
+                
                 console.log('DEBUG: Collapsed details for:', requestId);
-            } else if (details) {
+            } else {
+                // Expand: Add classes and explicitly show
                 details.classList.add('expanded');
                 card.classList.add('expanded');
-                icon.classList.add('expanded');
+                if (icon) icon.classList.add('expanded');
+                
+                // Explicit display management as fallback
+                details.style.display = 'block';
+                
                 console.log('DEBUG: Expanded details for:', requestId);
-            } else {
-                console.error('DEBUG: Details element not found for:', requestId);
             }
+            
+            // Additional robustness check after a brief delay
+            setTimeout(() => {
+                const finalDisplay = getComputedStyle(details).display;
+                const shouldBeVisible = details.classList.contains('expanded');
+                
+                if (shouldBeVisible && finalDisplay === 'none') {
+                    console.warn('DEBUG: CSS/JS coordination issue detected, forcing display');
+                    details.style.display = 'block';
+                } else if (!shouldBeVisible && finalDisplay !== 'none') {
+                    console.warn('DEBUG: CSS/JS coordination issue detected, forcing hide');
+                    details.style.display = 'none';
+                }
+            }, 50);
         }
         
         function createRequestCard(req) {
-            const cardId = `card-${req.request_id}`;
-            const detailsId = `details-${req.request_id}`;
-            const iconId = `icon-${req.request_id}`;
+            // Sanitize the request ID for consistent DOM element IDs
+            const sanitizedRequestId = sanitizeId(req.request_id);
+            const cardId = `card-${sanitizedRequestId}`;
+            const detailsId = `details-${sanitizedRequestId}`;
+            const iconId = `icon-${sanitizedRequestId}`;
+            
+            console.log('DEBUG: Creating request card with IDs:', {
+                originalId: req.request_id,
+                sanitizedId: sanitizedRequestId,
+                cardId: cardId,
+                detailsId: detailsId,
+                iconId: iconId
+            });
             
             // Format spatial bounds if available
             let spatialBoundsHtml = '';
@@ -610,12 +686,12 @@
             
             return `
                 <div class="request-card" id="${cardId}">
-                    <div class="request-summary" onclick="toggleRequestDetails('${req.request_id}')">
+                    <div class="request-summary" onclick="toggleRequestDetails('${req.request_id}')" style="cursor: pointer;">
                         <div class="request-basic-info">
-                            <div class="request-id">${req.request_id}</div>
+                            <div class="request-id">${req.request_id.replace(/^id_/, '')}</div>
                             <div class="request-meta">
-                                ${getStatusBadge(req.status)} | 
-                                ${req.region || 'UNKNOWN'} | 
+                                ${getStatusBadge(req.status)} |
+                                ${req.region || 'UNKNOWN'} |
                                 ${getParameterDisplayName(req.variable_type || 'unknown')} |
                                 Index: ${req.request_index}
                             </div>
@@ -627,7 +703,7 @@
                             <div class="detail-section">
                                 <h4>📋 Request Information</h4>
                                 <ul class="param-list">
-                                    <li><span class="param-key">Request ID:</span> <span class="param-value">${req.request_id}</span></li>
+                                    <li><span class="param-key">Request ID:</span> <span class="param-value">${req.request_id.replace(/^id_/, '')}</span></li>
                                     <li><span class="param-key">Request Index:</span> <span class="param-value">${req.request_index}</span></li>
                                     <li><span class="param-key">Dataset ID:</span> <span class="param-value">${req.dsid || 'N/A'}</span></li>
                                     <li><span class="param-key">Status:</span> <span class="param-value">${getStatusBadge(req.status)}</span></li>
@@ -691,8 +767,9 @@
         }
         
         function createCompletedRegionCard(region) {
-            console.log('Creating card for region:', region);
+            console.log('DEBUG: Creating completed region card for region:', region);
             console.log('DEBUG: Region data structure:', JSON.stringify(region, null, 2));
+            console.log('DEBUG: Has detailed_requests:', !!(region.detailed_requests && region.detailed_requests.length > 0));
             
             // FIXED: Use detailed_requests data from backend instead of creating pseudo-requests
             if (region.detailed_requests && region.detailed_requests.length > 0) {
@@ -702,10 +779,17 @@
                 const primaryRequest = region.detailed_requests[0];
                 console.log('DEBUG: Primary request data:', JSON.stringify(primaryRequest, null, 2));
                 
+                // Sanitize the request ID from detailed requests data
+                const sanitizedRequestId = sanitizeId(primaryRequest.request_id);
+                console.log('DEBUG: Sanitizing detailed request ID:', {
+                    original: primaryRequest.request_id,
+                    sanitized: sanitizedRequestId
+                });
+                
                 // Create a properly structured request object with all the detailed information
                 const detailedRequest = {
                     id: primaryRequest.id,
-                    request_id: primaryRequest.request_id,
+                    request_id: primaryRequest.request_id, // Use original request_id, don't sanitize here
                     request_index: primaryRequest.request_index,
                     dsid: primaryRequest.dsid,
                     status: primaryRequest.status,
@@ -763,8 +847,16 @@
                 const sampleRequest = (region.sample_requests && region.sample_requests.length > 0) ?
                                     region.sample_requests[0] : {};
                 
-                const requestId = sampleRequest.request_id || `${regionCode}_COMPLETED_${totalRequests}`;
-                const requestIndex = sampleRequest.request_index || `${regionCode}_INDEX_${totalRequests}`;
+                // Generate a sanitized request ID for completed regions
+                const baseRequestId = sampleRequest.request_id || `${regionCode}_COMPLETED_${totalRequests}`;
+                const requestId = sanitizeId(baseRequestId);
+                console.log('DEBUG: Generated sanitized request ID for completed region:', {
+                    original: baseRequestId,
+                    sanitized: requestId,
+                    regionCode: regionCode
+                });
+                const baseRequestIndex = sampleRequest.request_index || `${regionCode}_INDEX_${totalRequests}`;
+                const requestIndex = sanitizeId(baseRequestIndex);
                 const actualVariableType = mostCommonVariable !== 'unknown' ? mostCommonVariable :
                                          (sampleRequest.variable_type ||
                                           (region.variable_breakdown && Object.keys(region.variable_breakdown)[0]) ||
