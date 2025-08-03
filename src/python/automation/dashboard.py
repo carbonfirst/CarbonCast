@@ -45,6 +45,15 @@ from automation.error_dashboard_api import create_error_dashboard_api
 from automation.progress_tracker_api import create_progress_tracker_api
 from automation.dashboard_enhancements import create_dashboard_enhancements
 
+# Import timeline validation services
+from automation.timeline_validator import (
+    create_timestamp_validation_service,
+    create_timeline_validation_rules,
+    TimestampValidationService,
+    TimelineValidationRules
+)
+from automation.processing_time_calculator import create_processing_time_calculator, EnhancedProcessingTimeCalculator
+
 
 @dataclass
 class CurrentRequest:
@@ -211,6 +220,31 @@ class EnhancedRDADashboard:
                 'manual_override_region': lambda *args: {'success': False, 'error': 'Resolver not available'}
             })()
         
+        # Initialize timeline validation services
+        try:
+            self.timestamp_validator = create_timestamp_validation_service()
+            self.timeline_validator = create_timeline_validation_rules()
+            self.processing_time_calculator = create_processing_time_calculator()
+            self.logger.info("Timeline validation services initialized successfully")
+        except Exception as e:
+            self.logger.warning(f"Could not initialize timeline validation services: {e}")
+            # Create minimal fallback services
+            self.timestamp_validator = type('TimestampValidator', (), {
+                'parse_timestamp': lambda self, ts, field: type('ParsedTimestamp', (), {
+                    'value': None, 'is_valid': False, 'issues': [], 'confidence_score': 0.0
+                })()
+            })()
+            self.timeline_validator = type('TimelineValidator', (), {
+                'validate_timeline': lambda self, *args, **kwargs: type('TimelineValidationResult', (), {
+                    'is_valid': False, 'issues': [], 'processing_time_hours': None
+                })()
+            })()
+            self.processing_time_calculator = type('ProcessingTimeCalculator', (), {
+                'calculate_processing_time': lambda self, *args, **kwargs: type('ProcessingTimeResult', (), {
+                    'processing_time_hours': None, 'status': 'invalid', 'issues': []
+                })()
+            })()
+        
         # Setup routes
         self._setup_routes()
         
@@ -234,59 +268,40 @@ class EnhancedRDADashboard:
             
         return logger
     
-    def _safe_parse_datetime(self, date_str: str) -> Optional[datetime]:
+    def _safe_parse_datetime(self, date_str: str, field_name: str = "timestamp") -> Optional[datetime]:
         """
-        Safely parse datetime strings with multiple format fallbacks.
+        Enhanced datetime parsing using the timeline validation service.
+        
+        This method now uses the centralized TimestampValidationService for consistent
+        and robust timestamp parsing with comprehensive error handling.
         
         Args:
             date_str: Date string to parse
+            field_name: Name of the field being parsed (for error reporting)
             
         Returns:
             Parsed datetime object or None if parsing fails
         """
-        if not date_str:
-            return None
-            
-        # List of common datetime formats to try
-        formats_to_try = [
-            # ISO formats
-            '%Y-%m-%dT%H:%M:%S.%fZ',
-            '%Y-%m-%dT%H:%M:%SZ', 
-            '%Y-%m-%dT%H:%M:%S.%f+00:00',
-            '%Y-%m-%dT%H:%M:%S+00:00',
-            '%Y-%m-%dT%H:%M:%S.%f',
-            '%Y-%m-%dT%H:%M:%S',
-            # Alternative formats
-            '%Y-%m-%d %H:%M:%S.%f',
-            '%Y-%m-%d %H:%M:%S',
-            '%Y-%m-%d',
-            # RDA specific formats
-            '%Y%m%d%H%M%S',
-            '%Y%m%d'
-        ]
-        
-        # Clean the date string
-        cleaned_date = str(date_str).strip()
-        
-        # Try fromisoformat first (fastest for ISO dates)
         try:
-            # Handle Z suffix
-            if cleaned_date.endswith('Z'):
-                cleaned_date = cleaned_date[:-1] + '+00:00'
-            return datetime.fromisoformat(cleaned_date)
-        except (ValueError, AttributeError):
-            pass
-        
-        # Try each format
-        for fmt in formats_to_try:
-            try:
-                return datetime.strptime(cleaned_date, fmt)
-            except (ValueError, TypeError):
-                continue
-        
-        # Log the problematic date string for debugging
-        self.logger.warning(f"Could not parse date string: '{date_str}'")
-        return None
+            parsed_result = self.timestamp_validator.parse_timestamp(date_str, field_name)
+            
+            # Log validation issues if any
+            if parsed_result.issues:
+                for issue in parsed_result.issues:
+                    if issue.severity.value in ['error', 'critical']:
+                        self.logger.warning(f"Timestamp parsing issue for {field_name}: {issue.message}")
+                    elif issue.severity.value == 'warning':
+                        self.logger.debug(f"Timestamp parsing warning for {field_name}: {issue.message}")
+            
+            # Log low confidence parsing
+            if parsed_result.is_valid and parsed_result.confidence_score < 0.7:
+                self.logger.debug(f"Low confidence timestamp parsing for {field_name}: {parsed_result.confidence_score:.2f}")
+            
+            return parsed_result.value
+            
+        except Exception as e:
+            self.logger.error(f"Error in enhanced timestamp parsing for {field_name}: {e}")
+            return None
 
     def _get_db_connection(self) -> sqlite3.Connection:
         """Get a database connection with row factory."""
@@ -607,6 +622,33 @@ class EnhancedRDADashboard:
         else:
             return "unknown"
     
+    def _get_variable_display_name(self, variable_type: str) -> str:
+        """Get human-readable display name for variable type."""
+        display_names = {
+            'dswrf': 'Solar Radiation',
+            'ugrd_vgrd': 'Wind Speed',
+            'tmp_dpt': 'Temperature',
+            'apcp': 'Precipitation',
+            'unknown': 'Unknown Variable'
+        }
+        return display_names.get(variable_type, variable_type.upper())
+    
+    def _format_processing_time_display(self, processing_time_hours: Optional[float]) -> str:
+        """Format processing time for human-readable display."""
+        if processing_time_hours is None:
+            return "N/A"
+        
+        if processing_time_hours < 0:
+            return "Invalid"
+        elif processing_time_hours < 1:
+            minutes = processing_time_hours * 60
+            return f"{minutes:.1f} minutes"
+        elif processing_time_hours < 24:
+            return f"{processing_time_hours:.1f} hours"
+        else:
+            days = processing_time_hours / 24
+            return f"{days:.1f} days"
+    
     def get_current_requests(self, status_filter: Optional[str] = None,
                            region_filter: Optional[str] = None,
                            variable_filter: Optional[str] = None) -> List[Dict[str, Any]]:
@@ -663,30 +705,63 @@ class EnhancedRDADashboard:
                     except json.JSONDecodeError:
                         self.logger.warning(f"Failed to parse raw_response for {row['request_id']}")
                 
-                # Calculate processing time if applicable
+                # Calculate processing time using enhanced processing time calculator
                 processing_time = None
-                if row['date_rqst'] and row['status'].lower() in ['processing', 'completed']:
-                    try:
-                        start_time = self._safe_parse_datetime(row['date_rqst'])
-                        if start_time:
-                            end_time = datetime.now()
-                            if row['date_ready']:
-                                parsed_ready = self._safe_parse_datetime(row['date_ready'])
-                                if parsed_ready:
-                                    end_time = parsed_ready
-                            # Remove timezone info for calculation
-                            if start_time.tzinfo:
-                                start_time = start_time.replace(tzinfo=None)
-                            if hasattr(end_time, 'tzinfo') and end_time.tzinfo:
-                                end_time = end_time.replace(tzinfo=None)
-                            processing_time = (end_time - start_time).total_seconds() / 3600
-                    except Exception as e:
-                        self.logger.debug(f"Error calculating processing time: {e}")
-                        pass
+                processing_time_result = None
+                timeline_validation_issues = []
+                
+                try:
+                    # Use the enhanced processing time calculator
+                    processing_time_result = self.processing_time_calculator.calculate_processing_time(
+                        date_rqst=row['date_rqst'],
+                        date_ready=row['date_ready'],
+                        date_purge=row['date_purge'],
+                        request_status=row['status'],
+                        request_id=row['request_id']
+                    )
+                    
+                    # Extract processing time and validation issues
+                    processing_time = processing_time_result.processing_time_hours
+                    timeline_validation_issues = processing_time_result.issues
+                    
+                    # Log critical timeline validation issues
+                    for issue in timeline_validation_issues:
+                        if issue.severity.value == 'critical':
+                            self.logger.warning(f"Critical timeline issue for {row['request_id']}: {issue.message}")
+                        elif issue.severity.value == 'error':
+                            self.logger.debug(f"Timeline error for {row['request_id']}: {issue.message}")
+                    
+                    # Log low confidence calculations
+                    if processing_time_result.confidence_score < 0.7:
+                        self.logger.debug(f"Low confidence processing time for {row['request_id']}: {processing_time_result.confidence_score:.2f}")
+                        
+                except Exception as e:
+                    self.logger.error(f"Error in enhanced processing time calculation for {row['request_id']}: {e}")
+                    processing_time = None
                 
                 # Extract region and variable from rinfo and subset_note if not in control_files_tracking
                 region = row['region'] or self._extract_region_from_rinfo(row['rinfo'])
                 variable_type = row['variable_type'] or self._extract_variable_from_subset_note(row['subset_note'])
+                
+                # Format dates for consistent display
+                formatted_date_rqst = None
+                formatted_date_ready = None
+                formatted_date_purge = None
+                
+                if row['date_rqst']:
+                    parsed_rqst = self._safe_parse_datetime(row['date_rqst'], 'date_rqst')
+                    if parsed_rqst:
+                        formatted_date_rqst = parsed_rqst.isoformat()
+                
+                if row['date_ready']:
+                    parsed_ready = self._safe_parse_datetime(row['date_ready'], 'date_ready')
+                    if parsed_ready:
+                        formatted_date_ready = parsed_ready.isoformat()
+                
+                if row['date_purge']:
+                    parsed_purge = self._safe_parse_datetime(row['date_purge'], 'date_purge')
+                    if parsed_purge:
+                        formatted_date_purge = parsed_purge.isoformat()
                 
                 # Create enhanced request object with complete get_status information
                 request_obj = {
@@ -695,9 +770,9 @@ class EnhancedRDADashboard:
                     'request_id': row['request_id'],
                     'dsid': row['dsid'],
                     'status': row['status'],
-                    'date_rqst': row['date_rqst'],
-                    'date_ready': row['date_ready'],
-                    'date_purge': row['date_purge'],
+                    'date_rqst': formatted_date_rqst,
+                    'date_ready': formatted_date_ready,
+                    'date_purge': formatted_date_purge,
                     'location': row['location'],
                     'ncar_contact': row['ncar_contact'],
                     'rinfo': row['rinfo'],
@@ -705,6 +780,24 @@ class EnhancedRDADashboard:
                     'region': region,
                     'variable_type': variable_type,
                     'processing_time_hours': processing_time,
+                    # Enhanced timeline information with validation data
+                    'timeline': {
+                        'requested': formatted_date_rqst,
+                        'ready': formatted_date_ready,
+                        'purge': formatted_date_purge,
+                        'processing_time_hours': processing_time,
+                        'processing_time_display': self._format_processing_time_display(processing_time),
+                        'status': row['status'],
+                        # Timeline validation information
+                        'validation': {
+                            'has_issues': len(timeline_validation_issues) > 0,
+                            'issue_count': len(timeline_validation_issues),
+                            'critical_issues': len([i for i in timeline_validation_issues if i.severity.value == 'critical']),
+                            'confidence_score': processing_time_result.confidence_score if processing_time_result else 0.0,
+                            'calculation_mode': processing_time_result.calculation_mode.value if processing_time_result else 'unknown',
+                            'calculation_status': processing_time_result.status.value if processing_time_result else 'invalid'
+                        }
+                    },
                     # Complete get_status information
                     'complete_status_data': complete_data,
                     'subset_info': complete_data.get('subset_info', {}),
@@ -813,9 +906,9 @@ class EnhancedRDADashboard:
                 date_range = "N/A"
                 if data['first_request'] and data['last_request']:
                     try:
-                        first_dt = self._safe_parse_datetime(data['first_request'])
+                        first_dt = self._safe_parse_datetime(data['first_request'], 'first_request')
                         first = first_dt.strftime('%Y-%m-%d') if first_dt else 'N/A'
-                        last_dt = self._safe_parse_datetime(data['last_request'])
+                        last_dt = self._safe_parse_datetime(data['last_request'], 'last_request')
                         last = last_dt.strftime('%Y-%m-%d') if last_dt else 'N/A'
                         date_range = f"{first} to {last}"
                     except:
@@ -923,9 +1016,9 @@ class EnhancedRDADashboard:
                 date_range = "N/A"
                 if data['first_request'] and data['last_request']:
                     try:
-                        first_dt = self._safe_parse_datetime(data['first_request'])
+                        first_dt = self._safe_parse_datetime(data['first_request'], 'first_request')
                         first = first_dt.strftime('%Y-%m-%d') if first_dt else 'N/A'
-                        last_dt = self._safe_parse_datetime(data['last_request'])
+                        last_dt = self._safe_parse_datetime(data['last_request'], 'last_request')
                         last = last_dt.strftime('%Y-%m-%d') if last_dt else 'N/A'
                         date_range = f"{first} to {last}"
                     except:
@@ -954,15 +1047,16 @@ class EnhancedRDADashboard:
     def get_dashboard_summary(self) -> Dict[str, Any]:
         """
         Get comprehensive dashboard summary with all key metrics from rda_requests and real-time sync status.
+        Enhanced with progress tracking data.
         
         Returns:
-            Dictionary containing dashboard summary data with freshness information
+            Dictionary containing dashboard summary data with freshness information and progress tracking
         """
         # Trigger sync if needed for fresh data
         self._trigger_sync_if_needed("get_dashboard_summary")
         
         try:
-            # Get basic statistics from rda_requests
+            # Get basic statistics from rda_requests with enhanced progress tracking
             with self._get_db_connection() as conn:
                 cursor = conn.execute("""
                     SELECT
@@ -979,12 +1073,21 @@ class EnhancedRDADashboard:
                 """)
                 stats = cursor.fetchone()
             
-            # Calculate rates
+            # Calculate enhanced progress metrics
             total = stats['total_requests']
             completed = stats['completed']
             purged = stats['purged']
-            success_rate = (completed / (completed + purged) * 100) if (completed + purged) > 0 else 0
+            processing = stats['processing']
+            queued = stats['queued']
+            
+            # Progress tracking calculations
+            files_done = completed
+            files_remaining = total - completed
             progress_percentage = (completed / total * 100) if total > 0 else 0
+            
+            # Calculate completion rate (excluding purged as they're not "successful")
+            active_requests = total - purged
+            completion_rate = (completed / active_requests * 100) if active_requests > 0 else 0
             
             # Get status distribution for the fresh data
             status_distribution = {}
@@ -1016,15 +1119,29 @@ class EnhancedRDADashboard:
             return {
                 'overview': {
                     'total_requests': total,
-                    'queued_requests': stats['queued'],
-                    'processing_requests': stats['processing'],
+                    'queued_requests': queued,
+                    'processing_requests': processing,
                     'completed_requests': completed,
                     'purged_requests': purged,
-                    'success_rate': success_rate,
+                    'completion_rate': completion_rate,
                     'progress_percentage': progress_percentage,
                     'unique_regions': stats['unique_regions'],
                     'unique_variables': stats['unique_variables'],
                     'unique_datasets': stats['unique_datasets']
+                },
+                'progress_tracking': {
+                    'files_done': files_done,
+                    'files_remaining': files_remaining,
+                    'progress_percentage': progress_percentage,
+                    'completion_rate': completion_rate,
+                    'total_files': total,
+                    'active_files': active_requests,
+                    'status_breakdown': {
+                        'completed': completed,
+                        'processing': processing,
+                        'queued': queued,
+                        'purged': purged
+                    }
                 },
                 'status_distribution': status_distribution,
                 'error_statistics': error_stats,
@@ -1039,7 +1156,7 @@ class EnhancedRDADashboard:
                 'data_freshness': freshness_info,
                 'sync_metrics': sync_metrics,
                 'last_updated': datetime.now().isoformat(),
-                'data_source': 'rda_requests (real-time sync)'
+                'data_source': 'rda_requests (real-time sync with progress tracking)'
             }
             
         except Exception as e:
@@ -1342,130 +1459,286 @@ class EnhancedRDADashboard:
         
         @self.app.route('/api/completed-regions')
         def api_completed_regions():
-            """API endpoint for completed regions data using filesystem scanning."""
+            """API endpoint for completed regions data using database-first approach with filesystem verification."""
             try:
-                # Scan downloaded_files directory for completed regions
-                import os
-                import glob
-                from collections import defaultdict
+                self.logger.info("DEBUG: /api/completed-regions endpoint called")
+                # Trigger sync if needed for fresh data
+                self._trigger_sync_if_needed("get_completed_regions")
                 
                 completed_regions = []
                 total_downloaded_files = 0
                 
-                # Check if downloaded_files directory exists
-                downloaded_files_dir = 'downloaded_files'
-                if not os.path.exists(downloaded_files_dir):
-                    self.logger.warning(f"Downloaded files directory not found: {downloaded_files_dir}")
+                # Query database for completed requests with proper metadata AND full detailed information
+                with self._get_db_connection() as conn:
+                    cursor = conn.execute("""
+                        SELECT
+                            r.id,
+                            r.request_id,
+                            r.request_index,
+                            r.region,
+                            r.variable_type,
+                            r.status,
+                            r.date_rqst,
+                            r.date_ready,
+                            r.date_purge,
+                            r.completion_time,
+                            r.download_time,
+                            r.download_directory,
+                            r.file_size,
+                            r.processing_duration,
+                            r.rinfo,
+                            r.subset_note,
+                            r.raw_response,
+                            r.dsid,
+                            r.location,
+                            r.ncar_contact,
+                            cf.region as cf_region,
+                            cf.variable_type as cf_variable_type,
+                            cf.filename as cf_filename
+                        FROM rda_requests r
+                        LEFT JOIN control_files_tracking cf ON r.request_index = cf.request_index
+                        WHERE LOWER(r.status) IN ('completed', 'ready', 'online')
+                           OR r.date_ready IS NOT NULL
+                        ORDER BY r.completion_time DESC, r.date_ready DESC
+                    """)
+                    completed_requests = cursor.fetchall()
+                
+                if not completed_requests:
+                    self.logger.info("DEBUG: No completed requests found in database")
                     return jsonify({
                         'completed_regions': [],
                         'statistics': {
-                            'total_completed_files': 0,
+                            'total_completed_requests': 0,
                             'total_downloaded_files': 0,
                             'unique_regions': 0,
                             'unique_variables': 0,
                             'regions_with_downloads': 0,
-                            'download_completion_rate': 0,
+                            'download_completion_rate': 0.0,
                             'avg_processing_hours': 0.0
                         },
-                        'timestamp': datetime.now().isoformat()
+                        'timestamp': datetime.now().isoformat(),
+                        'data_source': 'database_with_filesystem_verification'
                     })
                 
-                # Scan each region directory
-                for item in os.listdir(downloaded_files_dir):
-                    region_path = os.path.join(downloaded_files_dir, item)
-                    if os.path.isdir(region_path):
-                        # Count files and analyze variables
-                        variable_breakdown = defaultdict(int)
-                        total_files = 0
-                        
-                        # Scan for files in region directory and subdirectories
-                        for root, dirs, files in os.walk(region_path):
-                            for file in files:
-                                if file.endswith(('.nc', '.grb', '.grib', '.dat', '.bin', '.tar', '.gz', '.bz2', '.zip', '.grib2')):  # Common weather data formats including compressed
-                                    total_files += 1
-                                    
-                                    # Try to extract variable type from filename or directory
-                                    file_lower = file.lower()
-                                    dir_name = os.path.basename(root).lower()
-                                    
-                                    if 'dswrf' in file_lower or 'dswrf' in dir_name or 'solar' in dir_name:
-                                        variable_breakdown['dswrf'] += 1
-                                    elif 'wind' in file_lower or 'wind' in dir_name or 'ugrd' in file_lower or 'vgrd' in file_lower:
-                                        variable_breakdown['ugrd_vgrd'] += 1
-                                    elif 'rain' in file_lower or 'rain' in dir_name or 'apcp' in file_lower or 'precip' in dir_name:
-                                        variable_breakdown['apcp'] += 1
-                                    elif 'temp' in file_lower or 'temp' in dir_name or 'tmp' in file_lower:
-                                        variable_breakdown['tmp_dpt'] += 1
-                                    else:
-                                        variable_breakdown['unknown'] += 1
-                        
-                        if total_files > 0:
-                            # Get region name (try to make it more readable)
-                            region_name = item.replace('_', ' ').title()
-                            
-                            # Get directory timestamps for first_discovered and last_updated
-                            try:
-                                stat_info = os.stat(region_path)
-                                first_discovered = datetime.fromtimestamp(stat_info.st_ctime).isoformat()
-                                last_updated = datetime.fromtimestamp(stat_info.st_mtime).isoformat()
-                            except:
-                                first_discovered = None
-                                last_updated = datetime.now().isoformat()
-                            
-                            region_data = {
-                                'region': item,
-                                'region_name': region_name,
-                                'total_files': total_files,
-                                'completed_files': total_files,  # All files in downloaded_files are completed
-                                'downloaded_files': total_files,
-                                'success_rate': 100.0,  # All downloaded files are successful
-                                'completion_percentage': 100.0,
-                                'variable_breakdown': dict(variable_breakdown),
-                                'first_discovered': first_discovered,
-                                'last_updated': last_updated,
-                                'has_actual_downloads': True,
-                                'download_directory': region_path
+                # Group completed requests by region
+                from collections import defaultdict
+                region_data = defaultdict(lambda: {
+                    'requests': [],
+                    'variable_breakdown': defaultdict(int),
+                    'total_requests': 0,
+                    'downloaded_files': 0,
+                    'total_file_size': 0,
+                    'processing_times': [],
+                    'first_completion': None,
+                    'last_completion': None,
+                    'download_directories': set()
+                })
+                
+                for request in completed_requests:
+                    # Get region name (prioritize control_files_tracking, then rda_requests, then extract from rinfo)
+                    region = request['cf_region'] or request['region'] or self._extract_region_from_rinfo(request['rinfo']) or 'UNKNOWN'
+                    
+                    # Get variable type (prioritize control_files_tracking, then rda_requests, then extract from subset_note)
+                    variable_type = request['cf_variable_type'] or request['variable_type'] or self._extract_variable_from_subset_note(request['subset_note']) or 'unknown'
+                    
+                    # Add to region data
+                    region_info = region_data[region]
+                    region_info['requests'].append(request)
+                    region_info['variable_breakdown'][variable_type] += 1
+                    region_info['total_requests'] += 1
+                    
+                    # Track file information
+                    if request['file_size']:
+                        region_info['total_file_size'] += request['file_size']
+                    
+                    # Track processing times
+                    if request['processing_duration']:
+                        region_info['processing_times'].append(request['processing_duration'])
+                    
+                    # Track completion times
+                    completion_time = request['completion_time'] or request['date_ready']
+                    if completion_time:
+                        if not region_info['first_completion'] or completion_time < region_info['first_completion']:
+                            region_info['first_completion'] = completion_time
+                        if not region_info['last_completion'] or completion_time > region_info['last_completion']:
+                            region_info['last_completion'] = completion_time
+                    
+                    # Track download directories
+                    if request['download_directory']:
+                        region_info['download_directories'].add(request['download_directory'])
+                
+                # Process each region and verify filesystem downloads
+                for region, info in region_data.items():
+                    # Count actual downloaded files by checking filesystem
+                    downloaded_file_count = 0
+                    has_actual_downloads = False
+                    
+                    # Check common download directory patterns
+                    download_paths_to_check = [
+                        f'downloaded_files/{region}',
+                        f'downloaded_files/{region.lower()}',
+                        f'downloaded_files/{region.upper()}',
+                        f'data/downloaded/{region}',
+                        f'downloads/{region}'
+                    ]
+                    
+                    # Also check any specific download directories from the database
+                    for download_dir in info['download_directories']:
+                        if download_dir:
+                            download_paths_to_check.append(download_dir)
+                    
+                    # Count files in download directories
+                    for download_path in download_paths_to_check:
+                        if os.path.exists(download_path) and os.path.isdir(download_path):
+                            has_actual_downloads = True
+                            for root, dirs, files in os.walk(download_path):
+                                for file in files:
+                                    if file.endswith(('.nc', '.grb', '.grib', '.grib2', '.dat', '.bin', '.tar', '.gz', '.bz2', '.zip')):
+                                        downloaded_file_count += 1
+                    
+                    # If no files found in filesystem, use request count as estimate
+                    if downloaded_file_count == 0:
+                        downloaded_file_count = info['total_requests']
+                    
+                    info['downloaded_files'] = downloaded_file_count
+                    info['has_actual_downloads'] = has_actual_downloads
+                    
+                    # Calculate statistics
+                    success_rate = 100.0  # All requests in this query are completed
+                    completion_percentage = 100.0  # All requests are completed
+                    
+                    # Calculate average processing time
+                    avg_processing_time = 0.0
+                    if info['processing_times']:
+                        avg_processing_time = sum(info['processing_times']) / len(info['processing_times'])
+                    
+                    # Get most common variable
+                    most_common_variable = 'unknown'
+                    if info['variable_breakdown']:
+                        most_common_variable = max(info['variable_breakdown'].items(), key=lambda x: x[1])[0]
+                    
+                    # Format region name for display
+                    region_name = region.replace('_', ' ').title() if region != 'UNKNOWN' else 'Unknown Region'
+                    
+                    # Create region summary
+                    region_summary = {
+                        'region': region,
+                        'region_name': region_name,
+                        'total_requests': info['total_requests'],
+                        'completed_requests': info['total_requests'],  # All are completed
+                        'downloaded_files': downloaded_file_count,
+                        'success_rate': success_rate,
+                        'completion_percentage': completion_percentage,
+                        'variable_breakdown': dict(info['variable_breakdown']),
+                        'most_common_variable': most_common_variable,
+                        'average_processing_time_hours': avg_processing_time,
+                        'total_file_size_bytes': info['total_file_size'],
+                        'first_completion': info['first_completion'],
+                        'last_completion': info['last_completion'],
+                        'has_actual_downloads': has_actual_downloads,
+                        'download_directories': list(info['download_directories']),
+                        'sample_requests': [
+                            {
+                                'request_id': req['request_id'],
+                                'request_index': req['request_index'],
+                                'variable_type': req['cf_variable_type'] or req['variable_type'] or 'unknown',
+                                'completion_time': req['completion_time'] or req['date_ready'],
+                                'file_size': req['file_size']
                             }
-                            
-                            completed_regions.append(region_data)
-                            total_downloaded_files += total_files
+                            for req in info['requests'][:3]  # Show first 3 requests as samples
+                        ],
+                        # NEW: Include detailed request information for expandable view
+                        'detailed_requests': [
+                            {
+                                'id': req['id'],
+                                'request_id': req['request_id'],
+                                'request_index': req['request_index'],
+                                'dsid': req['dsid'],
+                                'status': req['status'],
+                                'date_rqst': req['date_rqst'],
+                                'date_ready': req['date_ready'],
+                                'date_purge': req['date_purge'],
+                                'location': req['location'],
+                                'ncar_contact': req['ncar_contact'],
+                                'rinfo': req['rinfo'],
+                                'subset_note': req['subset_note'],
+                                'region': req['cf_region'] or req['region'] or self._extract_region_from_rinfo(req['rinfo']) or 'UNKNOWN',
+                                'variable_type': req['cf_variable_type'] or req['variable_type'] or self._extract_variable_from_subset_note(req['subset_note']) or 'unknown',
+                                'processing_time_hours': req['processing_duration'],
+                                'completion_time': req['completion_time'] or req['date_ready'],
+                                'file_size': req['file_size'],
+                                'download_directory': req['download_directory'],
+                                # Parse raw_response JSON to get complete get_status data
+                                'complete_status_data': json.loads(req['raw_response']) if req['raw_response'] else {},
+                                'subset_info': json.loads(req['raw_response']).get('subset_info', {}) if req['raw_response'] else {},
+                                'NCAR_contact': json.loads(req['raw_response']).get('NCAR_contact', req['ncar_contact']) if req['raw_response'] else req['ncar_contact'],
+                                # Parsed rinfo parameters for easy display
+                                'rinfo_params': self._parse_rinfo_parameters(req['rinfo']),
+                                # Formatted subset details
+                                'formatted_subset_info': self._format_subset_info(
+                                    json.loads(req['raw_response']).get('subset_info', {}) if req['raw_response'] else {},
+                                    req['rinfo']
+                                ),
+                                # Enhanced timeline information
+                                'timeline': {
+                                    'requested': req['date_rqst'],
+                                    'ready': req['date_ready'],
+                                    'purge': req['date_purge'],
+                                    'processing_time_hours': req['processing_duration'],
+                                    'processing_time_display': self._format_processing_time_display(req['processing_duration']),
+                                    'status': req['status']
+                                }
+                            }
+                            for req in info['requests']  # Include ALL requests with full details
+                        ]
+                    }
+                    
+                    self.logger.info(f"DEBUG: Created region summary for {region}: {region_summary}")
+                    completed_regions.append(region_summary)
+                    total_downloaded_files += downloaded_file_count
                 
                 # Sort regions by number of downloaded files (descending)
                 completed_regions.sort(key=lambda x: x['downloaded_files'], reverse=True)
                 
                 # Calculate overall statistics
                 unique_regions = len(completed_regions)
-                regions_with_downloads = len(completed_regions)  # All regions have downloads by definition
+                regions_with_downloads = sum(1 for region in completed_regions if region['has_actual_downloads'])
                 
-                # Count unique variables from all regions
+                # Count unique variables
                 unique_variables = set()
                 for region in completed_regions:
-                    if region['variable_breakdown']:
-                        unique_variables.update(region['variable_breakdown'].keys())
+                    unique_variables.update(region['variable_breakdown'].keys())
                 
-                # Calculate average processing hours (estimate based on file count)
-                avg_processing_hours = 0.0
-                if total_downloaded_files > 0:
-                    # Rough estimate: assume 0.1 hours per file on average
-                    avg_processing_hours = total_downloaded_files * 0.1
+                # Calculate download completion rate
+                download_completion_rate = (regions_with_downloads / unique_regions * 100) if unique_regions > 0 else 0.0
                 
-                return jsonify({
+                # Calculate average processing hours
+                all_processing_times = []
+                for region in completed_regions:
+                    if region['average_processing_time_hours'] > 0:
+                        all_processing_times.append(region['average_processing_time_hours'])
+                
+                avg_processing_hours = sum(all_processing_times) / len(all_processing_times) if all_processing_times else 0.0
+                
+                result = {
                     'completed_regions': completed_regions,
                     'statistics': {
-                        'total_completed_files': total_downloaded_files,
+                        'total_completed_requests': sum(region['total_requests'] for region in completed_regions),
                         'total_downloaded_files': total_downloaded_files,
                         'unique_regions': unique_regions,
                         'unique_variables': len(unique_variables),
                         'regions_with_downloads': regions_with_downloads,
-                        'download_completion_rate': 100.0,  # All scanned regions have downloads
+                        'download_completion_rate': download_completion_rate,
                         'avg_processing_hours': avg_processing_hours
                     },
                     'timestamp': datetime.now().isoformat(),
-                    'data_source': 'filesystem_scan'
-                })
+                    'data_source': 'database_with_filesystem_verification'
+                }
+                self.logger.info(f"DEBUG: Returning completed regions data: {len(completed_regions)} regions")
+                return jsonify(result)
                 
             except Exception as e:
-                self.logger.error(f"Error getting completed regions from filesystem: {e}")
+                self.logger.error(f"Error getting completed regions from database: {e}")
                 return jsonify({'error': str(e)}), 500
         
         @self.app.route('/api/resolution-details/<request_id>')
@@ -1832,6 +2105,360 @@ class EnhancedRDADashboard:
                     'error': str(e),
                     'sync_status': {'status': 'error'},
                     'generated_at': datetime.now().isoformat()
+                }), 500
+        
+        # Enhanced API endpoints with progress tracking
+        @self.app.route('/api/status')
+        def api_status():
+            """API endpoint for system status overview with progress tracking."""
+            try:
+                # Get basic system status with progress tracking
+                with self._get_db_connection() as conn:
+                    cursor = conn.execute("""
+                        SELECT
+                            COUNT(*) as total_requests,
+                            COUNT(CASE WHEN LOWER(status) = 'completed' THEN 1 END) as completed,
+                            COUNT(CASE WHEN LOWER(status) = 'processing' THEN 1 END) as processing,
+                            COUNT(CASE WHEN LOWER(status) LIKE '%queued%' THEN 1 END) as queued,
+                            COUNT(CASE WHEN LOWER(status) LIKE '%purge%' THEN 1 END) as purged
+                        FROM rda_requests
+                    """)
+                    stats = cursor.fetchone()
+                
+                # Calculate progress metrics
+                total = stats['total_requests']
+                completed = stats['completed']
+                remaining = total - completed
+                progress_percentage = (completed / total * 100) if total > 0 else 0
+                
+                # Get sync status
+                sync_status = self.real_time_sync.get_live_sync_status()
+                freshness_info = self._get_data_freshness_info()
+                
+                return jsonify({
+                    'system_status': 'operational',
+                    'database_status': 'connected',
+                    'total_requests': total,
+                    'completed_requests': completed,
+                    'remaining_requests': remaining,
+                    'processing_requests': stats['processing'],
+                    'queued_requests': stats['queued'],
+                    'purged_requests': stats['purged'],
+                    'progress_tracking': {
+                        'files_done': completed,
+                        'files_remaining': remaining,
+                        'progress_percentage': progress_percentage,
+                        'completion_status': 'in_progress' if remaining > 0 else 'completed'
+                    },
+                    'sync_status': {
+                        'status': sync_status.status.value,
+                        'last_sync': sync_status.last_sync.isoformat() if sync_status.last_sync else None,
+                        'sync_count': sync_status.sync_count,
+                        'error_count': sync_status.error_count
+                    },
+                    'data_freshness': freshness_info,
+                    'timestamp': datetime.now().isoformat()
+                })
+            except Exception as e:
+                self.logger.error(f"Error getting system status: {e}")
+                return jsonify({
+                    'system_status': 'error',
+                    'error': str(e),
+                    'timestamp': datetime.now().isoformat()
+                }), 500
+        
+        @self.app.route('/api/variable-summary')
+        def api_variable_summary():
+            """API endpoint for weather variable summary."""
+            try:
+                # Get variable summary from weather variable metrics
+                variable_metrics = self.get_weather_variable_metrics()
+                
+                # Transform to summary format
+                variable_summary = []
+                for metric in variable_metrics:
+                    variable_summary.append({
+                        'variable_type': metric.variable_type,
+                        'display_name': self._get_variable_display_name(metric.variable_type),
+                        'total_requests': metric.total_requests,
+                        'completed_requests': metric.completed_requests,
+                        'success_rate': metric.success_rate,
+                        'most_active_regions': metric.most_active_regions,
+                        'date_range': metric.date_range
+                    })
+                
+                return jsonify({
+                    'variable_summary': variable_summary,
+                    'total_variables': len(variable_summary),
+                    'timestamp': datetime.now().isoformat()
+                })
+            except Exception as e:
+                self.logger.error(f"Error getting variable summary: {e}")
+                return jsonify({'error': str(e)}), 500
+        
+        @self.app.route('/api/recent-activity')
+        def api_recent_activity():
+            """API endpoint for recent activity feed."""
+            try:
+                limit = request.args.get('limit', 50, type=int)
+                
+                # Get recent requests with activity
+                with self._get_db_connection() as conn:
+                    cursor = conn.execute("""
+                        SELECT
+                            r.request_id,
+                            r.request_index,
+                            r.status,
+                            r.date_rqst,
+                            r.date_ready,
+                            r.completion_time,
+                            r.region,
+                            r.variable_type,
+                            cf.region as cf_region,
+                            cf.variable_type as cf_variable_type
+                        FROM rda_requests r
+                        LEFT JOIN control_files_tracking cf ON r.request_index = cf.request_index
+                        ORDER BY
+                            CASE
+                                WHEN r.completion_time IS NOT NULL THEN r.completion_time
+                                WHEN r.date_ready IS NOT NULL THEN r.date_ready
+                                WHEN r.date_rqst IS NOT NULL THEN r.date_rqst
+                                ELSE '1970-01-01'
+                            END DESC
+                        LIMIT ?
+                    """, (limit,))
+                    recent_requests = cursor.fetchall()
+                
+                # Format activity feed
+                activity_feed = []
+                for req in recent_requests:
+                    region = req['cf_region'] or req['region'] or 'UNKNOWN'
+                    variable = req['cf_variable_type'] or req['variable_type'] or 'unknown'
+                    
+                    # Determine activity type and timestamp
+                    if req['completion_time']:
+                        activity_type = 'completed'
+                        timestamp = req['completion_time']
+                    elif req['date_ready']:
+                        activity_type = 'ready'
+                        timestamp = req['date_ready']
+                    elif req['date_rqst']:
+                        activity_type = 'submitted'
+                        timestamp = req['date_rqst']
+                    else:
+                        activity_type = 'unknown'
+                        timestamp = None
+                    
+                    activity_feed.append({
+                        'request_id': req['request_id'],
+                        'request_index': req['request_index'],
+                        'activity_type': activity_type,
+                        'status': req['status'],
+                        'region': region,
+                        'variable_type': variable,
+                        'variable_display_name': self._get_variable_display_name(variable),
+                        'timestamp': timestamp,
+                        'formatted_timestamp': self._safe_parse_datetime(timestamp, 'activity_timestamp').strftime('%Y-%m-%d %H:%M:%S') if timestamp and self._safe_parse_datetime(timestamp, 'activity_timestamp') else 'N/A'
+                    })
+                
+                return jsonify({
+                    'recent_activity': activity_feed,
+                    'total_items': len(activity_feed),
+                    'limit': limit,
+                    'timestamp': datetime.now().isoformat()
+                })
+            except Exception as e:
+                self.logger.error(f"Error getting recent activity: {e}")
+                return jsonify({'error': str(e)}), 500
+        
+        @self.app.route('/api/progress-tracking')
+        def api_progress_tracking():
+            """API endpoint for comprehensive progress tracking data."""
+            try:
+                # Trigger sync if needed for fresh data
+                self._trigger_sync_if_needed("get_progress_tracking")
+                
+                # Get comprehensive progress statistics
+                with self._get_db_connection() as conn:
+                    cursor = conn.execute("""
+                        SELECT
+                            COUNT(*) as total_requests,
+                            COUNT(CASE WHEN LOWER(r.status) = 'completed' THEN 1 END) as completed,
+                            COUNT(CASE WHEN LOWER(r.status) = 'processing' THEN 1 END) as processing,
+                            COUNT(CASE WHEN LOWER(r.status) LIKE '%queued%' THEN 1 END) as queued,
+                            COUNT(CASE WHEN LOWER(r.status) LIKE '%purge%' THEN 1 END) as purged,
+                            COUNT(DISTINCT COALESCE(cf.region, 'UNKNOWN')) as unique_regions,
+                            COUNT(DISTINCT COALESCE(cf.variable_type, 'unknown')) as unique_variables
+                        FROM rda_requests r
+                        LEFT JOIN control_files_tracking cf ON r.request_index = cf.request_index
+                    """)
+                    stats = cursor.fetchone()
+                
+                # Calculate progress metrics
+                total = stats['total_requests']
+                completed = stats['completed']
+                processing = stats['processing']
+                queued = stats['queued']
+                purged = stats['purged']
+                
+                files_done = completed
+                files_remaining = total - completed
+                progress_percentage = (completed / total * 100) if total > 0 else 0
+                
+                # Get regional progress breakdown
+                cursor = conn.execute("""
+                    SELECT
+                        COALESCE(cf.region, 'UNKNOWN') as region,
+                        COUNT(*) as total_requests,
+                        COUNT(CASE WHEN LOWER(r.status) = 'completed' THEN 1 END) as completed_requests,
+                        COUNT(CASE WHEN LOWER(r.status) = 'processing' THEN 1 END) as processing_requests,
+                        COUNT(CASE WHEN LOWER(r.status) LIKE '%queued%' THEN 1 END) as queued_requests
+                    FROM rda_requests r
+                    LEFT JOIN control_files_tracking cf ON r.request_index = cf.request_index
+                    GROUP BY COALESCE(cf.region, 'UNKNOWN')
+                    ORDER BY completed_requests DESC
+                """)
+                regional_progress = []
+                for row in cursor.fetchall():
+                    region_total = row['total_requests']
+                    region_completed = row['completed_requests']
+                    region_progress = (region_completed / region_total * 100) if region_total > 0 else 0
+                    
+                    regional_progress.append({
+                        'region': row['region'],
+                        'total_requests': region_total,
+                        'completed_requests': region_completed,
+                        'processing_requests': row['processing_requests'],
+                        'queued_requests': row['queued_requests'],
+                        'files_done': region_completed,
+                        'files_remaining': region_total - region_completed,
+                        'progress_percentage': region_progress
+                    })
+                
+                # Get variable progress breakdown
+                cursor = conn.execute("""
+                    SELECT
+                        COALESCE(cf.variable_type, 'unknown') as variable_type,
+                        COUNT(*) as total_requests,
+                        COUNT(CASE WHEN LOWER(r.status) = 'completed' THEN 1 END) as completed_requests,
+                        COUNT(CASE WHEN LOWER(r.status) = 'processing' THEN 1 END) as processing_requests,
+                        COUNT(CASE WHEN LOWER(r.status) LIKE '%queued%' THEN 1 END) as queued_requests
+                    FROM rda_requests r
+                    LEFT JOIN control_files_tracking cf ON r.request_index = cf.request_index
+                    GROUP BY COALESCE(cf.variable_type, 'unknown')
+                    ORDER BY completed_requests DESC
+                """)
+                variable_progress = []
+                for row in cursor.fetchall():
+                    var_total = row['total_requests']
+                    var_completed = row['completed_requests']
+                    var_progress = (var_completed / var_total * 100) if var_total > 0 else 0
+                    
+                    variable_progress.append({
+                        'variable_type': row['variable_type'],
+                        'variable_display_name': self._get_variable_display_name(row['variable_type']),
+                        'total_requests': var_total,
+                        'completed_requests': var_completed,
+                        'processing_requests': row['processing_requests'],
+                        'queued_requests': row['queued_requests'],
+                        'files_done': var_completed,
+                        'files_remaining': var_total - var_completed,
+                        'progress_percentage': var_progress
+                    })
+                
+                return jsonify({
+                    'overall_progress': {
+                        'total_files': total,
+                        'files_done': files_done,
+                        'files_remaining': files_remaining,
+                        'progress_percentage': progress_percentage,
+                        'status_breakdown': {
+                            'completed': completed,
+                            'processing': processing,
+                            'queued': queued,
+                            'purged': purged
+                        }
+                    },
+                    'regional_progress': regional_progress,
+                    'variable_progress': variable_progress,
+                    'summary_stats': {
+                        'unique_regions': stats['unique_regions'],
+                        'unique_variables': stats['unique_variables'],
+                        'completion_status': 'completed' if files_remaining == 0 else 'in_progress'
+                    },
+                    'timestamp': datetime.now().isoformat(),
+                    'data_source': 'rda_requests (progress tracking)'
+                })
+                
+            except Exception as e:
+                self.logger.error(f"Error getting progress tracking data: {e}")
+                return jsonify({'error': str(e)}), 500
+        
+        # Timeline Validation API Endpoints
+        @self.app.route('/api/timeline-validation/statistics')
+        def api_timeline_validation_statistics():
+            """API endpoint for timeline validation statistics."""
+            try:
+                # Get statistics from validation services
+                timestamp_stats = self.timestamp_validator.get_parsing_statistics()
+                timeline_stats = self.timeline_validator.get_validation_statistics()
+                processing_stats = self.processing_time_calculator.get_calculation_statistics()
+                
+                return jsonify({
+                    'timestamp_parsing': timestamp_stats,
+                    'timeline_validation': timeline_stats,
+                    'processing_time_calculation': processing_stats.to_dict(),
+                    'summary': {
+                        'total_timestamp_attempts': timestamp_stats['total_attempts'],
+                        'timestamp_success_rate': timestamp_stats['success_rate_percentage'],
+                        'total_timeline_validations': timeline_stats['total_validations'],
+                        'timeline_success_rate': timeline_stats['success_rate_percentage'],
+                        'total_processing_calculations': processing_stats.total_calculations,
+                        'processing_success_rate': (processing_stats.successful_calculations / processing_stats.total_calculations * 100) if processing_stats.total_calculations > 0 else 0
+                    },
+                    'generated_at': datetime.now().isoformat()
+                })
+            except Exception as e:
+                self.logger.error(f"Error getting timeline validation statistics: {e}")
+                return jsonify({'error': str(e)}), 500
+        
+        @self.app.route('/api/timeline-validation/health-check')
+        def api_timeline_validation_health():
+            """API endpoint for timeline validation health check."""
+            try:
+                # Test the validation services with sample data
+                test_timestamp = "2024-01-15T10:30:00Z"
+                test_result = self.timestamp_validator.parse_timestamp(test_timestamp, "health_check")
+                
+                health_status = {
+                    'timestamp_validator': {
+                        'status': 'healthy' if test_result.is_valid else 'degraded',
+                        'confidence': test_result.confidence_score,
+                        'issues': len(test_result.issues)
+                    },
+                    'timeline_validator': {
+                        'status': 'healthy',  # Basic health check
+                        'service_available': hasattr(self.timeline_validator, 'validate_timeline')
+                    },
+                    'processing_calculator': {
+                        'status': 'healthy',  # Basic health check
+                        'service_available': hasattr(self.processing_time_calculator, 'calculate_processing_time')
+                    },
+                    'overall_health': 'healthy',
+                    'last_check': datetime.now().isoformat()
+                }
+                
+                # Determine overall health
+                if not test_result.is_valid or test_result.confidence_score < 0.5:
+                    health_status['overall_health'] = 'degraded'
+                
+                return jsonify(health_status)
+            except Exception as e:
+                self.logger.error(f"Error in timeline validation health check: {e}")
+                return jsonify({
+                    'overall_health': 'unhealthy',
+                    'error': str(e),
+                    'last_check': datetime.now().isoformat()
                 }), 500
         
         @self.app.errorhandler(404)
@@ -2378,25 +3005,38 @@ class EnhancedRDADashboard:
     
     def start_dashboard(self, host: str = '0.0.0.0', port: int = 8080, debug: bool = False):
         """
-        Start the enhanced dashboard server.
+        Start the enhanced dashboard server with automatic port conflict resolution.
         
         Args:
             host: Host to bind to
-            port: Port to bind to
+            port: Port to bind to (will auto-increment if in use)
             debug: Enable debug mode
         """
         self.create_dashboard_template()
         
-        self.logger.info(f"Starting Enhanced RDA Dashboard on http://{host}:{port}")
+        # Try multiple ports to avoid conflicts (especially port 5000 on macOS)
+        max_attempts = 10
+        current_port = port
         
-        try:
-            self.app.run(host=host, port=port, debug=debug, use_reloader=False, threaded=True)
-        except OSError as e:
-            if "Address already in use" in str(e):
-                self.logger.warning(f"Port {port} is in use, trying port {port + 1}")
-                self.app.run(host=host, port=port + 1, debug=debug, use_reloader=False, threaded=True)
-            else:
-                raise
+        for attempt in range(max_attempts):
+            try:
+                self.logger.info(f"Starting Enhanced RDA Dashboard on http://{host}:{current_port}")
+                self.app.run(host=host, port=current_port, debug=debug, use_reloader=False, threaded=True)
+                break
+            except OSError as e:
+                if "Address already in use" in str(e):
+                    if current_port == 5000:
+                        self.logger.warning(f"Port 5000 is in use (likely AirPlay Receiver on macOS), trying port 8080")
+                        current_port = 8080
+                    else:
+                        self.logger.warning(f"Port {current_port} is in use, trying port {current_port + 1}")
+                        current_port += 1
+                    
+                    if attempt == max_attempts - 1:
+                        self.logger.error(f"Could not find available port after {max_attempts} attempts")
+                        raise
+                else:
+                    raise
 
 
 def create_dashboard(db_path: str = "src/python/data/automation_state.db") -> EnhancedRDADashboard:

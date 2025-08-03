@@ -472,28 +472,60 @@
         }
         
         function getParameterDisplayName(param) {
+            // Handle undefined, null, or empty parameter values
+            if (!param || typeof param !== 'string') {
+                return 'Unknown Variable';
+            }
+            
+            // Clean the parameter string
+            const cleanParam = param.toLowerCase().trim();
+            
             const names = {
                 'dswrf': 'Solar Radiation',
                 'ugrd_vgrd': 'Wind Speed',
+                'ugrd': 'Wind Speed (U-component)',
+                'vgrd': 'Wind Speed (V-component)',
                 'tmp_dpt': 'Temperature',
-                'apcp': 'Precipitation'
+                'tmp': 'Temperature',
+                'dpt': 'Dew Point Temperature',
+                'apcp': 'Precipitation',
+                'rain': 'Precipitation',
+                'wind': 'Wind Speed',
+                'temp': 'Temperature',
+                'solar': 'Solar Radiation',
+                'radiation': 'Solar Radiation',
+                'unknown': 'Unknown Variable'
             };
-            return names[param] || param.toUpperCase();
+            
+            // Return mapped name or formatted original parameter
+            return names[cleanParam] || param.replace(/_/g, ' ').toUpperCase();
         }
         
         function toggleRequestDetails(requestId) {
+            console.log('DEBUG: toggleRequestDetails called for:', requestId);
             const card = document.getElementById(`card-${requestId}`);
             const details = document.getElementById(`details-${requestId}`);
             const icon = document.getElementById(`icon-${requestId}`);
             
-            if (details.classList.contains('expanded')) {
+            console.log('DEBUG: Elements found:', {
+                card: !!card,
+                details: !!details,
+                icon: !!icon,
+                detailsContent: details ? details.innerHTML.length : 0
+            });
+            
+            if (details && details.classList.contains('expanded')) {
                 details.classList.remove('expanded');
                 card.classList.remove('expanded');
                 icon.classList.remove('expanded');
-            } else {
+                console.log('DEBUG: Collapsed details for:', requestId);
+            } else if (details) {
                 details.classList.add('expanded');
                 card.classList.add('expanded');
                 icon.classList.add('expanded');
+                console.log('DEBUG: Expanded details for:', requestId);
+            } else {
+                console.error('DEBUG: Details element not found for:', requestId);
             }
         }
         
@@ -645,6 +677,136 @@
             `;
         }
         
+        function createCompletedRegionCard(region) {
+            console.log('Creating card for region:', region);
+            console.log('DEBUG: Region data structure:', JSON.stringify(region, null, 2));
+            
+            // FIXED: Use detailed_requests data from backend instead of creating pseudo-requests
+            if (region.detailed_requests && region.detailed_requests.length > 0) {
+                console.log('DEBUG: Using detailed_requests data from backend');
+                
+                // Use the first detailed request as the primary request for the card
+                const primaryRequest = region.detailed_requests[0];
+                console.log('DEBUG: Primary request data:', JSON.stringify(primaryRequest, null, 2));
+                
+                // Create a properly structured request object with all the detailed information
+                const detailedRequest = {
+                    id: primaryRequest.id,
+                    request_id: primaryRequest.request_id,
+                    request_index: primaryRequest.request_index,
+                    dsid: primaryRequest.dsid,
+                    status: primaryRequest.status,
+                    date_rqst: primaryRequest.date_rqst,
+                    date_ready: primaryRequest.date_ready,
+                    date_purge: primaryRequest.date_purge,
+                    location: primaryRequest.location,
+                    ncar_contact: primaryRequest.ncar_contact,
+                    rinfo: primaryRequest.rinfo,
+                    subset_note: primaryRequest.subset_note,
+                    region: primaryRequest.region,
+                    variable_type: primaryRequest.variable_type,
+                    processing_time_hours: primaryRequest.processing_time_hours,
+                    // Complete get_status information from backend
+                    complete_status_data: primaryRequest.complete_status_data || {},
+                    subset_info: primaryRequest.subset_info || {},
+                    NCAR_contact: primaryRequest.NCAR_contact || primaryRequest.ncar_contact,
+                    // Parsed rinfo parameters from backend
+                    rinfo_params: primaryRequest.rinfo_params || {},
+                    // Formatted subset details from backend
+                    formatted_subset_info: primaryRequest.formatted_subset_info || {
+                        raw_note: primaryRequest.subset_note || 'No subset information available',
+                        parameters: [],
+                        date_range: {},
+                        spatial_bounds: {}
+                    },
+                    // Enhanced timeline information from backend
+                    timeline: primaryRequest.timeline || {
+                        requested: primaryRequest.date_rqst,
+                        ready: primaryRequest.date_ready,
+                        purge: primaryRequest.date_purge,
+                        processing_time_hours: primaryRequest.processing_time_hours,
+                        processing_time_display: formatProcessingTime(primaryRequest.processing_time_hours),
+                        status: primaryRequest.status
+                    }
+                };
+                
+                console.log('DEBUG: Created detailed request object:', JSON.stringify(detailedRequest, null, 2));
+                return createRequestCard(detailedRequest);
+            } else {
+                console.log('DEBUG: No detailed_requests available, falling back to pseudo-request creation');
+                
+                // FALLBACK: Create pseudo-request if detailed_requests is not available (backward compatibility)
+                const regionCode = region.region || 'UNKNOWN';
+                const regionName = region.region_name || regionCode.replace('_', ' ').toUpperCase();
+                const mostCommonVariable = region.most_common_variable || 'unknown';
+                const totalRequests = region.total_requests || region.completed_requests || 0;
+                const downloadedFiles = region.downloaded_files || totalRequests;
+                const completionPercentage = region.completion_percentage || 100.0;
+                const avgProcessingTime = region.average_processing_time_hours || 0;
+                const lastCompletion = region.last_completion || region.first_completion || new Date().toISOString();
+                const successRate = region.success_rate || 100.0;
+                
+                // Get sample request for detailed info with better fallbacks
+                const sampleRequest = (region.sample_requests && region.sample_requests.length > 0) ?
+                                    region.sample_requests[0] : {};
+                
+                const requestId = sampleRequest.request_id || `${regionCode}_COMPLETED_${totalRequests}`;
+                const requestIndex = sampleRequest.request_index || `${regionCode}_INDEX_${totalRequests}`;
+                const actualVariableType = mostCommonVariable !== 'unknown' ? mostCommonVariable :
+                                         (sampleRequest.variable_type ||
+                                          (region.variable_breakdown && Object.keys(region.variable_breakdown)[0]) ||
+                                          'dswrf');
+                
+                // Create a pseudo-request object that matches the expected structure
+                const pseudoRequest = {
+                    request_id: requestId,
+                    request_index: requestIndex,
+                    status: 'completed',
+                    region: regionCode,
+                    variable_type: actualVariableType,
+                    date_rqst: sampleRequest.completion_time || lastCompletion,
+                    date_ready: sampleRequest.completion_time || lastCompletion,
+                    date_purge: null,
+                    processing_time_hours: avgProcessingTime,
+                    NCAR_contact: sampleRequest.NCAR_contact || 'N/A',
+                    location: regionName,
+                    dsid: sampleRequest.dsid || 'N/A',
+                    rinfo_params: {
+                        'Total Requests': totalRequests,
+                        'Downloaded Files': downloadedFiles,
+                        'Completion Rate': `${completionPercentage.toFixed(1)}%`,
+                        'Success Rate': `${successRate.toFixed(1)}%`,
+                        'Most Common Variable': getParameterDisplayName(actualVariableType),
+                        'Region Code': regionCode,
+                        'Region Name': regionName
+                    },
+                    formatted_subset_info: {
+                        raw_note: `Region Summary for ${regionName} (${regionCode})\n\n` +
+                                 `Total Requests: ${totalRequests}\n` +
+                                 `Downloaded Files: ${downloadedFiles}\n` +
+                                 `Completion Rate: ${completionPercentage.toFixed(1)}%\n` +
+                                 `Success Rate: ${successRate.toFixed(1)}%\n` +
+                                 `Average Processing Time: ${formatProcessingTime(avgProcessingTime)}\n` +
+                                 `Most Common Variable: ${getParameterDisplayName(actualVariableType)}\n` +
+                                 `Last Completion: ${formatTime(lastCompletion)}\n\n` +
+                                 `Variable Breakdown:\n${Object.entries(region.variable_breakdown || {})
+                                     .map(([variable, count]) => `  ${getParameterDisplayName(variable)}: ${count}`)
+                                     .join('\n')}`,
+                        parameters: [getParameterDisplayName(actualVariableType)],
+                        date_range: {
+                            start: 'N/A',
+                            end: 'N/A',
+                            formatted_start: 'N/A',
+                            formatted_end: 'N/A'
+                        }
+                    }
+                };
+                
+                console.log('DEBUG: Created fallback pseudo-request:', JSON.stringify(pseudoRequest, null, 2));
+                return createRequestCard(pseudoRequest);
+            }
+        }
+        
         async function refreshData() {
             try {
                 // Update summary metrics
@@ -738,15 +900,17 @@
             const container = document.getElementById('completedRegionsContent');
             const statsElement = document.getElementById('completedStats');
             
+            console.log('updateCompletedRegionsDisplay called with data:', data);
+            
             try {
                 // Add error handling for missing data structure
                 if (!data || typeof data !== 'object') {
                     throw new Error('Invalid data structure received');
                 }
                 
-                // Update statistics with safe property access
+                // Update statistics with safe property access and better fallbacks
                 const stats = data.statistics || {};
-                const totalFiles = stats.total_completed_files || stats.total_downloaded_files || 0;
+                const totalFiles = stats.total_completed_requests || stats.total_completed_files || stats.total_downloaded_files || 0;
                 const uniqueRegions = stats.unique_regions || 0;
                 const uniqueVariables = stats.unique_variables || 0;
                 const avgHours = stats.avg_processing_hours || 0;
@@ -760,27 +924,56 @@
                 
                 // Handle completed regions array safely
                 const completedRegions = data.completed_regions || [];
+                console.log('Processing completed regions:', completedRegions.length, 'regions found');
                 
                 if (completedRegions.length === 0) {
                     container.innerHTML = `
                         <div class="alert alert-info">
                             <strong>✅ No Completed Requests</strong><br>
-                            No completed requests found in the system.
+                            No completed requests found in the system. This may be because:<br>
+                            • All requests are still processing<br>
+                            • No requests have been marked as completed yet<br>
+                            • Data synchronization is in progress
                         </div>
                     `;
                     return;
                 }
                 
                 let html = '';
-                completedRegions.forEach(req => {
+                let successfulCards = 0;
+                let failedCards = 0;
+                
+                completedRegions.forEach((region, index) => {
                     try {
-                        html += createRequestCard(req);
+                        console.log(`Processing region ${index}:`, {
+                            region: region.region,
+                            total_requests: region.total_requests,
+                            most_common_variable: region.most_common_variable
+                        });
+                        html += createCompletedRegionCard(region);
+                        successfulCards++;
                     } catch (cardError) {
-                        console.warn('Error creating request card:', cardError, req);
-                        // Skip problematic cards but continue processing
+                        console.warn(`Error creating completed region card ${index}:`, cardError, region);
+                        failedCards++;
+                        // Create a fallback card for problematic regions
+                        html += `
+                            <div class="request-card" style="border-color: #dc3545;">
+                                <div class="request-summary">
+                                    <div class="request-basic-info">
+                                        <div class="request-id">Error Loading Region</div>
+                                        <div class="request-meta">
+                                            <span class="status-badge status-failed">Error</span> |
+                                            ${region.region || 'Unknown Region'} |
+                                            Failed to load data
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
                     }
                 });
                 
+                console.log(`Completed regions processing: ${successfulCards} successful, ${failedCards} failed`);
                 container.innerHTML = html;
                 
             } catch (error) {
@@ -788,7 +981,8 @@
                 container.innerHTML = `
                     <div class="alert alert-danger">
                         <strong>❌ Error Loading Completed Regions</strong><br>
-                        ${error.message || 'An unexpected error occurred while loading completed regions data.'}
+                        ${error.message || 'An unexpected error occurred while loading completed regions data.'}<br>
+                        <small>Check the browser console for more details.</small>
                     </div>
                 `;
                 
