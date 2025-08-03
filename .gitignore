@@ -202,3 +202,7 @@ src/python/downloaded_files/CRISIS_RESOLUTION/
 !.gitkeep
 
 rdams_token.txt
+
+#ignore all pycache files
+**/__pycache__/
+**/*.pyc

@@ -9,6 +9,7 @@
 
 # Configuration and data handling
 pyyaml>=6.0                 # YAML configuration file parsing
+jsonschema>=3.2.0           # Configuration validation
 requests>=2.28.0            # HTTP requests for RDA API communication
 pathlib2>=2.3.7; python_version < '3.4'  # Path handling for older Python versions
 

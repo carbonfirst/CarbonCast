@@ -34,28 +34,58 @@ CarbonCast is a sophisticated **Enhanced RDA (Research Data Archive) Automation 
 
 ## 🚀 Quick Start
 
-Get up and running in 5 minutes with the user-friendly automation starter:
+Get up and running in 5 minutes with our foolproof setup process:
+
+### Option 1: Automated Setup (Recommended) ⚡
 
 ```bash
-# 1. Clone and setup
+# 1. Clone the repository
 git clone <repository-url>
 cd CarbonCast
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-# 2. Install dependencies
-pip install -r src/python/requirements.txt
-
-# 3. Configure RDA authentication
-# Get your token from https://rda.ucar.edu/accounts/profile/
+# 2. Navigate to the Python directory
 cd src/python
+
+# 3. Run the enhanced setup script
+chmod +x setup.sh
+./setup.sh
+
+# 4. Configure RDA authentication
+# Get your token from https://rda.ucar.edu/accounts/profile/
 echo "your_rda_token_here" > rdams_token.txt
 
-# 4. Run the user-friendly automation starter
+# 5. Start the automation system
+source venv/bin/activate
+python start_automation.py
+```
+
+### Option 2: Manual Setup 🔧
+
+```bash
+# 1. Clone and navigate
+git clone <repository-url>
+cd CarbonCast/src/python
+
+# 2. Create virtual environment
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# 3. Install dependencies (IMPORTANT: Use root requirements.txt)
+pip install -r ../../requirements.txt
+
+# 4. Verify installation
+python verify_dependencies.py
+
+# 5. Configure RDA authentication
+echo "your_rda_token_here" > rdams_token.txt
+
+# 6. Run the automation starter
 python start_automation.py
 ```
 
 **🎉 That's it! The system will guide you through the rest!**
+
+> **📖 Need help?** See our comprehensive [Setup Guide](docs/Setup_Guide.md) for detailed instructions, troubleshooting, and advanced configuration options.
 
 The automation starter will:
 - ✅ Check all prerequisites automatically
@@ -73,14 +103,22 @@ The automation starter will:
 - **10GB+ Disk Space** for downloads and logs
 
 ### Dependencies
+
+**⚠️ IMPORTANT:** Always use the root [`requirements.txt`](requirements.txt) for installation.
+
 ```bash
-# Core dependencies (automatically installed)
-requests>=2.25.0    # RDA API communication
-flask>=2.0.0        # Web dashboard
-psutil>=5.8.0       # System monitoring
-pyyaml>=5.4.0       # Configuration files
-jsonschema>=3.2.0   # Configuration validation
+# Core dependencies (automatically installed from requirements.txt)
+requests>=2.25.0     # RDA API communication
+flask>=2.0.0         # Web dashboard
+flask-cors>=4.0.0    # Dashboard CORS support (CRITICAL)
+psutil>=5.8.0        # System monitoring
+pyyaml>=5.4.0        # Configuration files
+jsonschema>=3.2.0    # Configuration validation
+numpy>=1.21.0        # Data processing
+pandas>=1.5.0        # Data analysis
 ```
+
+**📖 For detailed dependency information and troubleshooting, see our [Setup Guide](docs/Setup_Guide.md).**
 
 ## 🎮 Interactive Usage
 
@@ -370,15 +408,48 @@ dashboard.start_dashboard(port=5001)
 
 ## 🚨 Troubleshooting
 
-### Common Issues
+### Common Setup Issues
 
 | Issue | Symptoms | Solution |
 |-------|----------|----------|
-| **Import Error** | `ModuleNotFoundError` | Run from `src/python` directory |
-| **Missing Token** | `❌ RDA token file not found` | Create `rdams_token.txt` with your token |
+| **flask-cors Import Error** | `ModuleNotFoundError: No module named 'flask_cors'` | Use correct requirements: `pip install -r src/python/requirements.txt` |
+| **fix_completed_requests Import Error** | `ImportError: cannot import name 'fix_completed_requests'` | Run from `src/python` directory: `cd src/python` |
+| **Wrong Requirements File** | Multiple dependency errors | Use `src/python/requirements.txt`, NOT root `requirements.txt` |
+| **Python Version** | Various import/syntax errors | Upgrade to Python 3.8+: `python3 --version` |
+| **Virtual Environment** | System-wide package conflicts | Create venv: `python3 -m venv venv && source venv/bin/activate` |
+| **Missing Token** | `❌ RDA token file not found` | Create `rdams_token.txt` with your token in `src/python/` |
 | **No Control Files** | `❌ No control files found` | Add `.ctl` files to `control_files/` directory |
 | **Port in Use** | Dashboard fails to start | Kill process: `lsof -ti:5001 \| xargs kill -9` |
 | **Database Error** | SQLite issues | Delete and recreate: `rm -f data/automation_state.db` |
+
+### Dependency Issues Quick Fix
+
+```bash
+# Navigate to correct directory
+cd src/python
+
+# Verify your setup
+python verify_dependencies.py --verbose
+
+# Auto-fix missing dependencies
+python verify_dependencies.py --fix
+
+# Or run the full setup script
+./setup.sh
+```
+
+### Emergency Reset
+
+If everything is broken:
+
+```bash
+# Clean slate reset
+cd src/python
+rm -rf venv
+./setup.sh
+echo "your_rda_token_here" > rdams_token.txt
+python start_automation.py
+```
 
 ### Quick Diagnostics
 
