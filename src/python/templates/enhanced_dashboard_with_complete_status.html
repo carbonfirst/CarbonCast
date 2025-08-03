@@ -433,6 +433,134 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             transform: translateY(-2px);
         }
+        
+        /* Completed Region Cards - Expandable */
+        .completed-region-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin: 15px;
+            background: white;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+        .completed-region-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .completed-region-card.expanded {
+            border-color: #007bff;
+            box-shadow: 0 4px 12px rgba(0,123,255,0.2);
+        }
+        
+        .completed-region-summary {
+            padding: 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .completed-region-summary:hover {
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+        }
+        
+        .completed-region-basic-info {
+            flex: 1;
+        }
+        .completed-region-name {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .completed-region-meta {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        
+        .completed-region-expand-icon {
+            font-size: 1.2em;
+            color: white;
+            transition: transform 0.3s ease;
+        }
+        .completed-region-expand-icon.expanded {
+            transform: rotate(180deg);
+        }
+        
+        .completed-region-details {
+            display: none;
+            border-top: 1px solid #eee;
+            background: #f9f9f9;
+        }
+        .completed-region-card.expanded .completed-region-details {
+            display: block;
+        }
+        
+        /* Nested Request Cards */
+        .nested-request-card {
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            margin: 10px 15px;
+            background: white;
+            transition: all 0.3s ease;
+        }
+        .nested-request-card:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .nested-request-card.expanded {
+            border-color: #28a745;
+        }
+        
+        .nested-request-summary {
+            padding: 12px 15px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .nested-request-summary:hover {
+            background: #f8f9fa;
+        }
+        
+        .nested-request-basic-info {
+            flex: 1;
+        }
+        .nested-request-id {
+            font-weight: bold;
+            color: #28a745;
+            font-size: 0.95em;
+        }
+        .nested-request-meta {
+            color: #666;
+            font-size: 0.85em;
+            margin-top: 3px;
+        }
+        
+        .nested-expand-icon {
+            font-size: 1em;
+            color: #666;
+            transition: transform 0.3s ease;
+        }
+        .nested-expand-icon.expanded {
+            transform: rotate(180deg);
+        }
+        
+        .nested-request-details {
+            display: none;
+            border-top: 1px solid #eee;
+            padding: 15px;
+            background: #fdfdfd;
+        }
+        .nested-request-card.expanded .nested-request-details {
+            display: block;
+        }
+        
+        .requests-list-header {
+            padding: 15px 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            font-weight: 500;
+            color: #495057;
+        }
         .region-card-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -1055,9 +1183,246 @@
             `;
         }
         
+        function toggleCompletedRegionDetails(regionId) {
+            console.log('toggleCompletedRegionDetails called for:', regionId);
+            
+            // Sanitize the region ID for DOM selection
+            const sanitizedId = sanitizeId(regionId);
+            console.log('Sanitized region ID:', sanitizedId);
+            
+            const card = document.getElementById(`completed-card-${sanitizedId}`);
+            const details = document.getElementById(`completed-details-${sanitizedId}`);
+            const icon = document.getElementById(`completed-icon-${sanitizedId}`);
+            
+            // Error handling for missing DOM elements
+            if (!card || !details) {
+                console.error('Required elements not found for completed region:', {
+                    regionId: regionId,
+                    sanitizedId: sanitizedId,
+                    cardFound: !!card,
+                    detailsFound: !!details
+                });
+                return;
+            }
+            
+            // Simple toggle logic using CSS classes
+            const isExpanded = card.classList.contains('expanded');
+            
+            if (isExpanded) {
+                // Collapse
+                card.classList.remove('expanded');
+                if (icon) icon.classList.remove('expanded');
+                console.log('Collapsed completed region details for:', regionId);
+            } else {
+                // Expand
+                card.classList.add('expanded');
+                if (icon) icon.classList.add('expanded');
+                console.log('Expanded completed region details for:', regionId);
+            }
+        }
+        
+        function toggleNestedRequestDetails(requestId, regionId) {
+            console.log('toggleNestedRequestDetails called for:', requestId, 'in region:', regionId);
+            
+            // Sanitize the request ID for DOM selection
+            const sanitizedRequestId = sanitizeId(requestId);
+            const sanitizedRegionId = sanitizeId(regionId);
+            console.log('Sanitized nested request ID:', sanitizedRequestId);
+            
+            const card = document.getElementById(`nested-card-${sanitizedRegionId}-${sanitizedRequestId}`);
+            const details = document.getElementById(`nested-details-${sanitizedRegionId}-${sanitizedRequestId}`);
+            const icon = document.getElementById(`nested-icon-${sanitizedRegionId}-${sanitizedRequestId}`);
+            
+            // Error handling for missing DOM elements
+            if (!card || !details) {
+                console.error('Required elements not found for nested request:', {
+                    requestId: requestId,
+                    regionId: regionId,
+                    sanitizedRequestId: sanitizedRequestId,
+                    sanitizedRegionId: sanitizedRegionId,
+                    cardFound: !!card,
+                    detailsFound: !!details
+                });
+                return;
+            }
+            
+            // Simple toggle logic using CSS classes
+            const isExpanded = card.classList.contains('expanded');
+            
+            if (isExpanded) {
+                // Collapse
+                card.classList.remove('expanded');
+                if (icon) icon.classList.remove('expanded');
+                console.log('Collapsed nested request details for:', requestId);
+            } else {
+                // Expand
+                card.classList.add('expanded');
+                if (icon) icon.classList.add('expanded');
+                console.log('Expanded nested request details for:', requestId);
+            }
+        }
+        
         function formatTime(timeStr) {
             if (!timeStr) return 'N/A';
             return new Date(timeStr).toLocaleString();
+        }
+        
+        function createNestedRequestCard(req, regionId) {
+            // Sanitize IDs for consistent DOM element IDs
+            const sanitizedRequestId = sanitizeId(req.request_id);
+            const sanitizedRegionId = sanitizeId(regionId);
+            const cardId = `nested-card-${sanitizedRegionId}-${sanitizedRequestId}`;
+            const detailsId = `nested-details-${sanitizedRegionId}-${sanitizedRequestId}`;
+            const iconId = `nested-icon-${sanitizedRegionId}-${sanitizedRequestId}`;
+            
+            console.log('Creating nested request card with IDs:', {
+                originalRequestId: req.request_id,
+                regionId: regionId,
+                sanitizedRequestId: sanitizedRequestId,
+                sanitizedRegionId: sanitizedRegionId,
+                cardId: cardId
+            });
+            
+            // Format spatial bounds if available
+            let spatialBoundsHtml = '';
+            if (req.formatted_subset_info && req.formatted_subset_info.spatial_bounds) {
+                const bounds = req.formatted_subset_info.spatial_bounds;
+                spatialBoundsHtml = `
+                    <div class="spatial-bounds">
+                        <div class="bound-item">
+                            <span class="bound-label">North Lat</span>
+                            <span class="bound-value">${bounds.north_lat}°</span>
+                        </div>
+                        <div class="bound-item">
+                            <span class="bound-label">South Lat</span>
+                            <span class="bound-value">${bounds.south_lat}°</span>
+                        </div>
+                        <div class="bound-item">
+                            <span class="bound-label">West Lon</span>
+                            <span class="bound-value">${bounds.west_lon}°</span>
+                        </div>
+                        <div class="bound-item">
+                            <span class="bound-label">East Lon</span>
+                            <span class="bound-value">${bounds.east_lon}°</span>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Format rinfo parameters
+            let rinfoParamsHtml = '';
+            if (req.rinfo_params && Object.keys(req.rinfo_params).length > 0) {
+                rinfoParamsHtml = '<ul class="param-list">';
+                for (const [key, value] of Object.entries(req.rinfo_params)) {
+                    rinfoParamsHtml += `
+                        <li>
+                            <span class="param-key">${key}:</span>
+                            <span class="param-value">${value}</span>
+                        </li>
+                    `;
+                }
+                rinfoParamsHtml += '</ul>';
+            }
+            
+            // Format date range if available
+            let dateRangeHtml = '';
+            if (req.formatted_subset_info && req.formatted_subset_info.date_range) {
+                const dateRange = req.formatted_subset_info.date_range;
+                dateRangeHtml = `
+                    <p><strong>Start:</strong> ${dateRange.formatted_start || dateRange.start}</p>
+                    <p><strong>End:</strong> ${dateRange.formatted_end || dateRange.end}</p>
+                `;
+            }
+            
+            // Format parameters list
+            let parametersHtml = '';
+            if (req.formatted_subset_info && req.formatted_subset_info.parameters) {
+                parametersHtml = '<ul>';
+                req.formatted_subset_info.parameters.forEach(param => {
+                    parametersHtml += `<li>${param}</li>`;
+                });
+                parametersHtml += '</ul>';
+            }
+            
+            return `
+                <div class="nested-request-card" id="${cardId}">
+                    <div class="nested-request-summary" onclick="toggleNestedRequestDetails('${req.request_id}', '${regionId}')" style="cursor: pointer;">
+                        <div class="nested-request-basic-info">
+                            <div class="nested-request-id">${req.request_id.replace(/^id_/, '')}</div>
+                            <div class="nested-request-meta">
+                                ${getStatusBadge(req.status)} |
+                                ${getParameterDisplayName(req.variable_type || 'unknown')} |
+                                Index: ${req.request_index} |
+                                ${formatProcessingTime(req.processing_time_hours)}
+                            </div>
+                        </div>
+                        <div class="nested-expand-icon" id="${iconId}">▼</div>
+                    </div>
+                    <div class="nested-request-details" id="${detailsId}">
+                        <div class="details-grid">
+                            <div class="detail-section">
+                                <h4>📋 Request Information</h4>
+                                <ul class="param-list">
+                                    <li><span class="param-key">Request ID:</span> <span class="param-value">${req.request_id.replace(/^id_/, '')}</span></li>
+                                    <li><span class="param-key">Request Index:</span> <span class="param-value">${req.request_index}</span></li>
+                                    <li><span class="param-key">Dataset ID:</span> <span class="param-value">${req.dsid || 'N/A'}</span></li>
+                                    <li><span class="param-key">Status:</span> <span class="param-value">${getStatusBadge(req.status)}</span></li>
+                                    <li><span class="param-key">Variable:</span> <span class="param-value">${getParameterDisplayName(req.variable_type || 'unknown')}</span></li>
+                                </ul>
+                            </div>
+                            
+                            <div class="detail-section">
+                                <h4>📅 Timeline</h4>
+                                <ul class="param-list">
+                                    <li><span class="param-key">Requested:</span> <span class="param-value">${formatTime(req.date_rqst)}</span></li>
+                                    <li><span class="param-key">Ready:</span> <span class="param-value">${formatTime(req.date_ready)}</span></li>
+                                    <li><span class="param-key">Purge:</span> <span class="param-value">${formatTime(req.date_purge)}</span></li>
+                                    <li><span class="param-key">Processing Time:</span> <span class="param-value">${formatProcessingTime(req.processing_time_hours)}</span></li>
+                                </ul>
+                            </div>
+                            
+                            <div class="detail-section">
+                                <h4>👤 Contact & Location</h4>
+                                <ul class="param-list">
+                                    <li><span class="param-key">NCAR Contact:</span> <span class="param-value">${req.NCAR_contact || req.ncar_contact || 'N/A'}</span></li>
+                                    <li><span class="param-key">Location:</span> <span class="param-value">${req.location || 'N/A'}</span></li>
+                                </ul>
+                            </div>
+                            
+                            <div class="detail-section">
+                                <h4>⚙️ Request Parameters</h4>
+                                ${rinfoParamsHtml || '<p>No parameters available</p>'}
+                            </div>
+                            
+                            ${dateRangeHtml ? `
+                            <div class="detail-section">
+                                <h4>📅 Data Range</h4>
+                                ${dateRangeHtml}
+                            </div>
+                            ` : ''}
+                            
+                            ${parametersHtml ? `
+                            <div class="detail-section">
+                                <h4>🌡️ Parameters</h4>
+                                ${parametersHtml}
+                            </div>
+                            ` : ''}
+                            
+                            ${spatialBoundsHtml ? `
+                            <div class="detail-section">
+                                <h4>🗺️ Spatial Bounds</h4>
+                                ${spatialBoundsHtml}
+                            </div>
+                            ` : ''}
+                            
+                            <div class="detail-section" style="grid-column: 1 / -1;">
+                                <h4>📝 Subset Information</h4>
+                                <div class="subset-note">${req.formatted_subset_info?.raw_note || req.subset_note || 'No subset information available'}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
         }
         
         function formatProcessingTime(hours) {
@@ -1312,140 +1677,86 @@
         }
         
         function createCompletedRegionCard(region) {
-            console.log('Creating completed region card for region:', region);
+            console.log('Creating expandable completed region card for region:', region);
             console.log('Region data structure:', JSON.stringify(region, null, 2));
             console.log('Has detailed_requests:', !!(region.detailed_requests && region.detailed_requests.length > 0));
             
-            // FIXED: Use detailed_requests data from backend instead of creating pseudo-requests
+            const regionCode = region.region || 'UNKNOWN';
+            const regionName = region.region_name || regionCode.replace('_', ' ').toUpperCase();
+            const totalRequests = region.total_requests || region.completed_requests || 0;
+            const downloadedFiles = region.downloaded_files || totalRequests;
+            const successRate = region.success_rate || 100.0;
+            const avgProcessingTime = region.processing_time_stats?.average_hours || region.average_processing_time_hours || 0;
+            const mostCommonVariable = region.most_common_variable || 'unknown';
+            
+            // Sanitize region ID for DOM elements
+            const sanitizedRegionId = sanitizeId(regionCode);
+            const cardId = `completed-card-${sanitizedRegionId}`;
+            const detailsId = `completed-details-${sanitizedRegionId}`;
+            const iconId = `completed-icon-${sanitizedRegionId}`;
+            
+            console.log('Creating expandable completed region card with IDs:', {
+                regionCode: regionCode,
+                sanitizedRegionId: sanitizedRegionId,
+                cardId: cardId
+            });
+            
+            // Create nested request cards if detailed_requests are available
+            let nestedRequestsHtml = '';
             if (region.detailed_requests && region.detailed_requests.length > 0) {
-                console.log('Using detailed_requests data from backend');
+                console.log('Creating nested request cards for', region.detailed_requests.length, 'requests');
                 
-                // Use the first detailed request as the primary request for the card
-                const primaryRequest = region.detailed_requests[0];
-                console.log('Primary request data:', JSON.stringify(primaryRequest, null, 2));
+                nestedRequestsHtml = `
+                    <div class="requests-list-header">
+                        📋 Individual Requests (${region.detailed_requests.length} total)
+                    </div>
+                `;
                 
-                // Create a properly structured request object with all the detailed information
-                const detailedRequest = {
-                    id: primaryRequest.id,
-                    request_id: primaryRequest.request_id, // Use original request_id, don't sanitize here
-                    request_index: primaryRequest.request_index,
-                    dsid: primaryRequest.dsid,
-                    status: primaryRequest.status,
-                    date_rqst: primaryRequest.date_rqst,
-                    date_ready: primaryRequest.date_ready,
-                    date_purge: primaryRequest.date_purge,
-                    location: primaryRequest.location,
-                    ncar_contact: primaryRequest.ncar_contact,
-                    rinfo: primaryRequest.rinfo,
-                    subset_note: primaryRequest.subset_note,
-                    region: primaryRequest.region,
-                    variable_type: primaryRequest.variable_type,
-                    processing_time_hours: primaryRequest.processing_time_hours,
-                    // Complete get_status information from backend
-                    complete_status_data: primaryRequest.complete_status_data || {},
-                    subset_info: primaryRequest.subset_info || {},
-                    NCAR_contact: primaryRequest.NCAR_contact || primaryRequest.ncar_contact,
-                    // Parsed rinfo parameters from backend
-                    rinfo_params: primaryRequest.rinfo_params || {},
-                    // Formatted subset details from backend
-                    formatted_subset_info: primaryRequest.formatted_subset_info || {
-                        raw_note: primaryRequest.subset_note || 'No subset information available',
-                        parameters: [],
-                        date_range: {},
-                        spatial_bounds: {}
-                    },
-                    // Enhanced timeline information from backend
-                    timeline: primaryRequest.timeline || {
-                        requested: primaryRequest.date_rqst,
-                        ready: primaryRequest.date_ready,
-                        purge: primaryRequest.date_purge,
-                        processing_time_hours: primaryRequest.processing_time_hours,
-                        processing_time_display: formatProcessingTime(primaryRequest.processing_time_hours),
-                        status: primaryRequest.status
+                region.detailed_requests.forEach((request, index) => {
+                    try {
+                        nestedRequestsHtml += createNestedRequestCard(request, regionCode);
+                    } catch (error) {
+                        console.warn(`Error creating nested request card ${index}:`, error, request);
+                        nestedRequestsHtml += `
+                            <div class="nested-request-card" style="border-color: #dc3545;">
+                                <div class="nested-request-summary" style="background: #f8d7da; color: #721c24;">
+                                    <div class="nested-request-basic-info">
+                                        <div class="nested-request-id">Error Loading Request</div>
+                                        <div class="nested-request-meta">Failed to load request data</div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
                     }
-                };
-                
-                console.log('Created detailed request object:', JSON.stringify(detailedRequest, null, 2));
-                return createRequestCard(detailedRequest);
-            } else {
-                console.log('No detailed_requests available, falling back to pseudo-request creation');
-                
-                // FALLBACK: Create pseudo-request if detailed_requests is not available (backward compatibility)
-                const regionCode = region.region || 'UNKNOWN';
-                const regionName = region.region_name || regionCode.replace('_', ' ').toUpperCase();
-                const mostCommonVariable = region.most_common_variable || 'unknown';
-                const totalRequests = region.total_requests || region.completed_requests || 0;
-                const downloadedFiles = region.downloaded_files || totalRequests;
-                const completionPercentage = region.completion_percentage || 100.0;
-                const avgProcessingTime = region.average_processing_time_hours || 0;
-                const lastCompletion = region.last_completion || region.first_completion || new Date().toISOString();
-                const successRate = region.success_rate || 100.0;
-                
-                // Get sample request for detailed info with better fallbacks
-                const sampleRequest = (region.sample_requests && region.sample_requests.length > 0) ?
-                                    region.sample_requests[0] : {};
-                
-                // Generate request ID for completed regions - let createRequestCard handle sanitization
-                const baseRequestId = sampleRequest.request_id || `${regionCode}_COMPLETED_${totalRequests}`;
-                const requestId = baseRequestId;
-                console.log('Generated request ID for completed region:', {
-                    original: baseRequestId,
-                    regionCode: regionCode
                 });
-                const requestIndex = sampleRequest.request_index || `${regionCode}_INDEX_${totalRequests}`;
-                const actualVariableType = mostCommonVariable !== 'unknown' ? mostCommonVariable :
-                                         (sampleRequest.variable_type ||
-                                          (region.variable_breakdown && Object.keys(region.variable_breakdown)[0]) ||
-                                          'dswrf');
-                
-                // Create a pseudo-request object that matches the expected structure
-                const pseudoRequest = {
-                    request_id: requestId,
-                    request_index: requestIndex,
-                    status: 'completed',
-                    region: regionCode,
-                    variable_type: actualVariableType,
-                    date_rqst: sampleRequest.completion_time || lastCompletion,
-                    date_ready: sampleRequest.completion_time || lastCompletion,
-                    date_purge: null,
-                    processing_time_hours: avgProcessingTime,
-                    NCAR_contact: sampleRequest.NCAR_contact || 'N/A',
-                    location: regionName,
-                    dsid: sampleRequest.dsid || 'N/A',
-                    rinfo_params: {
-                        'Total Requests': totalRequests,
-                        'Downloaded Files': downloadedFiles,
-                        'Completion Rate': `${completionPercentage.toFixed(1)}%`,
-                        'Success Rate': `${successRate.toFixed(1)}%`,
-                        'Most Common Variable': getParameterDisplayName(actualVariableType),
-                        'Region Code': regionCode,
-                        'Region Name': regionName
-                    },
-                    formatted_subset_info: {
-                        raw_note: `Region Summary for ${regionName} (${regionCode})\n\n` +
-                                 `Total Requests: ${totalRequests}\n` +
-                                 `Downloaded Files: ${downloadedFiles}\n` +
-                                 `Completion Rate: ${completionPercentage.toFixed(1)}%\n` +
-                                 `Success Rate: ${successRate.toFixed(1)}%\n` +
-                                 `Average Processing Time: ${formatProcessingTime(avgProcessingTime)}\n` +
-                                 `Most Common Variable: ${getParameterDisplayName(actualVariableType)}\n` +
-                                 `Last Completion: ${formatTime(lastCompletion)}\n\n` +
-                                 `Variable Breakdown:\n${Object.entries(region.variable_breakdown || {})
-                                     .map(([variable, count]) => `  ${getParameterDisplayName(variable)}: ${count}`)
-                                     .join('\n')}`,
-                        parameters: [getParameterDisplayName(actualVariableType)],
-                        date_range: {
-                            start: 'N/A',
-                            end: 'N/A',
-                            formatted_start: 'N/A',
-                            formatted_end: 'N/A'
-                        }
-                    }
-                };
-                
-                console.log('Created fallback pseudo-request:', JSON.stringify(pseudoRequest, null, 2));
-                return createRequestCard(pseudoRequest);
+            } else {
+                nestedRequestsHtml = `
+                    <div class="requests-list-header">
+                        📋 Request Details
+                    </div>
+                    <div style="padding: 20px; text-align: center; color: #666;">
+                        <p>Detailed request information is not available for this region.</p>
+                        <p>This may be because the requests were completed before detailed tracking was implemented.</p>
+                    </div>
+                `;
             }
+            
+            return `
+                <div class="completed-region-card" id="${cardId}">
+                    <div class="completed-region-summary" onclick="toggleCompletedRegionDetails('${regionCode}')" style="cursor: pointer;">
+                        <div class="completed-region-basic-info">
+                            <div class="completed-region-name">${regionName}</div>
+                            <div class="completed-region-meta">
+                                ${totalRequests} requests • ${downloadedFiles} files • ${successRate.toFixed(1)}% success • ${getParameterDisplayName(mostCommonVariable)}
+                            </div>
+                        </div>
+                        <div class="completed-region-expand-icon" id="${iconId}">▼</div>
+                    </div>
+                    <div class="completed-region-details" id="${detailsId}">
+                        ${nestedRequestsHtml}
+                    </div>
+                </div>
+            `;
         }
         
         async function refreshData() {
@@ -1635,8 +1946,8 @@
                             has_detailed_requests: !!(region.detailed_requests && region.detailed_requests.length > 0)
                         });
                         
-                        // Use enhanced region card for better display
-                        html += createEnhancedRegionCard(region);
+                        // Use expandable completed region card for better display
+                        html += createCompletedRegionCard(region);
                         successfulCards++;
                     } catch (cardError) {
                         console.warn(`Error creating enhanced region card ${index}:`, cardError, region);

@@ -40,10 +40,8 @@ from automation.data_sync import RDADataSyncService, create_data_sync_service
 from automation.real_time_sync_engine import RealTimeSyncEngine, create_real_time_sync_engine, DataFreshnessLevel, SyncStatus
 from automation.unknown_region_resolver import EnhancedUnknownRegionResolver
 
-# Import new enhanced monitoring modules
-from automation.error_dashboard_api import create_error_dashboard_api
-from automation.progress_tracker_api import create_progress_tracker_api
-from automation.dashboard_enhancements import create_dashboard_enhancements
+# Note: Removed unused error dashboard/visualization imports
+# The dashboard now uses only the core working monitoring system
 
 # Import timeline validation services
 from automation.timeline_validator import (
@@ -178,44 +176,9 @@ class EnhancedRDADashboard:
                 'get_retry_summary': lambda: {}
             })()
         
-        # Initialize enhanced monitoring APIs
-        try:
-            self.error_dashboard_api = create_error_dashboard_api(db_path)
-            self.progress_tracker_api = create_progress_tracker_api(db_path)
-            self.dashboard_enhancements = create_dashboard_enhancements(db_path)
-            self.logger.info("Enhanced monitoring APIs initialized successfully")
-        except Exception as e:
-            self.logger.warning(f"Could not initialize enhanced monitoring APIs: {e}")
-            # Create minimal fallback APIs
-            self.error_dashboard_api = type('ErrorDashboardAPI', (), {
-                'get_error_summary': lambda time_window=24: {'summary': {
-                    'total_errors': 0,
-                    'active_errors': 0,
-                    'resolved_errors': 0,
-                    'critical_errors': 0,
-                    'error_rate_24h': 0.0,
-                    'most_common_error_type': 'None',
-                    'most_affected_region': 'None',
-                    'resolution_rate': 0.0,
-                    'average_resolution_time_hours': 0.0
-                }, 'generated_at': datetime.now().isoformat()},
-                'get_live_error_feed': lambda **kwargs: {'errors': [], 'total_count': 0, 'generated_at': datetime.now().isoformat()},
-                'get_regional_error_health': lambda: {'regional_health': [], 'total_regions': 0, 'generated_at': datetime.now().isoformat()},
-                'get_error_trends': lambda **kwargs: {'trends': [], 'analysis': {}, 'generated_at': datetime.now().isoformat()},
-                'get_retry_queue_status': lambda: {'queue_status': {}, 'generated_at': datetime.now().isoformat()}
-            })()
-            self.progress_tracker_api = type('ProgressTrackerAPI', (), {
-                'get_overall_progress': lambda: {'progress': {}, 'error': 'API not available'},
-                'get_regional_progress': lambda: {'regional_progress': [], 'error': 'API not available'},
-                'get_variable_progress': lambda: {'variable_progress': [], 'error': 'API not available'},
-                'get_progress_trends': lambda **kwargs: {'trends': [], 'error': 'API not available'}
-            })()
-            self.dashboard_enhancements = type('DashboardEnhancements', (), {
-                'get_dashboard_layout': lambda: {'widgets': [], 'error': 'API not available'},
-                'get_all_widget_data': lambda: {'widgets': {}, 'error': 'API not available'},
-                'check_alerts': lambda: [],
-                'get_dashboard_metrics': lambda: {'error': 'API not available'}
-            })()
+        # Note: Removed unused error dashboard/visualization APIs
+        # The dashboard now relies on the core working error handling and monitoring system
+        self.logger.info("Dashboard initialized with core monitoring system")
         
         # Initialize unknown region resolver
         try:
@@ -1285,13 +1248,8 @@ class EnhancedRDADashboard:
             freshness_info = self._get_data_freshness_info()
             sync_metrics = self.real_time_sync.get_sync_metrics()
             
-            # Get error summary from ErrorDashboardAPI if available
+            # Note: Using core error handling system instead of removed error dashboard API
             error_summary = {}
-            try:
-                if hasattr(self, 'error_dashboard_api') and self.error_dashboard_api:
-                    error_summary = self.error_dashboard_api.get_error_summary(24)
-            except Exception as e:
-                self.logger.debug(f"Could not get error summary: {e}")
             
             return {
                 'overview': {
@@ -1497,6 +1455,62 @@ class EnhancedRDADashboard:
             except Exception as e:
                 self.logger.error(f"Error getting filter options: {e}")
                 return jsonify({'error': str(e)}), 500
+        
+        @self.app.route('/api/error-tracking/summary')
+        def api_error_tracking_summary():
+            """API endpoint for error tracking summary data."""
+            try:
+                # Get error statistics from error manager
+                error_stats = {}
+                try:
+                    error_stats = self.error_manager.get_error_statistics()
+                except Exception as e:
+                    self.logger.warning(f"Could not get error statistics: {e}")
+                
+                # Get retry statistics from retry manager
+                retry_stats = {}
+                try:
+                    retry_stats = self.retry_manager.get_retry_statistics()
+                except Exception as e:
+                    self.logger.warning(f"Could not get retry statistics: {e}")
+                
+                # Build error tracking summary in expected format
+                summary = {
+                    'total_errors': error_stats.get('total_errors', 0),
+                    'active_errors': error_stats.get('active_errors', 0),
+                    'resolved_errors': error_stats.get('resolved_errors', 0),
+                    'critical_errors': error_stats.get('critical_errors', 0),
+                    'error_rate_24h': error_stats.get('error_rate_24h', 0.0),
+                    'resolution_rate': error_stats.get('resolution_rate', 0.0),
+                    'most_common_error_type': error_stats.get('most_common_error_type', 'Unknown'),
+                    'most_affected_region': error_stats.get('most_affected_region', 'Unknown'),
+                    'average_resolution_time_hours': error_stats.get('average_resolution_time_hours', 0.0)
+                }
+                
+                return jsonify({
+                    'summary': summary,
+                    'retry_statistics': retry_stats,
+                    'timestamp': datetime.now().isoformat(),
+                    'data_source': 'error_manager_and_retry_manager'
+                })
+                
+            except Exception as e:
+                self.logger.error(f"Error getting error tracking summary: {e}")
+                return jsonify({
+                    'summary': {
+                        'total_errors': 0,
+                        'active_errors': 0,
+                        'resolved_errors': 0,
+                        'critical_errors': 0,
+                        'error_rate_24h': 0.0,
+                        'resolution_rate': 0.0,
+                        'most_common_error_type': 'Unknown',
+                        'most_affected_region': 'Unknown',
+                        'average_resolution_time_hours': 0.0
+                    },
+                    'error': str(e),
+                    'timestamp': datetime.now().isoformat()
+                }), 500
         
         @self.app.route('/api/live-data')
         def api_live_data():
@@ -2365,361 +2379,8 @@ class EnhancedRDADashboard:
                 self.logger.error(f"Error getting resolution details: {e}")
                 return jsonify({'error': str(e)}), 500
         
-        # Enhanced Error Tracking API Endpoints
-        @self.app.route('/api/error-tracking/summary')
-        def api_error_summary():
-            """API endpoint for comprehensive error summary."""
-            try:
-                time_window = request.args.get('time_window_hours', 24, type=int)
-                summary = self.error_dashboard_api.get_error_summary(time_window)
-                return jsonify(summary)
-            except Exception as e:
-                self.logger.error(f"Error getting error summary: {e}")
-                return jsonify({'error': str(e)}), 500
-        
-        @self.app.route('/api/error-tracking/live-feed')
-        def api_live_error_feed():
-            """API endpoint for live error feed with filtering."""
-            try:
-                limit = request.args.get('limit', 50, type=int)
-                region_filter = request.args.get('region')
-                error_type_filter = request.args.get('error_type')
-                severity_filter = request.args.get('severity')
-                
-                feed = self.error_dashboard_api.get_live_error_feed(
-                    limit=limit,
-                    region_filter=region_filter,
-                    error_type_filter=error_type_filter,
-                    severity_filter=severity_filter
-                )
-                return jsonify(feed)
-            except Exception as e:
-                self.logger.error(f"Error getting live error feed: {e}")
-                return jsonify({'error': str(e)}), 500
-        
-        @self.app.route('/api/error-tracking/regional-health')
-        def api_regional_error_health():
-            """API endpoint for regional error health metrics."""
-            try:
-                health = self.error_dashboard_api.get_regional_error_health()
-                return jsonify(health)
-            except Exception as e:
-                self.logger.error(f"Error getting regional error health: {e}")
-                return jsonify({'error': str(e)}), 500
-        
-        @self.app.route('/api/error-tracking/trends')
-        def api_error_trends():
-            """API endpoint for error trend analysis."""
-            try:
-                hours_back = request.args.get('hours_back', 24, type=int)
-                interval_hours = request.args.get('interval_hours', 1, type=int)
-                
-                trends = self.error_dashboard_api.get_error_trends(
-                    hours_back=hours_back,
-                    interval_hours=interval_hours
-                )
-                return jsonify(trends)
-            except Exception as e:
-                self.logger.error(f"Error getting error trends: {e}")
-                return jsonify({'error': str(e)}), 500
-        
-        @self.app.route('/api/error-tracking/retry-queue-status')
-        def api_retry_queue_status():
-            """API endpoint for retry queue status and metrics."""
-            try:
-                status = self.error_dashboard_api.get_retry_queue_status()
-                return jsonify(status)
-            except Exception as e:
-                self.logger.error(f"Error getting retry queue status: {e}")
-                return jsonify({'error': str(e)}), 500
-        
-        @self.app.route('/api/error-tracking/patterns')
-        def api_error_patterns():
-            """API endpoint for error pattern analysis."""
-            try:
-                min_frequency = request.args.get('min_frequency', 3, type=int)
-                patterns = self.error_dashboard_api.get_error_patterns(min_frequency)
-                return jsonify(patterns)
-            except Exception as e:
-                self.logger.error(f"Error getting error patterns: {e}")
-                return jsonify({'error': str(e)}), 500
-        
-        @self.app.route('/api/error-tracking/resolve/<int:error_id>', methods=['POST'])
-        def api_resolve_error(error_id):
-            """API endpoint to resolve an error."""
-            try:
-                data = request.get_json()
-                if not data or 'resolution_notes' not in data:
-                    return jsonify({'error': 'Missing resolution_notes'}), 400
-                
-                result = self.error_dashboard_api.resolve_error(
-                    error_id=error_id,
-                    resolution_notes=data['resolution_notes'],
-                    resolved_by=data.get('resolved_by', 'dashboard_user')
-                )
-                return jsonify(result)
-            except Exception as e:
-                self.logger.error(f"Error resolving error {error_id}: {e}")
-                return jsonify({'error': str(e)}), 500
-        
-        # Enhanced Progress Tracking API Endpoints
-        @self.app.route('/api/progress-tracking/overall')
-        def api_overall_progress():
-            """API endpoint for overall system progress."""
-            try:
-                progress = self.progress_tracker_api.get_overall_progress()
-                return jsonify(progress)
-            except Exception as e:
-                self.logger.error(f"Error getting overall progress: {e}")
-                return jsonify({'error': str(e)}), 500
-        
-        @self.app.route('/api/progress-tracking/regional')
-        def api_regional_progress():
-            """API endpoint for regional progress breakdown."""
-            try:
-                progress = self.progress_tracker_api.get_regional_progress()
-                return jsonify(progress)
-            except Exception as e:
-                self.logger.error(f"Error getting regional progress: {e}")
-                return jsonify({'error': str(e)}), 500
-        
-        @self.app.route('/api/progress-tracking/variables')
-        def api_variable_progress():
-            """API endpoint for weather variable progress breakdown."""
-            try:
-                progress = self.progress_tracker_api.get_variable_progress()
-                return jsonify(progress)
-            except Exception as e:
-                self.logger.error(f"Error getting variable progress: {e}")
-                return jsonify({'error': str(e)}), 500
-        
-        @self.app.route('/api/progress-tracking/trends')
-        def api_progress_trends():
-            """API endpoint for progress trends over time."""
-            try:
-                hours_back = request.args.get('hours_back', 24, type=int)
-                interval_hours = request.args.get('interval_hours', 1, type=int)
-                
-                trends = self.progress_tracker_api.get_progress_trends(
-                    hours_back=hours_back,
-                    interval_hours=interval_hours
-                )
-                return jsonify(trends)
-            except Exception as e:
-                self.logger.error(f"Error getting progress trends: {e}")
-                return jsonify({'error': str(e)}), 500
-        
-        @self.app.route('/api/progress-tracking/create-snapshot', methods=['POST'])
-        def api_create_progress_snapshot():
-            """API endpoint to create a progress snapshot."""
-            try:
-                data = request.get_json() if request.is_json else {}
-                snapshot_type = data.get('snapshot_type', 'overall')
-                
-                result = self.progress_tracker_api.create_progress_snapshot(snapshot_type)
-                return jsonify(result)
-            except Exception as e:
-                self.logger.error(f"Error creating progress snapshot: {e}")
-                return jsonify({'error': str(e)}), 500
-        
-        # Enhanced System Health API Endpoints
-        @self.app.route('/api/system-health/comprehensive')
-        def api_comprehensive_system_health():
-            """API endpoint for comprehensive system health metrics."""
-            try:
-                # Combine data from multiple sources
-                error_summary = self.error_dashboard_api.get_error_summary()
-                retry_status = self.error_dashboard_api.get_retry_queue_status()
-                overall_progress = self.progress_tracker_api.get_overall_progress()
-                regional_health = self.error_dashboard_api.get_regional_error_health()
-                
-                # Get sync status
-                sync_status = self.real_time_sync.get_live_sync_status()
-                freshness_info = self._get_data_freshness_info()
-                
-                comprehensive_health = {
-                    'system_overview': {
-                        'overall_health_score': self._calculate_system_health_score(
-                            error_summary, retry_status, overall_progress
-                        ),
-                        'data_freshness': freshness_info,
-                        'sync_status': {
-                            'status': sync_status.status.value,
-                            'last_sync': sync_status.last_sync.isoformat() if sync_status.last_sync else None,
-                            'sync_count': sync_status.sync_count,
-                            'error_count': sync_status.error_count
-                        }
-                    },
-                    'error_health': error_summary,
-                    'retry_health': retry_status,
-                    'progress_health': overall_progress,
-                    'regional_health': regional_health,
-                    'alerts': self._generate_system_alerts(
-                        error_summary, retry_status, overall_progress, regional_health
-                    ),
-                    'generated_at': datetime.now().isoformat()
-                }
-                
-                return jsonify(comprehensive_health)
-            except Exception as e:
-                self.logger.error(f"Error getting comprehensive system health: {e}")
-                return jsonify({'error': str(e)}), 500
-        
-        # Dashboard Enhancement API Endpoints
-        @self.app.route('/api/dashboard/layout')
-        def api_dashboard_layout():
-            """API endpoint for dashboard layout configuration."""
-            try:
-                layout = self.dashboard_enhancements.get_dashboard_layout()
-                return jsonify(layout)
-            except Exception as e:
-                self.logger.error(f"Error getting dashboard layout: {e}")
-                return jsonify({'error': str(e)}), 500
-        
-        @self.app.route('/api/dashboard/widgets')
-        def api_all_widget_data():
-            """API endpoint for all widget data."""
-            try:
-                widget_data = self.dashboard_enhancements.get_all_widget_data()
-                return jsonify(widget_data)
-            except Exception as e:
-                self.logger.error(f"Error getting all widget data: {e}")
-                return jsonify({'error': str(e)}), 500
-        
-        @self.app.route('/api/dashboard/widgets/<widget_id>')
-        def api_widget_data(widget_id):
-            """API endpoint for specific widget data."""
-            try:
-                widget_data = self.dashboard_enhancements.get_widget_data(widget_id)
-                return jsonify(widget_data)
-            except Exception as e:
-                self.logger.error(f"Error getting widget data for {widget_id}: {e}")
-                return jsonify({'error': str(e)}), 500
-        
-        @self.app.route('/api/dashboard/alerts')
-        def api_dashboard_alerts():
-            """API endpoint for dashboard alerts."""
-            try:
-                alerts = self.dashboard_enhancements.check_alerts()
-                return jsonify({
-                    'alerts': alerts,
-                    'total_alerts': len(alerts),
-                    'critical_alerts': len([a for a in alerts if a.get('severity') == 'critical']),
-                    'warning_alerts': len([a for a in alerts if a.get('severity') == 'warning']),
-                    'generated_at': datetime.now().isoformat()
-                })
-            except Exception as e:
-                self.logger.error(f"Error getting dashboard alerts: {e}")
-                return jsonify({'error': str(e)}), 500
-        
-        @self.app.route('/api/dashboard/metrics')
-        def api_dashboard_metrics():
-            """API endpoint for dashboard performance metrics."""
-            try:
-                metrics = self.dashboard_enhancements.get_dashboard_metrics()
-                return jsonify(metrics)
-            except Exception as e:
-                self.logger.error(f"Error getting dashboard metrics: {e}")
-                return jsonify({'error': str(e)}), 500
-        
-        @self.app.route('/api/dashboard/widgets/<widget_id>/config', methods=['PUT'])
-        def api_update_widget_config(widget_id):
-            """API endpoint to update widget configuration."""
-            try:
-                data = request.get_json()
-                if not data:
-                    return jsonify({'error': 'No configuration data provided'}), 400
-                
-                result = self.dashboard_enhancements.update_widget_config(widget_id, data)
-                return jsonify(result)
-            except Exception as e:
-                self.logger.error(f"Error updating widget config for {widget_id}: {e}")
-                return jsonify({'error': str(e)}), 500
-        
-        @self.app.route('/api/dashboard/export-config')
-        def api_export_dashboard_config():
-            """API endpoint to export dashboard configuration."""
-            try:
-                config = self.dashboard_enhancements.export_dashboard_config()
-                return jsonify(config)
-            except Exception as e:
-                self.logger.error(f"Error exporting dashboard config: {e}")
-                return jsonify({'error': str(e)}), 500
-        
-        # Real-time Dashboard Updates Endpoint
-        @self.app.route('/api/dashboard/real-time-update')
-        def api_real_time_dashboard_update():
-            """API endpoint for real-time dashboard updates with all monitoring data."""
-            try:
-                # Trigger immediate sync for fresh data
-                sync_result = self.real_time_sync.perform_immediate_sync("dashboard_real_time_update")
-                
-                # Get comprehensive monitoring data
-                error_summary = self.error_dashboard_api.get_error_summary()
-                progress_overview = self.progress_tracker_api.get_overall_progress()
-                regional_health = self.error_dashboard_api.get_regional_error_health()
-                retry_status = self.error_dashboard_api.get_retry_queue_status()
-                active_alerts = self.dashboard_enhancements.check_alerts()
-                
-                # Get sync status and freshness
-                sync_status = self.real_time_sync.get_live_sync_status()
-                freshness_info = self._get_data_freshness_info()
-                
-                # Calculate system health score
-                system_health_score = self._calculate_system_health_score(
-                    error_summary, retry_status, progress_overview
-                )
-                
-                real_time_update = {
-                    'sync_info': {
-                        'sync_result': {
-                            'success': sync_result.success,
-                            'timestamp': sync_result.timestamp,
-                            'duration_seconds': sync_result.duration_seconds,
-                            'total_requests': sync_result.total_requests,
-                            'sync_trigger': sync_result.sync_trigger
-                        },
-                        'sync_status': {
-                            'status': sync_status.status.value,
-                            'last_sync': sync_status.last_sync.isoformat() if sync_status.last_sync else None,
-                            'sync_count': sync_status.sync_count,
-                            'error_count': sync_status.error_count
-                        },
-                        'data_freshness': freshness_info
-                    },
-                    'monitoring_data': {
-                        'error_summary': error_summary,
-                        'progress_overview': progress_overview,
-                        'regional_health': regional_health,
-                        'retry_status': retry_status,
-                        'system_health_score': system_health_score
-                    },
-                    'alerts': {
-                        'active_alerts': active_alerts,
-                        'alert_counts': {
-                            'total': len(active_alerts),
-                            'critical': len([a for a in active_alerts if a.get('severity') == 'critical']),
-                            'warning': len([a for a in active_alerts if a.get('severity') == 'warning']),
-                            'info': len([a for a in active_alerts if a.get('severity') == 'info'])
-                        }
-                    },
-                    'dashboard_status': {
-                        'widgets_active': len([w for w in self.dashboard_enhancements.widget_configs.values() if w.enabled]),
-                        'alerts_enabled': len([a for a in self.dashboard_enhancements.alert_configs.values() if a.enabled]),
-                        'last_update': datetime.now().isoformat()
-                    },
-                    'generated_at': datetime.now().isoformat()
-                }
-                
-                return jsonify(real_time_update)
-                
-            except Exception as e:
-                self.logger.error(f"Error in real-time dashboard update: {e}")
-                return jsonify({
-                    'error': str(e),
-                    'sync_status': {'status': 'error'},
-                    'generated_at': datetime.now().isoformat()
-                }), 500
+        # Note: Removed unused error dashboard/visualization API endpoints
+        # The dashboard now uses only the core working error handling and monitoring system
         
         # Enhanced API endpoints with progress tracking
         @self.app.route('/api/status')
