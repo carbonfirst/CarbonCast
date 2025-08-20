@@ -68,7 +68,7 @@ def runFirstTier(configFileName):
         sourceIdx = 0
         outFileNamePrefix = regionConfig["OUT_FILE_NAME_PREFIX"]
         for source in sourceList:
-            inFileName = regionConfig["IN_FILE_NAME_PREFIX"] + source.lower() + firstTierConfig["IN_FILE_NAME_SUFFIX"]
+            inFileName = regionConfig["IN_FILE_NAME_PREFIX"] + "source_prod" + firstTierConfig["IN_FILE_NAME_SUFFIX"]
             sourceCol = sourceColList[sourceIdx]
             partialSourceProductionForecastAvailable = regionConfig["PARTIAL_FORECAST_AVAILABILITY_LIST"][sourceIdx]
             partialForecastHours =  regionConfig["PARTIAL_FORECAST_HOURS"]
@@ -355,20 +355,53 @@ def aggregateDataAndGenerateForecastFile(firstTierConfig, sourceList, weatherFor
     weatherDatasetEndRow = firstTierConfig["ROW_END_FOR_2022"]
     sourceForecastDatasetEndRow = firstTierConfig["SOURCE_FORECAST_ROW_END_FOR_2022"]
 
-    weatherDataset = pd.read_csv(weatherForecastFile, header=0, index_col=["datetime"])
+    # Read weather with proper datetime index
+    weatherDataset = pd.read_csv(
+        weatherForecastFile,
+        header=0,
+        parse_dates=["datetime"],
+        index_col=["datetime"],
+    )
+    # For offline runs, we will align/join by datetime so that the resulting
+    # dataset has exactly the rows that exist in the source forecast files
+    # (e.g., last NUM_TEST_DAYS * PREDICTION_WINDOW_HOURS rows).
     if (isRealTime is False):
         weatherDataset = weatherDataset[weatherDatasetStartRow:weatherDatasetEndRow]
+
+    # Ensure clean hourly index without duplicates
+    weatherDataset.index = pd.to_datetime(weatherDataset.index).tz_localize(None)
+    weatherDataset = weatherDataset[~weatherDataset.index.duplicated(keep="first")]
+    weatherDataset.sort_index(inplace=True)
     modifiedDataset = weatherDataset.copy()
-    for source in sourceList:
-        sourceForecastFileName = sourceForecastFileNamePrefix + "_" + source.lower() + "_iter0.csv" # TODO: for now, only 1 iteration. generalize later
+    for idx, source in enumerate(sourceList):
+        sourceForecastFileName = sourceForecastFileNamePrefix + "_" + source.lower() + "_iter0.csv"  # TODO: only 1 iteration for now
         if (isRealTime is True and startDate is not None):
-            sourceForecastFileName = sourceForecastFileNamePrefix + "_" + source.lower() + "_"+str(startDate)+".csv"
-        sourceForecastDataset = pd.read_csv(sourceForecastFileName, header=0, index_col=["datetime"])
+            sourceForecastFileName = sourceForecastFileNamePrefix + "_" + source.lower() + "_" + str(startDate) + ".csv"
+        sourceForecastDataset = pd.read_csv(
+            sourceForecastFileName,
+            header=0,
+            parse_dates=["datetime"],
+            index_col=["datetime"],
+        )
         if (isRealTime is False):
             sourceForecastDataset = sourceForecastDataset[:sourceForecastDatasetEndRow]
-        forecastColumnName = "avg_"+source.lower()+"_production_forecast"
-        modifiedDataset[forecastColumnName] = sourceForecastDataset[forecastColumnName].values
-    print(modifiedDataset.shape)
+
+        # Normalize datetime index for the forecast file
+        sourceForecastDataset.index = pd.to_datetime(sourceForecastDataset.index).tz_localize(None)
+        sourceForecastDataset = sourceForecastDataset[~sourceForecastDataset.index.duplicated(keep="first")]
+        sourceForecastDataset.sort_index(inplace=True)
+
+        forecastColumnName = "avg_" + source.lower() + "_production_forecast"
+
+        # Align to common datetime index to avoid length mismatch errors.
+        # We keep only rows present in both weather and source forecast files.
+        # On the first join, this will typically shrink from full weather rows
+        # to just the forecast horizon rows (e.g., 181*168).
+        modifiedDataset = modifiedDataset.join(
+            sourceForecastDataset[[forecastColumnName]], how="inner"
+        )
+
+    print("Aggregated rows, cols:", modifiedDataset.shape)
     # print(modifiedDataset.head(2))
     # print(modifiedDataset.tail(2))
 
@@ -476,7 +509,13 @@ def manipulateTrainingDataShape(data, labelWindowHours, weatherData = None):
     weatherIdx = 0
     hourIdx = 0
     # step over the entire history one time step at a time
-    for i in range(len(data)-(TRAINING_WINDOW_HOURS+labelWindowHours)+1):
+    # When weather data is provided, cap the max iterations to the number of available
+    # daily weather blocks (each block supports 24 hourly samples).
+    max_iters = len(data) - (TRAINING_WINDOW_HOURS + labelWindowHours) + 1
+    if weatherData is not None:
+        daily_blocks = len(weatherData) // PREDICTION_WINDOW_HOURS
+        max_iters = min(max_iters, daily_blocks * 24)
+    for i in range(max_iters):
         # define the end of the input sequence
         trainWindow = i + TRAINING_WINDOW_HOURS
         labelWindow = trainWindow + labelWindowHours
@@ -484,6 +523,9 @@ def manipulateTrainingDataShape(data, labelWindowHours, weatherData = None):
         # xInput = xInput.reshape((len(xInput), 1))
         X.append(xInput)
         if(weatherData is not None):
+            # Guard against tail fragments shorter than TRAINING_WINDOW_HOURS
+            if weatherIdx + TRAINING_WINDOW_HOURS > len(weatherData):
+                break
             weatherX.append(weatherData[weatherIdx:weatherIdx+TRAINING_WINDOW_HOURS])
             weatherIdx +=1
             hourIdx +=1

@@ -227,7 +227,11 @@ def runSecondTier(configFileName, cefType, loadFromSavedModel):
                                     np.percentile(regionDailyMape[region][:, i], 99)])
 
             print("Saving MAPE values by day in file...")
-            with open("../data/"+region+"/"+region+"_MAPE_iter"+str(exptNum)+".txt", "w") as f:
+            import os
+            mape_dir = os.path.join("data", region)
+            os.makedirs(mape_dir, exist_ok=True)
+            mape_path = os.path.join(mape_dir, f"{region}_MAPE_iter{exptNum}.txt")
+            with open(mape_path, "w") as f:
                 for item in mapeByDay:
                     f.writelines(str(item))
                     f.write("\n")
@@ -454,13 +458,21 @@ def manipulateTrainingDataShape(data, trainWindowHours, labelWindowHours, weathe
     weatherIdx = 0
     hourIdx = 0
     # step over the entire history one time step at a time
-    for i in range(len(data)-(trainWindowHours+labelWindowHours)+1):
+    # When weather data is provided, cap iterations to available daily weather blocks
+    max_iters = len(data) - (trainWindowHours + labelWindowHours) + 1
+    if weatherData is not None and len(weatherData) > 0:
+        daily_blocks = len(weatherData) // MAX_PREDICTION_WINDOW_HOURS
+        max_iters = max(0, min(max_iters, daily_blocks * 24))
+    for i in range(max_iters):
         # define the end of the input sequence
         trainWindow = i + trainWindowHours
         labelWindow = trainWindow + labelWindowHours
         xInput = data[i:trainWindow, :]
         # xInput = xInput.reshape((len(xInput), 1))
         X.append(xInput)
+        # Guard against tail fragments shorter than trainWindowHours
+        if weatherIdx + trainWindowHours > len(weatherData):
+            break
         weatherX.append(weatherData[weatherIdx:weatherIdx+trainWindowHours])
         weatherIdx +=1
         hourIdx +=1

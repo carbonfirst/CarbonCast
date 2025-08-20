@@ -11,9 +11,7 @@ import pytz as pytz
 import os
 import sys
 
-US_REGION_LIST = ["AECI", "AZPS", "BPAT", "CISO", "DUK", "EPE", "ERCO", "FPL", 
-                "ISNE", "LDWP", "MISO", "NEVP", "NWMT", "NYIS", "PACE", "PJM", 
-                "SC", "SCEG", "SOCO", "TIDC", "TVA"] # add US regions here
+US_REGION_LIST = ["AECI"] # add US regions here
 EU_REGION_LIST = ["AL", "AT", "BE", "BG", "CH", "CZ", "DE", "DK", "EE", "ES", "FI", 
                   "FR", "GB", "GR", "HR", "HU", "IE", "IT", "LT", "LV", "NL", "PL", 
                   "PT", "RO", "RS", "SE", "SI", "SK"] # add EU regions here]
@@ -22,13 +20,43 @@ COLUMN_NAME = ["forecast_avg_wind_speed_wMean", "forecast_avg_temperature_wMean"
                 "forecast_avg_dswrf_wMean", "forecast_avg_precipitation_wMean"]
 
 
-PREDICTION_PERIOD_DAYS = 4
+# Use 7 days (168 hours) for extended horizon
+PREDICTION_PERIOD_DAYS = 7
 PREDICTION_WINDOW_HOURS = 24 * PREDICTION_PERIOD_DAYS
+
+def _build_column_names_for_file(inFileName: str):
+    base = os.path.basename(inFileName).upper()
+    common = ["datetime", "param", "level", "latitude", "longitude"]
+    if base.endswith("_DSWRF.CSV"):
+        names = list(common)
+        # Pairs: 0-3, 0-6; 6-9, 6-12; ...; 162-165, 162-168
+        for start in range(0, PREDICTION_WINDOW_HOURS, 6):
+            names.append(f"{start}-{start+3} hr avg")
+            names.append(f"{start}-{start+6} hr avg")
+        return names
+    if base.endswith("_APCP.CSV"):
+        names = list(common)
+        for start in range(0, PREDICTION_WINDOW_HOURS, 6):
+            names.append(f"{start}-{start+3} hr acc")
+            names.append(f"{start}-{start+6} hr acc")
+        return names
+    # WIND_SPEED, TEMP, DPT
+    names = list(common)
+    names.append("Analysis")
+    for h in range(3, PREDICTION_WINDOW_HOURS+1, 3):
+        names.append(f"{h} hr fcst")
+    return names
+
 
 def readFile(inFileName):
     print("Filename: ", inFileName)
-    dataset = pd.read_csv(inFileName, header=0, parse_dates=['datetime'], index_col=['datetime'])
-    dataset = dataset.iloc[:, 1:]    
+    try:
+        dataset = pd.read_csv(inFileName, header=0, parse_dates=['datetime'], index_col=['datetime'])
+    except Exception as e:
+        # Fallback: missing header row or malformed header; regenerate expected names
+        names = _build_column_names_for_file(inFileName)
+        dataset = pd.read_csv(inFileName, header=None, names=names, parse_dates=['datetime'], index_col=['datetime'])
+    dataset = dataset.iloc[:, 1:]
     print(dataset.head())
     print(dataset.columns)
     dateTime = dataset.index.values
@@ -226,8 +254,9 @@ def moveForecastsAheadByADay(region, inFileDir, outFileDir):
     inFileName = inFileDir+region+"_aggregated_weather_data_2023.csv"
     outFileName = outFileDir+region+"_weather_forecast_2023.csv"
     dataset = pd.read_csv(inFileName, header=0, index_col=["datetime"])
-    modifiedDataset = np.array(dataset.iloc[96:, :])
-    zeroVal = np.zeros((96, len(dataset.columns)))
+    # Shift by the configured prediction window hours (e.g., 168 for 7 days)
+    modifiedDataset = np.array(dataset.iloc[PREDICTION_WINDOW_HOURS:, :])
+    zeroVal = np.zeros((PREDICTION_WINDOW_HOURS, len(dataset.columns)))
     modifiedDataset = np.vstack((modifiedDataset, zeroVal))
 
     modifiedDataset = pd.DataFrame(modifiedDataset, columns=dataset.columns.values, index=dataset.index)

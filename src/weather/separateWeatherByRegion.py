@@ -23,6 +23,8 @@ import numpy as np
 import threading
 import sys
 import os
+import argparse
+from typing import Optional
 
 FILE_DIR = ["../../src/weather/EU_2023/ugrd_vgrd/",
             "../../src/weather/EU_2023/tmp_dpt/",
@@ -33,47 +35,37 @@ YEARS = [2023] # Modify this as required. If YEARS is current year (2023), modif
 
 FILE_PREFIX = "gfs.0p25."
 HOUR = ["00"] ##, "06", "12", "18"]
-FCST = ["000", "003", "006", "009", "012", "015", "018", "021", "024",
-                "027", "030", "033", "036", "039", "042", "045", "048",
-                "051", "054", "057", "060", "063", "066", "069", "072",
-                "075", "078", "081", "084", "087", "090", "093", "096"]
-FCST_RT = ["003", "006", "009", "012", "015", "018", "021", "024",
-                "027", "030", "033", "036", "039", "042", "045", "048",
-                "051", "054", "057", "060", "063", "066", "069", "072",
-                "075", "078", "081", "084", "087", "090", "093", "096"]
-FCST_AVG_ACC = ["003", "006", "009", "012", "015", "018", "021", "024",
-                "027", "030", "033", "036", "039", "042", "045", "048",
-                "051", "054", "057", "060", "063", "066", "069", "072",
-                "075", "078", "081", "084", "087", "090", "093", "096"]
+FCST = ["000"] + [f"{i:03d}" for i in range(3, 169, 3)]
+FCST_RT = [f"{i:03d}" for i in range(3, 169, 3)]
+FCST_AVG_ACC = [f"{i:03d}" for i in range(3, 169, 3)]
 HEADER = ["startDate", "endDate", "param", "level", "longitude", "latitude", "value"]
-CSV_FILE_FIELDS_FCST = ["datetime", "param", "level", "latitude", "longitude", "Analysis", "3 hr fcst", 
-        "6 hr fcst", "9 hr fcst", "12 hr fcst", "15 hr fcst", "18 hr fcst",
-        "21 hr fcst", "24 hr fcst", "27 hr fcst", "30 hr fcst", "33 hr fcst",
-        "36 hr fcst", "39 hr fcst", "42 hr fcst", "45 hr fcst", "48 hr fcst",
-        "51 hr fcst", "54 hr fcst", "57 hr fcst", "60 hr fcst", "63 hr fcst",
-        "66 hr fcst", "69 hr fcst", "72 hr fcst", "75 hr fcst", "78 hr fcst",
-        "81 hr fcst", "84 hr fcst", "87 hr fcst", "90 hr fcst", "93 hr fcst", "96 hr fcst"]
-CSV_FILE_FIELDS_AVG = ["datetime", "param", "level", "latitude", "longitude", "0-3 hr avg", 
-        "0-6 hr avg", "6-9 hr avg", "6-12 hr avg", "12-15 hr avg", "12-18 hr avg",
-        "18-21 hr avg", "18-24 hr avg", "24-27 hr avg", "24-30 hr avg", "30-33 hr avg",
-        "30-36 hr avg", "36-39 hr avg", "36-42 hr avg", "42-45 hr avg", "42-48 hr avg",
-        "48-51 hr avg", "48-54 hr avg", "54-57 hr avg", "54-60 hr avg", "60-63 hr avg",
-        "60-66 hr avg", "66-69 hr avg", "66-72 hr avg", "72-75 hr avg", "72-78 hr avg",
-        "78-81 hr avg", "78-84 hr avg", "84-87 hr avg", "84-90 hr avg", "90-93 hr avg", "90-96 hr avg"] 
-CSV_FILE_FIELDS_ACC = ["datetime", "param", "level", "latitude", "longitude", "0-3 hr acc", 
-        "0-6 hr acc", "6-9 hr acc", "6-12 hr acc", "12-15 hr acc", "12-18 hr acc",
-        "18-21 hr acc", "18-24 hr acc", "24-27 hr acc", "24-30 hr acc", "30-33 hr acc",
-        "30-36 hr acc", "36-39 hr acc", "36-42 hr acc", "42-45 hr acc", "42-48 hr acc",
-        "48-51 hr acc", "48-54 hr acc", "54-57 hr acc", "54-60 hr acc", "60-63 hr acc",
-        "60-66 hr acc", "66-69 hr acc", "66-72 hr acc", "72-75 hr acc", "72-78 hr acc",
-        "78-81 hr acc", "78-84 hr acc", "84-87 hr acc", "84-90 hr acc", "90-93 hr acc", "90-96 hr acc"]
 
+# Non-RT headers (include an "Analysis" column for 000h, then 3..168hr labels)
+CSV_FILE_FIELDS_FCST = [
+    "datetime", "param", "level", "latitude", "longitude", "Analysis",
+] + [f"{i} hr fcst" for i in range(3, 169, 3)]
+
+# Build 3-hourly window labels up to 168h: 0-3, 0-6, 6-9, 6-12, ... , 165-168
+def _build_three_hour_window_labels(suffix: str):
+    labels = []
+    step_hours = list(range(0, 168, 3))  # 0,3,6,...,165
+    for idx, h in enumerate(step_hours):
+        if idx % 2 == 0:
+            labels.append(f"{h}-{h+3} hr {suffix}")
+        else:
+            labels.append(f"{h-3}-{h+3} hr {suffix}")
+    return labels
+
+CSV_FILE_FIELDS_AVG = ["datetime", "param", "level", "latitude", "longitude"] + _build_three_hour_window_labels("avg")
+CSV_FILE_FIELDS_ACC = ["datetime", "param", "level", "latitude", "longitude"] + _build_three_hour_window_labels("acc")
+
+# RT headers (no Analysis column)
 CSV_FILE_FIELDS_FCST_RT = ["datetime", "param", "level", "latitude", "longitude"]
-CSV_FILE_FIELDS_FCST_RT.extend([str(i) + " hr fcst" for i in range(3, 97, 3)]) # change range to (1, 97) for hourly weather forecasts
+CSV_FILE_FIELDS_FCST_RT.extend([str(i) + " hr fcst" for i in range(3, 169, 3)])
 CSV_FILE_FIELDS_AVG_RT = ["datetime", "param", "level", "latitude", "longitude"]
-CSV_FILE_FIELDS_AVG_RT.extend([str(i) + " hr avg" for i in range(3, 97, 3)]) # change range to (1, 97) for hourly weather forecasts
+CSV_FILE_FIELDS_AVG_RT.extend([str(i) + " hr avg" for i in range(3, 169, 3)])
 CSV_FILE_FIELDS_ACC_RT = ["datetime", "param", "level", "latitude", "longitude"]
-CSV_FILE_FIELDS_ACC_RT.extend([str(i) + " hr acc" for i in range(3, 97, 3)]) # change range to (1, 97) for hourly weather forecasts
+CSV_FILE_FIELDS_ACC_RT.extend([str(i) + " hr acc" for i in range(3, 169, 3)])
 
 GRIB2_CMD = "wgrib2"
 
@@ -172,6 +164,37 @@ EU_VAR_SEPARATOR =  23547
 
 import numpy as np
 
+_printed_first_sample: bool = False
+def _debug_print_first_sample(csv_path: str):
+    global _printed_first_sample
+    if _printed_first_sample:
+        return
+    try:
+        df = pd.read_csv(csv_path, names=HEADER)
+        print("Sample params in", os.path.basename(csv_path), ":", df["param"].head(5).tolist())
+        print("Sample levels:", df["level"].head(5).tolist())
+    except Exception as e:
+        print("Sample read failed for", csv_path, e)
+    _printed_first_sample = True
+
+def _list_dir_grib2_files(fileDir: str):
+    """Return a sorted list of full paths to GRIB2 files in a directory.
+    This is used when a concrete directory of files is provided (like combined/<REGION>/<VAR>/)
+    to avoid calendar-based iteration and "prev file" fallback loops.
+    """
+    try:
+        if not os.path.isdir(fileDir):
+            return None
+        entries = [f for f in os.listdir(fileDir) if f.endswith('.grib2') and f.startswith(FILE_PREFIX)]
+        if not entries:
+            # Fallback to any .grib2 if prefix isn't used
+            entries = [f for f in os.listdir(fileDir) if f.endswith('.grib2')]
+        entries.sort()  # lexicographic sort groups by date/hour then fcst
+        return [os.path.join(fileDir, f) for f in entries]
+    except Exception as e:
+        print(f"Warning: failed to list files in {fileDir}: {e}")
+        return None
+
 def earth_radius(lat):
     '''
     calculate radius of Earth assuming oblate spheroid
@@ -231,7 +254,7 @@ def area_grid(lat, lon):
     https://github.com/chadagreene/CDT/blob/master/cdt/cdtarea.m
     """
     from numpy import meshgrid, deg2rad, gradient, cos
-    from xarray import DataArray
+    # from xarray import DataArray  # unused
 
     xlon, ylat = meshgrid(lon, lat)
     # print(ylat)
@@ -248,6 +271,10 @@ def area_grid(lat, lon):
     return area
 
 def getFileList(yearList = [2022], fileDir = None, fcstCol = FCST):
+    # Prefer directory scan mode when a concrete folder of GRIB2s is provided
+    dir_files = _list_dir_grib2_files(fileDir)
+    if dir_files is not None:
+        return dir_files
     fileList = []
     prevFile = None
     for year in yearList:
@@ -263,14 +290,10 @@ def getFileList(yearList = [2022], fileDir = None, fcstCol = FCST):
                         filePath = ""
                         filePath = fileDir + fileName
                         if (os.path.exists(filePath) == False):
-                            print(filePath + " doesn't exist")
-                            filePath = fileDir + str(prevFile)
-                            if (os.path.exists(filePath) == True):
-                                fileList.append(filePath)
-                                print("Using previous forecast value with file: ", prevFile)
-                            else:
-                                print(filePath + " doesn't exist also")
-                                pass
+                            # In calendar mode, skip missing files without falling back indefinitely
+                            # to the previous file (prevents endless repeats at dataset tail).
+                            # print(filePath + " doesn't exist")
+                            pass
                         else:
                             fileList.append(filePath)
                             prevFile = fileName # assuming the first file to be searched is always present
@@ -285,8 +308,8 @@ def getFileListForDate(startDate = None, fileDir = None, fcstCol = FCST):
     curDate = str(year) + str(month) + str(day)
     fileName = "gfs.t00z.pgrb2.0p25." + str(curDate)
     oldFileName = fileName
-    # for fcst in range(1, 96): # uncomment this line & comment below line for hourly weather forecasts
-    for fcst in range(3, 97, 3):
+    # for fcst in range(1, 168): # uncomment this line & comment below line for hourly weather forecasts
+    for fcst in range(3, 169, 3):
         fileName = oldFileName
 
         if fcst < 10:
@@ -309,7 +332,9 @@ def getFileListForDate(startDate = None, fileDir = None, fcstCol = FCST):
             prevFile = fileName # assuming the first file to be searched is always present
     return fileList
 
-def fetchWeatherDataByRegion(weatherVariable, fcstCol, pid, isRealTime, startDate, varSeparator):
+def fetchWeatherDataByRegion(weatherVariable, fcstCol, pid, isRealTime, startDate, varSeparator,
+                             stream: bool = False, stream_out: str | None = None,
+                             stream_fields: list | None = None, stream_file_name=None):
     if (isRealTime is False):
         fileList = getFileList(YEARS, weatherVariable, fcstCol)
     else:
@@ -323,6 +348,8 @@ def fetchWeatherDataByRegion(weatherVariable, fcstCol, pid, isRealTime, startDat
     tmprows = {}
     dptrows = {}
     
+    # Track header written per region for streaming mode
+    header_written = set()
 
     while fileIdx < len(fileList):
         lat = None
@@ -336,26 +363,50 @@ def fetchWeatherDataByRegion(weatherVariable, fcstCol, pid, isRealTime, startDat
         dptrow = {}
         weatherVarRow = {}
         for i in range(len(fcstCol)):
+            if fileIdx >= len(fileList):
+                break  # guard against partial final block
             row = {}
             urow = {}
             vrow = {}
             tmpCsvFile = "tmp"+str(pid)+weatherVariable.split("/")[-2]+str(YEARS[0])+".csv"
             if (isRealTime is True):
                 tmpCsvFile = "tmp"+str(pid)+weatherVariable.split("/")[-2]+str(startDate)+".csv"
-            val = subprocess.call(GRIB2_CMD + " " + fileList[fileIdx] + " -csv "+tmpCsvFile, shell=True)
-            print("File: ", fileList[fileIdx])
+            current_file = fileList[fileIdx]
+            val = subprocess.call(GRIB2_CMD + " " + current_file + " -csv "+tmpCsvFile, shell=True)
+            print("File:", current_file)
             fileIdx+=1
             if(val == 0):
                 dataset = pd.read_csv(tmpCsvFile, infer_datetime_format=True, 
                         names=HEADER) #, header=0,  parse_dates=['UTC time'], index_col=['UTC time'])    
                 # print(dataset.head(2))
+                _debug_print_first_sample(tmpCsvFile)
                 if ("ugrd_vgrd" in weatherVariable or "tmp_dpt" in weatherVariable):
-                    vdataset = dataset[varSeparator:]
-                    udataset = dataset[:varSeparator]
+                    # Robust split: use 'param' labels instead of a fixed row separator
+                    if ("ugrd_vgrd" in weatherVariable):
+                        udataset = dataset[
+                            dataset["param"].astype(str).str.startswith("UGRD")
+                            & dataset["level"].astype(str).str.contains("10 m")
+                        ]
+                        vdataset = dataset[
+                            dataset["param"].astype(str).str.startswith("VGRD")
+                            & dataset["level"].astype(str).str.contains("10 m")
+                        ]
+                    else:  # tmp_dpt
+                        udataset = dataset[
+                            dataset["param"].astype(str).str.startswith("TMP")
+                            & dataset["level"].astype(str).str.contains("2 m")
+                        ]
+                        vdataset = dataset[
+                            dataset["param"].astype(str).str.startswith("DPT")
+                            & dataset["level"].astype(str).str.contains("2 m")
+                        ]
                     # print(udataset.tail(2))
                     # print(vdataset.head(2))
                     for line in range(len(udataset)):
                         lon = float(udataset["longitude"].values[line])
+                        # Normalize longitudes to -180..180 if needed
+                        if lon > 180:
+                            lon -= 360.0
                         lat = float(udataset["latitude"].values[line])
                         for region, val in ISO_BOUNDING_BOX.items():
                             (wlon, slat, elon, nlat) = val
@@ -372,6 +423,9 @@ def fetchWeatherDataByRegion(weatherVariable, fcstCol, pid, isRealTime, startDat
                                                          udataset["value"].iloc[line]])
                     for line in range(len(vdataset)):
                         lon = float(vdataset["longitude"].values[line])
+                        # Normalize longitudes to -180..180 if needed
+                        if lon > 180:
+                            lon -= 360.0
                         lat = float(vdataset["latitude"].values[line])
                         for region, val in ISO_BOUNDING_BOX.items():
                             (wlon, slat, elon, nlat) = val
@@ -386,12 +440,47 @@ def fetchWeatherDataByRegion(weatherVariable, fcstCol, pid, isRealTime, startDat
                                                          vdataset["param"].iloc[line], vdataset["level"].iloc[line], 
                                                          vdataset["longitude"].iloc[line], vdataset["latitude"].iloc[line], 
                                                          vdataset["value"].iloc[line]])
+                    # If either split is empty, log and proceed to NaN seeding below
+                    if len(udataset) == 0 or len(vdataset) == 0:
+                        print(f"Warning: empty component set for {os.path.basename(current_file)}: U={len(udataset)} V={len(vdataset)}")
+
                     # now we have region-wise datasets for this timestamp
-                    vdataset = None
-                    udataset = None
                     for region in ISO_BOUNDING_BOX.keys():
-                        udataset = pd.DataFrame(urow[region], columns=HEADER)
-                        vdataset = pd.DataFrame(vrow[region], columns=HEADER)
+                        u_entries = urow.get(region, [])
+                        v_entries = vrow.get(region, [])
+
+                        if len(u_entries) == 0 or len(v_entries) == 0:
+                            # No grid cells for this region in this file; append NaN and lazily init metadata
+                            if ("ugrd_vgrd" in weatherVariable):
+                                if region not in windrow.keys():
+                                    # Seed metadata from any available record in the raw dataset
+                                    if len(dataset) > 0:
+                                        seed = dataset.iloc[0]
+                                        windrow[region] = [seed["startDate"], seed["param"], seed["level"], seed["latitude"], seed["longitude"]]
+                                    else:
+                                        windrow[region] = ["", "", "", "", ""]
+                                windrow[region].append(np.nan)
+                            else:
+                                # tmp_dpt branch: keep both temp and dewpoint aligned
+                                if region not in tmprow.keys():
+                                    if len(dataset) > 0:
+                                        seed = dataset.iloc[0]
+                                        tmprow[region] = [seed["startDate"], seed["param"], seed["level"], seed["latitude"], seed["longitude"]]
+                                    else:
+                                        tmprow[region] = ["", "", "", "", ""]
+                                if region not in dptrow.keys():
+                                    if len(dataset) > 0:
+                                        seed = dataset.iloc[0]
+                                        dptrow[region] = [seed["startDate"], seed["param"], seed["level"], seed["latitude"], seed["longitude"]]
+                                    else:
+                                        dptrow[region] = ["", "", "", "", ""]
+                                tmprow[region].append(np.nan)
+                                dptrow[region].append(np.nan)
+                            # Skip to next region for this timestamp
+                            continue
+
+                        udataset = pd.DataFrame(u_entries, columns=HEADER)
+                        vdataset = pd.DataFrame(v_entries, columns=HEADER)
                         if (i==0):
                             latitude[region] = np.unique(udataset["latitude"].values)
                             longitude[region] = np.unique(udataset["longitude"].values)
@@ -409,7 +498,6 @@ def fetchWeatherDataByRegion(weatherVariable, fcstCol, pid, isRealTime, startDat
 
                         if ("ugrd_vgrd" in weatherVariable):
                             windSpeed = (udataset["value"].values**2 + vdataset["value"].values**2)**(0.5)
-                            # print(len(windSpeed), len(latitude[region]), len(longitude[region]), len(latitude[region])*len(longitude[region]))
                             value = np.reshape(windSpeed, (len(latitude[region]), len(longitude[region])))
                             weighted_mean = (value * grid_cell_area[region]) / total_area_of_earth[region]
                             weighted_mean = np.sum(weighted_mean)
@@ -432,6 +520,9 @@ def fetchWeatherDataByRegion(weatherVariable, fcstCol, pid, isRealTime, startDat
                         dataset = dataset[varSeparator:]
                     for line in range(len(dataset)):
                         lon = float(dataset["longitude"].values[line])
+                        # Normalize longitudes to -180..180 if needed
+                        if lon > 180:
+                            lon -= 360.0
                         lat = float(dataset["latitude"].values[line])
                         for region, val in ISO_BOUNDING_BOX.items():
                             (wlon, slat, elon, nlat) = val
@@ -448,17 +539,28 @@ def fetchWeatherDataByRegion(weatherVariable, fcstCol, pid, isRealTime, startDat
                                                         dataset["value"].iloc[line]])
                     # now we have region-wise datasets for this timestamp
                     for region in ISO_BOUNDING_BOX.keys():
-                        dataset = pd.DataFrame(row[region], columns=HEADER)
+                        entries = row.get(region, [])
+                        if len(entries) == 0:
+                            # Append NaN and lazily init metadata
+                            if region not in weatherVarRow.keys():
+                                if len(dataset) > 0:
+                                    seed = dataset.iloc[0]
+                                    weatherVarRow[region] = [seed["startDate"], seed["param"], seed["level"], seed["latitude"], seed["longitude"]]
+                                else:
+                                    weatherVarRow[region] = ["", "", "", "", ""]
+                            weatherVarRow[region].append(np.nan)
+                            continue
+
+                        dset = pd.DataFrame(entries, columns=HEADER)
                         if (i==0):
-                            latitude[region] = np.unique(dataset["latitude"].values)
-                            longitude[region] = np.unique(dataset["longitude"].values)
+                            latitude[region] = np.unique(dset["latitude"].values)
+                            longitude[region] = np.unique(dset["longitude"].values)
                             grid_cell_area[region] = area_grid(latitude[region], longitude[region])
                             total_area_of_earth[region] = np.sum(grid_cell_area[region])
                         if region not in weatherVarRow.keys():
-                            weatherVarRow[region] = [dataset["startDate"].iloc[0], dataset["param"].iloc[0], dataset["level"].iloc[0],
-                                        dataset["latitude"].iloc[0], dataset["longitude"].iloc[0]]
-                        
-                        value = dataset["value"].values
+                            weatherVarRow[region] = [dset["startDate"].iloc[0], dset["param"].iloc[0], dset["level"].iloc[0],
+                                        dset["latitude"].iloc[0], dset["longitude"].iloc[0]]
+                        value = dset["value"].values
                         value = np.reshape(value, (len(latitude[region]), len(longitude[region])))
                         weighted_mean = (value * grid_cell_area[region]) / total_area_of_earth[region]
                         weighted_mean = np.sum(weighted_mean)
@@ -469,31 +571,62 @@ def fetchWeatherDataByRegion(weatherVariable, fcstCol, pid, isRealTime, startDat
             else:
                 print("Error: Process call failed -- ", GRIB2_CMD)
                 
+        # If we broke early due to partial block at the end, drop this incomplete aggregation
+        # by not appending any region rows and exit loop.
+        if fileIdx >= len(fileList) and i+1 < len(fcstCol):
+            break
+        # Build per-region row blocks to optionally stream
+        block_rows = {}
+        block_tmprows = {}
+        block_dptrows = {}
         for region in ISO_BOUNDING_BOX.keys():
             if ("tmp_dpt" in weatherVariable):
+                # collect this block
+                block_tmprows[region] = [tmprow.get(region)] if region in tmprow else None
+                block_dptrows[region] = [dptrow.get(region)] if region in dptrow else None
+                # accumulate full result when not streaming
                 if region not in tmprows.keys():
-                    tmprows[region] = [tmprow[region]]
+                    tmprows[region] = [tmprow.get(region)] if region in tmprow else []
                 else:    
-                    tmprows[region].append(tmprow[region])
+                    tmprows[region].append(tmprow.get(region))
                 if (region not in dptrows.keys()):
-                    dptrows[region] = [dptrow[region]]
+                    dptrows[region] = [dptrow.get(region)] if region in dptrow else []
                 else:
-                    dptrows[region].append(dptrow[region])
+                    dptrows[region].append(dptrow.get(region))
             else:
                 if ("ugrd_vgrd" in weatherVariable):
+                    block_rows[region] = [windrow.get(region)] if region in windrow else None
                     if (region not in rows.keys()):
-                        rows[region] = [windrow[region]]
+                        rows[region] = [windrow.get(region)] if region in windrow else []
                     else:
-                        rows[region].append(windrow[region])
+                        rows[region].append(windrow.get(region))
                 else:
+                    block_rows[region] = [weatherVarRow.get(region)] if region in weatherVarRow else None
                     if (region not in rows.keys()):
-                        rows[region] = [weatherVarRow[region]]
+                        rows[region] = [weatherVarRow.get(region)] if region in weatherVarRow else []
                     else:
-                        rows[region].append(weatherVarRow[region])
+                        rows[region].append(weatherVarRow.get(region))
 
-    if ("tmp_dpt" in weatherVariable):
-        return tmprows, dptrows
-    return rows, None
+        # Stream write this block if requested
+        if stream and stream_out and stream_fields and stream_file_name:
+            if ("tmp_dpt" in weatherVariable):
+                temp_file, dpt_file = stream_file_name
+                _write_stream_block(stream_out, block_tmprows, stream_fields, temp_file, isRealTime, header_written)
+                _write_stream_block(stream_out, block_dptrows, stream_fields, dpt_file, isRealTime, header_written)
+            else:
+                _write_stream_block(stream_out, block_rows, stream_fields, stream_file_name, isRealTime, header_written)
+
+        # If we consumed a full block, continue; if not, exit while
+        if fileIdx >= len(fileList):
+            break
+
+    if stream:
+        # In streaming mode we already wrote blocks; return empty to avoid large memory
+        return ({}, {}) if ("tmp_dpt" in weatherVariable) else ({}, None)
+    else:
+        if ("tmp_dpt" in weatherVariable):
+            return tmprows, dptrows
+        return rows, None
 
 def writeWeatherValuesToFile(outFilePath, weatherValues, csvFields, weatherVariableFileName, isRealTime=False):
     for region in ISO_BOUNDING_BOX.keys():
@@ -505,12 +638,47 @@ def writeWeatherValuesToFile(outFilePath, weatherValues, csvFields, weatherVaria
             print(regionOutFilePath+region+"_"+weatherVariableFileName)
         else:
             regionOutFilePath = outFilePath
+        # Ensure directory exists when writing files
+        try:
+            os.makedirs(regionOutFilePath, exist_ok=True)
+        except Exception as e:
+            print(f"Warning: could not create directory {regionOutFilePath}: {e}")
         with open(regionOutFilePath+region+"_"+weatherVariableFileName, writeMode) as regioncsvfile:
             csvwriter = csv.writer(regioncsvfile)
             csvwriter.writerow(csvFields)
             csvwriter.writerows(weatherValues[region])
 
-def startScript(continent, regionList, index, pid, inFilePath, outFilePath, isRealTime, startDate):
+def _write_stream_block(outFilePath, blockValues, csvFields, weatherVariableFileName, isRealTime, header_written):
+    """Append a single block (one forecast cycle) to per-region CSVs.
+    Writes header once per region (tracked in header_written set).
+    blockValues is a dict[region] -> list[list[...]] where each inner list is one row.
+    """
+    for region, rows_list in blockValues.items():
+        if rows_list is None:
+            continue
+        writeMode = "a"
+        regionOutFilePath = ""
+        if (isRealTime is True):
+            regionOutFilePath = outFilePath + region + "/weather_data/"
+        else:
+            regionOutFilePath = outFilePath
+        try:
+            os.makedirs(regionOutFilePath, exist_ok=True)
+        except Exception as e:
+            print(f"Warning: could not create directory {regionOutFilePath}: {e}")
+        out_path = regionOutFilePath+region+"_"+weatherVariableFileName
+        need_header = False
+        if region not in header_written:
+            # If file doesn't exist or empty, write header first
+            need_header = not os.path.exists(out_path) or os.path.getsize(out_path) == 0
+        with open(out_path, writeMode, newline="") as regioncsvfile:
+            csvwriter = csv.writer(regioncsvfile)
+            if need_header:
+                csvwriter.writerow(csvFields)
+                header_written.add(region)
+            csvwriter.writerows(rows_list)
+
+def startScript(continent, regionList, index, pid, inFilePath, outFilePath, isRealTime, startDate, stream=False):
     global FCST
     global CSV_FILE_FIELDS_FCST
     global CSV_FILE_FIELDS_AVG
@@ -549,40 +717,134 @@ def startScript(continent, regionList, index, pid, inFilePath, outFilePath, isRe
 
 
     if ("ugrd_vgrd" in inFilePath[index]):
-        windSpeed, nop = fetchWeatherDataByRegion(inFilePath[index], FCST, pid, isRealTime, startDate, varSeparator)
-        writeWeatherValuesToFile(outFilePath, windSpeed, CSV_FILE_FIELDS_FCST, weatherVariable[0]+".csv", isRealTime)
-    elif ("tmp_dpt" in inFilePath[index]):
-        temperature, dewpoint = fetchWeatherDataByRegion(inFilePath[index], FCST, pid, isRealTime, startDate, varSeparator)
-        writeWeatherValuesToFile(outFilePath, temperature, CSV_FILE_FIELDS_FCST, weatherVariable[1]+".csv", isRealTime)
-        writeWeatherValuesToFile(outFilePath, dewpoint, CSV_FILE_FIELDS_FCST, weatherVariable[2]+".csv", isRealTime)
-    else:
-        weatherValues, nop = fetchWeatherDataByRegion(inFilePath[index], FCST_AVG_ACC, pid, isRealTime, startDate, varSeparator)
-        if ("dswrf" in inFilePath[index]):
-            writeWeatherValuesToFile(outFilePath, weatherValues, CSV_FILE_FIELDS_AVG, weatherVariable[3]+".csv", isRealTime)
+        if stream:
+            fetchWeatherDataByRegion(
+                inFilePath[index], FCST, pid, isRealTime, startDate, varSeparator,
+                stream=True, stream_out=outFilePath, stream_fields=CSV_FILE_FIELDS_FCST,
+                stream_file_name=weatherVariable[0]+".csv"
+            )
         else:
-            writeWeatherValuesToFile(outFilePath, weatherValues, CSV_FILE_FIELDS_ACC, weatherVariable[4]+".csv", isRealTime)
+            windSpeed, nop = fetchWeatherDataByRegion(inFilePath[index], FCST, pid, isRealTime, startDate, varSeparator)
+            writeWeatherValuesToFile(outFilePath, windSpeed, CSV_FILE_FIELDS_FCST, weatherVariable[0]+".csv", isRealTime)
+    elif ("tmp_dpt" in inFilePath[index]):
+        if stream:
+            fetchWeatherDataByRegion(
+                inFilePath[index], FCST, pid, isRealTime, startDate, varSeparator,
+                stream=True, stream_out=outFilePath, stream_fields=CSV_FILE_FIELDS_FCST,
+                stream_file_name=(weatherVariable[1]+".csv", weatherVariable[2]+".csv")
+            )
+        else:
+            temperature, dewpoint = fetchWeatherDataByRegion(inFilePath[index], FCST, pid, isRealTime, startDate, varSeparator)
+            writeWeatherValuesToFile(outFilePath, temperature, CSV_FILE_FIELDS_FCST, weatherVariable[1]+".csv", isRealTime)
+            writeWeatherValuesToFile(outFilePath, dewpoint, CSV_FILE_FIELDS_FCST, weatherVariable[2]+".csv", isRealTime)
+    else:
+        if stream:
+            if ("dswrf" in inFilePath[index]):
+                fetchWeatherDataByRegion(
+                    inFilePath[index], FCST_AVG_ACC, pid, isRealTime, startDate, varSeparator,
+                    stream=True, stream_out=outFilePath, stream_fields=CSV_FILE_FIELDS_AVG,
+                    stream_file_name=weatherVariable[3]+".csv"
+                )
+            else:
+                fetchWeatherDataByRegion(
+                    inFilePath[index], FCST_AVG_ACC, pid, isRealTime, startDate, varSeparator,
+                    stream=True, stream_out=outFilePath, stream_fields=CSV_FILE_FIELDS_ACC,
+                    stream_file_name=weatherVariable[4]+".csv"
+                )
+        else:
+            weatherValues, nop = fetchWeatherDataByRegion(inFilePath[index], FCST_AVG_ACC, pid, isRealTime, startDate, varSeparator)
+            if ("dswrf" in inFilePath[index]):
+                writeWeatherValuesToFile(outFilePath, weatherValues, CSV_FILE_FIELDS_AVG, weatherVariable[3]+".csv", isRealTime)
+            else:
+                writeWeatherValuesToFile(outFilePath, weatherValues, CSV_FILE_FIELDS_ACC, weatherVariable[4]+".csv", isRealTime)
         
     
     return
 
 
 if __name__ == "__main__":
-    print("Separating whole US data by CarbonCast regions...")
-    print("Usage: python3 separateWeatherByRegion <continent> <index>")
-    print("Continent: US") # curently, only US is supported
-    print("Index: 0 -> wind speed, 1 -> tmp/dpt, 2-> dswrf, 3 -> apcp")
-    if (len(sys.argv) < 3):
-        print("Wrong no. of arguments!")
-        exit(0)
+    # Backward-compatible CLI with optional overrides
+    parser = argparse.ArgumentParser(description="Aggregate GRIB2 weather by region and export CSVs.")
+    parser.add_argument("continent", choices=["US", "EU"], help="Continent key")
+    parser.add_argument("index", type=int, choices=[0, 1, 2, 3], help="Variable index: 0=wind, 1=tmp/dpt, 2=dswrf, 3=apcp")
+    parser.add_argument("--base", dest="base_dir", default=None, help="Base directory containing subfolders ugrd_vgrd, tmp_dpt, dswrf, apcp")
+    parser.add_argument("--out", dest="out_dir", default=None, help="Output directory. If --rt is set, files go under <out>/<REGION>/weather_data/")
+    parser.add_argument("--years", dest="years", default=None, help="Comma-separated years, e.g. 2021,2022 (batch mode)")
+    parser.add_argument("--regions", dest="regions", default=None, help="Comma-separated region codes to process (subset)")
 
-    continent = sys.argv[1]
-    index = int(sys.argv[2])
+    # Track header written per region for streaming mode
+    header_written = set()
+
+    parser.add_argument("--rt", dest="rt_date", default=None, help="Real-time single start date: YYYY-MM-DD or YYYYMMDD")
+    parser.add_argument("--stream", dest="stream", action="store_true", help="Append rows to output CSVs as each block completes (enables tail -f monitoring)")
+
+    args = parser.parse_args()
+
+    def _ensure_trailing_sep(p: str) -> str:
+        if p is None or p == "":
+            return p
+        return p if p.endswith(os.sep) else p + os.sep
+
+    def _normalize_date(s: str) -> str:
+        s = s.strip()
+        if len(s) == 8 and s.isdigit():
+            return f"{s[0:4]}-{s[4:6]}-{s[6:8]}"
+        if len(s) == 10 and s[4] == "-" and s[7] == "-":
+            return s
+        raise ValueError("Invalid date; use YYYY-MM-DD or YYYYMMDD")
+
+    continent = args.continent
+    index = args.index
+
+    # Determine region list
     regionList = US_REGION_LIST
-    # index: 0 = wind, 1 = tmp/dpt, 2 = dswrf, 3 = apcp
-    inFilePath = FILE_DIR
-    outFilePath = OUT_FILE_DIR
-    if (continent == "EU"):
+    if continent == "EU":
         regionList = EU_REGION_LIST
-        print("Coming soon!") # not ready yet
-        exit(0)
-    startScript(continent, regionList, index, os.getpid(), inFilePath, outFilePath, isRealTime=False, startDate=None)
+        print("EU mode selected (bounding boxes available); note: historical EU batch may need validation.")
+
+    if args.regions:
+        req = [r.strip() for r in args.regions.split(",") if r.strip()]
+        # Validate provided regions
+        unknown = [r for r in req if r not in regionList]
+        if unknown:
+            print(f"Error: unknown region codes for {continent}: {unknown}")
+            sys.exit(1)
+        regionList = req
+
+    # Build input variable directories
+    inFilePath = FILE_DIR
+    if args.base_dir:
+        base = _ensure_trailing_sep(args.base_dir)
+        inFilePath = [
+            os.path.join(base, "ugrd_vgrd") + os.sep,
+            os.path.join(base, "tmp_dpt") + os.sep,
+            os.path.join(base, "dswrf") + os.sep,
+            os.path.join(base, "apcp") + os.sep,
+        ]
+
+    # Output directory
+    outFilePath = OUT_FILE_DIR
+    if args.out_dir:
+        outFilePath = _ensure_trailing_sep(args.out_dir)
+
+    # Years for batch mode
+    if args.years:
+        try:
+            globals()["YEARS"] = [int(y.strip()) for y in args.years.split(",") if y.strip()]
+        except Exception as e:
+            print(f"Error parsing --years: {e}")
+            sys.exit(1)
+
+    # Real-time optional single start date
+    isRealTime = False
+    startDate = None
+    if args.rt_date:
+        try:
+            startDate = _normalize_date(args.rt_date)
+            isRealTime = True
+        except Exception as e:
+            print(f"Error parsing --rt: {e}")
+            sys.exit(1)
+
+    # index: 0 = wind, 1 = tmp/dpt, 2 = dswrf, 3 = apcp
+    startScript(continent, regionList, index, os.getpid(), inFilePath, outFilePath, isRealTime=isRealTime, startDate=startDate, stream=args.stream)

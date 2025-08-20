@@ -1,0 +1,18 @@
+numpy==1.23.2
+pandas==1.4.4
+# Use Apple Silicon builds for TensorFlow on macOS
+tensorflow-macos==2.9.0
+tensorflow-metal==0.5.0
+keras==2.9.0
+scikit-learn==1.1.2
+scipy==1.9.1
+pytz==2022.1
+matplotlib==3.5.3
+json5==0.9.10
+seaborn==0.11.2
+statsmodels==0.13.2
+entsoe-py==0.5.10
+xarray==2023.7.0
+python-dotenv==1.0.1
+# Compatibility pin for TF 2.9
+protobuf==3.20.*
