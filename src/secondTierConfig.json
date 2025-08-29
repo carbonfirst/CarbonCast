@@ -36,8 +36,8 @@
                          "FR", "DE", "GB", "GR", "HU", "IE", "IT", "LV", "LT", "NL",
                         "PL", "PT", "RO", "RS", "SK", "SI", "ES", "SE", "CH"],
 
-    "NUM_TEST_DAYS": 12,
-    "NUM_VAL_DAYS": 8,
+    "NUM_TEST_DAYS": 170,
+    "NUM_VAL_DAYS": 4,
     "MODEL_SLIDING_WINDOW_LEN": 24, 
     "TRAINING_WINDOW_HOURS": 24, 
     "PREDICTION_WINDOW_HOURS": 168,
@@ -46,12 +46,18 @@
     "START_COL": 1,
     "NUM_FEATURES": 6,
     "NUMBER_OF_EXPERIMENTS_PER_REGION": 1,
+    // Control trimming of emissions dataset before splitting (was fixed 8760 / 72)
+    "INITIAL_HOURS_TO_DROP": 0,
+    "FINAL_HOURS_TO_DROP": 0,
+        // Absolute date bounds for emissions dataset used in backtest; ensures test window ends June 30 2023
+        //"START_DATE": "",
+        //"END_DATE": "",
     "LIFECYCLE_SAVED_MODEL_LOCATION": "saved_second_tier_models/lifecycle/",
     "DIRECT_SAVED_MODEL_LOCATION": "saved_second_tier_models/direct/",
     "WRITE_CI_FORECASTS_TO_FILE": "True",
     
     "SECOND_TIER_CNN_LSTM_MODEL_HYPERPARAMS": {
-        "EPOCH": 100,
+        "EPOCH": 10,
         "BATCH_SIZE": [10],
         "ACTIVATION_FUNC": "relu",
         "LOSS_FUNC": "mse",
@@ -76,6 +82,7 @@
     "AECI": {
     "LIFECYCLE_CEF_IN_FILE_NAME": "data/AECI/AECI_lifecycle_emissions.csv",
     "DIRECT_CEF_IN_FILE_NAME": "data/AECI/AECI_direct_emissions.csv",
+    // Must point to 168h aggregated first-tier forecast file (fuel+weather) matching PREDICTION_WINDOW_HOURS=168
     "FORECAST_IN_FILE_NAME": "data/AECI/AECI_168hr_forecasts_DA.csv",
     "LIFECYCLE_CEF_OUT_FILE_NAME_PREFIX": "CI_forecast_data/AECI/AECI_lifecycle_168hr_CI_forecasts",
     "DIRECT_CEF_OUT_FILE_NAME_PREFIX": "CI_forecast_data/AECI/AECI_direct_168hr_CI_forecasts",
