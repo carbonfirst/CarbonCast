@@ -588,47 +588,31 @@ def trainingandValidationPhase(trainData, wTrainData, valData, wValData,
 def manipulateTrainingDataShape(data, labelWindowHours, weatherData = None):
     global TRAINING_WINDOW_HOURS
     global PREDICTION_WINDOW_HOURS
-    global WEATHER_STRIDE_HOURS
 
     print("Data shape: ", data.shape)
-    global PREDICTION_WINDOW_HOURS
     X, y, weatherX = list(), list(), list()
     weatherIdx = 0
     hourIdx = 0
     # step over the entire history one time step at a time
-    # When weather data is provided, cap the max iterations to the number of available
-    # daily weather blocks (each block supports 24 hourly samples).
-    max_iters = len(data) - (TRAINING_WINDOW_HOURS + labelWindowHours) + 1
-    if weatherData is not None:
-        # Compute number of available issuance blocks dynamically.
-        # A block has length PREDICTION_WINDOW_HOURS and blocks start every WEATHER_STRIDE_HOURS.
-        # Require at least one full block to start.
-        if len(weatherData) >= PREDICTION_WINDOW_HOURS and WEATHER_STRIDE_HOURS > 0:
-            num_blocks = 1 + (len(weatherData) - PREDICTION_WINDOW_HOURS) // WEATHER_STRIDE_HOURS
-        else:
-            num_blocks = 0
-        max_iters = min(max_iters, num_blocks * 24)
-        # Track start of current block for stride skipping.
-        block_start_idx = 0
-    for i in range(max_iters):
+    for i in range(len(data)-(TRAINING_WINDOW_HOURS+labelWindowHours)+1):
+        # Bounds check BEFORE processing to ensure exact alignment
+        if(weatherData is not None):
+            if weatherIdx + TRAINING_WINDOW_HOURS > len(weatherData):
+                # Stop processing when weather data runs out
+                break
+                
         # define the end of the input sequence
         trainWindow = i + TRAINING_WINDOW_HOURS
         labelWindow = trainWindow + labelWindowHours
         xInput = data[i:trainWindow, :]
-        # xInput = xInput.reshape((len(xInput), 1))
         X.append(xInput)
         if(weatherData is not None):
-            # Guard against tail fragments shorter than TRAINING_WINDOW_HOURS
-            if weatherIdx + TRAINING_WINDOW_HOURS > len(weatherData):
-                break
             weatherX.append(weatherData[weatherIdx:weatherIdx+TRAINING_WINDOW_HOURS])
             weatherIdx += 1
             hourIdx += 1
-            if hourIdx == TRAINING_WINDOW_HOURS:  # completed one day segment
+            if(hourIdx == 24):
                 hourIdx = 0
-                # Advance to next issuance block start (dynamic stride). Legacy behavior when stride==horizon.
-                block_start_idx += WEATHER_STRIDE_HOURS
-                weatherIdx = block_start_idx
+                weatherIdx += (PREDICTION_WINDOW_HOURS-24)
         y.append(data[trainWindow:labelWindow, DEPENDENT_VARIABLE_COL])
     X = np.array(X, dtype=np.float64)
     y = np.array(y, dtype=np.float64)

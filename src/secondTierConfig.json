@@ -8,10 +8,11 @@
         "AFFILIATION": "University of Massachusetts, Amherst"
     },
 
+    // Regions: CISO, PJM, ERCO, ISNE, NYISO, FPL, BPAT, SE, DE, ES, NL, PL, AUS_QLD
+    // Can include multiple regions in the list, separated by comma.  
     
-    
-    "REGION_WITH_INCONSISTENT_DATA": ["BANC", "FPC", "GRID", "PSEI", "WALC"],
-    "REGION_WITH_SINGLE_SOURCE": ["GCPD", "SCL", "TPWR"],
+    "REGION_WITH_INCONSISTENT_DATA": ["BANC", "FPC", "GRID", "PSEI", "WALC"], // TODO: check these later
+    "REGION_WITH_SINGLE_SOURCE": ["GCPD", "SCL", "TPWR"], // TODO: check these later
 
     "ORIGINAL_REGIONS": ["AECI", "AZPS", "BPAT", "CISO", "DUK", "EPE", "ERCO", "FPL", "IPCO", 
                 "ISNE", "LDWP", "MISO", "NEVP", "NWMT", "NYIS", "PACE", "PACW", "PJM", 
@@ -27,7 +28,7 @@
 
     "REGION_DIRECT": ["AECI"],
 
-    "REGION_LIFECYCLE": ["IPCO", "PACW", 
+    "REGION_LIFECYCLE": ["AECI", "PACW", 
                 "PSCO", "SPA", "SWPP"],
 
     "TMP_REGION": ["CISO"],
@@ -36,22 +37,16 @@
                          "FR", "DE", "GB", "GR", "HU", "IE", "IT", "LV", "LT", "NL",
                         "PL", "PT", "RO", "RS", "SK", "SI", "ES", "SE", "CH"],
 
-    "NUM_TEST_DAYS": 170,
-    "NUM_VAL_DAYS": 4,
+    "NUM_TEST_DAYS": 359,
+    "NUM_VAL_DAYS": 90,
     "MODEL_SLIDING_WINDOW_LEN": 24, 
     "TRAINING_WINDOW_HOURS": 24, 
     "PREDICTION_WINDOW_HOURS": 168,
     "MAX_PREDICTION_WINDOW_HOURS": 168,
-    "TOP_N_FEATURES": 5, 
+    "TOP_N_FEATURES": 5,
     "START_COL": 1,
     "NUM_FEATURES": 6,
     "NUMBER_OF_EXPERIMENTS_PER_REGION": 1,
-    // Control trimming of emissions dataset before splitting (was fixed 8760 / 72)
-    "INITIAL_HOURS_TO_DROP": 0,
-    "FINAL_HOURS_TO_DROP": 0,
-        // Absolute date bounds for emissions dataset used in backtest; ensures test window ends June 30 2023
-        //"START_DATE": "",
-        //"END_DATE": "",
     "LIFECYCLE_SAVED_MODEL_LOCATION": "saved_second_tier_models/lifecycle/",
     "DIRECT_SAVED_MODEL_LOCATION": "saved_second_tier_models/direct/",
     "WRITE_CI_FORECASTS_TO_FILE": "True",
@@ -70,23 +65,22 @@
         "CNN_NUM_FILTERS2": 16,
         "CNN_POOL_SIZE": 2,
 
-        
-        
+        // "REPEAT_VECTOR_UNITS":
+        // "LSTM_UNITS":
         "LSTM_DROPOUT_RATE": 0.1, 
 
         "DENSE_UNITS": 20
     },
 
-    
+    // US regions
 
     "AECI": {
-    "LIFECYCLE_CEF_IN_FILE_NAME": "data/AECI/AECI_lifecycle_emissions.csv",
-    "DIRECT_CEF_IN_FILE_NAME": "data/AECI/AECI_direct_emissions.csv",
-    // Must point to 168h aggregated first-tier forecast file (fuel+weather) matching PREDICTION_WINDOW_HOURS=168
-    "FORECAST_IN_FILE_NAME": "data/AECI/AECI_168hr_forecasts_DA.csv",
-    "LIFECYCLE_CEF_OUT_FILE_NAME_PREFIX": "CI_forecast_data/AECI/AECI_lifecycle_168hr_CI_forecasts",
-    "DIRECT_CEF_OUT_FILE_NAME_PREFIX": "CI_forecast_data/AECI/AECI_direct_168hr_CI_forecasts",
-        "NUM_FORECAST_FEATURES": 8
+        "LIFECYCLE_CEF_IN_FILE_NAME": "data/AECI/AECI_lifecycle_emissions.csv",
+        "DIRECT_CEF_IN_FILE_NAME": "data/AECI/AECI_direct_emissions.csv",
+        "FORECAST_IN_FILE_NAME": "data/AECI/AECI_168hr_forecasts_DA.csv",
+        "LIFECYCLE_CEF_OUT_FILE_NAME_PREFIX": "CI_forecast_data/AECI/AECI_lifecycle_168hr_CI_forecasts",
+        "DIRECT_CEF_OUT_FILE_NAME_PREFIX": "CI_forecast_data/AECI/AECI_direct_168hr_CI_forecasts",
+        "NUM_FORECAST_FEATURES": 9
         
     },
 
@@ -115,8 +109,8 @@
         "LIFECYCLE_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/CISO/CISO_lifecycle_96hr_CI_forecasts",
         "DIRECT_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/CISO/CISO_direct_96hr_CI_forecasts",
         "NUM_FORECAST_FEATURES": 12
-        
-        
+        // "NUM_SPECIALIZED_FORECAST_FEATURES": 8, // weather + subset of source production forecasts
+        // "SPECIALIZED_FORECASTS": ["NAT_GAS", "SOLAR", "WIND"]
     },
 
     "DUK": {
@@ -335,7 +329,7 @@
         "NUM_FORECAST_FEATURES": 13
     },
 
-    
+    // EU regions
 
     "AT": {
         "LIFECYCLE_CEF_IN_FILE_NAME": "../data/EU_DATA/AT/AT_lifecycle_emissions.csv",
@@ -625,7 +619,7 @@
         "NUM_FORECAST_FEATURES": 12
     },
 
-    
+    // AUS regions
 
     "AUS_QLD": {
         "LIFECYCLE_CEF_IN_FILE_NAME": "../data/AUS_QLD/AUS_QLD_lifecycle_emissions.csv",

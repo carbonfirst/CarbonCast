@@ -3,3 +3,6 @@
 #all pycache files
 __pycache__/
 .DS_Store
+
+#.grib2 files
+*.grib2

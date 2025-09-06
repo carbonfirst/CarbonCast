@@ -44,8 +44,6 @@ MODEL_SLIDING_WINDOW_LEN = None
 BUFFER_HOURS = None
 SAVED_MODEL_LOCATION = None
 TOP_N_FEATURES = 0
-INITIAL_HOURS_TO_DROP = 8760
-FINAL_HOURS_TO_DROP = 72
 ############################# MACRO END #########################################
 
 def runSecondTier(configFileName, cefType, loadFromSavedModel):
@@ -57,8 +55,6 @@ def runSecondTier(configFileName, cefType, loadFromSavedModel):
     global DEPENDENT_VARIABLE_COL
     global SAVED_MODEL_LOCATION
     global TOP_N_FEATURES
-    global INITIAL_HOURS_TO_DROP
-    global FINAL_HOURS_TO_DROP
 
     secondTierConfig = {}
 
@@ -75,19 +71,10 @@ def runSecondTier(configFileName, cefType, loadFromSavedModel):
     TOP_N_FEATURES = secondTierConfig["TOP_N_FEATURES"]
     NUMBER_OF_EXPERIMENTS = secondTierConfig["NUMBER_OF_EXPERIMENTS_PER_REGION"]
     BUFFER_HOURS = PREDICTION_WINDOW_HOURS - 24
-    # Optional trimming parameters to avoid hard-coded slice when dataset time span differs
-    if "INITIAL_HOURS_TO_DROP" in secondTierConfig:
-        INITIAL_HOURS_TO_DROP = int(secondTierConfig["INITIAL_HOURS_TO_DROP"])
-    if "FINAL_HOURS_TO_DROP" in secondTierConfig:
-        FINAL_HOURS_TO_DROP = int(secondTierConfig["FINAL_HOURS_TO_DROP"])
 
-    # Optional absolute date bounds for emissions data (precede hour trimming)
-    startDateBound = secondTierConfig.get("START_DATE")
-    endDateBound = secondTierConfig.get("END_DATE")
     regionList = secondTierConfig["REGION_DIRECT"]
     if (loadFromSavedModel is True):
         NUMBER_OF_EXPERIMENTS = 1
-    # Set save location based on cef type
     if (cefType == "-l"):
         SAVED_MODEL_LOCATION = secondTierConfig["LIFECYCLE_SAVED_MODEL_LOCATION"]
     else:
@@ -108,15 +95,7 @@ def runSecondTier(configFileName, cefType, loadFromSavedModel):
         startCol = secondTierConfig["START_COL"]
 
         print("Initializing...")
-        dataset, forecastDataset, dateTime = initialize(inFileName, forecastInFileName, startCol, startDateBound, endDateBound)
-        # Sanity: ensure overlapping date ranges (light warning only)
-        try:
-            f_start, f_end = forecastDataset.index.min(), forecastDataset.index.max()
-            d_start, d_end = dateTime[0], dateTime[-1]
-            if f_end < d_end:
-                print(f"[WARN] Forecast feature file ends earlier ({f_end}) than emissions ({d_end}). Predictions for later dates will reuse older weather/source forecasts -> potential quality issues.")
-        except Exception:
-            pass
+        dataset, forecastDataset, dateTime = initialize(inFileName, forecastInFileName, startCol, secondTierConfig)
         specializedForecasts = None
         if ("NUM_SPECIALIZED_FORECAST_FEATURES" in regionConfig): # weather + subset of source production forecasts
             numForecastFeatures = regionConfig["NUM_SPECIALIZED_FORECAST_FEATURES"]
@@ -181,8 +160,6 @@ def runSecondTier(configFileName, cefType, loadFromSavedModel):
         print("***** Data scaling done *****")
 
         print("Saving min & max values for each column in file...")
-        import os
-        os.makedirs(SAVED_MODEL_LOCATION+region, exist_ok=True)
         with open(SAVED_MODEL_LOCATION+region+"/"+region+"_min_max_values.txt", "w") as f:
             f.writelines(str(ftMin))
             f.write("\n")
@@ -250,11 +227,7 @@ def runSecondTier(configFileName, cefType, loadFromSavedModel):
                                     np.percentile(regionDailyMape[region][:, i], 99)])
 
             print("Saving MAPE values by day in file...")
-            import os
-            mape_dir = os.path.join("data", region)
-            os.makedirs(mape_dir, exist_ok=True)
-            mape_path = os.path.join(mape_dir, f"{region}_MAPE_iter{exptNum}.txt")
-            with open(mape_path, "w") as f:
+            with open("data/"+region+"/"+region+"_MAPE_iter"+str(exptNum)+".txt", "w") as f:
                 for item in mapeByDay:
                     f.writelines(str(item))
                     f.write("\n")
@@ -374,66 +347,43 @@ def runSecondTierInRealTime(configFileName, regionList, cefType, startDate, elec
 
     return
 
-def initialize(inFileName, forecastInFileName, startCol, startDateBound=None, endDateBound=None):
+def initialize(inFileName, forecastInFileName, startCol, secondTierConfig=None):
     print(inFileName)
     # load the new file
-    dataset = pd.read_csv(inFileName, header=0, infer_datetime_format=True, 
-                            parse_dates=['UTC time'], index_col=['UTC time'])    
-    # We'll load forecast dataset first so we can optionally align both by overlapping dates
-    # (previous trimming applied before knowing overlap)
+    dataset = pd.read_csv(inFileName, header=0, infer_datetime_format=True,
+                            parse_dates=['UTC time'], index_col=['UTC time'])
+    
+    # Calculate dynamic trimming based on dates
+    # Get the first timestamp in the dataset
+    first_timestamp = dataset.index[0]
+    target_start_date = pd.Timestamp('2022-01-01 00:00:00', tz=first_timestamp.tz)
+    
+    # Calculate hours between first timestamp and target start date
+    time_diff = target_start_date - first_timestamp
+    initial_drop = int(time_diff.total_seconds() / 3600)  # Convert to hours
+    final_drop = 0
+    
+    print(f"Dataset starts from: {first_timestamp}")
+    print(f"Target start date: {target_start_date}")
+    print(f"Applying data trimming: dropping first {initial_drop} hours, last {final_drop} hours")
+    print(f"Original dataset size: {len(dataset)}")
+    
+    if final_drop > 0:
+        dataset = dataset[initial_drop:-final_drop]
+    else:
+        dataset = dataset[initial_drop:]
+    
+    print(f"Trimmed dataset size: {len(dataset)}")
+    print(f"New dataset starts from: {dataset.index[0]}")
     print(dataset.head())
     print(dataset.columns)
-    # Preserve original index for reference, but we'll recompute dateTime after applying
-    # overlap bounds so downstream shapes align with the trimmed dataset length.
-    originalDateTime = dataset.index.values
+    dateTime = dataset.index.values
 
     print(forecastInFileName)
     # forecastDataset = pd.read_csv(forecastInFileName, header=0, infer_datetime_format=True, 
     #                         parse_dates=['UTC time'], index_col=['UTC time']) # old data files
     forecastDataset = pd.read_csv(forecastInFileName, header=0, infer_datetime_format=True, 
                             parse_dates=['datetime'], index_col=['datetime']) # new data files in data
-    # Overlapping stacked forecast files (e.g. 168h DA) intentionally repeat each future hour
-    # across rolling issuance windows, creating duplicate datetime index labels. Using .loc
-    # slicing with a duplicated right bound can raise a KeyError. We therefore keep ALL
-    # overlapping rows (to preserve horizon alignment logic in splitWeatherDataset) and perform
-    # slicing via a boolean mask instead of a label slice when duplicates are present.
-    # Dynamic overlap logic: if explicit bounds not provided, automatically restrict to the
-    # intersection of emissions & forecast feature date ranges; if bounds provided, clip them
-    # to the overlap so we never select periods without features.
-    emissions_start, emissions_end = dataset.index.min(), dataset.index.max()
-    fc_start, fc_end = forecastDataset.index.min(), forecastDataset.index.max()
-    overlap_start = max(emissions_start, fc_start)
-    overlap_end = min(emissions_end, fc_end)
-    if overlap_end < overlap_start:
-        print(f"[ERROR] No overlapping date range between emissions ({emissions_start}..{emissions_end}) and forecast features ({fc_start}..{fc_end}). Aborting.")
-        return dataset.iloc[0:0], forecastDataset.iloc[0:0], dataset.index.values
-    # Apply user-specified bounds if present, else use overlap
-    if startDateBound is None:
-        effective_start = overlap_start
-    else:
-        effective_start = max(overlap_start, pd.to_datetime(startDateBound))
-    if endDateBound is None:
-        effective_end = overlap_end
-    else:
-        effective_end = min(overlap_end, pd.to_datetime(endDateBound))
-    if effective_end < effective_start:
-        print(f"[WARN] Effective date range after applying START/END & overlap is empty ({effective_start}>{effective_end}). Using raw overlap.")
-        effective_start, effective_end = overlap_start, overlap_end
-    dataset = dataset.loc[effective_start:effective_end]
-    if forecastDataset.index.is_unique:
-        forecastDataset = forecastDataset.loc[effective_start:effective_end]
-    else:
-        mask = (forecastDataset.index >= effective_start) & (forecastDataset.index <= effective_end)
-        forecastDataset = forecastDataset[mask]
-    # Recompute aligned dateTime AFTER slicing so feature engineering arrays match length
-    dateTime = dataset.index.values
-    # After date narrowing apply hour-based trimming if configured
-    global INITIAL_HOURS_TO_DROP, FINAL_HOURS_TO_DROP
-    if INITIAL_HOURS_TO_DROP > 0 and len(dataset) > INITIAL_HOURS_TO_DROP:
-        dataset = dataset[INITIAL_HOURS_TO_DROP:]
-    if FINAL_HOURS_TO_DROP > 0 and len(dataset) > FINAL_HOURS_TO_DROP:
-        dataset = dataset[:-FINAL_HOURS_TO_DROP]
-    # Cast feature dtypes
     for i in range(startCol, len(dataset.columns.values)):
         col = dataset.columns.values[i]
         dataset[col] = dataset[col].astype(np.float64)
@@ -518,35 +468,35 @@ def addDateTimeFeatures(dataset, dateTime, startCol):
     return dataset
 
 # convert history into inputs and outputs
-def manipulateTrainingDataShape(data, trainWindowHours, labelWindowHours, weatherData = None): 
+def manipulateTrainingDataShape(data, trainWindowHours, labelWindowHours, weatherData = None):
     print("Data shape: ", data.shape)
     global MAX_PREDICTION_WINDOW_HOURS
     global PREDICTION_WINDOW_HOURS
+    global MODEL_SLIDING_WINDOW_LEN
     X, y, weatherX = list(), list(), list()
     weatherIdx = 0
     hourIdx = 0
     # step over the entire history one time step at a time
-    # When weather data is provided, cap iterations to available daily weather blocks
-    max_iters = len(data) - (trainWindowHours + labelWindowHours) + 1
-    if weatherData is not None and len(weatherData) > 0:
-        daily_blocks = len(weatherData) // MAX_PREDICTION_WINDOW_HOURS
-        max_iters = max(0, min(max_iters, daily_blocks * 24))
-    for i in range(max_iters):
+    for i in range(len(data)-(trainWindowHours+labelWindowHours)+1):
+        # Guard against out-of-bounds weather data access BEFORE processing
+        if weatherIdx + trainWindowHours > len(weatherData):
+            # If we run out of weather data, break the loop
+            break
+            
         # define the end of the input sequence
         trainWindow = i + trainWindowHours
         labelWindow = trainWindow + labelWindowHours
         xInput = data[i:trainWindow, :]
         # xInput = xInput.reshape((len(xInput), 1))
         X.append(xInput)
-        # Guard against tail fragments shorter than trainWindowHours
-        if weatherIdx + trainWindowHours > len(weatherData):
-            break
         weatherX.append(weatherData[weatherIdx:weatherIdx+trainWindowHours])
         weatherIdx +=1
         hourIdx +=1
-        if(hourIdx ==24):
+        if(hourIdx == 24):
             hourIdx = 0
-            weatherIdx += (MAX_PREDICTION_WINDOW_HOURS-24)
+            # For 168h rolling forecasts, move to next day's forecast window
+            # Each day starts a new 168h window, so skip by forecast stride (24h for daily forecasts)
+            weatherIdx += 23  # Skip to next day's start (24h stride - 1 for the increment)
         y.append(data[trainWindow:labelWindow, DEPENDENT_VARIABLE_COL])
     X = np.array(X, dtype=np.float64)
     y = np.array(y, dtype=np.float64)
