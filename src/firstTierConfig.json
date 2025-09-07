@@ -21,7 +21,7 @@
     // "REGION": ["AECI", "AZPS", "BPAT", "CISO", "DUK", "EPE", "ERCOT", "FPL", "IPCO", 
     //             "ISNE", "LDWP", "MISO", "NEVP", "NWMT", "NYISO", "PACE", "PACW", "PJM", 
     //             "PSCO", "SC", "SCEG", "SOCO", "SPA", "SRP", "SWPP", "TIDC", "TVA", "WACM"],
-    "REGION": ["AECI"],
+    "REGION": ["BE"],
     "NUM_VAL_DAYS": 30, // 1 month
     "MODEL_SLIDING_WINDOW_LEN": 24, 
     "TRAINING_WINDOW_HOURS": 24, 
@@ -470,10 +470,10 @@
     },
 
     "BE": {
-        "IN_FILE_NAME_PREFIX": "../data/EU_DATA/BE/fuel_forecast/BE_",
-        "WEATHER_FORECAST_IN_FILE_NAME": "../data/EU_DATA/BE/BE_weather_forecast.csv",
-        "OUT_FILE_NAME_PREFIX": "../data/EU_DATA/BE/fuel_forecast/BE_ANN",
-        "AGGREGATED_FORECAST_OUT_FILE_NAME": "../data/EU_DATA/BE/BE_96hr_forecasts_DA.csv",
+        "IN_FILE_NAME_PREFIX": "data/BE/fuel_forecast/BE_",
+        "WEATHER_FORECAST_IN_FILE_NAME": "EU_2023_BE_output/BE_weather_forecast_2023.csv",
+        "OUT_FILE_NAME_PREFIX": "data/BE/fuel_forecast/BE_ANN",
+        "AGGREGATED_FORECAST_OUT_FILE_NAME": "data/BE/BE_168hr_forecasts_DA.csv",
         "LOCAL_TIMEZONE": "CET",
         "SOURCES": ["coal", "nat_gas", "nuclear", "oil", "hydro", "solar", "wind", "biomass", "unknown"], // "unknown" and "other" are same
         "SOURCE_COL": [0, 1, 2, 3, 4, 5, 6, 7, 8],
