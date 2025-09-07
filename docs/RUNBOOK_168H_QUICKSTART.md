@@ -1,10 +1,44 @@
 # CarbonCast 168-Hour Forecasting - Simple Quickstart Guide
 
-Complete 4-step guide to generate 7-day (168-hour) carbon intensity forecasts from GRIB2 weather data.
+Complete guide to generate 7-day (168-hour) carbon intensity forecasts from GRIB2 weather data.
 
-## 🚀 Why micromamba?
+## 🛠️ Setup: micromamba Environment
 
 **micromamba is the recommended environment manager for macOS users** - it handles TensorFlow Metal GPU dependencies seamlessly and avoids common installation issues with conda/pip conflicts.
+
+### Install micromamba (macOS)
+
+```bash
+# Install micromamba
+curl -Ls https://micro.mamba.pm/api/install/osx-arm64/latest | tar -xvj bin/micromamba
+sudo mv bin/micromamba /usr/local/bin/
+
+# Initialize shell integration
+micromamba shell init -s zsh
+source ~/.zshrc
+```
+
+### Create CarbonCast Environment
+
+```bash
+# Create Python 3.10 environment
+micromamba create -n carboncast-310 -c conda-forge python=3.10 pip
+
+# Activate environment
+micromamba activate carboncast-310
+
+# Install dependencies
+pip install -r requirements-macos-arm.txt
+
+# Install wgrib2 (required for weather data processing)
+brew install wgrib2
+
+# Verify setup
+python --version  # Should show Python 3.10.x
+which wgrib2     # Should show /opt/homebrew/bin/wgrib2
+```
+
+**✅ Environment ready!** All subsequent commands use `micromamba run -n carboncast-310` prefix.
 
 ---
 
@@ -109,8 +143,6 @@ micromamba run -n carboncast-310 python src/weather/cleanWeatherData.py EU EU_20
 EU_2023_BE_output/BE_weather_forecast_2023.csv      (37.3 MB) ← Key output
 EU_2023_BE_output/BE_aggregated_weather_data_2023.csv (37.3 MB)
 ```
-
-**Runtime:** ~2 minutes
 
 ---
 
@@ -235,5 +267,3 @@ After running all steps, verify:
 □ **CI forecasts generated** (Step 5): Merged 2023 file with 60k+ forecast points
 
 **Final output:** `CI_forecast_data/{REGION}/{REGION}_direct_168hr_CI_forecasts_merged_2023.csv`
-
-This file contains hourly carbon intensity forecasts for the complete year with proper 168-hour overlapping window structure preserved for comprehensive analysis.
