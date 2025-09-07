@@ -2,6 +2,8 @@
 set -euo pipefail
 
 BASE_DIR="${1:-/Users/tanushsavadi/Documents/Research/UCSC_CarbonCast/CarbonCast/168h_grib2_data}"
+# Convert to absolute path to ensure symlinks work correctly
+BASE_DIR=$(cd "$BASE_DIR" && pwd)
 OUT_DIR="$BASE_DIR/combined"
 VARS=(ugrd_vgrd tmp_dpt dswrf apcp)
 
