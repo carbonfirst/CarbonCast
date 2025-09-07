@@ -356,7 +356,10 @@ def initialize(inFileName, forecastInFileName, startCol, secondTierConfig=None):
     # Calculate dynamic trimming based on dates
     # Get the first timestamp in the dataset
     first_timestamp = dataset.index[0]
-    target_start_date = pd.Timestamp('2022-01-01 00:00:00', tz=first_timestamp.tz)
+    
+    # For chunk data (6-month forecasting), use the dataset's first timestamp as target
+    # This ensures no trimming is applied to pre-filtered chunk data
+    target_start_date = first_timestamp
     
     # Calculate hours between first timestamp and target start date
     time_diff = target_start_date - first_timestamp
