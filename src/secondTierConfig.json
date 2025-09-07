@@ -26,7 +26,7 @@
                                 "NWMT", "NYIS", "PACE", "PJM", "SC", "SCEG", "SOCO", "SRP",
                                 "TIDC", "TVA", "WACM"],
 
-    "REGION_DIRECT": ["AECI"],
+    "REGION_DIRECT": ["BE"],
 
     "REGION_LIFECYCLE": ["AECI", "PACW", 
                 "PSCO", "SPA", "SWPP"],
@@ -341,12 +341,12 @@
     },
 
     "BE": {
-        "LIFECYCLE_CEF_IN_FILE_NAME": "../data/EU_DATA/BE/BE_lifecycle_emissions.csv",
-        "DIRECT_CEF_IN_FILE_NAME": "../data/EU_DATA/BE/BE_direct_emissions.csv",
-        "FORECAST_IN_FILE_NAME": "../data/EU_DATA/BE/BE_96hr_forecasts_DA.csv",
-        "LIFECYCLE_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/EU_DATA/BE/BE_lifecycle_96hr_CI_forecasts",
-        "DIRECT_CEF_OUT_FILE_NAME_PREFIX": "../CI_forecast_data/EU_DATA/BE/BE_direct_96hr_CI_forecasts",
-        "NUM_FORECAST_FEATURES": 14 
+        "LIFECYCLE_CEF_IN_FILE_NAME": "data/BE/BE_lifecycle_emissions.csv",
+        "DIRECT_CEF_IN_FILE_NAME": "data/BE/BE_direct_emissions.csv",
+        "FORECAST_IN_FILE_NAME": "data/BE/BE_168hr_forecasts_DA.csv",
+        "LIFECYCLE_CEF_OUT_FILE_NAME_PREFIX": "CI_forecast_data/BE/BE_lifecycle_168hr_CI_forecasts",
+        "DIRECT_CEF_OUT_FILE_NAME_PREFIX": "CI_forecast_data/BE/BE_direct_168hr_CI_forecasts",
+        "NUM_FORECAST_FEATURES": 15
     },
 
     "BG": {
