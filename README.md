@@ -111,7 +111,38 @@ Then, run ```source ~/.bashrc```.
 If you are using MacOS and having trouble compiling wgrib2, please refer to [this](https://theweatherguy.net/blog/weather-links-info/how-to-install-and-compile-wgrib2-on-mac-os-10-14-6-mojave/) article.
 <!-- * ``` pip3 install numpy, matplotlib, sklearn, datetime, matplotlib ``` -->
 
-### 4.2 Running CarbonCast using saved models/Reproducing results from paper:
+### 4.2 168-Hour Forecasting (7-Day Carbon Intensity Predictions):
+
+**🚀 New User Quick Start:** See [`docs/RUNBOOK_168H_QUICKSTART.md`](docs/RUNBOOK_168H_QUICKSTART.md) for a complete 5-step guide to generate 168-hour forecasts from GRIB2 weather data.
+
+**Why micromamba?** We recommend micromamba for macOS users as it handles TensorFlow Metal GPU dependencies seamlessly.
+
+**Complete Pipeline (5 Commands):**
+```bash
+# 1. Organize GRIB2 data
+bash scripts/combine_grib2_symlinks.sh tmp_files
+
+# 2. Extract weather variables (run for indices 0,1,2,3)
+micromamba run -n carboncast-310 python src/weather/separateWeatherByRegion.py EU {INDEX} \
+    --base tmp_files/combined/{REGION}/ --out ./{REGION}_output/ --regions {REGION}
+
+# 3. Clean weather data
+micromamba run -n carboncast-310 python src/weather/cleanWeatherData.py EU {REGION}_output/
+
+# 4. Generate source forecasts
+micromamba run -n carboncast-310 python src/firstTierForecasts.py src/firstTierConfig.json
+
+# 5. Generate carbon intensity forecasts
+micromamba run -n carboncast-310 python scripts/run_6month_forecasting.py src/secondTierConfig.json -d
+```
+
+**Key Features:**
+- **Complete 2023 Coverage**: ~60,000 forecast windows across the entire year
+- **Dynamic Region Support**: Works with any configured region (BE, AECI, TVA, etc.)
+- **6-Month Chunk Approach**: H1 and H2 chunks provide better seasonal coverage
+- **Overlap Preservation**: All forecast windows preserved for comprehensive analysis
+
+### 4.3 Running CarbonCast using saved models/Reproducing results from paper:
 We have saved second-tier models for each region which you can use with existing & new datasets to get 96-hour CI forecasts. These models are trained with data from Jan-Dec 2020 and validated with data from Jan-Jun 2021, so that results similar to the paper can be obtained when tested over Jul-Dec 2021. Each region has 2 saved models --- one for lifecycle CEF & the other for direct CEF. If you are using new datasets, you may need to update the models with new training data or generate new models.<br>
 To run CarbonCast using the saved model for any region, run: <br>
 ```python3 secondTierForecasts.py <configFileName> <-l/-d> <-s>```<br>
