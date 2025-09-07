@@ -12,9 +12,9 @@ import os
 import sys
 
 US_REGION_LIST = ["AECI"] # add US regions here
-EU_REGION_LIST = ["AL", "AT", "BE", "BG", "CH", "CZ", "DE", "DK", "EE", "ES", "FI", 
-                  "FR", "GB", "GR", "HR", "HU", "IE", "IT", "LT", "LV", "NL", "PL", 
-                  "PT", "RO", "RS", "SE", "SI", "SK"] # add EU regions here]
+EU_REGION_LIST = ["AL", "AT", "BE", "BG", "CH", "CZ", "DE", "DK", "EE", "ES", "FI",
+                  "FR", "GB", "GR", "HR", "HU", "IE", "IT", "LT", "LV", "NL", "PL",
+                  "PT", "RO", "RS", "SE", "SI", "SK"] # add EU regions here
 
 COLUMN_NAME = ["forecast_avg_wind_speed_wMean", "forecast_avg_temperature_wMean", "forecast_avg_dewpoint_wMean", 
                 "forecast_avg_dswrf_wMean", "forecast_avg_precipitation_wMean"]
