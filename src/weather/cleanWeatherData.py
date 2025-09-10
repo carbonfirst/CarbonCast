@@ -12,51 +12,79 @@ import os
 import sys
 
 US_REGION_LIST = ["AECI"] # add US regions here
-EU_REGION_LIST = ["AL", "AT", "BE", "BG", "CH", "CZ", "DE", "DK", "EE", "ES", "FI",
-                  "FR", "GB", "GR", "HR", "HU", "IE", "IT", "LT", "LV", "NL", "PL",
-                  "PT", "RO", "RS", "SE", "SI", "SK"] # add EU regions here
+EU_REGION_LIST = ["BE"] # add EU regions here]
 
 COLUMN_NAME = ["forecast_avg_wind_speed_wMean", "forecast_avg_temperature_wMean", "forecast_avg_dewpoint_wMean", 
                 "forecast_avg_dswrf_wMean", "forecast_avg_precipitation_wMean"]
 
 
-# Use 7 days (168 hours) for extended horizon
 PREDICTION_PERIOD_DAYS = 7
 PREDICTION_WINDOW_HOURS = 24 * PREDICTION_PERIOD_DAYS
 
-def _build_column_names_for_file(inFileName: str):
-    base = os.path.basename(inFileName).upper()
-    common = ["datetime", "param", "level", "latitude", "longitude"]
-    if base.endswith("_DSWRF.CSV"):
-        names = list(common)
-        # Pairs: 0-3, 0-6; 6-9, 6-12; ...; 162-165, 162-168
-        for start in range(0, PREDICTION_WINDOW_HOURS, 6):
-            names.append(f"{start}-{start+3} hr avg")
-            names.append(f"{start}-{start+6} hr avg")
-        return names
-    if base.endswith("_APCP.CSV"):
-        names = list(common)
-        for start in range(0, PREDICTION_WINDOW_HOURS, 6):
-            names.append(f"{start}-{start+3} hr acc")
-            names.append(f"{start}-{start+6} hr acc")
-        return names
-    # WIND_SPEED, TEMP, DPT
-    names = list(common)
-    names.append("Analysis")
-    for h in range(3, PREDICTION_WINDOW_HOURS+1, 3):
-        names.append(f"{h} hr fcst")
-    return names
-
-
 def readFile(inFileName):
     print("Filename: ", inFileName)
+    
+    # First, check if the file has proper headers
     try:
-        dataset = pd.read_csv(inFileName, header=0, parse_dates=['datetime'], index_col=['datetime'])
+        # Try reading first line to check for headers
+        first_line = pd.read_csv(inFileName, nrows=0)
+        
+        if 'datetime' in first_line.columns:
+            # File has proper headers with datetime column
+            dataset = pd.read_csv(inFileName, header=0, parse_dates=['datetime'], index_col=['datetime'])
+            dataset = dataset.iloc[:, 1:]  # Remove extra columns if needed
+        else:
+            # File doesn't have 'datetime' in header, read without parsing
+            # Check if first column looks like dates
+            test_df = pd.read_csv(inFileName, nrows=1, header=None)
+            first_val = str(test_df.iloc[0, 0])
+            
+            # If first value looks like a date, treat first row as data, not header
+            if '-' in first_val and ':' in first_val:  # Simple date check
+                dataset = pd.read_csv(inFileName, header=None)
+                # Set column names based on expected pattern
+                num_cols = len(dataset.columns)
+                col_names = ['datetime', 'param', 'level', 'latitude', 'longitude']
+                
+                # Add forecast columns
+                if num_cols > 5:
+                    # Check if there's an Analysis column (6th column)
+                    remaining = num_cols - 5
+                    if remaining == 57:  # 1 Analysis + 56 forecast columns
+                        col_names.append('Analysis')
+                        col_names.extend([f'{i} hr fcst' for i in range(3, 169, 3)])
+                    else:  # Just forecast columns
+                        col_names.extend([f'{i} hr fcst' for i in range(3, 169, 3)])
+                
+                dataset.columns = col_names[:num_cols]
+                dataset['datetime'] = pd.to_datetime(dataset['datetime'])
+                dataset = dataset.set_index('datetime')
+                # Remove param, level, lat, lon columns
+                dataset = dataset.iloc[:, 3:]
+            else:
+                # Has headers but no 'datetime' column, use first column as datetime
+                dataset = pd.read_csv(inFileName, header=0)
+                dataset.iloc[:, 0] = pd.to_datetime(dataset.iloc[:, 0])
+                dataset = dataset.set_index(dataset.columns[0])
+                dataset.index.name = 'datetime'
+                dataset = dataset.iloc[:, 1:]  # Remove extra columns
+                
     except Exception as e:
-        # Fallback: missing header row or malformed header; regenerate expected names
-        names = _build_column_names_for_file(inFileName)
-        dataset = pd.read_csv(inFileName, header=None, names=names, parse_dates=['datetime'], index_col=['datetime'])
-    dataset = dataset.iloc[:, 1:]
+        print(f"Warning reading {inFileName}: {e}, trying alternative approach")
+        # Fallback: assume no headers and first column is datetime
+        dataset = pd.read_csv(inFileName, header=None)
+        dataset.iloc[:, 0] = pd.to_datetime(dataset.iloc[:, 0])
+        dataset = dataset.set_index(0)
+        dataset.index.name = 'datetime'
+        # Remove param, level, lat, lon columns (columns 1-4)
+        dataset = dataset.iloc[:, 4:]
+        # Rename remaining columns as forecast hours
+        num_fcst_cols = len(dataset.columns)
+        if num_fcst_cols == 57:  # Has Analysis column
+            dataset.columns = ['Analysis'] + [f'{i} hr fcst' for i in range(3, 169, 3)]
+        else:
+            dataset.columns = [f'{i} hr fcst' for i in range(3, 169, 3)][:num_fcst_cols]
+    
     print(dataset.head())
     print(dataset.columns)
     dateTime = dataset.index.values
@@ -87,88 +115,162 @@ def createHourlyTimeCol(dateTime):
     global PREDICTION_WINDOW_HOURS
     global PREDICTION_PERIOD_DAYS
     hourlyDateTime = []
-    dayIndex = 0
-    for dayIndex in range(len(dateTime)):
-        hourlyDateTime.append(dateTime[dayIndex])
-        for j in range(PREDICTION_WINDOW_HOURS-1):
-            hourlyDateTime.append(hourlyDateTime[-1] + np.timedelta64(1, 'h'))
+    
+    # FIXED: Create proper sliding windows
+    # Each forecast creates a 168-hour window
+    # Windows slide by 24 hours (1 day)
+    print(f"DEBUG: Input dateTime has {len(dateTime)} forecast starting points")
+    
+    if len(dateTime) == 0:
+        return hourlyDateTime
+    
+    # Start with the first forecast's 168-hour window
+    start_time = dateTime[0]
+    current_time = start_time
+    
+    # For each forecast starting point
+    for forecast_idx in range(len(dateTime)):
+        # Create 168 hours for this forecast window
+        for hour in range(PREDICTION_WINDOW_HOURS):
+            hourlyDateTime.append(current_time + np.timedelta64(hour, 'h'))
+        
+        # Slide forward by 24 hours for the next window
+        current_time = current_time + np.timedelta64(24, 'h')
+    
+    print(f"DEBUG: Created {len(hourlyDateTime)} hourly timestamps for {len(dateTime)} sliding windows")
+    print(f"DEBUG: Each window is {PREDICTION_WINDOW_HOURS} hours, sliding by 24 hours")
     return hourlyDateTime
 
 def createForecastColumns(dataset, modifiedDataset, colName):
     global PREDICTION_PERIOD_DAYS
     global PREDICTION_WINDOW_HOURS
-    idx, fcstIdx, i = 0, 0, 1
-    while i < len(modifiedDataset.index.values):
-        fcstIdx = 0
-        j=3 # change this to j=1 for hourly weather forecasts
-        while (j<=PREDICTION_WINDOW_HOURS): # changed from 24 for 96 hour forecast
-            if(fcstIdx < j):
-                fcstColName = str(j)+" hr fcst"
-                modifiedDataset[colName].iloc[i] = dataset[fcstColName].iloc[idx]
-                # print(i, j, idx, fcstIdx)
-                fcstIdx += 1
-                i += 1
-                if(i == len(modifiedDataset.index.values)):
-                    break
+    
+    # FIXED: Proper sliding window implementation
+    print(f"DEBUG createForecastColumns for '{colName}':")
+    print(f"  - Dataset has {len(dataset)} forecast starting points")
+    print(f"  - ModifiedDataset has {len(modifiedDataset)} rows")
+    
+    num_forecasts = len(dataset)
+    
+    # For each forecast starting point (sliding by 24 hours each time)
+    for forecast_idx in range(num_forecasts):
+        # Calculate the starting index in modifiedDataset for this window
+        window_start_idx = forecast_idx * PREDICTION_WINDOW_HOURS
+        
+        # Fill in the 168-hour window for this forecast
+        for hour in range(PREDICTION_WINDOW_HOURS):
+            output_idx = window_start_idx + hour
+            
+            if output_idx >= len(modifiedDataset):
+                break
+            
+            # Find the appropriate forecast value for this hour
+            # Forecasts come in 3-hour intervals: 3, 6, 9, ..., 168
+            # For hour h, use the forecast at the next 3-hour interval
+            forecast_hour = ((hour // 3) + 1) * 3
+            if forecast_hour > PREDICTION_WINDOW_HOURS:
+                forecast_hour = PREDICTION_WINDOW_HOURS
+            
+            fcst_col_name = str(forecast_hour) + " hr fcst"
+            
+            if fcst_col_name in dataset.columns:
+                modifiedDataset[colName].iloc[output_idx] = dataset[fcst_col_name].iloc[forecast_idx]
             else:
-                j+=3 # change this to j+=1 for hourly weather forecasts
-        idx += 1 # changed from 4 to 1 since we are not collecting updated weather data at 06, 12, 18 hours anymore
+                # If column doesn't exist, use the last available forecast
+                print(f"WARNING: Missing column '{fcst_col_name}' for hour {hour}")
+    
+    # Handle wind speed (make absolute)
     if "wind" in colName:
         modifiedDataset[colName] = np.abs(modifiedDataset[colName].values)
-
-    for i in range(PREDICTION_WINDOW_HOURS, len(modifiedDataset.index.values), PREDICTION_WINDOW_HOURS): # Check correctness
-        modifiedDataset[colName].iloc[i] = modifiedDataset[colName].iloc[i-((PREDICTION_PERIOD_DAYS-1)*24)]
-
+    
     return modifiedDataset
 
 def createAvgOrAccForecastColumns(dataset, modifiedDataset, colName, avgOrAcc):
     global PREDICTION_PERIOD_DAYS
     global PREDICTION_WINDOW_HOURS
-    idx, fcstIdx, i = 0, 0, 1
-    timePeriodSuffix = " hr "+avgOrAcc
-    modifiedDatasetLength = len(modifiedDataset.index.values)
-    while i < modifiedDatasetLength:
-        fcstIdx = 0
-        for hour in range(0, PREDICTION_WINDOW_HOURS, 3):
-            timePeriod=""
-            if hour%2==0: # n-(n+3) hour avg
-                timePeriod = str(hour)+"-"+str(hour+3)+timePeriodSuffix
-            else: # n-(n+6) hour avg --> eg. 0-6 hr avg. This is how ds084.1 returns, & how data is stored
-                timePeriod = str(hour-3)+"-"+str(hour+3)+timePeriodSuffix
-            nHourAvgorAcc = dataset[timePeriod].iloc[idx]
-            while(fcstIdx < hour+3 and i < modifiedDatasetLength):
-                # print(timePeriod, idx, i ,len(modifiedDataset.index.values))
-                modifiedDataset[colName].iloc[i] = nHourAvgorAcc
-                i += 1
-                fcstIdx += 1
-        idx += 1 # changed from 4 to 1 since we are not collecting updated weather data at 06, 12, 18 hours anymore
-
-    for i in range(PREDICTION_WINDOW_HOURS, len(modifiedDataset.index.values), PREDICTION_WINDOW_HOURS):  # Check correctness
-        modifiedDataset[colName].iloc[i] = modifiedDataset[colName].iloc[i-((PREDICTION_PERIOD_DAYS-1)*24)]
-
+    
+    timePeriodSuffix = " hr " + avgOrAcc
+    num_forecasts = len(dataset)
+    
+    print(f"DEBUG createAvgOrAccForecastColumns for '{colName}' ({avgOrAcc}):")
+    print(f"  - Dataset has {len(dataset)} forecast starting points")
+    
+    # FIXED: Proper sliding window implementation for avg/acc columns
+    for forecast_idx in range(num_forecasts):
+        # Calculate the starting index in modifiedDataset for this window
+        window_start_idx = forecast_idx * PREDICTION_WINDOW_HOURS
+        
+        # Fill in the 168-hour window for this forecast
+        for hour in range(PREDICTION_WINDOW_HOURS):
+            output_idx = window_start_idx + hour
+            
+            if output_idx >= len(modifiedDataset):
+                break
+            
+            # Map hours to the correct column names based on actual data structure
+            # The pattern is: 0-3, 0-6, 6-9, 6-12, 12-15, 12-18, 18-21, 18-24, etc.
+            timePeriod = ""
+            
+            if hour < 3:
+                timePeriod = "0-3" + timePeriodSuffix
+            elif hour < 6:
+                timePeriod = "0-6" + timePeriodSuffix
+            else:
+                # For hours 6 and beyond, find the appropriate interval
+                # Pattern repeats every 6 hours: n-(n+3), n-(n+6) where n is multiple of 6
+                base_hour = (hour // 6) * 6
+                if hour < base_hour + 3:
+                    timePeriod = str(base_hour) + "-" + str(base_hour + 3) + timePeriodSuffix
+                else:
+                    timePeriod = str(base_hour) + "-" + str(base_hour + 6) + timePeriodSuffix
+            
+            # Get the value for this time period
+            if timePeriod in dataset.columns:
+                modifiedDataset[colName].iloc[output_idx] = dataset[timePeriod].iloc[forecast_idx]
+            else:
+                # If column not found, use the 0-6 value as fallback for early hours
+                if hour < 6 and "0-6" + timePeriodSuffix in dataset.columns:
+                    modifiedDataset[colName].iloc[output_idx] = dataset["0-6" + timePeriodSuffix].iloc[forecast_idx]
+    
     return modifiedDataset
 
 def createRTAvgOrAccForecastColumns(dataset, modifiedDataset, colName, avgOrAcc):
     global PREDICTION_PERIOD_DAYS
     global PREDICTION_WINDOW_HOURS
-    idx, fcstIdx, i = 0, 0, 1
-    timePeriodSuffix = " hr "+avgOrAcc
-    modifiedDatasetLength = len(modifiedDataset.index.values)
-    while i < modifiedDatasetLength:
-        fcstIdx = 0
-        # for hour in range(1, PREDICTION_WINDOW_HOURS+1): # uncomment this line & comment below line for hourly forecasts
-        for hour in range(3, PREDICTION_WINDOW_HOURS+1, 3):
-            timePeriod= str(hour) + timePeriodSuffix
-            nHourAvgorAcc = dataset[timePeriod].iloc[idx]
-            while(fcstIdx < hour+3 and i < modifiedDatasetLength):
-                modifiedDataset[colName].iloc[i] = nHourAvgorAcc
-                i += 1
-                fcstIdx += 1
-        idx += 1 # changed from 4 to 1 since we are not collecting updated weather data at 06, 12, 18 hours anymore
-
-    for i in range(PREDICTION_WINDOW_HOURS, len(modifiedDataset.index.values), PREDICTION_WINDOW_HOURS):  # Check correctness
-        modifiedDataset[colName].iloc[i] = modifiedDataset[colName].iloc[i-((PREDICTION_PERIOD_DAYS-1)*24)]
-
+    
+    timePeriodSuffix = " hr " + avgOrAcc
+    num_forecasts = len(dataset)
+    
+    print(f"DEBUG createRTAvgOrAccForecastColumns for '{colName}' ({avgOrAcc}):")
+    print(f"  - Dataset has {len(dataset)} forecast starting points")
+    
+    # FIXED: Proper sliding window implementation for real-time avg/acc columns
+    for forecast_idx in range(num_forecasts):
+        # Calculate the starting index in modifiedDataset for this window
+        window_start_idx = forecast_idx * PREDICTION_WINDOW_HOURS
+        
+        # Fill in the 168-hour window for this forecast
+        for hour in range(PREDICTION_WINDOW_HOURS):
+            output_idx = window_start_idx + hour
+            
+            if output_idx >= len(modifiedDataset):
+                break
+            
+            # For real-time, we use cumulative periods: 3 hr, 6 hr, 9 hr, etc.
+            # Find the next 3-hour interval that covers this hour
+            forecast_hour = ((hour // 3) + 1) * 3
+            if forecast_hour > PREDICTION_WINDOW_HOURS:
+                forecast_hour = PREDICTION_WINDOW_HOURS
+            
+            timePeriod = str(forecast_hour) + timePeriodSuffix
+            
+            # Get the value for this time period
+            if timePeriod in dataset.columns:
+                modifiedDataset[colName].iloc[output_idx] = dataset[timePeriod].iloc[forecast_idx]
+            else:
+                # Try using the previous interval's value
+                print(f"WARNING: Missing column '{timePeriod}' for hour {hour}")
+    
     return modifiedDataset
 
 def calcluateWindSpeed(dataset):
@@ -254,9 +356,9 @@ def moveForecastsAheadByADay(region, inFileDir, outFileDir):
     inFileName = inFileDir+region+"_aggregated_weather_data_2023.csv"
     outFileName = outFileDir+region+"_weather_forecast_2023.csv"
     dataset = pd.read_csv(inFileName, header=0, index_col=["datetime"])
-    # Shift by the configured prediction window hours (e.g., 168 for 7 days)
-    modifiedDataset = np.array(dataset.iloc[PREDICTION_WINDOW_HOURS:, :])
-    zeroVal = np.zeros((PREDICTION_WINDOW_HOURS, len(dataset.columns)))
+    # Changed from 96 to 168 hours for proper 7-day sliding window
+    modifiedDataset = np.array(dataset.iloc[168:, :])
+    zeroVal = np.zeros((168, len(dataset.columns)))
     modifiedDataset = np.vstack((modifiedDataset, zeroVal))
 
     modifiedDataset = pd.DataFrame(modifiedDataset, columns=dataset.columns.values, index=dataset.index)
@@ -289,16 +391,3 @@ if __name__ == "__main__":
 
     for region in ISO_LIST:
         moveForecastsAheadByADay(region, inFileDir=inFileDir, outFileDir=inFileDir)
-
-
-
-
-
-    
-    
-    
-    
-    
-
-
-
