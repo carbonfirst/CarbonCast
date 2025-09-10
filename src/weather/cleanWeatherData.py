@@ -3,8 +3,8 @@ import math
 from datetime import datetime as dt
 # from datetime import timedelta
 from datetime import timezone as tz
-import matplotlib.dates as mdates
-import matplotlib.pyplot as plt
+# import matplotlib.dates as mdates  # Not used in this script
+# import matplotlib.pyplot as plt  # Not used in this script
 import numpy as np
 import pandas as pd
 import pytz as pytz
@@ -117,27 +117,31 @@ def createHourlyTimeCol(dateTime):
     hourlyDateTime = []
     
     # FIXED: Create proper sliding windows
-    # Each forecast creates a 168-hour window
-    # Windows slide by 24 hours (1 day)
-    print(f"DEBUG: Input dateTime has {len(dateTime)} forecast starting points")
+    # Only use daily forecasts (at 00:00) for sliding windows, not every 6-hour forecast
+    print(f"DEBUG: Input dateTime has {len(dateTime)} total forecast starting points")
     
     if len(dateTime) == 0:
         return hourlyDateTime
     
-    # Start with the first forecast's 168-hour window
-    start_time = dateTime[0]
-    current_time = start_time
+    # Filter to only use daily forecasts (at midnight/00:00)
+    # Forecasts come every 6 hours, but we only want one per day for sliding windows
+    daily_forecasts = []
+    for dt in dateTime:
+        # Check if this is a midnight forecast (hour == 0)
+        dt_as_pd = pd.to_datetime(dt)
+        if dt_as_pd.hour == 0:
+            daily_forecasts.append(dt)
     
-    # For each forecast starting point
-    for forecast_idx in range(len(dateTime)):
+    print(f"DEBUG: Filtered to {len(daily_forecasts)} daily forecasts (at 00:00)")
+    
+    # For each daily forecast, create a 168-hour window
+    for forecast_idx in range(len(daily_forecasts)):
+        start_time = daily_forecasts[forecast_idx]
         # Create 168 hours for this forecast window
         for hour in range(PREDICTION_WINDOW_HOURS):
-            hourlyDateTime.append(current_time + np.timedelta64(hour, 'h'))
-        
-        # Slide forward by 24 hours for the next window
-        current_time = current_time + np.timedelta64(24, 'h')
+            hourlyDateTime.append(start_time + np.timedelta64(hour, 'h'))
     
-    print(f"DEBUG: Created {len(hourlyDateTime)} hourly timestamps for {len(dateTime)} sliding windows")
+    print(f"DEBUG: Created {len(hourlyDateTime)} hourly timestamps for {len(daily_forecasts)} sliding windows")
     print(f"DEBUG: Each window is {PREDICTION_WINDOW_HOURS} hours, sliding by 24 hours")
     return hourlyDateTime
 
@@ -145,17 +149,24 @@ def createForecastColumns(dataset, modifiedDataset, colName):
     global PREDICTION_PERIOD_DAYS
     global PREDICTION_WINDOW_HOURS
     
-    # FIXED: Proper sliding window implementation
+    # FIXED: Only use daily forecasts (at 00:00) for sliding windows
     print(f"DEBUG createForecastColumns for '{colName}':")
-    print(f"  - Dataset has {len(dataset)} forecast starting points")
-    print(f"  - ModifiedDataset has {len(modifiedDataset)} rows")
+    print(f"  - Dataset has {len(dataset)} total forecast starting points")
+    print(f"  - ModifiedDataset expected to have {len(modifiedDataset)} rows")
     
-    num_forecasts = len(dataset)
+    # Filter dataset to only use daily forecasts (at midnight/00:00)
+    daily_indices = []
+    for idx in range(len(dataset)):
+        dt_as_pd = pd.to_datetime(dataset.index[idx])
+        if dt_as_pd.hour == 0:
+            daily_indices.append(idx)
     
-    # For each forecast starting point (sliding by 24 hours each time)
-    for forecast_idx in range(num_forecasts):
+    print(f"  - Using {len(daily_indices)} daily forecasts (at 00:00)")
+    
+    # For each daily forecast starting point (sliding by 24 hours each time)
+    for window_idx, forecast_idx in enumerate(daily_indices):
         # Calculate the starting index in modifiedDataset for this window
-        window_start_idx = forecast_idx * PREDICTION_WINDOW_HOURS
+        window_start_idx = window_idx * PREDICTION_WINDOW_HOURS
         
         # Fill in the 168-hour window for this forecast
         for hour in range(PREDICTION_WINDOW_HOURS):
@@ -190,15 +201,24 @@ def createAvgOrAccForecastColumns(dataset, modifiedDataset, colName, avgOrAcc):
     global PREDICTION_WINDOW_HOURS
     
     timePeriodSuffix = " hr " + avgOrAcc
-    num_forecasts = len(dataset)
     
     print(f"DEBUG createAvgOrAccForecastColumns for '{colName}' ({avgOrAcc}):")
-    print(f"  - Dataset has {len(dataset)} forecast starting points")
+    print(f"  - Dataset has {len(dataset)} total forecast starting points")
+    print(f"  - ModifiedDataset expected to have {len(modifiedDataset)} rows")
     
-    # FIXED: Proper sliding window implementation for avg/acc columns
-    for forecast_idx in range(num_forecasts):
+    # Filter dataset to only use daily forecasts (at midnight/00:00)
+    daily_indices = []
+    for idx in range(len(dataset)):
+        dt_as_pd = pd.to_datetime(dataset.index[idx])
+        if dt_as_pd.hour == 0:
+            daily_indices.append(idx)
+    
+    print(f"  - Using {len(daily_indices)} daily forecasts (at 00:00)")
+    
+    # FIXED: Only use daily forecasts for sliding window implementation
+    for window_idx, forecast_idx in enumerate(daily_indices):
         # Calculate the starting index in modifiedDataset for this window
-        window_start_idx = forecast_idx * PREDICTION_WINDOW_HOURS
+        window_start_idx = window_idx * PREDICTION_WINDOW_HOURS
         
         # Fill in the 168-hour window for this forecast
         for hour in range(PREDICTION_WINDOW_HOURS):
@@ -239,15 +259,23 @@ def createRTAvgOrAccForecastColumns(dataset, modifiedDataset, colName, avgOrAcc)
     global PREDICTION_WINDOW_HOURS
     
     timePeriodSuffix = " hr " + avgOrAcc
-    num_forecasts = len(dataset)
     
     print(f"DEBUG createRTAvgOrAccForecastColumns for '{colName}' ({avgOrAcc}):")
-    print(f"  - Dataset has {len(dataset)} forecast starting points")
+    print(f"  - Dataset has {len(dataset)} total forecast starting points")
     
-    # FIXED: Proper sliding window implementation for real-time avg/acc columns
-    for forecast_idx in range(num_forecasts):
+    # Filter dataset to only use daily forecasts (at midnight/00:00)
+    daily_indices = []
+    for idx in range(len(dataset)):
+        dt_as_pd = pd.to_datetime(dataset.index[idx])
+        if dt_as_pd.hour == 0:
+            daily_indices.append(idx)
+    
+    print(f"  - Using {len(daily_indices)} daily forecasts (at 00:00)")
+    
+    # FIXED: Only use daily forecasts for sliding window implementation
+    for window_idx, forecast_idx in enumerate(daily_indices):
         # Calculate the starting index in modifiedDataset for this window
-        window_start_idx = forecast_idx * PREDICTION_WINDOW_HOURS
+        window_start_idx = window_idx * PREDICTION_WINDOW_HOURS
         
         # Fill in the 168-hour window for this forecast
         for hour in range(PREDICTION_WINDOW_HOURS):
