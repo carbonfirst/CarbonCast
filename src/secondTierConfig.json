@@ -26,7 +26,7 @@
                                 "NWMT", "NYIS", "PACE", "PJM", "SC", "SCEG", "SOCO", "SRP",
                                 "TIDC", "TVA", "WACM"],
 
-    "REGION_DIRECT": ["BE"],
+    "REGION_DIRECT": ["AECI"],
 
     "REGION_LIFECYCLE": ["AECI", "PACW", 
                 "PSCO", "SPA", "SWPP"],
