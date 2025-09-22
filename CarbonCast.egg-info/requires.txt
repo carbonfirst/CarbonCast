@@ -1,0 +1,12 @@
+requests
+Django==4.2.5
+sqlparse==0.4.4
+djangorestframework==3.14.0
+qrcode==7.4.2
+pyotp==2.9.0
+entsoe-py==0.5.10
+xarray==2023.7.0
+drf-yasg
+
+[:python_version >= "3.11.4"]
+importlib-metadata

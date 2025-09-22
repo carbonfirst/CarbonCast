@@ -1,8 +1,11 @@
 import os
+from pathlib import Path
 
 
 def get_latest_csv_file(region_code):
-    path = os.path.abspath(os.path.join(os.getcwd(),'real_time',region_code))
+    # Get the project root directory (3 levels up from this file)
+    base_dir = Path(__file__).resolve().parent.parent.parent.parent
+    path = os.path.join(base_dir, 'real_time', region_code)
     file_list1= [file for file in os.listdir(path) if file.endswith("_lifecycle_emissions.csv")]
     file_list2= [file for file in os.listdir(path) if file.endswith("_direct_emissions.csv")]
     dates_list1 , dates_list2 = [] , []
@@ -20,7 +23,9 @@ def get_latest_csv_file(region_code):
 
 
 def get_CI_forecasts_csv_file(region_code, date):
-    path = os.path.abspath(os.path.join(os.getcwd(),'real_time',region_code))
+    # Get the project root directory (3 levels up from this file)
+    base_dir = Path(__file__).resolve().parent.parent.parent.parent
+    path = os.path.join(base_dir, 'real_time', region_code)
     i = 0 
     numFiles = len(os.listdir(path))
     csv_file_l= None
@@ -57,7 +62,9 @@ def get_CI_forecasts_csv_file(region_code, date):
 
 
 def get_actual_value_file_by_date(region_code, date):
-    path = os.path.abspath(os.path.join(os.getcwd(),'real_time',region_code))
+    # Get the project root directory (3 levels up from this file)
+    base_dir = Path(__file__).resolve().parent.parent.parent.parent
+    path = os.path.join(base_dir, 'real_time', region_code)
     i = 0
     numFiles = len(os.listdir(path))
     csv_file_a = None
@@ -92,7 +99,9 @@ def get_actual_value_file_by_date(region_code, date):
     return csv_file_a, csv_file_b
 
 def get_energy_forecasts_csv_file(region_code, date):
-    path = os.path.abspath(os.path.join(os.getcwd(),'real_time',region_code))
+    # Get the project root directory (3 levels up from this file)
+    base_dir = Path(__file__).resolve().parent.parent.parent.parent
+    path = os.path.join(base_dir, 'real_time', region_code)
     for file in os.listdir(path):
         if file.endswith(f"_96hr_forecasts_{date}.csv"):
             e_forecast_csv_file = os.path.join(path, file)

@@ -11,6 +11,48 @@ Affiliation: University of Massachusetts, Amherst
 <b>CarbonCast v3.0, which can provide forecasts in real-time, is now in the testing phase and can be found [here](https://github.com/carbonfirst/CarbonCast/tree/v3.0_real_time_service). Please feel free to use and report any issues. We are working to release it in the main branch soon.</b>
 
 
+## Quick Start: DB-Backed API (SQLite)
+
+The API now reads carbon intensity and energy mix from the SQLite database (populated from CSVs) and falls back to CSVs only when DB rows are missing. Follow these steps for a clean local run:
+
+1. Create virtual environment & install deps:
+  ```bash
+  python -m venv .venv
+  source .venv/bin/activate
+  pip install -r requirements.txt
+  ```
+2. Run migrations (creates tables for models like EmissionActual in [`models.py`](src/CarbonCastAPI/CarbonCastRESTAPI/models.py:32)):
+  ```bash
+  python src/CarbonCastAPI/manage.py makemigrations CarbonCastRESTAPI
+  python src/CarbonCastAPI/manage.py migrate
+  ```
+3. (Optional first run) Create a test user for authenticated endpoints:
+  ```bash
+  python src/CarbonCastAPI/manage.py shell -c "from django.contrib.auth.models import User; User.objects.create_user('apitest', password='s3cret') if not User.objects.filter(username='apitest').exists() else None"
+  ```
+4. Import emissions CSVs (idempotent upsert via [`import_csvs`](src/CarbonCastAPI/CarbonCastRESTAPI/management/commands/import_csvs.py:1)):
+  ```bash
+  python src/CarbonCastAPI/manage.py import_csvs --path real_time
+  ```
+5. (Optional) Continuous ingestion watcher (reruns import on new/changed files) via [`import_daemon`](src/CarbonCastAPI/CarbonCastRESTAPI/management/commands/import_daemon.py:1):
+  ```bash
+  python src/CarbonCastAPI/manage.py import_daemon --path real_time --interval 300
+  ```
+6. Run server:
+  ```bash
+  python src/CarbonCastAPI/manage.py runserver
+  ```
+7. Test endpoint (uses DB → fallback logic; replace PJM with another region if desired):
+  ```bash
+  curl -u apitest:s3cret -H "Accept: application/json" "http://127.0.0.1:8000/v1/CarbonIntensity?region_code=PJM"
+  ```
+8. Inspect a DB row:
+  ```bash
+  python src/CarbonCastAPI/manage.py shell -c "from CarbonCastRESTAPI.models import EmissionActual; print(EmissionActual.objects.filter(region='PJM').order_by('-ts').first())"
+  ```
+
+For more detailed operational notes see [`docs/API_instructions.md`](docs/API_instructions.md:1).
+
 <!-- ## CarbonCast Architecture
 ### First tier
 ### Second Tier

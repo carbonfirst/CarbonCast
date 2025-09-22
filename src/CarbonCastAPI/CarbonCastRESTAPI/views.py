@@ -14,7 +14,8 @@ from django.contrib.auth import authenticate,login, logout
 from django.contrib.auth.models import User
 from django.shortcuts import redirect, render
 from django.conf import settings
-from .models import UserModel, UserThrottleLimit
+from django.core.cache import cache
+from .models import UserModel, UserThrottleLimit, EmissionActual, Forecast96, Weather
 from .serializers import UserSerializer
 from .helper import get_latest_csv_file, get_actual_value_file_by_date, get_CI_forecasts_csv_file, get_energy_forecasts_csv_file
 import os
@@ -23,22 +24,8 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from datetime import datetime
 def check_throttle_limit(user):
-    try:
-        throttle_limit_obj = user.userthrottlelimit  # Access the related UserThrottleLimit object
-        throttle_limit = throttle_limit_obj.throttle_limit  # Access the throttle_limit field
-    except UserThrottleLimit.DoesNotExist:
-        throttle_limit = None
-    print(f"Throttle_limit:{throttle_limit_obj.throttle_limit}")
-
-    if throttle_limit is None:
-        return True
-    elif throttle_limit <= 0:
-        return False
-    else:
-        throttle_limit_obj.throttle_limit -= 1
-        throttle_limit_obj.save()
-        print(f"After saving, throttle_limit:{throttle_limit_obj.throttle_limit}")
-        return True
+    # Rate limiting disabled - always allow requests
+    return True
 
 # 1: 
 class CarbonIntensityApiView(APIView):
@@ -94,26 +81,66 @@ class CarbonIntensityApiView(APIView):
             final_list=[]
         
             for region_code in regions:
-                csv_file1, csv_file2 = get_latest_csv_file(region_code)
-                print(csv_file1)
-                print(csv_file2)
-                with open(csv_file1) as file:
-                    for line in file:
-                        # pass
-                        values_csv1 = line.split(',')
-                with open(csv_file2) as file:
-                    for line in file:
-                        values_csv2 = line.split(',')
+                # Try cache first (short lived)
+                cache_key = f"ci_latest_{region_code}"
+                cached = cache.get(cache_key)
+                if cached:
+                    final_list.append(cached)
+                    continue
+
+                # Query latest emission row for region
+                obj = EmissionActual.objects.filter(region=region_code).order_by('-ts').first()
+                if not obj:
+                    # fallback to CSV if DB has no data (preserve compatibility)
+                    try:
+                        csv_file1, csv_file2 = get_latest_csv_file(region_code)
+                        with open(csv_file1) as f1:
+                            last = None
+                            for line in f1:
+                                last = line
+                            values_csv1 = last.split(',') if last else []
+                        with open(csv_file2) as f2:
+                            last = None
+                            for line in f2:
+                                last = line
+                            values_csv2 = last.split(',') if last else []
+                        temp_dict = {
+                            fields[0]: values_csv1[1],
+                            fields[1]: values_csv1[2],
+                            fields[2]: values_csv1[3],
+                            fields[3]: region_code,
+                            fields[4]: float(values_csv1[4]) if len(values_csv1) > 4 else 0,
+                            fields[5]: float(values_csv2[4]) if len(values_csv2) > 4 else 0,
+                            fields[6]: "gCO2eg/kWh"
+                        }
+                        final_list.append(temp_dict)
+                        cache.set(cache_key, temp_dict, 10)
+                        continue
+                    except Exception:
+                        continue
 
                 temp_dict = {
-                fields[0]: values_csv1[1],
-                fields[1]: values_csv1[2],
-                fields[2]: values_csv1[3],
-                fields[3]: region_code,
-                fields[4]: float(values_csv1[4]),
-                fields[5]: float(values_csv2[4]),
-                fields[6]: "gCO2eg/kWh"
+                    fields[0]: obj.ts.isoformat(),
+                    fields[1]: obj.data.get("creation_time (UTC)") or obj.data.get("creation_time") or "",
+                    fields[2]: obj.data.get("version") or "",
+                    fields[3]: region_code,
+                    fields[4]: float(obj.lifecycle) if obj.lifecycle is not None else float(
+                        obj.data.get("carbon_intensity_avg_lifecycle")
+                        or obj.data.get("carbon_intensity")
+                        or obj.data.get("lifecycle")
+                        or obj.data.get("value")
+                        or 0
+                    ),
+                    fields[5]: float(obj.direct) if obj.direct is not None else float(
+                        obj.data.get("carbon_intensity_avg_direct")
+                        or obj.data.get("carbon_intensity")
+                        or obj.data.get("direct")
+                        or obj.data.get("value")
+                        or 0
+                    ),
+                    fields[6]: obj.data.get("carbon_intensity_unit", "gCO2eg/kWh")
                 }
+                cache.set(cache_key, temp_dict, 10)
                 final_list.append(temp_dict)
                 
             response = {
@@ -179,27 +206,55 @@ class EnergySourcesApiView(APIView):
             response = {"data": [], "carbon_cast_version": carbon_cast_version}  
 
             for region_code in regions:
-                csv_file1, csv_file2 = get_latest_csv_file(region_code)
-        
-                with open(csv_file1) as file:
-                    header = file.readline().strip()
-                    columns = header.split(',')        
-                    for row in file:
-                        line = row.strip().split(',')
-                
-                response_data={}
+                cache_key = f"energy_latest_{region_code}"
+                cached = cache.get(cache_key)
+                if cached:
+                    response["data"].append(cached)
+                    continue
 
+                obj = EmissionActual.objects.filter(region=region_code).order_by('-ts').first()
+                if not obj:
+                    # fallback to CSV
+                    try:
+                        csv_file1, csv_file2 = get_latest_csv_file(region_code)
+                        with open(csv_file1) as file:
+                            header = file.readline().strip()
+                            columns = header.split(',')
+                            line = None
+                            for row in file:
+                                line = row.strip().split(',')
+                        response_data = {}
+                        for field in fields:
+                            if field in columns:
+                                index = columns.index(field)
+                                value = line[index].strip() if index < len(line) else "0"
+                                response_data[field] = value
+                            elif field == "region_code":
+                                response_data[field] = region_code
+                            else:
+                                response_data[field] = "0"
+                        response["data"].append(response_data)
+                        cache.set(cache_key, response_data, 10)
+                        continue
+                    except Exception:
+                        continue
+
+                # Use stored JSON data for energy breakdown when available
+                response_data = {}
                 for field in fields:
-                    if field in columns:
-                        index = columns.index(field)
-                        value = line[index].strip() if index < len(line) else "0"
-                        response_data[field] = value
+                    if field == "UTC time":
+                        response_data[field] = obj.ts.isoformat()
+                    elif field == "creation_time (UTC)":
+                        response_data[field] = obj.data.get("creation_time (UTC)") or obj.data.get("creation_time") or ""
+                    elif field == "version":
+                        response_data[field] = obj.data.get("version") or ""
                     elif field == "region_code":
                         response_data[field] = region_code
                     else:
-                        response_data[field] = "0"
-                
-                response["data"].append(response_data)  
+                        # try to read energy source fields from stored JSON
+                        response_data[field] = obj.data.get(field, "0")
+                cache.set(cache_key, response_data, 10)
+                response["data"].append(response_data)
 
             return Response(response, status=status.HTTP_200_OK)
             
@@ -255,26 +310,62 @@ class CarbonIntensityHistoryApiView(APIView):
 
         final_list =[]
         for region_code in regions:
-            csv_file_a, csv_file_b = get_actual_value_file_by_date(region_code, date)
-            print("In view: ", csv_file_a, csv_file_b)
-            with open(csv_file_a) as file:
-                lines_csv1 = file.readlines()
-            with open(csv_file_b) as file:
-                lines_csv2 = file.readlines()
-            
-            values_csv1 = [line.strip().split(',') for line in lines_csv1]
-            values_csv2 = [line.strip().split(',') for line in lines_csv2]
-            
-            for i in range(1, len(values_csv1)):
-                temp_dict= {}
-                temp_dict[field_names[0]] = values_csv1[i][1]
-                temp_dict[field_names[1]] = values_csv1[i][2]
-                temp_dict[field_names[2]] = values_csv1[i][3]
+            cache_key = f"ci_history_{region_code}_{date}"
+            cached = cache.get(cache_key)
+            if cached:
+                final_list.extend(cached)
+                continue
+
+            # parse date to filter by ts.date
+            try:
+                from datetime import datetime
+                date_obj = datetime.strptime(date, "%Y-%m-%d").date()
+            except Exception:
+                date_obj = None
+
+            if date_obj:
+                rows = EmissionActual.objects.filter(region=region_code, ts__date=date_obj).order_by('ts')
+            else:
+                rows = EmissionActual.objects.filter(region=region_code).order_by('ts')
+
+            if not rows.exists():
+                # fallback to CSV-compatible behavior
+                csv_file_a, csv_file_b = get_actual_value_file_by_date(region_code, date)
+                try:
+                    with open(csv_file_a) as file:
+                        lines_csv1 = file.readlines()
+                    with open(csv_file_b) as file:
+                        lines_csv2 = file.readlines()
+                    values_csv1 = [line.strip().split(',') for line in lines_csv1]
+                    values_csv2 = [line.strip().split(',') for line in lines_csv2]
+                    for i in range(1, len(values_csv1)):
+                        temp_dict= {}
+                        temp_dict[field_names[0]] = values_csv1[i][1]
+                        temp_dict[field_names[1]] = values_csv1[i][2]
+                        temp_dict[field_names[2]] = values_csv1[i][3]
+                        temp_dict[field_names[3]] = region_code
+                        temp_dict[field_names[4]] = (values_csv1[i][4])
+                        temp_dict[field_names[5]] = (values_csv2[i][4])
+                        temp_dict[field_names[6]] = "gCO2eg/kWh"
+                        final_list.append(temp_dict)
+                    cache.set(cache_key, final_list, 10)
+                    continue
+                except Exception:
+                    continue
+
+            temp_batch = []
+            for obj in rows:
+                temp_dict = {}
+                temp_dict[field_names[0]] = obj.ts.isoformat()
+                temp_dict[field_names[1]] = obj.data.get("creation_time (UTC)") or obj.data.get("creation_time") or ""
+                temp_dict[field_names[2]] = obj.data.get("version") or ""
                 temp_dict[field_names[3]] = region_code
-                temp_dict[field_names[4]] = (values_csv1[i][4])
-                temp_dict[field_names[5]] = (values_csv2[i][4])
-                temp_dict[field_names[6]] = "gCO2eg/kWh"
+                temp_dict[field_names[4]] = obj.lifecycle if obj.lifecycle is not None else 0
+                temp_dict[field_names[5]] = obj.direct if obj.direct is not None else 0
+                temp_dict[field_names[6]] = obj.data.get("carbon_intensity_unit", "gCO2eg/kWh")
+                temp_batch.append(temp_dict)
                 final_list.append(temp_dict)
+            cache.set(cache_key, temp_batch, 10)
         response = {
             "data": final_list,
             "carbon_cast_version": carbon_cast_version,
@@ -323,38 +414,71 @@ class EnergySourcesHistoryApiView(APIView):
             else:
                 return Response({"error": "Invalid region code parameter"}, status=status.HTTP_400_BAD_REQUEST)
         date = request.query_params.get('date', '')
-        print("this is the query" ,date)   
+        print("this is the query" ,date)
+        
+        fields = [
+            "UTC time", "creation_time (UTC)", "version", "region_code", "coal", "nat_gas", "nuclear",
+            "oil", "hydro", "solar", "wind", "other"
+        ]
+        
         final_list =[]
         for region_code in regions:
-            
-            csv_file_a, csv_file_b = get_actual_value_file_by_date(region_code, date)
-            with open(csv_file_a) as file:
-                lines_csv1 = file.readlines()
+            cache_key = f"energy_history_{region_code}_{date}"
+            cached = cache.get(cache_key)
+            if cached:
+                final_list.extend(cached)
+                continue
 
-            with open(csv_file_b) as file:
-                lines_csv2 = file.readlines()
+            try:
+                from datetime import datetime
+                date_obj = datetime.strptime(date, "%Y-%m-%d").date()
+            except Exception:
+                date_obj = None
 
-            values_csv1 = [line.strip().split(',') for line in lines_csv1]
-            values_csv2 = [line.strip().split(',') for line in lines_csv2]
+            if date_obj:
+                rows = EmissionActual.objects.filter(region=region_code, ts__date=date_obj).order_by('ts')
+            else:
+                rows = EmissionActual.objects.filter(region=region_code).order_by('ts')
 
-            fields = [
-                    "UTC time", "creation_time (UTC)", "version","region_code", "coal", "nat_gas", "nuclear",
-                    "oil", "hydro", "solar", "wind", "other"
-                ]
-            for i in range(1, len(values_csv1)):
+            if not rows.exists():
+                # fallback to CSV behavior
+                csv_file_a, csv_file_b = get_actual_value_file_by_date(region_code, date)
+                try:
+                    with open(csv_file_a) as file:
+                        lines_csv1 = file.readlines()
+                    with open(csv_file_b) as file:
+                        lines_csv2 = file.readlines()
+                    values_csv1 = [line.strip().split(',') for line in lines_csv1]
+                    for i in range(1, len(values_csv1)):
+                        temp_dict = {field: "0" for field in fields}
+                        temp_dict["UTC time"] = values_csv1[i][1]
+                        temp_dict["creation_time (UTC)"] = values_csv1[i][2]
+                        temp_dict["version"] = values_csv1[i][3]
+                        temp_dict["region_code"] = region_code
+
+                        for field in fields[2:]:
+                            if field in values_csv1[0]:
+                                index = values_csv1[0].index(field)
+                                temp_dict[field] = values_csv1[i][index]
+
+                        final_list.append(temp_dict)
+                    cache.set(cache_key, final_list, 10)
+                    continue
+                except Exception:
+                    continue
+
+            temp_batch = []
+            for obj in rows:
                 temp_dict = {field: "0" for field in fields}
-                temp_dict["UTC time"] = values_csv1[i][1]
-                temp_dict["creation_time (UTC)"] = values_csv1[i][2]
-                temp_dict["version"] = values_csv1[i][3]
+                temp_dict["UTC time"] = obj.ts.isoformat()
+                temp_dict["creation_time (UTC)"] = obj.data.get("creation_time (UTC)") or obj.data.get("creation_time") or ""
+                temp_dict["version"] = obj.data.get("version") or ""
                 temp_dict["region_code"] = region_code
-
-
-                for field in fields[2:]:  
-                    if field in values_csv1[0]:
-                        index = values_csv1[0].index(field)
-                        temp_dict[field] = values_csv1[i][index]
-
+                for field in fields[4:]:
+                    temp_dict[field] = obj.data.get(field, "0")
+                temp_batch.append(temp_dict)
                 final_list.append(temp_dict)
+            cache.set(cache_key, temp_batch, 10)
 
 
         response = {
@@ -400,32 +524,62 @@ class CarbonIntensityForecastsApiView(APIView):
         # today_date = datetime.now().strftime('%Y-%m-%d')
         date = '2023-09-17'
 
-        CI_lifecycle, CI_direct = get_CI_forecasts_csv_file(region_code, date)
-        with open(CI_lifecycle) as file:
-            lines_CI_lifecycle = file.readlines()
-
-        with open(CI_direct) as file:
-            lines_CI_direct = file.readlines()
-
+        # Try to read forecasts from DB first
         field_names = [
-                        "UTC time", "creation_time (UTC)", "version", "region_code", "carbon_intensity_avg_lifecycle", 
+                        "UTC time", "creation_time (UTC)", "version", "region_code", "carbon_intensity_avg_lifecycle",
                         "carbon_intensity_avg_direct", "carbon_intensity_unit"
         ]
+        cache_key = f"ci_forecast_{region_code}_{forecastPeriod}"
+        cached = cache.get(cache_key)
+        if cached:
+            return Response({"data": cached, "carbon_cast_version": carbon_cast_version}, status=status.HTTP_200_OK)
 
-        CI_lifecycle_filtered = [line.split(',') for i, line in enumerate(lines_CI_lifecycle) if i>0 and i<=forecastPeriod]
-        CI_direct_filtered = [line.split(',') for i, line in enumerate(lines_CI_direct) if i>0 and i<= forecastPeriod]
+        lifecycle_qs = Forecast96.objects.filter(region=region_code, forecast_type__icontains='lifecycle').order_by('ts')[:forecastPeriod]
+        direct_qs = Forecast96.objects.filter(region=region_code, forecast_type__icontains='direct').order_by('ts')[:forecastPeriod]
 
-        final_list =[]
-        for i in range(0,len(CI_lifecycle_filtered)):
-            temp_dict= {}
-            temp_dict[field_names[0]] = CI_lifecycle_filtered[i][0]
-            temp_dict[field_names[1]] = CI_lifecycle_filtered[i][1]
-            temp_dict[field_names[2]] = CI_lifecycle_filtered[i][2]
-            temp_dict[field_names[3]] = region_code
-            temp_dict[field_names[4]] = float(CI_lifecycle_filtered[i][3])
-            temp_dict[field_names[5]] = float(CI_direct_filtered[i][3])
-            temp_dict[field_names[6]] = "gCO2eg/kWh"
-            final_list.append(temp_dict)
+        final_list = []
+        # If DB has no forecasts, fallback to CSV behavior
+        if not lifecycle_qs.exists() or not direct_qs.exists():
+            CI_lifecycle, CI_direct = get_CI_forecasts_csv_file(region_code, date)
+            try:
+                with open(CI_lifecycle) as file:
+                    lines_CI_lifecycle = file.readlines()
+                with open(CI_direct) as file:
+                    lines_CI_direct = file.readlines()
+                CI_lifecycle_filtered = [line.split(',') for i, line in enumerate(lines_CI_lifecycle) if i>0 and i<=forecastPeriod]
+                CI_direct_filtered = [line.split(',') for i, line in enumerate(lines_CI_direct) if i>0 and i<= forecastPeriod]
+                for i in range(0,len(CI_lifecycle_filtered)):
+                    temp_dict= {}
+                    temp_dict[field_names[0]] = CI_lifecycle_filtered[i][0]
+                    temp_dict[field_names[1]] = CI_lifecycle_filtered[i][1]
+                    temp_dict[field_names[2]] = CI_lifecycle_filtered[i][2]
+                    temp_dict[field_names[3]] = region_code
+                    temp_dict[field_names[4]] = float(CI_lifecycle_filtered[i][3])
+                    temp_dict[field_names[5]] = float(CI_direct_filtered[i][3])
+                    temp_dict[field_names[6]] = "gCO2eg/kWh"
+                    final_list.append(temp_dict)
+                cache.set(cache_key, final_list, 10)
+            except Exception:
+                final_list = []
+        else:
+            # build by pairing lifecycle and direct by position
+            lifecycle_list = list(lifecycle_qs)
+            direct_list = list(direct_qs)
+            count = min(len(lifecycle_list), len(direct_list))
+            for i in range(count):
+                l = lifecycle_list[i]
+                d = direct_list[i]
+                temp_dict = {
+                    field_names[0]: l.ts.isoformat(),
+                    field_names[1]: l.data.get("creation_time (UTC)") or l.data.get("creation_time") or "",
+                    field_names[2]: l.data.get("version") or "",
+                    field_names[3]: region_code,
+                    field_names[4]: float(l.value),
+                    field_names[5]: float(d.value),
+                    field_names[6]: l.data.get("carbon_intensity_unit", "gCO2eg/kWh")
+                }
+                final_list.append(temp_dict)
+            cache.set(cache_key, final_list, 10)
 
         response = {
             "data": final_list,
@@ -484,34 +638,74 @@ class CarbonIntensityForecastsHistoryApiView(APIView):
 
         final_list =[]
         for region_code in regions:
+            cache_key = f"ci_forecast_history_{region_code}_{date}"
+            cached = cache.get(cache_key)
+            if cached:
+                final_list.extend(cached)
+                continue
+
+            # filter Forecast96 by date prefix
+            try:
+                from datetime import datetime
+                date_obj = datetime.strptime(date, "%Y-%m-%d").date()
+            except Exception:
+                date_obj = None
+
+            if date_obj:
+                lifecycle_rows = Forecast96.objects.filter(region=region_code, forecast_type__icontains='lifecycle', ts__date=date_obj).order_by('ts')
+                direct_rows = Forecast96.objects.filter(region=region_code, forecast_type__icontains='direct', ts__date=date_obj).order_by('ts')
+            else:
+                lifecycle_rows = Forecast96.objects.filter(region=region_code, forecast_type__icontains='lifecycle').order_by('ts')
+                direct_rows = Forecast96.objects.filter(region=region_code, forecast_type__icontains='direct').order_by('ts')
+
+            if lifecycle_rows.exists() and direct_rows.exists():
+                lifecycle_list = list(lifecycle_rows)
+                direct_list = list(direct_rows)
+                count = min(len(lifecycle_list), len(direct_list))
+                for i in range(count):
+                    l = lifecycle_list[i]
+                    d = direct_list[i]
+                    temp_dict = {
+                        field_names[0]: l.ts.isoformat(),
+                        field_names[1]: l.data.get("creation_time (UTC)") or l.data.get("creation_time") or "",
+                        field_names[2]: l.data.get("version") or "",
+                        field_names[3]: region_code,
+                        field_names[4]: l.value if hasattr(l, 'value') else None,
+                        field_names[5]: d.value if hasattr(d, 'value') else None,
+                        field_names[6]: l.data.get("carbon_intensity_unit", "gCO2eg/kWh")
+                    }
+                    final_list.append(temp_dict)
+                cache.set(cache_key, final_list, 10)
+                continue
+
+            # fallback to CSV-based behavior if DB not populated
             csv_file_l, csv_file_d = get_CI_forecasts_csv_file(region_code, date)
-            #print("In view: ", csv_file_l, csv_file_d)
-            with open(csv_file_l) as file:
-                lines_csv1 = file.readlines()
-
-            with open(csv_file_d) as file:
-                lines_csv2 = file.readlines()
-                
-            filtered_data_by_date_csv1 = [line.strip().split(',') for line in lines_csv1 if line.startswith(date)]
-            filtered_data_by_date_csv2 = [line.strip().split(',') for line in lines_csv2 if line.startswith(date)]
-            
-            for i in range(0,len(filtered_data_by_date_csv1)):
-                temp_dict= {}
-                temp_dict[field_names[0]] = filtered_data_by_date_csv1[i][0]
-                temp_dict[field_names[1]] = filtered_data_by_date_csv1[i][1]
-                temp_dict[field_names[2]] = filtered_data_by_date_csv1[i][2]
-                temp_dict[field_names[3]] = region_code
-                try:
-                    temp_dict[field_names[4]] = filtered_data_by_date_csv1[i][4]
-                except:
-                    temp_dict[field_names[4]] = 0
-
-                try:
-                    temp_dict[field_names[5]] = filtered_data_by_date_csv2[i][4]
-                except:
-                    temp_dict[field_names[5]] = 0
-                temp_dict[field_names[6]] = "gCO2eg/kWh"
-                final_list.append(temp_dict)
+            try:
+                with open(csv_file_l) as file:
+                    lines_csv1 = file.readlines()
+                with open(csv_file_d) as file:
+                    lines_csv2 = file.readlines()
+                filtered_data_by_date_csv1 = [line.strip().split(',') for line in lines_csv1 if line.startswith(date)]
+                filtered_data_by_date_csv2 = [line.strip().split(',') for line in lines_csv2 if line.startswith(date)]
+                for i in range(0,len(filtered_data_by_date_csv1)):
+                    temp_dict= {}
+                    temp_dict[field_names[0]] = filtered_data_by_date_csv1[i][0]
+                    temp_dict[field_names[1]] = filtered_data_by_date_csv1[i][1]
+                    temp_dict[field_names[2]] = filtered_data_by_date_csv1[i][2]
+                    temp_dict[field_names[3]] = region_code
+                    try:
+                        temp_dict[field_names[4]] = filtered_data_by_date_csv1[i][4]
+                    except:
+                        temp_dict[field_names[4]] = 0
+                    try:
+                        temp_dict[field_names[5]] = filtered_data_by_date_csv2[i][4]
+                    except:
+                        temp_dict[field_names[5]] = 0
+                    temp_dict[field_names[6]] = "gCO2eg/kWh"
+                    final_list.append(temp_dict)
+                cache.set(cache_key, final_list, 10)
+            except Exception:
+                pass
         response = {
             "data": final_list,
             "carbon_cast_version": carbon_cast_version
@@ -554,35 +748,54 @@ class EnergySourcesForecastsHistoryApiView(APIView):
         final_interval = int(f[:-1])
         forecastPeriod = int(final_interval)        
 
-        energy_forecast_csv_file = get_energy_forecasts_csv_file(region_code, date)
-
-        with open(energy_forecast_csv_file) as file:
-            lines_csv = file.readlines()
-
-        energy_forecast_filtered_file = [line.split(',') for i, line in enumerate(lines_csv) if i>0 and i<=forecastPeriod]
-
-        fields = [
+        cache_key = f"energy_forecast_{region_code}_{forecastPeriod}_{date}"
+        cached = cache.get(cache_key)
+        if cached:
+            final_list = cached
+        else:
+            # try DB queries for energy-type forecasts
+            energy_qs = Forecast96.objects.filter(region=region_code, forecast_type__icontains='energy').order_by('ts')[:forecastPeriod]
+            fields = [
                 "UTC time", "creation_time (UTC)", "version","region_code", "avg_coal_production_forecast", "avg_nat_gas_production_forecast",
                 "avg_nuclear_production_forecast", "avg_oil_production_forecast", "avg_hydro_production_forecast", "avg_solar_production_forecast",
                 "avg_wind_production_forecast", "avg_other_production_forecast"
             ]
-
-        final_list = []
-        for i in range(0, len(energy_forecast_filtered_file)):
-            temp_dict = {field: "0" for field in fields}
-            temp_dict["UTC time"] = energy_forecast_filtered_file[i][0]
-            temp_dict["creation_time (UTC)"] = energy_forecast_filtered_file[i][1]
-            temp_dict["version"] = energy_forecast_filtered_file[i][2]
-            temp_dict["region_code"] = region_code
-
-            splitlines = lines_csv[0].split(",")
-            splitlines[-1] = splitlines[-1].rstrip("\n")
-            for field in fields[4:]:  
-                if field in lines_csv[0]:
-                    index1 = splitlines.index(field)
-                    temp_dict[field] = energy_forecast_filtered_file[i][index1]
-
-            final_list.append(temp_dict)
+            final_list = []
+            if energy_qs.exists():
+                for obj in energy_qs:
+                    temp_dict = {field: "0" for field in fields}
+                    temp_dict["UTC time"] = obj.ts.isoformat()
+                    temp_dict["creation_time (UTC)"] = obj.data.get("creation_time (UTC)") or obj.data.get("creation_time") or ""
+                    temp_dict["version"] = obj.data.get("version") or ""
+                    temp_dict["region_code"] = region_code
+                    # attempt to map known energy fields from JSON payload
+                    for field in fields[4:]:
+                        temp_dict[field] = obj.data.get(field, "0")
+                    final_list.append(temp_dict)
+                cache.set(cache_key, final_list, 10)
+            else:
+                # fallback to CSV if DB not populated
+                energy_forecast_csv_file = get_energy_forecasts_csv_file(region_code, date)
+                try:
+                    with open(energy_forecast_csv_file) as file:
+                        lines_csv = file.readlines()
+                    energy_forecast_filtered_file = [line.split(',') for i, line in enumerate(lines_csv) if i>0 and i<=forecastPeriod]
+                    for i in range(0, len(energy_forecast_filtered_file)):
+                        temp_dict = {field: "0" for field in fields}
+                        temp_dict["UTC time"] = energy_forecast_filtered_file[i][0]
+                        temp_dict["creation_time (UTC)"] = energy_forecast_filtered_file[i][1]
+                        temp_dict["version"] = energy_forecast_filtered_file[i][2]
+                        temp_dict["region_code"] = region_code
+                        splitlines = lines_csv[0].split(",")
+                        splitlines[-1] = splitlines[-1].rstrip("\n")
+                        for field in fields[4:]:
+                            if field in lines_csv[0]:
+                                index1 = splitlines.index(field)
+                                temp_dict[field] = energy_forecast_filtered_file[i][index1]
+                        final_list.append(temp_dict)
+                    cache.set(cache_key, final_list, 10)
+                except Exception:
+                    final_list = []
 
         response = {
                 "data": final_list,
@@ -613,11 +826,12 @@ class SupportedRegionsApiView(APIView):
                     "carbon_cast_version": carbon_cast_version
                 }, status=status.HTTP_429_TOO_MANY_REQUESTS, headers={'Retry-After': 86400})
 
-        path = os.path.abspath(os.path.join(os.getcwd(),'real_time'))
-        items = os.listdir(path)
-        supported_regions = [item for item in items if os.path.isdir(os.path.join(path, item)) and item != 'weather_data']
+        # Try to discover supported regions from DB first
+        regions = list(EmissionActual.objects.order_by('region').values_list('region', flat=True).distinct())
+        # include any regions from Forecast96 and Weather as well
+        regions = sorted(set(regions) | set(Forecast96.objects.order_by('region').values_list('region', flat=True).distinct()) | set(Weather.objects.order_by('region').values_list('region', flat=True).distinct()))
         response = {
-            "US_supported_regions": supported_regions,
+            "US_supported_regions": regions,
             "carbon_cast_version": carbon_cast_version
         }
         return Response(response, status=status.HTTP_200_OK)

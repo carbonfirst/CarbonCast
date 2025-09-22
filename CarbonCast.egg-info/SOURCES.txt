@@ -1,0 +1,9 @@
+LICENSE.md
+README.md
+setup.py
+CarbonCast.egg-info/PKG-INFO
+CarbonCast.egg-info/SOURCES.txt
+CarbonCast.egg-info/dependency_links.txt
+CarbonCast.egg-info/requires.txt
+CarbonCast.egg-info/top_level.txt
+src/CarbonCastAPI/manage.py

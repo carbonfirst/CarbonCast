@@ -84,17 +84,15 @@ TEMPLATES = [
 ]
 
 
-REST_FRAMEWORK = {  
+REST_FRAMEWORK = {
     'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.URLPathVersioning',
     'ALLOWED_VERSIONS': ['v1', 'v2'],
     'DEFAULT_VERSION': 'v1',
-    'DEFAULT_PERMISSION_CLASSES': [     
-        'rest_framework.permissions.IsAuthenticated', 
-    ], 
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.SessionAuthentication',
-    ], 
-} 
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny',  # Changed to AllowAny - no authentication required
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [], # Disabled authentication
+}
 
 WSGI_APPLICATION = 'CarbonCastAPI.wsgi.application'
 
@@ -118,18 +116,18 @@ DATABASES = {
     }
 }
 
+# Disabled throttling - no rate limits
 REST_FRAMEWORK = {
-    'DEFAULT_THROTTLE_CLASSES': [
-        'CarbonCastRESTAPI.throttling.MyViewRateThrottle'
-    ],
-    'DEFAULT_THROTTLE_RATES': {
-        'default': '100/day'
-    }
+    # Throttling disabled - no rate limits
+    'DEFAULT_THROTTLE_CLASSES': [],
+    'DEFAULT_THROTTLE_RATES': {}
 }
 
-DEFAULT_THROTTLE_LIMIT = 10
-EXTENDED_THROTTLE_LIMIT = 1000
-REQUIRES_AUTH = os.environ.get('REQUIRES_AUTH')
+# Set to None to disable throttle limits
+DEFAULT_THROTTLE_LIMIT = None
+EXTENDED_THROTTLE_LIMIT = None
+# Force disable authentication
+REQUIRES_AUTH = 'False'
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators

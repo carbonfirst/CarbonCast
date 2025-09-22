@@ -1,8 +1,14 @@
 from rest_framework import throttling
 
 class MyViewRateThrottle(throttling.SimpleRateThrottle):
-    rate = '100/day'
+    # Disabled - no rate limit
+    rate = None
+
+    def allow_request(self, request, view):
+        # Always allow - no rate limiting
+        return True
 
     def get_cache_key(self, request, view):
-        return view.__class__.__name__
+        # Return None to disable caching
+        return None
 

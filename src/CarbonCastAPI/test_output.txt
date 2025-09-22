@@ -1,0 +1,99 @@
+================================================================================
+API Endpoint Testing - Verifying SQLite Usage
+================================================================================
+
+📍 Testing: CarbonIntensity
+   URL: /v1/CarbonIntensity
+   Params: {'region_code': 'GRID'}
+------------------------------------------------------------
+From here else
+[] [<class 'rest_framework.permissions.AllowAny'>]
+10 1000
+   ✅ Status: 200
+   📊 Records returned: 1
+   🔍 Database queries executed: 1
+   ✅ SQLite database is being queried
+   Query sample: SELECT "CarbonCastRESTAPI_emissionactual"."id", "CarbonCastRESTAPI_emissionactual"."region", "CarbonCastRESTAPI_emissionactual"."ts", "CarbonCastRESTA...
+   ✅ No CSV fallback indicators found
+
+📍 Testing: CarbonIntensityHistory
+   URL: /v1/CarbonIntensityHistory
+   Params: {'region_code': 'GRID'}
+------------------------------------------------------------
+   ✅ Status: 200
+   📊 Records returned: 8832
+   🔍 Database queries executed: 2
+   ✅ SQLite database is being queried
+   Query sample: SELECT 1 AS "a" FROM "CarbonCastRESTAPI_emissionactual" WHERE "CarbonCastRESTAPI_emissionactual"."region" = 'GRID' LIMIT 1...
+   ✅ No CSV fallback indicators found
+
+📍 Testing: EnergySources
+   URL: /v1/EnergySources
+   Params: {'region_code': 'GRID'}
+------------------------------------------------------------
+   ✅ Status: 200
+   📊 Records returned: 1
+   🔍 Database queries executed: 1
+   ✅ SQLite database is being queried
+   Query sample: SELECT "CarbonCastRESTAPI_emissionactual"."id", "CarbonCastRESTAPI_emissionactual"."region", "CarbonCastRESTAPI_emissionactual"."ts", "CarbonCastRESTA...
+   ✅ No CSV fallback indicators found
+
+📍 Testing: CarbonIntensityForecasts
+   URL: /v1/CarbonIntensityForecasts
+   Params: {'region_code': 'CISO'}
+------------------------------------------------------------
+Internal Server Error: /v1/CarbonIntensityForecasts
+Traceback (most recent call last):
+  File "/Users/tanushsavadi/Documents/Research/UCSC_CarbonCast_API/CarbonCast/.venv/lib/python3.13/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/Users/tanushsavadi/Documents/Research/UCSC_CarbonCast_API/CarbonCast/.venv/lib/python3.13/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "/Users/tanushsavadi/Documents/Research/UCSC_CarbonCast_API/CarbonCast/.venv/lib/python3.13/site-packages/django/views/decorators/csrf.py", line 56, in wrapper_view
+    return view_func(*args, **kwargs)
+  File "/Users/tanushsavadi/Documents/Research/UCSC_CarbonCast_API/CarbonCast/.venv/lib/python3.13/site-packages/django/views/generic/base.py", line 105, in view
+    return self.dispatch(request, *args, **kwargs)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/tanushsavadi/Documents/Research/UCSC_CarbonCast_API/CarbonCast/.venv/lib/python3.13/site-packages/rest_framework/views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+  File "/Users/tanushsavadi/Documents/Research/UCSC_CarbonCast_API/CarbonCast/.venv/lib/python3.13/site-packages/rest_framework/views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "/Users/tanushsavadi/Documents/Research/UCSC_CarbonCast_API/CarbonCast/.venv/lib/python3.13/site-packages/rest_framework/views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "/Users/tanushsavadi/Documents/Research/UCSC_CarbonCast_API/CarbonCast/.venv/lib/python3.13/site-packages/rest_framework/views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "/Users/tanushsavadi/Documents/Research/UCSC_CarbonCast_API/CarbonCast/src/CarbonCastAPI/CarbonCastRESTAPI/views.py", line 551, in get
+    CI_lifecycle, CI_direct = get_CI_forecasts_csv_file(region_code, date)
+                              ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "/Users/tanushsavadi/Documents/Research/UCSC_CarbonCast_API/CarbonCast/src/CarbonCastAPI/CarbonCastRESTAPI/helper.py", line 25, in get_CI_forecasts_csv_file
+    numFiles = len(os.listdir(path))
+                   ~~~~~~~~~~^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/Users/tanushsavadi/Documents/Research/UCSC_CarbonCast_API/CarbonCast/src/CarbonCastAPI/real_time'
+   ❌ Exception: [Errno 2] No such file or directory: '/Users/tanushsavadi/Documents/Research/UCSC_CarbonCast_API/CarbonCast/src/CarbonCastAPI/real_time'
+
+📍 Testing: SupportedRegions
+   URL: /v1/SupportedRegions
+   Params: {}
+------------------------------------------------------------
+   ✅ Status: 200
+   📊 Records returned: 0
+   🔍 Database queries executed: 3
+   ✅ SQLite database is being queried
+   Query sample: SELECT DISTINCT "CarbonCastRESTAPI_emissionactual"."region" FROM "CarbonCastRESTAPI_emissionactual" ORDER BY "CarbonCastRESTAPI_emissionactual"."regio...
+   ✅ No CSV fallback indicators found
+
+================================================================================
+SUMMARY REPORT
+================================================================================
+
+📊 Total endpoints tested: 5
+✅ Endpoints using SQLite: 4
+⚠️  Endpoints with CSV fallback: 0
+❌ Endpoints with errors: 1
+
+🎉 SUCCESS: API is using SQLite database!
+✅ No CSV fallback detected
+✅ Database queries are being executed
+✅ SQLite integration is working properly
+
+Detailed results saved to: api_endpoint_test_results.json

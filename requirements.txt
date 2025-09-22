@@ -19,4 +19,4 @@ pyotp==2.9.0
 entsoe-py==0.5.10
 xarray==23.7.0
 drf-yasg
-
+django-cors-headers

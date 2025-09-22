@@ -1,85 +1,91 @@
-Instructions to run CarbonCastAPI: 
+# CarbonCastAPI - Run & DB Integration Instructions
 
-1. Clone the Django API Branch
+This document contains tested commands to run the Django API with the SQLite DB ingestion in this repo.
 
-2. Choose the dockerized version or without docker:
-    - With Docker:
+Prerequisites:
+- Python 3.9+ and pip installed
+- Virtualenv recommended
 
-      Inside the main CarbonCast Folder, run 
-			```docker-compose up```
+Quick setup (no docker)
 
-		  (The API routes will be accessible on 0.0.0.0 instead of 127.0.0.1 or localhost)
+1. Create and activate a virtualenv:
 
-    - Without Docker:
-      - Inside the main CarbonCast Folder, install the dependencies and run:
+```bash
+python -m venv .venv
+source .venv/bin/activate
+```
 
-        ```pip install . ``` \
-        ```python setup.py run_django_server ```
+2. Install dependencies:
 
-    - Running manually:
-      
-      - Inside the main CarbonCast Folder, run migrations:
+```bash
+pip install -r requirements.txt
+```
 
-        ```python src/CarbonCastAPI/manage.py makemigrations ``` 
+3. Run migrations:
 
-        ``` python src/CarbonCastAPI/manage.py migrate ```
-      - Run the Server:
+```bash
+python src/CarbonCastAPI/manage.py makemigrations CarbonCastRESTAPI
+python src/CarbonCastAPI/manage.py migrate
+```
 
-        ```python src/CarbonCastAPI/manage.py runserver```
-      
-      - Optionally, to run the Server with user authentication disabled and with direct access to all the APIs:
+4. Import CSVs into SQLite (one-time; path is relative to repo):
 
-        ```python src/CarbonCastAPI/manage.py runserver --rmauth```
-        
+```bash
+python src/CarbonCastAPI/manage.py import_csvs --path real_time
+```
 
-3. We can check if a user needs to be authenticated to use the APIs based on the response received using the API: http://127.0.0.1:8000/v1/UserAuthenticationEnforced 
+Importer notes: The importer now makes parsed datetimes timezone-aware and heuristically populates EmissionActual.lifecycle and EmissionActual.direct from CSV headers when present while still storing the full row in EmissionActual.data. See [`src/CarbonCastAPI/CarbonCastRESTAPI/management/commands/import_csvs.py`](src/CarbonCastAPI/CarbonCastRESTAPI/management/commands/import_csvs.py:1).
 
-4. Based on the above response, if users need to log in to get access to the API endpoints, follow these steps:
-    - To Sign Up, send a POST request to http://127.0.0.1:8000/v1/SignUp  with the parameters “username”, “name”, “password” and “email”. 
-    Example:
-    ```json 
-    {
-    "username": "Test1",
-    "name": "Test1",
-    "password": "1234567g",
-    "email": "test1@abc.com"
-    }
-    ```
+5. Run integration tests:
 
-    - To Sign In, send a POST request to http://127.0.0.1:8000/v1/SignIn with the parameters “username”, “name”, “password” and “email”. Example:
-    ```json 
-    {
-    "username": "Test1",
-    "name": "Test1",
-    "password": "1234567g",
-    "email": "test1@abc.com"
-    }
-    ```
-    - Both Sign Up and Sign In return a response with the user details. The “otp_base32” field can be entered in any authenticator to get the OTP for 2-step verification. The url in “otp_auth_url” can be used to generate a QR code image for scanning using any authenticator, or optionally, the “otp_qrcode_image” sends the encoded image, which can be decoded to get the QR code. (A QR code also gets generated and stored in the code temporarily for easy access)
-    - Once we have the OTP,  send a POST request with the username to the Verification endpoint http://127.0.0.1:8000/v1/VerifyOTP for 2-step verification and to get access to the system.
-    ```json
-    {
-    "username": "Test1",
-    "token": "918641"
-    }
-    ```
+```bash
+python src/CarbonCastAPI/manage.py test CarbonCastRESTAPI.tests.test_db_integration
+```
 
-5. Access the API endpoint: 
+6. Start dev server:
 
-    - http://127.0.0.1:8000/v1/CarbonIntensity?region_code=all  ( can vary the region_code parameter to specific regions or all regions;  if region_code invalid or not entered, message will pop up )
-    - http://127.0.0.1:8000/v1/EnergySources?region_code=all  (can vary the region_code parameter to specific regions or all regions; if region_code invalid or not entered, message will pop up)
-    - http://127.0.0.1:8000/v1/CarbonIntensityHistory?regionCode=AECI&date=2023-08-19  (can specify any regionCode and date till 2023-09-10) 
-    - http://127.0.0.1:8000/v1/EnergySourcesHistory?regionCode=AECI&date=2023-08-19 (can specify any regionCode and date till 2023-09-10)
-    - http://127.0.0.1:8000/v1/CarbonIntensityForecasts?regionCode=AECI&forecastPeriod=48h (can specify any regionCode and if forecastPeriod not specified, default will be 24h; otherwise specify forecastPeriod as 24h, 48h or 96h)
-    - http://127.0.0.1:8000/v1/CarbonIntensityForecastsHistory?regionCode=AECI&date=2023-08-19 (can specify any regionCode and date till 2023-09-10)
-    - http://127.0.0.1:8000/v1/EnergySourcesForecastsHistory?regionCode=AECI&date=2023-08-19&forecastPeriod=48h (can specify any regionCode and date till 2023-09-10; if forecastPeriod not specified, default will be 24h; otherwise specify forecastPeriod as 24h, 48h or 96h)
-    - http://127.0.0.1:8000/v1/SupportedRegions 
+```bash
+python src/CarbonCastAPI/manage.py runserver
+```
 
+7. API endpoints (examples):
 
-6. Logout: To log out, it is necessary to be logged in and have an active session. Then access the API endpoint: http://127.0.0.1:8000/v1/Logout
+- Latest carbon intensity (requires auth by default):
 
-7. A cron job was created to refresh the individual user and overall global limits at 12:00 am everyday. To set up the cron job run: 
-```crontab -e ```
-and enter the following command to run cron job everyday at 12:00 am: 
+```bash
+curl -i -u apitest:s3cret -H "Accept: application/json" "http://127.0.0.1:8000/v1/CarbonIntensity?region_code=PJM"
+```
 
-    ```0 0 * * * /usr/bin/python3 /path/to/your/manage.py refresh_limits ```
+- Supported regions:
+
+```bash
+curl -i -u apitest:s3cret "http://127.0.0.1:8000/v1/SupportedRegions"
+```
+
+Troubleshooting/Notes:
+
+- If you see carbon_intensity values being returned when lifecycle/direct are 0, the view now falls back to values in the stored JSON (see [`src/CarbonCastAPI/CarbonCastRESTAPI/views.py`](src/CarbonCastAPI/CarbonCastRESTAPI/views.py:136)).
+- If running into timezone warnings, ensure migrations ran and importer was executed; importer now stores tz-aware datetimes.
+- To inspect counts:
+
+```bash
+python src/CarbonCastAPI/manage.py shell -c "from CarbonCastRESTAPI.models import EmissionActual; print('EmissionActual count=', EmissionActual.objects.count())"
+```
+
+- To view latest PJM row:
+
+```bash
+python src/CarbonCastAPI/manage.py shell -c "from CarbonCastRESTAPI.models import EmissionActual; o=EmissionActual.objects.filter(region='PJM').order_by('-ts').first(); print(o, o.lifecycle, o.direct, o.data)"
+```
+
+Files changed during DB integration work:
+
+- [`src/CarbonCastAPI/CarbonCastRESTAPI/management/commands/import_csvs.py`](src/CarbonCastAPI/CarbonCastRESTAPI/management/commands/import_csvs.py:1) — tz-aware datetimes, lifecycle/direct extraction, summary logging.
+- [`src/CarbonCastAPI/CarbonCastRESTAPI/views.py`](src/CarbonCastAPI/CarbonCastRESTAPI/views.py:136) — fallback to JSON carbon_intensity when lifecycle/direct missing.
+
+Last verified results:
+- Import summary: files_processed=41922, rows_updated=1006128, errors=0
+- Integration test: passed
+- Example API curl returns numeric carbon intensity for PJM
+
+End.

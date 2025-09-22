@@ -1,0 +1,14 @@
+Metadata-Version: 2.1
+Name: CarbonCast
+Version: 0.0.1
+License-File: LICENSE.md
+Requires-Dist: requests
+Requires-Dist: Django==4.2.5
+Requires-Dist: sqlparse==0.4.4
+Requires-Dist: djangorestframework==3.14.0
+Requires-Dist: qrcode==7.4.2
+Requires-Dist: pyotp==2.9.0
+Requires-Dist: entsoe-py==0.5.10
+Requires-Dist: xarray==2023.7.0
+Requires-Dist: drf-yasg
+Requires-Dist: importlib-metadata; python_version >= "3.11.4"
