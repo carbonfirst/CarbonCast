@@ -23,7 +23,7 @@ urlpatterns = [
     path('EnergySourcesHistory', EnergySourcesHistoryApiView.as_view()),
     path('CarbonIntensityForecasts', CarbonIntensityForecastsApiView.as_view()),
     path('CarbonIntensityForecastsHistory', CarbonIntensityForecastsHistoryApiView.as_view()),
-    path('EnergySourcesForecastsHistory', EnergySourcesForecastsHistoryApiView.as_view()),   
+    path('EnergySourcesForecastsHistory', EnergySourcesForecastsHistoryApiView.as_view()),
     path('SupportedRegions', SupportedRegionsApiView.as_view()),
     path('UserAuthenticationEnforced', UserAuthenticationEnforcedView.as_view()),
     path('SignUp', SignUpApiView.as_view()),

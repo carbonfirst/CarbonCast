@@ -1,5 +1,8 @@
 import os
+import re
 from pathlib import Path
+from datetime import datetime
+from typing import Tuple, Dict, Optional
 
 
 def get_latest_csv_file(region_code):
@@ -22,89 +25,263 @@ def get_latest_csv_file(region_code):
     return csv_file1, csv_file2
 
 
-def get_CI_forecasts_csv_file(region_code, date):
-    # Get the project root directory (3 levels up from this file)
+def find_closest_date_file(available_files: list, requested_date: str, file_pattern: str) -> Tuple[Optional[str], Optional[str], bool]:
+    """
+    Find the file with the closest date to the requested date.
+    
+    Args:
+        available_files: List of available filenames
+        requested_date: The requested date in YYYY-MM-DD format
+        file_pattern: Regex pattern to extract date from filename
+        
+    Returns:
+        Tuple of (selected_filename, actual_date, is_fallback)
+    """
+    if not available_files:
+        return None, None, False
+    
+    try:
+        requested_dt = datetime.strptime(requested_date, "%Y-%m-%d")
+    except ValueError:
+        print(f"[find_closest_date_file] Invalid date format: {requested_date}, using latest file")
+        # If invalid date format, return the latest file
+        available_files.sort()
+        selected_file = available_files[-1]
+        date_match = re.search(file_pattern, selected_file)
+        actual_date = date_match.group(1) if date_match else None
+        return selected_file, actual_date, True
+    
+    # Extract dates and calculate distances
+    file_dates = []
+    for filename in available_files:
+        date_match = re.search(file_pattern, filename)
+        if date_match:
+            try:
+                file_date_str = date_match.group(1)
+                file_dt = datetime.strptime(file_date_str, "%Y-%m-%d")
+                date_diff = abs((file_dt - requested_dt).days)
+                file_dates.append((filename, file_date_str, file_dt, date_diff))
+            except ValueError:
+                continue
+    
+    if not file_dates:
+        return None, None, False
+    
+    # Sort by date difference (closest first), then by date (prefer past dates over future for ties)
+    file_dates.sort(key=lambda x: (x[3], x[2] > requested_dt, x[2]))
+    
+    selected_file = file_dates[0][0]
+    actual_date = file_dates[0][1]
+    is_fallback = actual_date != requested_date
+    
+    if is_fallback:
+        days_diff = file_dates[0][3]
+        direction = "future" if file_dates[0][2] > requested_dt else "past"
+        print(f"[find_closest_date_file] Using fallback: requested {requested_date}, "
+              f"using {actual_date} ({days_diff} days in the {direction})")
+    
+    return selected_file, actual_date, is_fallback
+
+
+def get_CI_forecasts_csv_file_with_metadata(region_code: str, date: str) -> Dict:
+    """
+    Get CI forecast CSV files with metadata about fallback usage.
+    
+    Returns:
+        Dictionary containing:
+        - lifecycle_file: Path to lifecycle forecast file
+        - direct_file: Path to direct forecast file
+        - metadata: Dictionary with fallback information
+    """
     base_dir = Path(__file__).resolve().parent.parent.parent.parent
     path = os.path.join(base_dir, 'real_time', region_code)
-    i = 0 
-    numFiles = len(os.listdir(path))
-    csv_file_l= None
-    csv_file_d = None
-    for file in os.listdir(path):
-        #print("this is printing file:",file)
-        if(i ==numFiles-1):
-            print(i, file, date)
-        i+=1 
-        if file.endswith(f"lifecycle_CI_forecasts_{date}.csv"):
-            csv_file_l = os.path.join(path, file)
-        elif file.endswith(f"direct_CI_forecasts_{date}.csv"):
-            csv_file_d = os.path.join(path, file)
-    if (csv_file_l is None): # file not found
-        #csv_file_l = os.path.join(path, f"{region_code}_lifecycle_CI_forecasts_2023-08-07.csv")
-        latestdate = list()
-        for filename in os.listdir(path):
-            if "lifecycle_CI_forecast" in filename:
-                latestdate.append(filename)
-                print("this is the latestdate1:", latestdate[-1])
-
-        csv_file_l = os.path.join(path,latestdate[-1])
-    if (csv_file_d is None): # file not found
-       #csv_file_d = os.path.join(path, f"{region_code}_direct_CI_forecasts_2023-08-07.csv")
-       latestdate2 = list()
-       for filename in os.listdir(path):
-            if "direct_CI_forecasts" in filename:
-                latestdate2.append(filename)
-                print("this is the latestdate2:", latestdate2[-1])
-                csv_file_d = os.path.join(path, latestdate2[-1])
+    print(f"[get_CI_forecasts_csv_file_with_metadata] Looking for forecast files with date: {date} in region: {region_code}")
     
-    return csv_file_l, csv_file_d
+    metadata = {
+        "requested_date": date,
+        "lifecycle_fallback": False,
+        "lifecycle_actual_date": date,
+        "direct_fallback": False,
+        "direct_actual_date": date,
+        "overall_fallback": False
+    }
+    
+    # Get all available forecast files
+    all_files = os.listdir(path)
+    lifecycle_files = [f for f in all_files if "lifecycle_CI_forecasts_" in f and f.endswith(".csv")]
+    direct_files = [f for f in all_files if "direct_CI_forecasts_" in f and f.endswith(".csv")]
+    
+    # Find closest lifecycle forecast
+    lifecycle_file, lifecycle_date, lifecycle_fallback = find_closest_date_file(
+        lifecycle_files, date, r'lifecycle_CI_forecasts_(\d{4}-\d{2}-\d{2})'
+    )
+    
+    if lifecycle_file:
+        csv_file_l = os.path.join(path, lifecycle_file)
+        metadata["lifecycle_fallback"] = lifecycle_fallback
+        metadata["lifecycle_actual_date"] = lifecycle_date or date
+    else:
+        csv_file_l = None
+        print(f"[get_CI_forecasts_csv_file_with_metadata] WARNING: No lifecycle forecast files found")
+    
+    # Find closest direct forecast
+    direct_file, direct_date, direct_fallback = find_closest_date_file(
+        direct_files, date, r'direct_CI_forecasts_(\d{4}-\d{2}-\d{2})'
+    )
+    
+    if direct_file:
+        csv_file_d = os.path.join(path, direct_file)
+        metadata["direct_fallback"] = direct_fallback
+        metadata["direct_actual_date"] = direct_date or date
+    else:
+        csv_file_d = None
+        print(f"[get_CI_forecasts_csv_file_with_metadata] WARNING: No direct forecast files found")
+    
+    metadata["overall_fallback"] = lifecycle_fallback or direct_fallback
+    
+    print(f"[get_CI_forecasts_csv_file_with_metadata] Final files - Lifecycle: {csv_file_l}, Direct: {csv_file_d}")
+    print(f"[get_CI_forecasts_csv_file_with_metadata] Metadata: {metadata}")
+    
+    return {
+        "lifecycle_file": csv_file_l,
+        "direct_file": csv_file_d,
+        "metadata": metadata
+    }
 
+
+def get_CI_forecasts_csv_file(region_code, date):
+    """
+    Legacy function maintained for backward compatibility.
+    Returns just the file paths without metadata.
+    """
+    result = get_CI_forecasts_csv_file_with_metadata(region_code, date)
+    return result["lifecycle_file"], result["direct_file"]
+
+
+def get_actual_value_file_by_date_with_metadata(region_code: str, date: str) -> Dict:
+    """
+    Get actual value CSV files with metadata about fallback usage.
+    
+    Returns:
+        Dictionary containing:
+        - lifecycle_file: Path to lifecycle emissions file
+        - direct_file: Path to direct emissions file  
+        - metadata: Dictionary with fallback information
+    """
+    base_dir = Path(__file__).resolve().parent.parent.parent.parent
+    path = os.path.join(base_dir, 'real_time', region_code)
+    print(f"[get_actual_value_file_by_date_with_metadata] Looking for files with date: {date} in region: {region_code}")
+    
+    metadata = {
+        "requested_date": date,
+        "lifecycle_fallback": False,
+        "lifecycle_actual_date": date,
+        "direct_fallback": False,
+        "direct_actual_date": date,
+        "overall_fallback": False
+    }
+    
+    # Get all available emission files
+    all_files = os.listdir(path)
+    lifecycle_files = [f for f in all_files if "lifecycle_emissions.csv" in f]
+    direct_files = [f for f in all_files if "direct_emissions.csv" in f]
+    
+    # Find closest lifecycle emissions file
+    lifecycle_file, lifecycle_date, lifecycle_fallback = find_closest_date_file(
+        lifecycle_files, date, r'_(\d{4}-\d{2}-\d{2})_lifecycle_emissions'
+    )
+    
+    if lifecycle_file:
+        csv_file_a = os.path.join(path, lifecycle_file)
+        metadata["lifecycle_fallback"] = lifecycle_fallback
+        metadata["lifecycle_actual_date"] = lifecycle_date or date
+    else:
+        csv_file_a = None
+        print(f"[get_actual_value_file_by_date_with_metadata] WARNING: No lifecycle emission files found")
+    
+    # Find closest direct emissions file
+    direct_file, direct_date, direct_fallback = find_closest_date_file(
+        direct_files, date, r'_(\d{4}-\d{2}-\d{2})_direct_emissions'
+    )
+    
+    if direct_file:
+        csv_file_b = os.path.join(path, direct_file)
+        metadata["direct_fallback"] = direct_fallback
+        metadata["direct_actual_date"] = direct_date or date
+    else:
+        csv_file_b = None
+        print(f"[get_actual_value_file_by_date_with_metadata] WARNING: No direct emission files found")
+    
+    metadata["overall_fallback"] = lifecycle_fallback or direct_fallback
+    
+    print(f"[get_actual_value_file_by_date_with_metadata] Final files - Lifecycle: {csv_file_a}, Direct: {csv_file_b}")
+    print(f"[get_actual_value_file_by_date_with_metadata] Metadata: {metadata}")
+    
+    return {
+        "lifecycle_file": csv_file_a,
+        "direct_file": csv_file_b,
+        "metadata": metadata
+    }
 
 
 def get_actual_value_file_by_date(region_code, date):
-    # Get the project root directory (3 levels up from this file)
+    """
+    Legacy function maintained for backward compatibility.
+    Returns just the file paths without metadata.
+    """
+    result = get_actual_value_file_by_date_with_metadata(region_code, date)
+    return result["lifecycle_file"], result["direct_file"]
+
+
+def get_energy_forecasts_csv_file_with_metadata(region_code: str, date: str) -> Dict:
+    """
+    Get energy forecast CSV file with metadata about fallback usage.
+    
+    Returns:
+        Dictionary containing:
+        - file: Path to energy forecast file
+        - metadata: Dictionary with fallback information
+    """
     base_dir = Path(__file__).resolve().parent.parent.parent.parent
     path = os.path.join(base_dir, 'real_time', region_code)
-    i = 0
-    numFiles = len(os.listdir(path))
-    csv_file_a = None
-    csv_file_b = None
-    for file in os.listdir(path):
-        if(i, file, date):
-            print(i, file, date)
-        i += 1
-        if file.endswith(f"_{date}_lifecycle_emissions.csv"):
-            csv_file_a = os.path.join(path, file)
-            print(csv_file_a)
-        elif file.endswith(f"_{date}_direct_emissions.csv"):
-            csv_file_b = os.path.join(path, file)
-            print(csv_file_b)
-    if (csv_file_a is None): # file not found
-        latestdate3 = list()
-        for filename in os.listdir(path):
-            if "lifecycle_emissions" in filename:
-                latestdate3.append(filename)
-                print("this is the latestdate3:", latestdate3[-1])
-        csv_file_a = os.path.join(path,latestdate3[-1] )
+    print(f"[get_energy_forecasts_csv_file_with_metadata] Looking for energy forecast with date: {date} in region: {region_code}")
+    
+    metadata = {
+        "requested_date": date,
+        "fallback": False,
+        "actual_date": date
+    }
+    
+    # Get all available energy forecast files
+    all_files = os.listdir(path)
+    energy_files = [f for f in all_files if "_96hr_forecasts_" in f and f.endswith(".csv")]
+    
+    # Find closest energy forecast file
+    energy_file, actual_date, is_fallback = find_closest_date_file(
+        energy_files, date, r'_96hr_forecasts_(\d{4}-\d{2}-\d{2})'
+    )
+    
+    if energy_file:
+        e_forecast_csv_file = os.path.join(path, energy_file)
+        metadata["fallback"] = is_fallback
+        metadata["actual_date"] = actual_date or date
+    else:
+        e_forecast_csv_file = None
+        print(f"[get_energy_forecasts_csv_file_with_metadata] WARNING: No energy forecast files found")
+    
+    print(f"[get_energy_forecasts_csv_file_with_metadata] Final file: {e_forecast_csv_file}")
+    print(f"[get_energy_forecasts_csv_file_with_metadata] Metadata: {metadata}")
+    
+    return {
+        "file": e_forecast_csv_file,
+        "metadata": metadata
+    }
 
-    if (csv_file_b is None): # file not found
-        latestdate4 = list()
-        for filename in os.listdir(path):
-            if "direct_emissions" in filename:
-                latestdate4.append(filename)
-                print("this is the latestdate4:", latestdate4[-1])
-        csv_file_b = os.path.join(path,latestdate4[-1])
-
-    print(csv_file_a, csv_file_b)
-    return csv_file_a, csv_file_b
 
 def get_energy_forecasts_csv_file(region_code, date):
-    # Get the project root directory (3 levels up from this file)
-    base_dir = Path(__file__).resolve().parent.parent.parent.parent
-    path = os.path.join(base_dir, 'real_time', region_code)
-    for file in os.listdir(path):
-        if file.endswith(f"_96hr_forecasts_{date}.csv"):
-            e_forecast_csv_file = os.path.join(path, file)
-    return e_forecast_csv_file
-
-
+    """
+    Legacy function maintained for backward compatibility.
+    Returns just the file path without metadata.
+    """
+    result = get_energy_forecasts_csv_file_with_metadata(region_code, date)
+    return result["file"]

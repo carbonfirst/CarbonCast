@@ -17,12 +17,21 @@ from django.conf import settings
 from django.core.cache import cache
 from .models import UserModel, UserThrottleLimit, EmissionActual, Forecast96, Weather
 from .serializers import UserSerializer
-from .helper import get_latest_csv_file, get_actual_value_file_by_date, get_CI_forecasts_csv_file, get_energy_forecasts_csv_file
+from .helper import (
+    get_latest_csv_file,
+    get_actual_value_file_by_date,
+    get_CI_forecasts_csv_file,
+    get_energy_forecasts_csv_file,
+    get_actual_value_file_by_date_with_metadata,
+    get_CI_forecasts_csv_file_with_metadata,
+    get_energy_forecasts_csv_file_with_metadata
+)
 import os
 from .consts import carbon_cast_version, authentication_classes, permission_classes, US_region_codes
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from datetime import datetime
+import time
 def check_throttle_limit(user):
     # Rate limiting disabled - always allow requests
     return True
@@ -296,81 +305,339 @@ class CarbonIntensityHistoryApiView(APIView):
             
             if region_code == 'all':
                 regions = US_region_codes
+                print(f"[DEBUG] Requesting ALL regions. Total available: {len(US_region_codes)}")
+                print(f"[DEBUG] All regions: {US_region_codes}")
             elif region_code in US_region_codes:
                 regions = [region_code]
             else:
                 return Response({"error": "Invalid region code parameter"}, status=status.HTTP_400_BAD_REQUEST)
         date = request.query_params.get('date', '')
+        hour = request.query_params.get('hour', None)  # Get the hour parameter
+        start_time = time.time()
+        print(f"[PERF START] CarbonIntensityHistoryApiView for date: {date}, hour: {hour}, Requested regions: {len(regions)} regions")
                   
 
         field_names = [
-                        "UTC time", "creation_time (UTC)", "version", "region_code", "carbon_intensity_avg_lifecycle", 
+                        "UTC time", "creation_time (UTC)", "version", "region_code", "carbon_intensity_avg_lifecycle",
                         "carbon_intensity_avg_direct", "carbon_intensity_unit"
         ]
 
         final_list =[]
-        for region_code in regions:
-            cache_key = f"ci_history_{region_code}_{date}"
-            cached = cache.get(cache_key)
-            if cached:
-                final_list.extend(cached)
-                continue
-
-            # parse date to filter by ts.date
+        # Initialize metadata tracking for all regions
+        overall_metadata = None
+        regions_with_data = []
+        regions_without_data = []
+        regions_from_csv = []
+        regions_from_db = []
+        
+        # Parse date once before the loop
+        try:
+            from datetime import datetime
+            date_obj = datetime.strptime(date, "%Y-%m-%d").date() if date else None
+            print(f"[DEBUG] Successfully parsed date: {date_obj}")
+        except Exception as e:
+            print(f"[DEBUG] Failed to parse date '{date}': {e}, using default date")
+            from datetime import datetime
+            date_obj = datetime.now().date()  # Default to today
+        
+        # Prepare hour filter
+        hour_int = None
+        if hour is not None:
             try:
-                from datetime import datetime
-                date_obj = datetime.strptime(date, "%Y-%m-%d").date()
-            except Exception:
-                date_obj = None
-
-            if date_obj:
-                rows = EmissionActual.objects.filter(region=region_code, ts__date=date_obj).order_by('ts')
-            else:
-                rows = EmissionActual.objects.filter(region=region_code).order_by('ts')
-
-            if not rows.exists():
-                # fallback to CSV-compatible behavior
-                csv_file_a, csv_file_b = get_actual_value_file_by_date(region_code, date)
-                try:
-                    with open(csv_file_a) as file:
-                        lines_csv1 = file.readlines()
-                    with open(csv_file_b) as file:
-                        lines_csv2 = file.readlines()
-                    values_csv1 = [line.strip().split(',') for line in lines_csv1]
-                    values_csv2 = [line.strip().split(',') for line in lines_csv2]
-                    for i in range(1, len(values_csv1)):
-                        temp_dict= {}
-                        temp_dict[field_names[0]] = values_csv1[i][1]
-                        temp_dict[field_names[1]] = values_csv1[i][2]
-                        temp_dict[field_names[2]] = values_csv1[i][3]
-                        temp_dict[field_names[3]] = region_code
-                        temp_dict[field_names[4]] = (values_csv1[i][4])
-                        temp_dict[field_names[5]] = (values_csv2[i][4])
-                        temp_dict[field_names[6]] = "gCO2eg/kWh"
+                hour_int = int(hour)
+                print(f"[DEBUG] Hour filter: {hour_int}")
+            except (ValueError, TypeError):
+                print(f"[DEBUG] Invalid hour parameter: {hour}")
+        
+        # OPTIMIZATION: Batch query all regions at once when possible
+        if len(regions) > 1 and date_obj:  # Batch for any multiple regions
+            print(f"[DEBUG] Using OPTIMIZED BATCH QUERY for {len(regions)} regions")
+            
+            # Build optimized batch query - only fetch needed fields
+            base_query = EmissionActual.objects.filter(
+                region__in=regions,
+                ts__date=date_obj
+            ).only('region', 'ts', 'lifecycle', 'direct', 'data')  # Only fetch needed fields
+            
+            if hour_int is not None:
+                base_query = base_query.filter(ts__hour=hour_int)
+            
+            # Use values_list with named=True for faster processing
+            batch_results = base_query.order_by('region', 'ts').values_list(
+                'region', 'ts', 'lifecycle', 'direct', 'data', named=True
+            )
+            
+            # Group results by region using iterator for memory efficiency
+            from collections import defaultdict
+            region_data_map = defaultdict(list)
+            
+            # Process in chunks to avoid loading all into memory at once
+            for row in batch_results.iterator(chunk_size=1000):
+                region_data_map[row.region].append(row)
+            
+            print(f"[DEBUG] Batch query found data for {len(region_data_map)} regions")
+            
+            # Process each region's data
+            for region_code in regions:
+                # Check cache first
+                if hour_int is not None:
+                    cache_key = f"ci_history_{region_code}_{date}_hour_{hour}"
+                else:
+                    cache_key = f"ci_history_{region_code}_{date}"
+                
+                cached = cache.get(cache_key)
+                if cached:
+                    print(f"[DEBUG] Cache hit for {cache_key}, adding {len(cached)} items")
+                    final_list.extend(cached)
+                    regions_with_data.append(region_code)
+                    continue
+                
+                # Use batch query results
+                if region_code in region_data_map:
+                    temp_batch = []
+                    for row_data in region_data_map[region_code]:
+                        # Faster processing with named tuple access
+                        data_dict = row_data.data or {}
+                        temp_dict = {
+                            field_names[0]: row_data.ts.isoformat(),
+                            field_names[1]: data_dict.get("creation_time (UTC)", "") or data_dict.get("creation_time", ""),
+                            field_names[2]: data_dict.get("version", ""),
+                            field_names[3]: region_code,
+                            field_names[4]: float(row_data.lifecycle) if row_data.lifecycle is not None else 0.0,
+                            field_names[5]: float(row_data.direct) if row_data.direct is not None else 0.0,
+                            field_names[6]: data_dict.get("carbon_intensity_unit", "gCO2eg/kWh")
+                        }
+                        temp_batch.append(temp_dict)
                         final_list.append(temp_dict)
-                    cache.set(cache_key, final_list, 10)
-                    continue
-                except Exception:
+                    
+                    cache.set(cache_key, temp_batch, 10)
+                    print(f"[DEBUG] Batch processed {len(temp_batch)} items for region {region_code}")
+                    if len(temp_batch) > 0:
+                        regions_from_db.append(region_code)
+                        regions_with_data.append(region_code)
+                    else:
+                        regions_without_data.append(region_code)
+                else:
+                    # No data in batch results, try CSV fallback
+                    print(f"[DEBUG] No DB data for region {region_code}, trying CSV fallback")
+                    regions_without_data.append(region_code)
+                    # CSV fallback code will be same as before
+                    result = get_actual_value_file_by_date_with_metadata(region_code, date)
+                    csv_file_a = result["lifecycle_file"]
+                    csv_file_b = result["direct_file"]
+                    region_metadata = result["metadata"]
+                    if region_metadata and region_metadata.get("overall_fallback"):
+                        overall_metadata = region_metadata
+                    try:
+                        with open(csv_file_a) as file:
+                            lines_csv1 = file.readlines()
+                        with open(csv_file_b) as file:
+                            lines_csv2 = file.readlines()
+                        values_csv1 = [line.strip().split(',') for line in lines_csv1]
+                        values_csv2 = [line.strip().split(',') for line in lines_csv2]
+                        temp_batch = []
+                        for i in range(1, len(values_csv1)):
+                            if hour is not None:
+                                try:
+                                    hour_int = int(hour)
+                                    csv_timestamp = values_csv1[i][1]
+                                    if ' ' in csv_timestamp:
+                                        csv_hour = int(csv_timestamp.split(' ')[1].split(':')[0])
+                                        if csv_hour != hour_int:
+                                            continue
+                                except (ValueError, IndexError, TypeError):
+                                    pass
+                            
+                            temp_dict= {}
+                            temp_dict[field_names[0]] = values_csv1[i][1]
+                            temp_dict[field_names[1]] = values_csv1[i][2]
+                            temp_dict[field_names[2]] = values_csv1[i][3]
+                            temp_dict[field_names[3]] = region_code
+                            temp_dict[field_names[4]] = (values_csv1[i][4])
+                            temp_dict[field_names[5]] = (values_csv2[i][4])
+                            temp_dict[field_names[6]] = "gCO2eg/kWh"
+                            temp_batch.append(temp_dict)
+                            final_list.append(temp_dict)
+                        cache.set(cache_key, temp_batch, 10)
+                        if len(temp_batch) > 0:
+                            regions_from_csv.append(region_code)
+                    except Exception as e:
+                        print(f"[DEBUG] Error reading CSV for region {region_code}: {e}")
+        else:
+            # Sequential processing for single region or when no date
+            print(f"[DEBUG] Using SEQUENTIAL processing for {len(regions)} regions")
+            for region_code in regions:
+                # Include hour in cache key when hour parameter is provided
+                if hour is not None:
+                    cache_key = f"ci_history_{region_code}_{date}_hour_{hour}"
+                else:
+                    cache_key = f"ci_history_{region_code}_{date}"
+                
+                cached = cache.get(cache_key)
+                if cached:
+                    print(f"[DEBUG] Cache hit for {cache_key}, adding {len(cached)} items")
+                    final_list.extend(cached)
                     continue
 
-            temp_batch = []
-            for obj in rows:
-                temp_dict = {}
-                temp_dict[field_names[0]] = obj.ts.isoformat()
-                temp_dict[field_names[1]] = obj.data.get("creation_time (UTC)") or obj.data.get("creation_time") or ""
-                temp_dict[field_names[2]] = obj.data.get("version") or ""
-                temp_dict[field_names[3]] = region_code
-                temp_dict[field_names[4]] = obj.lifecycle if obj.lifecycle is not None else 0
-                temp_dict[field_names[5]] = obj.direct if obj.direct is not None else 0
-                temp_dict[field_names[6]] = obj.data.get("carbon_intensity_unit", "gCO2eg/kWh")
-                temp_batch.append(temp_dict)
-                final_list.append(temp_dict)
-            cache.set(cache_key, temp_batch, 10)
+                if date_obj:
+                    # Optimize query with only() to fetch needed fields
+                    base_query = EmissionActual.objects.filter(
+                        region=region_code,
+                        ts__date=date_obj
+                    ).only('ts', 'lifecycle', 'direct', 'data')
+                    
+                    # Check if hour parameter is provided
+                    if hour_int is not None:
+                        # Filter by both date AND hour when hour is provided
+                        rows = base_query.filter(ts__hour=hour_int).order_by('ts')
+                        print(f"[DEBUG] Querying for region {region_code} on date {date_obj} hour {hour_int}")
+                    else:
+                        # No hour parameter, return all hours for the date
+                        rows = base_query.order_by('ts')
+                        print(f"[DEBUG] Querying for region {region_code} on date {date_obj} (all hours)")
+                else:
+                    # Default to today's date if no date provided
+                    from datetime import datetime
+                    default_date = datetime.now().date()
+                    print(f"[DEBUG] Using default date: {default_date}")
+                    rows = EmissionActual.objects.filter(region=region_code, ts__date=default_date).order_by('ts')
+                    print(f"[DEBUG] Found {rows.count()} rows for default date")
+
+                # Initialize metadata for this region
+                region_metadata = None
+                
+                if not rows.exists():
+                    print(f"[DEBUG] No DB data for region {region_code} on {date_obj or 'no valid date'}")
+                    regions_without_data.append(region_code)
+                    # fallback to CSV-compatible behavior with metadata
+                    result = get_actual_value_file_by_date_with_metadata(region_code, date)
+                    csv_file_a = result["lifecycle_file"]
+                    csv_file_b = result["direct_file"]
+                    region_metadata = result["metadata"]
+                    # Track overall metadata across all regions
+                    if region_metadata and region_metadata.get("overall_fallback"):
+                        overall_metadata = region_metadata
+                    try:
+                        with open(csv_file_a) as file:
+                            lines_csv1 = file.readlines()
+                        with open(csv_file_b) as file:
+                            lines_csv2 = file.readlines()
+                        values_csv1 = [line.strip().split(',') for line in lines_csv1]
+                        values_csv2 = [line.strip().split(',') for line in lines_csv2]
+                        # Create temp_batch for this region only
+                        temp_batch = []
+                        for i in range(1, len(values_csv1)):
+                            # If hour parameter is specified, filter by hour
+                            if hour is not None:
+                                try:
+                                    hour_int = int(hour)
+                                    # Extract hour from CSV timestamp (format: "YYYY-MM-DD HH:MM:SS")
+                                    csv_timestamp = values_csv1[i][1]
+                                    if ' ' in csv_timestamp:
+                                        csv_hour = int(csv_timestamp.split(' ')[1].split(':')[0])
+                                        if csv_hour != hour_int:
+                                            continue  # Skip this row if hour doesn't match
+                                except (ValueError, IndexError, TypeError):
+                                    pass  # If can't parse hour, include the row
+                            
+                            temp_dict= {}
+                            temp_dict[field_names[0]] = values_csv1[i][1]
+                            temp_dict[field_names[1]] = values_csv1[i][2]
+                            temp_dict[field_names[2]] = values_csv1[i][3]
+                            temp_dict[field_names[3]] = region_code
+                            temp_dict[field_names[4]] = (values_csv1[i][4])
+                            temp_dict[field_names[5]] = (values_csv2[i][4])
+                            temp_dict[field_names[6]] = "gCO2eg/kWh"
+                            temp_batch.append(temp_dict)
+                            final_list.append(temp_dict)
+                        # Cache only this region's data, not the entire final_list
+                        cache.set(cache_key, temp_batch, 10)
+                        print(f"[DEBUG] Added {len(temp_batch)} items from CSV for region {region_code} (hour filter: {hour})")
+                        if len(temp_batch) > 0:
+                            regions_from_csv.append(region_code)
+                        continue
+                    except Exception as e:
+                        print(f"[DEBUG] Error reading CSV for region {region_code}: {e}")
+                        continue
+
+                temp_batch = []
+                # Use iterator for memory efficiency
+                for obj in rows.iterator(chunk_size=100):
+                    data_dict = obj.data or {}
+                    temp_dict = {
+                        field_names[0]: obj.ts.isoformat(),
+                        field_names[1]: data_dict.get("creation_time (UTC)", "") or data_dict.get("creation_time", ""),
+                        field_names[2]: data_dict.get("version", ""),
+                        field_names[3]: region_code,
+                        field_names[4]: float(obj.lifecycle) if obj.lifecycle is not None else 0.0,
+                        field_names[5]: float(obj.direct) if obj.direct is not None else 0.0,
+                        field_names[6]: data_dict.get("carbon_intensity_unit", "gCO2eg/kWh")
+                    }
+                    temp_batch.append(temp_dict)
+                    final_list.append(temp_dict)
+                
+                # Cache with hour-specific key when hour parameter is provided
+                if hour is not None:
+                    cache_key = f"ci_history_{region_code}_{date}_hour_{hour}"
+                else:
+                    cache_key = f"ci_history_{region_code}_{date}"
+                
+                cache.set(cache_key, temp_batch, 10)
+                print(f"[DEBUG] Cached {len(temp_batch)} items for region {region_code} with key: {cache_key}")
+                if len(temp_batch) > 0:
+                    regions_from_db.append(region_code)
+                    regions_with_data.append(region_code)
+                else:
+                    regions_without_data.append(region_code)
+        
+        total_time = (time.time() - start_time) * 1000
+        expected_items = len(regions) * (1 if hour is not None else 24)
+        regions_responded = len(set(regions_with_data + regions_from_csv))
+        
+        print(f"[PERF END] Total API time: {total_time:.2f}ms for {len(final_list)} items")
+        print(f"[PERF] Expected {expected_items} items (from {len(regions)} regions), got {len(final_list)} items")
+        print(f"[DEBUG] REGION SUMMARY:")
+        print(f"  - Requested regions: {len(regions)}")
+        print(f"  - Regions with data: {regions_responded} ({len(regions_from_db)} from DB, {len(regions_from_csv)} from CSV)")
+        print(f"  - Regions without any data: {len(regions_without_data)}")
+        if len(regions_without_data) > 0:
+            print(f"  - Missing regions: {regions_without_data[:10]}{'...' if len(regions_without_data) > 10 else ''}")
+        if total_time > 5000:
+            print(f"[PERF ALERT] 🔴 API response time exceeded 5 seconds: {total_time:.2f}ms")
+        elif total_time > 1000:
+            print(f"[PERF WARNING] 🟡 API response time exceeded 1 second: {total_time:.2f}ms")
+        
+        # Build response with metadata if fallback was used
         response = {
             "data": final_list,
             "carbon_cast_version": carbon_cast_version,
         }
-        return Response(response, status=status.HTTP_200_OK) 
+        
+        # Use overall_metadata if any region had fallback
+        if overall_metadata:
+            region_metadata = overall_metadata
+        else:
+            region_metadata = None
+            
+        # Add metadata if any fallback was used
+        if region_metadata and region_metadata.get("overall_fallback"):
+            response["fallback_metadata"] = {
+                "message": "Fallback date was used for one or more files",
+                "requested_date": date,
+                "lifecycle_actual_date": region_metadata.get("lifecycle_actual_date"),
+                "direct_actual_date": region_metadata.get("direct_actual_date"),
+                "lifecycle_fallback": region_metadata.get("lifecycle_fallback"),
+                "direct_fallback": region_metadata.get("direct_fallback")
+            }
+            
+        # Create response with appropriate headers
+        http_response = Response(response, status=status.HTTP_200_OK)
+        if region_metadata and region_metadata.get("overall_fallback"):
+            http_response["X-Fallback-Used"] = "true"
+            http_response["X-Actual-Date-Lifecycle"] = region_metadata.get("lifecycle_actual_date", date)
+            http_response["X-Actual-Date-Direct"] = region_metadata.get("direct_actual_date", date)
+        
+        return http_response
 
 #4  
 class EnergySourcesHistoryApiView(APIView):
@@ -414,7 +681,7 @@ class EnergySourcesHistoryApiView(APIView):
             else:
                 return Response({"error": "Invalid region code parameter"}, status=status.HTTP_400_BAD_REQUEST)
         date = request.query_params.get('date', '')
-        print("this is the query" ,date)
+        print(f"[EnergySourcesHistoryApiView] Requested date: {date}, Regions: {regions}")
         
         fields = [
             "UTC time", "creation_time (UTC)", "version", "region_code", "coal", "nat_gas", "nuclear",
@@ -422,6 +689,9 @@ class EnergySourcesHistoryApiView(APIView):
         ]
         
         final_list =[]
+        # Initialize metadata tracking for all regions
+        overall_metadata = None
+        
         for region_code in regions:
             cache_key = f"energy_history_{region_code}_{date}"
             cached = cache.get(cache_key)
@@ -432,17 +702,34 @@ class EnergySourcesHistoryApiView(APIView):
             try:
                 from datetime import datetime
                 date_obj = datetime.strptime(date, "%Y-%m-%d").date()
-            except Exception:
+                print(f"[DEBUG EnergySourcesHistory] Successfully parsed date: {date_obj} for region: {region_code}")
+            except Exception as e:
+                print(f"[DEBUG EnergySourcesHistory] Failed to parse date '{date}': {e}")
                 date_obj = None
 
             if date_obj:
                 rows = EmissionActual.objects.filter(region=region_code, ts__date=date_obj).order_by('ts')
+                print(f"[DEBUG EnergySourcesHistory] Found {rows.count()} rows for {region_code} on {date_obj}")
             else:
-                rows = EmissionActual.objects.filter(region=region_code).order_by('ts')
+                # Fix: Use default date instead of returning all data
+                from datetime import datetime
+                default_date = datetime.now().date()
+                print(f"[DEBUG EnergySourcesHistory] Using default date: {default_date}")
+                rows = EmissionActual.objects.filter(region=region_code, ts__date=default_date).order_by('ts')
+                print(f"[DEBUG EnergySourcesHistory] Found {rows.count()} rows for default date")
 
+            # Initialize metadata for this region
+            region_metadata = None
+            
             if not rows.exists():
-                # fallback to CSV behavior
-                csv_file_a, csv_file_b = get_actual_value_file_by_date(region_code, date)
+                # fallback to CSV behavior with metadata
+                result = get_actual_value_file_by_date_with_metadata(region_code, date)
+                csv_file_a = result["lifecycle_file"]
+                csv_file_b = result["direct_file"]
+                region_metadata = result["metadata"]
+                # Track overall metadata across all regions
+                if region_metadata and region_metadata.get("overall_fallback"):
+                    overall_metadata = region_metadata
                 try:
                     with open(csv_file_a) as file:
                         lines_csv1 = file.readlines()
@@ -485,7 +772,32 @@ class EnergySourcesHistoryApiView(APIView):
             "data": final_list,
             "carbon_cast_version": carbon_cast_version
         }
-        return Response(response, status=status.HTTP_200_OK)
+        
+        # Use overall_metadata if any region had fallback
+        if overall_metadata:
+            region_metadata = overall_metadata
+        else:
+            region_metadata = None
+            
+        # Add metadata if any fallback was used
+        if region_metadata and region_metadata.get("overall_fallback"):
+            response["fallback_metadata"] = {
+                "message": "Fallback date was used for one or more files",
+                "requested_date": date,
+                "lifecycle_actual_date": region_metadata.get("lifecycle_actual_date"),
+                "direct_actual_date": region_metadata.get("direct_actual_date"),
+                "lifecycle_fallback": region_metadata.get("lifecycle_fallback"),
+                "direct_fallback": region_metadata.get("direct_fallback")
+            }
+            
+        # Create response with appropriate headers
+        http_response = Response(response, status=status.HTTP_200_OK)
+        if region_metadata and region_metadata.get("overall_fallback"):
+            http_response["X-Fallback-Used"] = "true"
+            http_response["X-Actual-Date-Lifecycle"] = region_metadata.get("lifecycle_actual_date", date)
+            http_response["X-Actual-Date-Direct"] = region_metadata.get("direct_actual_date", date)
+            
+        return http_response
 
 #5
 class CarbonIntensityForecastsApiView(APIView):
@@ -521,8 +833,10 @@ class CarbonIntensityForecastsApiView(APIView):
         final_interval = int(f[:-1])
         forecastPeriod = int(final_interval)
 
-        # today_date = datetime.now().strftime('%Y-%m-%d')
-        date = '2023-09-17'
+        # Get the current date instead of using hardcoded date
+        from datetime import datetime
+        date = datetime.now().strftime('%Y-%m-%d')
+        print(f"[CarbonIntensityForecastsApiView] Using date: {date} (was previously hardcoded as 2023-09-17)")
 
         # Try to read forecasts from DB first
         field_names = [
@@ -538,9 +852,15 @@ class CarbonIntensityForecastsApiView(APIView):
         direct_qs = Forecast96.objects.filter(region=region_code, forecast_type__icontains='direct').order_by('ts')[:forecastPeriod]
 
         final_list = []
-        # If DB has no forecasts, fallback to CSV behavior
+        # Initialize metadata
+        forecast_metadata = None
+        
+        # If DB has no forecasts, fallback to CSV behavior with metadata
         if not lifecycle_qs.exists() or not direct_qs.exists():
-            CI_lifecycle, CI_direct = get_CI_forecasts_csv_file(region_code, date)
+            result = get_CI_forecasts_csv_file_with_metadata(region_code, date)
+            CI_lifecycle = result["lifecycle_file"]
+            CI_direct = result["direct_file"]
+            forecast_metadata = result["metadata"]
             try:
                 with open(CI_lifecycle) as file:
                     lines_CI_lifecycle = file.readlines()
@@ -586,7 +906,25 @@ class CarbonIntensityForecastsApiView(APIView):
             "carbon_cast_version": carbon_cast_version
         }
         
-        return Response(response, status=status.HTTP_200_OK)
+        # Add metadata if fallback was used
+        if forecast_metadata and forecast_metadata.get("overall_fallback"):
+            response["fallback_metadata"] = {
+                "message": "Fallback date was used for one or more forecast files",
+                "requested_date": date,
+                "lifecycle_actual_date": forecast_metadata.get("lifecycle_actual_date"),
+                "direct_actual_date": forecast_metadata.get("direct_actual_date"),
+                "lifecycle_fallback": forecast_metadata.get("lifecycle_fallback"),
+                "direct_fallback": forecast_metadata.get("direct_fallback")
+            }
+        
+        # Create response with appropriate headers
+        http_response = Response(response, status=status.HTTP_200_OK)
+        if forecast_metadata and forecast_metadata.get("overall_fallback"):
+            http_response["X-Fallback-Used"] = "true"
+            http_response["X-Actual-Date-Lifecycle"] = forecast_metadata.get("lifecycle_actual_date", date)
+            http_response["X-Actual-Date-Direct"] = forecast_metadata.get("direct_actual_date", date)
+            
+        return http_response
 
 #6    
 class CarbonIntensityForecastsHistoryApiView(APIView):
@@ -630,13 +968,17 @@ class CarbonIntensityForecastsHistoryApiView(APIView):
             else:
                 return Response({"error": "Invalid region code parameter"}, status=status.HTTP_400_BAD_REQUEST)
         date = request.query_params.get('date', '')
+        print(f"[CarbonIntensityForecastsHistoryApiView] Requested date: {date}, Regions: {regions}")
 
         field_names = [
-                        "UTC time", "creation_time (UTC)", "version", "region_code", "forecasted_avg_carbon_intensity_lifecycle", 
+                        "UTC time", "creation_time (UTC)", "version", "region_code", "forecasted_avg_carbon_intensity_lifecycle",
                         "forecasted_avg_carbon_intensity_direct", "carbon_intensity_unit"
         ]
 
         final_list =[]
+        # Initialize metadata tracking for all regions
+        overall_metadata = None
+        
         for region_code in regions:
             cache_key = f"ci_forecast_history_{region_code}_{date}"
             cached = cache.get(cache_key)
@@ -648,15 +990,23 @@ class CarbonIntensityForecastsHistoryApiView(APIView):
             try:
                 from datetime import datetime
                 date_obj = datetime.strptime(date, "%Y-%m-%d").date()
-            except Exception:
+                print(f"[DEBUG CI Forecasts History] Successfully parsed date: {date_obj} for region: {region_code}")
+            except Exception as e:
+                print(f"[DEBUG CI Forecasts History] Failed to parse date '{date}': {e}")
                 date_obj = None
 
             if date_obj:
                 lifecycle_rows = Forecast96.objects.filter(region=region_code, forecast_type__icontains='lifecycle', ts__date=date_obj).order_by('ts')
                 direct_rows = Forecast96.objects.filter(region=region_code, forecast_type__icontains='direct', ts__date=date_obj).order_by('ts')
+                print(f"[DEBUG CI Forecasts History] Found {lifecycle_rows.count()} lifecycle and {direct_rows.count()} direct rows")
             else:
-                lifecycle_rows = Forecast96.objects.filter(region=region_code, forecast_type__icontains='lifecycle').order_by('ts')
-                direct_rows = Forecast96.objects.filter(region=region_code, forecast_type__icontains='direct').order_by('ts')
+                # Fix: Use default date instead of returning all data
+                from datetime import datetime
+                default_date = datetime.now().date()
+                print(f"[DEBUG CI Forecasts History] Using default date: {default_date}")
+                lifecycle_rows = Forecast96.objects.filter(region=region_code, forecast_type__icontains='lifecycle', ts__date=default_date).order_by('ts')
+                direct_rows = Forecast96.objects.filter(region=region_code, forecast_type__icontains='direct', ts__date=default_date).order_by('ts')
+                print(f"[DEBUG CI Forecasts History] Found {lifecycle_rows.count()} lifecycle and {direct_rows.count()} direct rows for default date")
 
             if lifecycle_rows.exists() and direct_rows.exists():
                 lifecycle_list = list(lifecycle_rows)
@@ -678,8 +1028,17 @@ class CarbonIntensityForecastsHistoryApiView(APIView):
                 cache.set(cache_key, final_list, 10)
                 continue
 
-            # fallback to CSV-based behavior if DB not populated
-            csv_file_l, csv_file_d = get_CI_forecasts_csv_file(region_code, date)
+            # Initialize metadata for this region
+            region_metadata = None
+            
+            # fallback to CSV-based behavior if DB not populated with metadata
+            result = get_CI_forecasts_csv_file_with_metadata(region_code, date)
+            csv_file_l = result["lifecycle_file"]
+            csv_file_d = result["direct_file"]
+            region_metadata = result["metadata"]
+            # Track overall metadata across all regions
+            if region_metadata and region_metadata.get("overall_fallback"):
+                overall_metadata = region_metadata
             try:
                 with open(csv_file_l) as file:
                     lines_csv1 = file.readlines()
@@ -710,7 +1069,32 @@ class CarbonIntensityForecastsHistoryApiView(APIView):
             "data": final_list,
             "carbon_cast_version": carbon_cast_version
         }
-        return Response(response, status=status.HTTP_200_OK)
+        
+        # Use overall_metadata if any region had fallback
+        if overall_metadata:
+            region_metadata = overall_metadata
+        else:
+            region_metadata = None
+            
+        # Add metadata if any fallback was used
+        if region_metadata and region_metadata.get("overall_fallback"):
+            response["fallback_metadata"] = {
+                "message": "Fallback date was used for one or more forecast files",
+                "requested_date": date,
+                "lifecycle_actual_date": region_metadata.get("lifecycle_actual_date"),
+                "direct_actual_date": region_metadata.get("direct_actual_date"),
+                "lifecycle_fallback": region_metadata.get("lifecycle_fallback"),
+                "direct_fallback": region_metadata.get("direct_fallback")
+            }
+        
+        # Create response with appropriate headers
+        http_response = Response(response, status=status.HTTP_200_OK)
+        if region_metadata and region_metadata.get("overall_fallback"):
+            http_response["X-Fallback-Used"] = "true"
+            http_response["X-Actual-Date-Lifecycle"] = region_metadata.get("lifecycle_actual_date", date)
+            http_response["X-Actual-Date-Direct"] = region_metadata.get("direct_actual_date", date)
+            
+        return http_response
 
 #7
 class EnergySourcesForecastsHistoryApiView(APIView):
@@ -743,6 +1127,7 @@ class EnergySourcesForecastsHistoryApiView(APIView):
 
         region_code = request.query_params.get('regionCode', '')   
         date = request.query_params.get('date', '')
+        print(f"[EnergySourcesForecastsHistoryApiView] Requested date: {date}, Region: {region_code}")
         f = request.query_params.get('forecastPeriod', '24h')
 
         final_interval = int(f[:-1])
@@ -774,8 +1159,13 @@ class EnergySourcesForecastsHistoryApiView(APIView):
                     final_list.append(temp_dict)
                 cache.set(cache_key, final_list, 10)
             else:
-                # fallback to CSV if DB not populated
-                energy_forecast_csv_file = get_energy_forecasts_csv_file(region_code, date)
+                # Initialize metadata
+                energy_metadata = None
+                
+                # fallback to CSV if DB not populated with metadata
+                result = get_energy_forecasts_csv_file_with_metadata(region_code, date)
+                energy_forecast_csv_file = result["file"]
+                energy_metadata = result["metadata"]
                 try:
                     with open(energy_forecast_csv_file) as file:
                         lines_csv = file.readlines()
@@ -801,7 +1191,23 @@ class EnergySourcesForecastsHistoryApiView(APIView):
                 "data": final_list,
                 "carbon_cast_version": carbon_cast_version
             }
-        return Response(response, status=status.HTTP_200_OK)
+        
+        # Add metadata if fallback was used
+        if energy_metadata and energy_metadata.get("fallback"):
+            response["fallback_metadata"] = {
+                "message": "Fallback date was used for energy forecast file",
+                "requested_date": date,
+                "actual_date": energy_metadata.get("actual_date"),
+                "fallback": energy_metadata.get("fallback")
+            }
+            
+        # Create response with appropriate headers
+        http_response = Response(response, status=status.HTTP_200_OK)
+        if energy_metadata and energy_metadata.get("fallback"):
+            http_response["X-Fallback-Used"] = "true"
+            http_response["X-Actual-Date"] = energy_metadata.get("actual_date", date)
+            
+        return http_response
 
 #8
 class SupportedRegionsApiView(APIView):
@@ -1111,7 +1517,8 @@ class VerifyOTP(APIView):
         serializer = self.serializer_class(user)
 
         return Response({
-            'otp_verified': True, 
-            "user": serializer.data, 
+            'otp_verified': True,
+            "user": serializer.data,
             "carbon_cast_version": carbon_cast_version
         })
+
