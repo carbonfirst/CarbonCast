@@ -30,7 +30,7 @@ The API now reads carbon intensity and energy mix from the SQLite database (popu
   ```bash
   python src/CarbonCastAPI/manage.py shell -c "from django.contrib.auth.models import User; User.objects.create_user('apitest', password='s3cret') if not User.objects.filter(username='apitest').exists() else None"
   ```
-4. Import emissions CSVs (idempotent upsert via [`import_csvs`](src/CarbonCastAPI/CarbonCastRESTAPI/management/commands/import_csvs.py:1)):
+4. (Optional and needed if new data needs to be added/ingested into API) Import emissions CSVs (idempotent upsert via [`import_csvs`](src/CarbonCastAPI/CarbonCastRESTAPI/management/commands/import_csvs.py:1)):
   ```bash
   python src/CarbonCastAPI/manage.py import_csvs --path real_time
   ```
