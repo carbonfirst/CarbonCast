@@ -1,0 +1,18 @@
+.git
+.DS_Store
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.venv/
+venv/
+build/
+CarbonCast.egg-info/
+curl_body.txt
+data_old (v2.1)/
+data_old(v3.1)/
+saved_first_tier_models/
+saved_second_tier_models/
+CI_forecast_data/

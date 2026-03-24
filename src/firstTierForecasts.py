@@ -20,6 +20,7 @@ from keras.models import load_model
 import common
 import sys
 import json5 as json
+import os
 
 
 ############################# MACRO START #######################################
@@ -35,6 +36,15 @@ BUFFER_HOURS = None
 
 ############################# MACRO END #########################################
 
+def _flatten_prediction_output(predicted_data):
+    predicted_array = np.asarray(predicted_data, dtype=np.float64)
+    return predicted_array.reshape(-1)
+
+def _resolve_from_src(path):
+    if os.path.isabs(path):
+        return path
+    return os.path.normpath(os.path.join(os.path.dirname(__file__), path))
+
 def runFirstTier(configFileName):
     global TRAINING_WINDOW_HOURS
     global PREDICTION_WINDOW_HOURS
@@ -43,6 +53,7 @@ def runFirstTier(configFileName):
 
     firstTierConfig = {}
 
+    configFileName = _resolve_from_src(configFileName)
     with open(configFileName, "r") as configFile:
         firstTierConfig = json.load(configFile)
         # print(configurationData)
@@ -246,6 +257,7 @@ def runFirstTierInRealTime(configFileName, regionList, startDate, electricityDat
 
     firstTierConfig = {}
 
+    configFileName = _resolve_from_src(configFileName)
     with open(configFileName, "r") as configFile:
         firstTierConfig = json.load(configFile)
         # print(configurationData)
@@ -262,12 +274,14 @@ def runFirstTierInRealTime(configFileName, regionList, startDate, electricityDat
         sourceList = regionConfig["SOURCES"]
         sourceColList = regionConfig["SOURCE_COL"]
         weatherForecastInFileName = realTimeWeatherFileDir+region+"/"+region+"_weather_forecast_"+str(startDate)+".csv"
-        SAVED_MODEL_LOCATION = firstTierConfig["SAVED_MODEL_LOCATION"]+region+"/"
+        SAVED_MODEL_LOCATION = _resolve_from_src(firstTierConfig["SAVED_MODEL_LOCATION"]) + "/" + region + "/"
         aggregatedForecastFileNames[region] = realTimeFileDir+region+"/"+region+"_96hr_forecasts_"+str(startDate)+".csv"
         partialSourceProductionForecast = None
         sourceIdx = 0
         inFileName = realTimeFileDir+region+"/"+region+"_"+str(electricityDataDate)+".csv"
         outFileNamePrefix = realTimeFileDir+region+"/fuel_forecast/"+region+"_ANN"
+        os.makedirs(os.path.dirname(outFileNamePrefix), exist_ok=True)
+        os.makedirs(os.path.dirname(aggregatedForecastFileNames[region]), exist_ok=True)
         for source in sourceList:
             sourceCol = sourceColList[sourceIdx]+2 # +2 because we have now added creation time & version for real-time files
             partialSourceProductionForecastAvailable = True if solWindFcstData is not None else False # partial forecasts only for SOLAR and WIND
@@ -326,9 +340,9 @@ def runFirstTierInRealTime(configFileName, regionList, startDate, electricityDat
                         weatherData, partialSourceProductionForecast, isRenewableSource)
             print("***** Forecast done *****")
 
-            predictedData = predictedData.astype(np.float64)
+            predictedData = np.asarray(predictedData, dtype=np.float64)
             # print("PredictedData shape: ", predictedData.shape)
-            predicted = np.reshape(predictedData, predictedData.shape[0]*predictedData.shape[1])
+            predicted = _flatten_prediction_output(predictedData)
             # print("predicted.shape: ", predicted.shape)
             unscaledPredictedData = common.inverseDataScaling(predicted, 
                                                               ftMax[DEPENDENT_VARIABLE_COL], 
@@ -373,6 +387,7 @@ def aggregateDataAndGenerateForecastFile(firstTierConfig, sourceList, weatherFor
     # print(modifiedDataset.tail(2))
 
     # print("Writing weather+source production forecasts to file...")
+    os.makedirs(os.path.dirname(aggregatedForecastFileName), exist_ok=True)
     modifiedDataset.to_csv(aggregatedForecastFileName)
     # print("All forecasts written to a single file")
     return
@@ -681,9 +696,9 @@ def getUnscaledForecastsAndForecastAccuracy(testData, testDates, predictedData, 
     print("actual.shape: ", actual.shape)
     unscaledTestData = common.inverseDataScaling(actual, ftMax[DEPENDENT_VARIABLE_COL], 
                         ftMin[DEPENDENT_VARIABLE_COL])
-    predictedData = predictedData.astype(np.float64)
+    predictedData = np.asarray(predictedData, dtype=np.float64)
     print("PredictedData shape: ", predictedData.shape)
-    predicted = np.reshape(predictedData, predictedData.shape[0]*predictedData.shape[1])
+    predicted = _flatten_prediction_output(predictedData)
     print("predicted.shape: ", predicted.shape)
     unscaledPredictedData = common.inverseDataScaling(predicted, 
                 ftMax[DEPENDENT_VARIABLE_COL], ftMin[DEPENDENT_VARIABLE_COL])
@@ -719,6 +734,7 @@ def writeRealTimeSourceProductionForecastsToFile(formattedTestDates, unscaledPre
         data.append(row)
     print("Writing to ", outFileName, "...")
     fields = ["datetime", "creation_time (UTC)", "version", "avg_"+source.lower()+"_production_forecast"] # TODO:[DM] Change this & legacy code to UTC time later if required
+    os.makedirs(os.path.dirname(outFileName), exist_ok=True)
     with open(outFileName, "w") as csvfile: 
         csvwriter = csv.writer(csvfile)   
         csvwriter.writerow(fields) 

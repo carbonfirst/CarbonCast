@@ -15,8 +15,7 @@ import numpy as np
 import pandas as pd
 import pytz as pytz
 from keras.layers import Dense, Flatten, LSTM
-from keras.layers.convolutional import Conv1D, MaxPooling1D
-from keras.layers.core import Activation, Dropout
+from keras.layers import Activation, Conv1D, Dropout, MaxPooling1D
 from keras.models import Sequential
 import tensorflow as tf
 from keras.callbacks import EarlyStopping
@@ -25,6 +24,7 @@ from keras.models import load_model, save_model
 from keras.layers import RepeatVector
 
 import json5 as json
+import os
 
 import common
 import utility
@@ -46,6 +46,29 @@ SAVED_MODEL_LOCATION = None
 TOP_N_FEATURES = 0
 ############################# MACRO END #########################################
 
+def _resolve_from_src(path):
+    if os.path.isabs(path):
+        return path
+    return os.path.normpath(os.path.join(os.path.dirname(__file__), path))
+
+def _load_forecast_dataset(forecastInFileName):
+    forecastDataset = pd.read_csv(forecastInFileName, header=0, infer_datetime_format=True)
+    datetime_col = None
+    if "datetime" in forecastDataset.columns:
+        datetime_col = "datetime"
+    elif "UTC time" in forecastDataset.columns:
+        datetime_col = "UTC time"
+    else:
+        raise ValueError(
+            f"Forecast file {forecastInFileName} is missing a supported datetime column. "
+            "Expected 'datetime' or 'UTC time'."
+        )
+
+    forecastDataset[datetime_col] = pd.to_datetime(forecastDataset[datetime_col])
+    forecastDataset = forecastDataset.set_index(datetime_col)
+    forecastDataset.index.name = "datetime"
+    return forecastDataset
+
 def runSecondTier(configFileName, cefType, loadFromSavedModel):
     global TRAINING_WINDOW_HOURS
     global PREDICTION_WINDOW_HOURS
@@ -58,6 +81,7 @@ def runSecondTier(configFileName, cefType, loadFromSavedModel):
 
     secondTierConfig = {}
 
+    configFileName = _resolve_from_src(configFileName)
     with open(configFileName, "r") as configFile:
         secondTierConfig = json.load(configFile)
         # print(secondTierConfig)
@@ -76,9 +100,9 @@ def runSecondTier(configFileName, cefType, loadFromSavedModel):
     if (loadFromSavedModel is True):
         NUMBER_OF_EXPERIMENTS = 1
     if (cefType == "-l"):
-        SAVED_MODEL_LOCATION = secondTierConfig["LIFECYCLE_SAVED_MODEL_LOCATION"]
+        SAVED_MODEL_LOCATION = _resolve_from_src(secondTierConfig["LIFECYCLE_SAVED_MODEL_LOCATION"]) + "/"
     else:
-        SAVED_MODEL_LOCATION = secondTierConfig["DIRECT_SAVED_MODEL_LOCATION"]
+        SAVED_MODEL_LOCATION = _resolve_from_src(secondTierConfig["DIRECT_SAVED_MODEL_LOCATION"]) + "/"
     writeCIForecastsToFile = secondTierConfig["WRITE_CI_FORECASTS_TO_FILE"]
 
     for region in regionList:
@@ -268,6 +292,7 @@ def runSecondTierInRealTime(configFileName, regionList, cefType, startDate, elec
 
     secondTierConfig = {}
 
+    configFileName = _resolve_from_src(configFileName)
     with open(configFileName, "r") as configFile:
         secondTierConfig = json.load(configFile)
         # print(secondTierConfig)
@@ -279,9 +304,9 @@ def runSecondTierInRealTime(configFileName, regionList, cefType, startDate, elec
     TOP_N_FEATURES = secondTierConfig["TOP_N_FEATURES"]
 
     if (cefType == "-l"):
-        SAVED_MODEL_LOCATION = secondTierConfig["LIFECYCLE_SAVED_MODEL_LOCATION"]
+        SAVED_MODEL_LOCATION = _resolve_from_src(secondTierConfig["LIFECYCLE_SAVED_MODEL_LOCATION"]) + "/"
     else:
-        SAVED_MODEL_LOCATION = secondTierConfig["DIRECT_SAVED_MODEL_LOCATION"]
+        SAVED_MODEL_LOCATION = _resolve_from_src(secondTierConfig["DIRECT_SAVED_MODEL_LOCATION"]) + "/"
     writeCIForecastsToFile = secondTierConfig["WRITE_CI_FORECASTS_TO_FILE"]
 
     for region in regionList:
@@ -358,10 +383,7 @@ def initialize(inFileName, forecastInFileName, startCol):
     dateTime = dataset.index.values
 
     print(forecastInFileName)
-    # forecastDataset = pd.read_csv(forecastInFileName, header=0, infer_datetime_format=True, 
-    #                         parse_dates=['UTC time'], index_col=['UTC time']) # old data files
-    forecastDataset = pd.read_csv(forecastInFileName, header=0, infer_datetime_format=True, 
-                            parse_dates=['datetime'], index_col=['datetime']) # new data files in data
+    forecastDataset = _load_forecast_dataset(forecastInFileName)
     for i in range(startCol, len(dataset.columns.values)):
         col = dataset.columns.values[i]
         dataset[col] = dataset[col].astype(np.float64)
@@ -379,8 +401,7 @@ def initializeInRealTime(inFileName, forecastInFileName, startCol):
     dataset = pd.read_csv(inFileName, header=0, infer_datetime_format=True, 
                             parse_dates=['UTC time'], index_col=['UTC time'])
 
-    forecastDataset = pd.read_csv(forecastInFileName, header=0, infer_datetime_format=True, 
-                            parse_dates=['datetime'], index_col=['datetime'])
+    forecastDataset = _load_forecast_dataset(forecastInFileName)
     forecastDateTime = forecastDataset.index.values
     
     print("\nAdding features related to date & time...")
