@@ -390,6 +390,10 @@ def fetchWeatherDataByRegion(weatherVariable, fcstCol, pid, isRealTime, startDat
                     vdataset = None
                     udataset = None
                     for region in ISO_BOUNDING_BOX.keys():
+                        if region not in urow or region not in vrow:
+                            raise ValueError(
+                                f"Missing regional weather data for {region} while parsing {fileList[fileIdx-1]}"
+                            )
                         udataset = pd.DataFrame(urow[region], columns=HEADER)
                         vdataset = pd.DataFrame(vrow[region], columns=HEADER)
                         if (i==0):
@@ -448,6 +452,10 @@ def fetchWeatherDataByRegion(weatherVariable, fcstCol, pid, isRealTime, startDat
                                                         dataset["value"].iloc[line]])
                     # now we have region-wise datasets for this timestamp
                     for region in ISO_BOUNDING_BOX.keys():
+                        if region not in row:
+                            raise ValueError(
+                                f"Missing regional weather data for {region} while parsing {fileList[fileIdx-1]}"
+                            )
                         dataset = pd.DataFrame(row[region], columns=HEADER)
                         if (i==0):
                             latitude[region] = np.unique(dataset["latitude"].values)

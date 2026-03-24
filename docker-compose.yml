@@ -1,11 +1,20 @@
-version: '3.9'
 services:
   web:
+    platform: ${DOCKER_PLATFORM:-linux/amd64}
     build:
-      dockerfile: src/CarbonCastAPI/dockerfile
+      context: .
+      dockerfile: src/CarbonCastAPI/Dockerfile
     container_name: carbon_cast_api
+    working_dir: /CarbonCast
+    environment:
+      EIA_API_KEY: ${EIA_API_KEY:-}
+      MPLCONFIGDIR: /tmp/matplotlib
+      PYTHONPATH: /CarbonCast/src
+      XDG_CACHE_HOME: /tmp
+    command: >
+      sh -c "python src/CarbonCastAPI/manage.py migrate &&
+             python src/CarbonCastAPI/manage.py runserver 0.0.0.0:8000"
     ports:
-    - "8000:8000"
+      - "8000:8000"
     volumes:
-      - ./real_time/:/CarbonCast/real_time/
-      - ./src/CarbonCastAPI/db.sqlite3:/CarbonCast/src/CarbonCastAPI/db.sqlite3
+      - ./:/CarbonCast

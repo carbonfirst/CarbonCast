@@ -5,9 +5,10 @@ from datetime import datetime, timedelta
 import time
 import sys
 import numpy as np
+from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse
 
-# public key for EIA API
-EIA_API_KEY="CZdQsisRJzwOfqUWV3jiMPNEx3ZbHcuJ2VQus04i"
+class EIADataError(Exception):
+    pass
 
 # map EIA fuel types to source types
 EIA_SOURCE_MAP = {
@@ -33,6 +34,42 @@ EIA_BAL_AUTH_LIST = ["AECI", "AZPS", "BPAT", "CISO", "DUK", "EPE", "ERCOT", "FPC
                 "SWPP", "TIDC", "TVA", "WACM", "WALC"]
 
 # get production data by source type from EIA API
+def _get_eia_api_key():
+    api_key = os.getenv("EIA_API_KEY")
+    if not api_key:
+        raise EIADataError("Missing EIA_API_KEY environment variable.")
+    return api_key
+
+def _validate_eia_response(resp):
+    if resp.status_code != 200:
+        raise EIADataError(
+            f"EIA request failed with status {resp.status_code}: {resp.text}"
+        )
+
+    try:
+        payload = resp.json()
+    except ValueError as exc:
+        raise EIADataError("EIA response was not valid JSON.") from exc
+
+    if payload.get("error"):
+        raise EIADataError(f"EIA API returned an error payload: {payload['error']}")
+
+    response = payload.get("response")
+    if not response or "data" not in response:
+        raise EIADataError("EIA response did not contain response.data.")
+
+    return response["data"]
+
+def _sanitize_url(url):
+    parsed = urlparse(url)
+    query = []
+    for key, value in parse_qsl(parsed.query, keep_blank_values=True):
+        if key == "api_key":
+            query.append((key, "***"))
+        else:
+            query.append((key, value))
+    return urlunparse(parsed._replace(query=urlencode(query)))
+
 def getProductionDataBySourceTypeDataFromEIA(ba, curDate, curEndDate):
     print(ba)
     API_URL="https://api.eia.gov/v2/electricity/rto/fuel-type-data/data?api_key="
@@ -42,14 +79,13 @@ def getProductionDataBySourceTypeDataFromEIA(ba, curDate, curEndDate):
     startDate = curDate+"T00"
     endDate = curEndDate+"T23"
     print(startDate, endDate)
-    URL = API_URL+EIA_API_KEY+API_URL_SUFFIX.format(ba, startDate, endDate)
-    resp = requests.get(URL)
-    print(resp.url)
-    if (resp.status_code != 200):
-        print("Error! Code: ", resp.status_code)
-        print("Error! Message: ", resp.text)
-        print("Error! Reason: ", resp.reason)
-    responseData = resp.json()["response"]["data"]
+    URL = API_URL+_get_eia_api_key()+API_URL_SUFFIX.format(ba, startDate, endDate)
+    try:
+        resp = requests.get(URL, timeout=30)
+    except requests.RequestException as exc:
+        raise EIADataError(f"EIA request failed for {ba}: {exc}") from exc
+    print(_sanitize_url(resp.url))
+    responseData = _validate_eia_response(resp)
     return responseData
 
 # parse production data by source type from EIA API
@@ -130,7 +166,15 @@ def getELectricityProductionDataFromEIA(balAuth, startDate, numDays, DAY_JUMP):
         endDateObj = startDateObj + timedelta(days=DAY_JUMP-1)
         endDate = endDateObj.strftime("%Y-%m-%d")
         data = getProductionDataBySourceTypeDataFromEIA(balAuth, startDate, endDate)
-        if (days == 0): # assuming all data is correctly available for the first day at least
+        unique_periods = {entry["period"] for entry in data}
+        expected_hours = DAY_JUMP * 24
+        if len(unique_periods) < expected_hours:
+            raise EIADataError(
+                f"Incomplete EIA data for {balAuth} on {startDate}: "
+                f"expected {expected_hours} hourly periods, got {len(unique_periods)}."
+            )
+
+        if (days == 0):
             for electricitySourceData in data:
                 electricitySources.add(EIA_SOURCE_MAP[electricitySourceData["fueltype"]])
                 numSources = len(electricitySources)
