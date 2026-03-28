@@ -31,6 +31,7 @@ import statistics
 
 # Add current directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from logger_utils import get_logger
 
 import rdams_client
 from automation.event_system import (
@@ -174,19 +175,8 @@ class EnhancedRequestMonitor:
         self.logger.info("EnhancedRequestMonitor initialized")
     
     def _setup_logging(self) -> logging.Logger:
-        """Set up logging for the enhanced request monitor."""
-        logger = logging.getLogger('rda_automation.enhanced_request_monitor')
-        
-        if not logger.handlers:
-            handler = logging.StreamHandler()
-            formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-            )
-            handler.setFormatter(formatter)
-            logger.addHandler(handler)
-            logger.setLevel(logging.INFO)
-        
-        return logger
+        """Set up logging for this component using centralized configuration."""
+        return get_logger('rda_automation.enhanced_request_monitor', level=logging.INFO)
     
     def _setup_event_callbacks(self):
         """Set up event system callbacks."""

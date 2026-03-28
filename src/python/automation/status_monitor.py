@@ -30,6 +30,7 @@ from pathlib import Path
 
 # Add current directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from logger_utils import get_logger
 
 import rdams_client
 from automation.error_manager import ErrorManager, create_error_manager
@@ -119,20 +120,8 @@ class StatusMonitor:
         self.logger.info("StatusMonitor initialized")
     
     def _setup_logging(self) -> logging.Logger:
-        """Set up logging for the status monitor."""
-        logger = logging.getLogger('rda_automation.status_monitor')
-        
-        # Only add handler if it doesn't already exist
-        if not logger.handlers:
-            handler = logging.StreamHandler()
-            formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-            )
-            handler.setFormatter(formatter)
-            logger.addHandler(handler)
-            logger.setLevel(logging.INFO)
-            
-        return logger
+        """Set up logging for this component using centralized configuration."""
+        return get_logger('rda_automation.status_monitor', level=logging.INFO)
     
     def check_request_status_via_client(self, request_id: str) -> StatusCheckResult:
         """

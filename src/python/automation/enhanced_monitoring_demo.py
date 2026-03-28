@@ -19,6 +19,7 @@ import time
 import logging
 from datetime import datetime
 from typing import Dict, Any
+from logger_utils import configure_root_logging
 
 # Add current directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -104,10 +105,7 @@ class MockStatusMonitor:
 
 def setup_logging():
     """Setup logging for the demo."""
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    )
+    configure_root_logging(level=logging.INFO)
 
 
 def demo_enhanced_monitoring_capabilities():

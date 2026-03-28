@@ -20,6 +20,7 @@ from dataclasses import dataclass
 
 # Add current directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from logger_utils import get_logger
 
 try:
     from fix_completed_requests import (
@@ -87,22 +88,8 @@ class CompletedRequestScanner:
         self.logger.info("CompletedRequestScanner initialized (compatibility stub)")
     
     def _setup_logging(self) -> logging.Logger:
-        """Setup logging for the scanner."""
-        logger = logging.getLogger('completed_request_scanner_stub')
-        
-        if not logger.handlers:
-            # Console handler
-            console_handler = logging.StreamHandler()
-            console_formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-            )
-            console_handler.setFormatter(console_formatter)
-            console_handler.setLevel(logging.INFO)
-            logger.addHandler(console_handler)
-            
-            logger.setLevel(logging.INFO)
-        
-        return logger
+        """Set up logging for this component using centralized configuration."""
+        return get_logger('completed_request_scanner_stub', level=logging.INFO)
     
     def scan_for_completed_requests(self) -> ScanResults:
         """

@@ -32,6 +32,7 @@ from pathlib import Path
 import concurrent.futures
 from enum import Enum
 import traceback
+from logger_utils import get_logger
 
 # Add current directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -812,16 +813,11 @@ Examples:
     # Ensure output directory exists
     os.makedirs(args.output_dir, exist_ok=True)
     
-    logging.basicConfig(
+    logger = get_logger(
+        'master_test_runner',
         level=log_level,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        handlers=[
-            logging.StreamHandler(),
-            logging.FileHandler(os.path.join(args.output_dir, 'test_execution.log'))
-        ]
+        log_file=os.path.join(args.output_dir, 'test_execution.log')
     )
-    
-    logger = logging.getLogger('master_test_runner')
     
     try:
         # Create test configuration

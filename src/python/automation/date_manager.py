@@ -1232,6 +1232,7 @@ def create_date_manager(temp_dir: Optional[str] = None,
 if __name__ == '__main__':
     # Simple command-line interface for testing
     import sys
+    from logger_utils import configure_root_logging
     
     if len(sys.argv) < 2:
         print("Usage: python date_manager.py <date_range_string>")
@@ -1239,7 +1240,7 @@ if __name__ == '__main__':
         sys.exit(1)
     
     # Setup logging
-    logging.basicConfig(level=logging.INFO)
+    configure_root_logging(level=logging.INFO)
     
     try:
         date_manager = create_date_manager()

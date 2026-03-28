@@ -29,6 +29,7 @@ import signal
 
 # Add current directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from logger_utils import get_logger
 
 import rdams_client
 from coordinate_utils import get_region_and_variable_from_request_enhanced
@@ -108,31 +109,8 @@ class BatchAutomationSystem:
             }
     
     def _setup_logging(self) -> logging.Logger:
-        """Setup logging configuration."""
-        logs_dir = Path(self.config['directories']['logs_dir'])
-        logs_dir.mkdir(exist_ok=True)
-        
-        # Create logger
-        logger = logging.getLogger('batch_automation')
-        logger.setLevel(logging.INFO)
-        
-        # Create formatters
-        formatter = logging.Formatter(
-            '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-        )
-        
-        # File handler
-        log_file = logs_dir / f"batch_automation_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
-        file_handler = logging.FileHandler(log_file)
-        file_handler.setFormatter(formatter)
-        logger.addHandler(file_handler)
-        
-        # Console handler
-        console_handler = logging.StreamHandler()
-        console_handler.setFormatter(formatter)
-        logger.addHandler(console_handler)
-        
-        return logger
+        """Set up logging for this component using centralized configuration."""
+        return get_logger('batch_automation', level=logging.INFO)
     
     def _signal_handler(self, signum, frame):
         """Handle shutdown signals gracefully."""

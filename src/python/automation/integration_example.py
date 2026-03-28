@@ -17,6 +17,7 @@ from typing import Optional
 
 # Add current directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from logger_utils import get_logger
 
 # Import enhanced monitoring components
 from automation.enhanced_monitoring_integration import integrate_with_batch_system
@@ -48,17 +49,8 @@ class EnhancedIntegratedBatchSystem:
         self.logger.info("Enhanced Integrated Batch System initialized")
     
     def _setup_logging(self) -> logging.Logger:
-        """Set up logging."""
-        logger = logging.getLogger('enhanced_integrated_batch_system')
-        if not logger.handlers:
-            handler = logging.StreamHandler()
-            formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-            )
-            handler.setFormatter(formatter)
-            logger.addHandler(handler)
-            logger.setLevel(logging.INFO)
-        return logger
+        """Set up logging for this component using centralized configuration."""
+        return get_logger('enhanced_integrated_batch_system', level=logging.INFO)
     
     def _setup_enhanced_monitoring(self):
         """Set up enhanced monitoring integration."""

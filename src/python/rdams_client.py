@@ -30,6 +30,7 @@ import time
 import logging
 from typing import Optional, Dict, Any, Tuple
 from datetime import datetime
+from logger_utils import get_logger
 
 # Import rate limiting components if available
 try:
@@ -99,19 +100,8 @@ class RateLimitedRDAMSClient:
         self.logger.info(f"RateLimitedRDAMSClient initialized (rate_limiting={enable_rate_limiting})")
     
     def _setup_logging(self) -> logging.Logger:
-        """Set up logging for the RDAMS client."""
-        logger = logging.getLogger('rdams_client.rate_limited')
-        
-        if not logger.handlers:
-            handler = logging.StreamHandler()
-            formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-            )
-            handler.setFormatter(formatter)
-            logger.addHandler(handler)
-            logger.setLevel(logging.INFO)
-        
-        return logger
+        """Set up logging for this component using centralized configuration."""
+        return get_logger('rdams_client.rate_limited', level=logging.INFO)
     
     def _get_default_config(self) -> Dict[str, Any]:
         """Get default configuration for rate-limited client."""

@@ -27,6 +27,7 @@ from pathlib import Path
 
 # Add current directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from logger_utils import get_logger
 
 
 class MonitoringMode(Enum):
@@ -496,19 +497,8 @@ class MonitoringConfigManager:
         self.logger.info("MonitoringConfigManager initialized")
     
     def _setup_logging(self) -> logging.Logger:
-        """Set up logging for the configuration manager."""
-        logger = logging.getLogger('rda_automation.monitoring_config_manager')
-        
-        if not logger.handlers:
-            handler = logging.StreamHandler()
-            formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-            )
-            handler.setFormatter(formatter)
-            logger.addHandler(handler)
-            logger.setLevel(logging.INFO)
-        
-        return logger
+        """Set up logging for this component using centralized configuration."""
+        return get_logger('rda_automation.monitoring_config_manager', level=logging.INFO)
     
     def create_default_config(self) -> EnhancedMonitoringConfig:
         """Create a default monitoring configuration."""

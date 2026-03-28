@@ -20,6 +20,7 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any, Tuple, Union
 from dataclasses import dataclass, asdict
 from enum import Enum
+from logger_utils import get_logger
 
 # Import the timeline validation service
 from .timeline_validator import (
@@ -148,19 +149,8 @@ class EnhancedProcessingTimeCalculator:
         }
     
     def _setup_logging(self) -> logging.Logger:
-        """Set up logging for the calculator."""
-        logger = logging.getLogger('rda_automation.processing_time_calculator')
-        
-        if not logger.handlers:
-            handler = logging.StreamHandler()
-            formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-            )
-            handler.setFormatter(formatter)
-            logger.addHandler(handler)
-            logger.setLevel(logging.INFO)
-            
-        return logger
+        """Set up logging for this component using centralized configuration."""
+        return get_logger('rda_automation.processing_time_calculator', level=logging.INFO)
     
     def calculate_processing_time(self, 
                                  date_rqst: Union[str, datetime, None],

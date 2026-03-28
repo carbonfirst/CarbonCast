@@ -25,6 +25,7 @@ from dataclasses import dataclass, asdict
 
 # Add current directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from logger_utils import get_logger
 
 from automation.dynamic_trigger_system import (
     DynamicTriggerSystem, create_dynamic_trigger_system, TriggerType, TriggerUrgency
@@ -129,19 +130,8 @@ class DynamicBatchIntegrationTest:
         self.logger.info("DynamicBatchIntegrationTest initialized")
     
     def _setup_logging(self) -> logging.Logger:
-        """Set up logging for the test."""
-        logger = logging.getLogger('rda_automation.integration_test')
-        
-        if not logger.handlers:
-            handler = logging.StreamHandler()
-            formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-            )
-            handler.setFormatter(formatter)
-            logger.addHandler(handler)
-            logger.setLevel(logging.INFO)
-        
-        return logger
+        """Set up logging for this component using centralized configuration."""
+        return get_logger('rda_automation.integration_test', level=logging.INFO)
     
     def setup_test_environment(self):
         """Set up the test environment with all components."""

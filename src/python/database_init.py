@@ -18,6 +18,7 @@ from datetime import datetime
 
 # Add current directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from logger_utils import get_logger
 
 # Import the new unified setup
 try:
@@ -29,18 +30,7 @@ except ImportError:
 
 def setup_logging() -> logging.Logger:
     """Setup logging for database initialization."""
-    logger = logging.getLogger('database_init')
-    logger.setLevel(logging.INFO)
-    
-    if not logger.handlers:
-        handler = logging.StreamHandler()
-        formatter = logging.Formatter(
-            '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-        )
-        handler.setFormatter(formatter)
-        logger.addHandler(handler)
-    
-    return logger
+    return get_logger('database_init', level=logging.INFO)
 
 
 def create_rda_requests_table(cursor):

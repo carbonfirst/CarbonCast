@@ -31,6 +31,7 @@ from enum import Enum
 
 # Add current directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from logger_utils import get_logger
 
 # Import our sequential processing components
 from automation.control_file_discovery import ControlFileDiscovery, create_control_file_discovery
@@ -187,19 +188,8 @@ class SequentialFileProcessor:
         self.logger.info("Sequential File Processor initialized")
     
     def _setup_logging(self) -> logging.Logger:
-        """Set up logging for the sequential processor."""
-        logger = logging.getLogger('rda_automation.sequential_file_processor')
-        
-        if not logger.handlers:
-            handler = logging.StreamHandler()
-            formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-            )
-            handler.setFormatter(formatter)
-            logger.addHandler(handler)
-            logger.setLevel(logging.INFO)
-            
-        return logger
+        """Set up logging for this component using centralized configuration."""
+        return get_logger('rda_automation.sequential_file_processor', level=logging.INFO)
     
     def _signal_handler(self, signum, frame):
         """Handle shutdown signals gracefully."""

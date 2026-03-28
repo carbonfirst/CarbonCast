@@ -35,6 +35,7 @@ import shutil
 from pathlib import Path
 import random
 from enum import Enum
+from logger_utils import get_logger
 
 # Add current directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -1199,13 +1200,10 @@ class ErrorScenarioTestRunner:
     
     def setup_logging(self):
         """Set up logging for error scenario test runner."""
-        logging.basicConfig(
+        self.logger = get_logger(
+            'error_scenario_test_runner',
             level=logging.INFO,
-            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-            handlers=[
-                logging.StreamHandler(),
-                logging.FileHandler('error_scenario_test.log')
-            ]
+            log_file='error_scenario_test.log'
         )
     
     def run_all_error_tests(self) -> Dict[str, Any]:

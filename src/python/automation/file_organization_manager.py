@@ -28,6 +28,7 @@ from datetime import datetime
 
 # Add current directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from logger_utils import get_logger
 
 import rdams_client
 from automation.data_sync import RDADataSyncService
@@ -252,19 +253,8 @@ class EnhancedFileOrganizationManager:
         self.logger.info("Enhanced File Organization Manager initialized")
     
     def _setup_logging(self) -> logging.Logger:
-        """Set up logging for the file organization manager."""
-        logger = logging.getLogger('rda_automation.file_organization')
-        
-        if not logger.handlers:
-            handler = logging.StreamHandler()
-            formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-            )
-            handler.setFormatter(formatter)
-            logger.addHandler(handler)
-            logger.setLevel(logging.INFO)
-            
-        return logger
+        """Set up logging for this component using centralized configuration."""
+        return get_logger('rda_automation.file_organization', level=logging.INFO)
     
     def detect_region_variable_multi_source(self, request_id: str,
                                           control_file_path: Optional[str] = None,

@@ -28,6 +28,7 @@ from dataclasses import dataclass, asdict
 from enum import Enum
 from collections import defaultdict, deque
 import concurrent.futures
+from logger_utils import get_logger
 
 
 class QueueStatus(Enum):
@@ -191,19 +192,8 @@ class RetryQueueProcessor:
         self.logger.info("Retry Queue Processor initialized")
     
     def _setup_logging(self) -> logging.Logger:
-        """Set up logging for the queue processor."""
-        logger = logging.getLogger('smart_retry.queue_processor')
-        
-        if not logger.handlers:
-            handler = logging.StreamHandler()
-            formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-            )
-            handler.setFormatter(formatter)
-            logger.addHandler(handler)
-            logger.setLevel(logging.INFO)
-            
-        return logger
+        """Set up logging for this component using centralized configuration."""
+        return get_logger('smart_retry.queue_processor', level=logging.INFO)
     
     def _get_db_connection(self) -> sqlite3.Connection:
         """Get a database connection with row factory."""

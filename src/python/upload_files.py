@@ -19,6 +19,7 @@ import time
 from datetime import datetime, timezone
 from typing import Dict, List, Optional, Any, Tuple
 from pathlib import Path
+from logger_utils import get_logger
 
 # Import rdams_client
 import rdams_client as rc
@@ -48,15 +49,11 @@ def setup_logging(log_level: str = "INFO") -> logging.Logger:
     Returns:
         Configured logger instance
     """
-    logging.basicConfig(
-        level=getattr(logging, log_level.upper()),
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        handlers=[
-            logging.StreamHandler(sys.stdout),
-            logging.FileHandler(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logs', 'upload_files.log'))
-        ]
+    return get_logger(
+        __name__,
+        level=getattr(logging, log_level.upper(), logging.INFO),
+        log_file=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logs', 'upload_files.log')
     )
-    return logging.getLogger(__name__)
 
 
 def copy_and_overwrite(src_path: pathlib.Path, dst_path: pathlib.Path) -> None:

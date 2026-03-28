@@ -38,6 +38,7 @@ import logging
 
 # Add current directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from logger_utils import get_logger
 
 from automation.error_manager import ErrorManager, PurgeConfig, create_error_manager
 from automation.retry_manager import RetryManager, RetryConfig, create_retry_manager, create_unified_error_retry_workflow
@@ -64,11 +65,7 @@ class CompleteSystemDemo:
     
     def _setup_logging(self) -> logging.Logger:
         """Set up logging for the demo."""
-        logging.basicConfig(
-            level=logging.INFO,
-            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-        )
-        return logging.getLogger('complete_system_demo')
+        return get_logger('complete_system_demo', level=logging.INFO)
     
     def _setup_demo_data(self):
         """Set up demonstration data in the database."""

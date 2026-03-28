@@ -51,6 +51,7 @@ from typing import List, Optional
 
 # Add current directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from logger_utils import get_logger
 
 try:
     from batch_automation_integrated import IntegratedBatchSystem
@@ -103,28 +104,8 @@ class RDAAutomationStarter:
         self.system = None
         
     def _setup_logging(self) -> logging.Logger:
-        """
-        Setup logging for the starter.
-        
-        Configures a logger with appropriate formatting for startup operations.
-        
-        Returns:
-            logging.Logger: Configured logger instance for the starter.
-        """
-        logger = logging.getLogger('rda_automation_starter')
-        logger.setLevel(logging.INFO)
-        
-        # Create formatter
-        formatter = logging.Formatter(
-            '%(asctime)s - %(levelname)s - %(message)s'
-        )
-        
-        # Console handler
-        console_handler = logging.StreamHandler()
-        console_handler.setFormatter(formatter)
-        logger.addHandler(console_handler)
-        
-        return logger
+        """Set up logging for this component using centralized configuration."""
+        return get_logger('rda_automation_starter', level=logging.INFO)
     
     def print_welcome_banner(self):
         """

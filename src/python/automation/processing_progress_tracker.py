@@ -31,6 +31,7 @@ from enum import Enum
 
 # Add current directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from logger_utils import get_logger
 
 
 class ProcessingStatus(Enum):
@@ -158,19 +159,8 @@ class ProcessingProgressTracker:
         self.logger.info(f"Processing Progress Tracker initialized with session: {self.session_id}")
     
     def _setup_logging(self) -> logging.Logger:
-        """Set up logging for the progress tracker."""
-        logger = logging.getLogger('rda_automation.processing_progress_tracker')
-        
-        if not logger.handlers:
-            handler = logging.StreamHandler()
-            formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-            )
-            handler.setFormatter(formatter)
-            logger.addHandler(handler)
-            logger.setLevel(logging.INFO)
-            
-        return logger
+        """Set up logging for this component using centralized configuration."""
+        return get_logger('rda_automation.processing_progress_tracker', level=logging.INFO)
     
     def _get_db_connection(self) -> sqlite3.Connection:
         """Get a database connection with row factory."""

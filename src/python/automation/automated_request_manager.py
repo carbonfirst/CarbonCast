@@ -51,6 +51,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # Add current directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from logger_utils import get_logger
 
 import rdams_client
 from automation.file_organization_manager import EnhancedFileOrganizationManager, create_file_organization_manager
@@ -215,27 +216,8 @@ class AutomatedRequestManager:
         self.logger.info("Automated Request Manager initialized")
     
     def _setup_logging(self) -> logging.Logger:
-        """
-        Set up logging for the automated request manager.
-        
-        Configures a logger with appropriate formatting for request
-        management operations.
-        
-        Returns:
-            logging.Logger: Configured logger instance for the manager.
-        """
-        logger = logging.getLogger('rda_automation.automated_request_manager')
-        
-        if not logger.handlers:
-            handler = logging.StreamHandler()
-            formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-            )
-            handler.setFormatter(formatter)
-            logger.addHandler(handler)
-            logger.setLevel(logging.INFO)
-            
-        return logger
+        """Set up logging for this component using centralized configuration."""
+        return get_logger('rda_automation.automated_request_manager', level=logging.INFO)
     
     def get_all_request_status(self) -> Dict[str, Any]:
         """

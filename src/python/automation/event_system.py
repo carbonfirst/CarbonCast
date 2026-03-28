@@ -30,6 +30,7 @@ from collections import defaultdict, deque
 
 # Add current directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from logger_utils import get_logger
 
 
 class EventType(Enum):
@@ -261,19 +262,8 @@ class EventDispatcher:
         self.logger.info("EventDispatcher initialized")
     
     def _setup_logging(self) -> logging.Logger:
-        """Set up logging for the event dispatcher."""
-        logger = logging.getLogger('rda_automation.event_dispatcher')
-        
-        if not logger.handlers:
-            handler = logging.StreamHandler()
-            formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-            )
-            handler.setFormatter(formatter)
-            logger.addHandler(handler)
-            logger.setLevel(logging.INFO)
-        
-        return logger
+        """Set up logging for this component using centralized configuration."""
+        return get_logger('rda_automation.event_dispatcher', level=logging.INFO)
     
     def subscribe(self,
                   callback: Callable[[BaseEvent], None],

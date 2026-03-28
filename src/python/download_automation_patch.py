@@ -15,6 +15,7 @@ from datetime import datetime
 
 # Add current directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from logger_utils import configure_root_logging
 
 try:
     import rdams_client
@@ -89,6 +90,6 @@ def download_and_purge_completed_requests():
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.INFO)
+    configure_root_logging(level=logging.INFO)
     success = download_and_purge_completed_requests()
     sys.exit(0 if success else 1)

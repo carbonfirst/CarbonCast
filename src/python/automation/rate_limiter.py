@@ -25,6 +25,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from collections import deque
 import asyncio
+from logger_utils import get_logger
 
 
 class RateLimitStrategy(Enum):
@@ -163,19 +164,8 @@ class RateLimiter:
         self.logger.info("RateLimiter initialized with adaptive rate limiting and circuit breaker")
     
     def _setup_logging(self) -> logging.Logger:
-        """Set up logging for the rate limiter."""
-        logger = logging.getLogger('rda_automation.rate_limiter')
-        
-        if not logger.handlers:
-            handler = logging.StreamHandler()
-            formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-            )
-            handler.setFormatter(formatter)
-            logger.addHandler(handler)
-            logger.setLevel(logging.INFO)
-        
-        return logger
+        """Set up logging for this component using centralized configuration."""
+        return get_logger('rda_automation.rate_limiter', level=logging.INFO)
     
     def can_make_request(self) -> Tuple[bool, Optional[float]]:
         """

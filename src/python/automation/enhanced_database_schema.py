@@ -24,6 +24,7 @@ from typing import Dict, List, Optional, Any, Tuple
 from pathlib import Path
 from dataclasses import dataclass, asdict
 import threading
+from logger_utils import get_logger
 
 
 @dataclass
@@ -270,19 +271,8 @@ class EnhancedDatabaseSchema:
         self.logger.info("Enhanced Database Schema Manager initialized")
     
     def _setup_logging(self) -> logging.Logger:
-        """Set up logging for the schema manager."""
-        logger = logging.getLogger('enhanced_database_schema')
-        
-        if not logger.handlers:
-            handler = logging.StreamHandler()
-            formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-            )
-            handler.setFormatter(formatter)
-            logger.addHandler(handler)
-            logger.setLevel(logging.INFO)
-            
-        return logger
+        """Set up logging for this component using centralized configuration."""
+        return get_logger('enhanced_database_schema', level=logging.INFO)
     
     def _get_db_connection(self) -> sqlite3.Connection:
         """Get a database connection with row factory."""

@@ -23,6 +23,7 @@ import shutil
 from datetime import datetime
 from typing import Dict, List, Optional, Tuple
 from pathlib import Path
+from logger_utils import get_logger
 
 
 class DatabaseMigrationManager:
@@ -48,36 +49,8 @@ class DatabaseMigrationManager:
         self.logger.info("Database Migration Manager initialized")
     
     def _setup_logging(self) -> logging.Logger:
-        """Set up comprehensive logging for the migration."""
-        logger = logging.getLogger('database_migration')
-        
-        if not logger.handlers:
-            # Create logs directory
-            logs_dir = Path("logs")
-            logs_dir.mkdir(exist_ok=True)
-            
-            # File handler for migration logs
-            log_file = logs_dir / f"migration_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
-            file_handler = logging.FileHandler(log_file)
-            file_formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - [%(funcName)s:%(lineno)d] - %(message)s'
-            )
-            file_handler.setFormatter(file_formatter)
-            file_handler.setLevel(logging.DEBUG)
-            logger.addHandler(file_handler)
-            
-            # Console handler
-            console_handler = logging.StreamHandler()
-            console_formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-            )
-            console_handler.setFormatter(console_formatter)
-            console_handler.setLevel(logging.INFO)
-            logger.addHandler(console_handler)
-            
-            logger.setLevel(logging.DEBUG)
-            
-        return logger
+        """Set up logging for this component using centralized configuration."""
+        return get_logger('database_migration', level=logging.DEBUG)
     
     def _get_db_connection(self, db_path: str) -> sqlite3.Connection:
         """Get a database connection with row factory."""

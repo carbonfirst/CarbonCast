@@ -29,6 +29,7 @@ from pathlib import Path
 
 # Add current directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from logger_utils import get_logger
 
 import rdams_client
 from automation.automated_request_manager import AutomatedRequestManager, create_automated_request_manager
@@ -155,19 +156,8 @@ class CapacityManager:
         self.logger.info("Capacity Manager initialized")
     
     def _setup_logging(self) -> logging.Logger:
-        """Set up logging for the capacity manager."""
-        logger = logging.getLogger('rda_automation.capacity_manager')
-        
-        if not logger.handlers:
-            handler = logging.StreamHandler()
-            formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-            )
-            handler.setFormatter(formatter)
-            logger.addHandler(handler)
-            logger.setLevel(logging.INFO)
-            
-        return logger
+        """Set up logging for this component using centralized configuration."""
+        return get_logger('rda_automation.capacity_manager', level=logging.INFO)
     
     def set_dynamic_integration_components(self,
                                          dynamic_trigger_system=None,

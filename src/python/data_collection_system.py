@@ -38,6 +38,7 @@ from dataclasses import dataclass, asdict
 
 # Add current directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from logger_utils import get_logger
 
 import rdams_client
 from database_reset import DatabaseResetManager, create_database_reset_manager
@@ -109,36 +110,8 @@ class RDADataCollector:
         self.logger.info("RDADataCollector initialized")
     
     def _setup_logging(self) -> logging.Logger:
-        """Setup logging for the data collector."""
-        logger = logging.getLogger('rda_data_collector')
-        
-        if not logger.handlers:
-            # Create logs directory
-            logs_dir = Path("logs")
-            logs_dir.mkdir(exist_ok=True)
-            
-            # File handler
-            log_file = logs_dir / f"data_collection_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
-            file_handler = logging.FileHandler(log_file)
-            file_formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - [%(funcName)s:%(lineno)d] - %(message)s'
-            )
-            file_handler.setFormatter(file_formatter)
-            file_handler.setLevel(logging.DEBUG)
-            logger.addHandler(file_handler)
-            
-            # Console handler
-            console_handler = logging.StreamHandler()
-            console_formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-            )
-            console_handler.setFormatter(console_formatter)
-            console_handler.setLevel(logging.INFO)
-            logger.addHandler(console_handler)
-            
-            logger.setLevel(logging.DEBUG)
-        
-        return logger
+        """Set up logging for this component using centralized configuration."""
+        return get_logger('rda_data_collector', level=logging.DEBUG)
     
     def fetch_all_rda_requests(self) -> Dict[str, Any]:
         """

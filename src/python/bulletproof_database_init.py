@@ -43,6 +43,7 @@ import fcntl
 
 # Add current directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from logger_utils import get_logger
 
 # Import existing modules
 try:
@@ -210,42 +211,41 @@ class BulletproofDatabaseInitializer:
     
     def _setup_comprehensive_logging(self) -> logging.Logger:
         """Set up comprehensive logging with multiple handlers."""
-        logger = logging.getLogger(f'bulletproof_db_init_{self.initialization_id}')
-        logger.setLevel(logging.DEBUG)
-        
-        # Clear any existing handlers
-        logger.handlers.clear()
-        
+        logger_name = f'bulletproof_db_init_{self.initialization_id}'
+
         # Create logs directory
         logs_dir = Path("logs")
         logs_dir.mkdir(exist_ok=True)
-        
+
         # Detailed file handler
         log_file = logs_dir / f"bulletproof_db_init_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
-        file_handler = logging.FileHandler(log_file)
-        file_formatter = logging.Formatter(
-            '%(asctime)s - %(name)s - %(levelname)s - [%(funcName)s:%(lineno)d] - %(message)s'
+        file_format = '%(asctime)s - %(name)s - %(levelname)s - [%(funcName)s:%(lineno)d] - %(message)s'
+        logger = get_logger(
+            logger_name,
+            level=logging.DEBUG,
+            log_file=log_file,
+            file_level=logging.DEBUG,
+            console_format='%(asctime)s - %(levelname)s - %(message)s',
+            file_format=file_format,
         )
-        file_handler.setFormatter(file_formatter)
-        file_handler.setLevel(logging.DEBUG)
-        logger.addHandler(file_handler)
-        
-        # Console handler for important messages
-        console_handler = logging.StreamHandler()
-        console_formatter = logging.Formatter(
-            '%(asctime)s - %(levelname)s - %(message)s'
-        )
-        console_handler.setFormatter(console_formatter)
-        console_handler.setLevel(logging.INFO)
-        logger.addHandler(console_handler)
-        
+
+        # Keep console output at INFO while preserving DEBUG in file logs.
+        for handler in logger.handlers:
+            if isinstance(handler, logging.StreamHandler) and not isinstance(handler, logging.FileHandler):
+                handler.setLevel(logging.INFO)
+
         # Error file handler for critical issues
         error_file = logs_dir / f"bulletproof_db_errors_{datetime.now().strftime('%Y%m%d')}.log"
-        error_handler = logging.FileHandler(error_file)
-        error_handler.setFormatter(file_formatter)
-        error_handler.setLevel(logging.ERROR)
-        logger.addHandler(error_handler)
-        
+        error_handler_exists = any(
+            isinstance(handler, logging.FileHandler) and Path(handler.baseFilename) == error_file
+            for handler in logger.handlers
+        )
+        if not error_handler_exists:
+            error_handler = logging.FileHandler(error_file)
+            error_handler.setFormatter(logging.Formatter(file_format))
+            error_handler.setLevel(logging.ERROR)
+            logger.addHandler(error_handler)
+
         return logger
     
     def _ensure_database_directory(self):

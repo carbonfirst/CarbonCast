@@ -27,6 +27,7 @@ from typing import Dict, List, Optional, Any, Tuple, Union
 from dataclasses import dataclass, asdict
 from enum import Enum
 import threading
+from logger_utils import get_logger
 
 
 class RetryStrategy(Enum):
@@ -160,19 +161,8 @@ class RetryStrategyEngine:
         self.logger.info("Retry Strategy Engine initialized")
     
     def _setup_logging(self) -> logging.Logger:
-        """Set up logging for the strategy engine."""
-        logger = logging.getLogger('smart_retry.strategy_engine')
-        
-        if not logger.handlers:
-            handler = logging.StreamHandler()
-            formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-            )
-            handler.setFormatter(formatter)
-            logger.addHandler(handler)
-            logger.setLevel(logging.INFO)
-            
-        return logger
+        """Set up logging for this component using centralized configuration."""
+        return get_logger('smart_retry.strategy_engine', level=logging.INFO)
     
     def _get_db_connection(self) -> sqlite3.Connection:
         """Get a database connection with row factory."""

@@ -24,6 +24,7 @@ from pathlib import Path
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from logger_utils import get_logger
 
 from completed_request_scanner import CompletedRequestScanner, create_completed_request_scanner
 
@@ -59,36 +60,8 @@ class CompletedRequestIntegration:
         self.logger.info("Completed Request Integration initialized")
     
     def _setup_logging(self) -> logging.Logger:
-        """Setup logging for the integration component."""
-        logger = logging.getLogger('completed_request_integration')
-        
-        if not logger.handlers:
-            # Create logs directory
-            logs_dir = Path("logs")
-            logs_dir.mkdir(exist_ok=True)
-            
-            # File handler
-            log_file = logs_dir / f"completed_request_integration_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
-            file_handler = logging.FileHandler(log_file)
-            file_formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - [%(funcName)s:%(lineno)d] - %(message)s'
-            )
-            file_handler.setFormatter(file_formatter)
-            file_handler.setLevel(logging.DEBUG)
-            logger.addHandler(file_handler)
-            
-            # Console handler
-            console_handler = logging.StreamHandler()
-            console_formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-            )
-            console_handler.setFormatter(console_formatter)
-            console_handler.setLevel(logging.INFO)
-            logger.addHandler(console_handler)
-            
-            logger.setLevel(logging.DEBUG)
-        
-        return logger
+        """Set up logging for this component using centralized configuration."""
+        return get_logger('completed_request_integration', level=logging.DEBUG)
     
     def should_run_scan(self) -> bool:
         """

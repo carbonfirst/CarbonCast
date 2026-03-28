@@ -33,6 +33,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # Add current directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from logger_utils import get_logger
 
 # Import all automation components
 from automation.sequential_file_processor import (
@@ -225,36 +226,8 @@ class SystemIntegrator:
         self.logger.info("System Integrator initialized")
     
     def _setup_logging(self) -> logging.Logger:
-        """Set up logging for the system integrator."""
-        logger = logging.getLogger('rda_automation.system_integrator')
-        
-        if not logger.handlers:
-            # Create logs directory if it doesn't exist
-            logs_dir = Path(self.config.logs_dir)
-            logs_dir.mkdir(parents=True, exist_ok=True)
-            
-            # Console handler
-            console_handler = logging.StreamHandler()
-            console_formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-            )
-            console_handler.setFormatter(console_formatter)
-            logger.addHandler(console_handler)
-            
-            # File handler
-            if self.config.enable_detailed_logging:
-                file_handler = logging.FileHandler(
-                    logs_dir / 'system_integrator.log'
-                )
-                file_formatter = logging.Formatter(
-                    '%(asctime)s - %(name)s - %(levelname)s - %(funcName)s:%(lineno)d - %(message)s'
-                )
-                file_handler.setFormatter(file_formatter)
-                logger.addHandler(file_handler)
-            
-            logger.setLevel(logging.DEBUG if self.config.debug_mode else logging.INFO)
-        
-        return logger
+        """Set up logging for this component using centralized configuration."""
+        return get_logger('rda_automation.system_integrator', level=logging.INFO)
     
     def _signal_handler(self, signum, frame):
         """Handle shutdown signals gracefully."""

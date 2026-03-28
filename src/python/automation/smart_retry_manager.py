@@ -29,6 +29,7 @@ from pathlib import Path
 import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from logger_utils import get_logger
 
 from automation.retry_strategy_engine import (
     RetryStrategyEngine, RetryContext, ErrorCategory, ErrorSeverity,
@@ -221,23 +222,8 @@ class SmartRetryManager:
         self.logger.info("Smart Retry Manager initialized")
     
     def _setup_logging(self) -> logging.Logger:
-        """Set up logging for the smart retry manager."""
-        logger = logging.getLogger('smart_retry.manager')
-        
-        if not logger.handlers:
-            handler = logging.StreamHandler()
-            formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-            )
-            handler.setFormatter(formatter)
-            logger.addHandler(handler)
-            
-            if self.config.enable_detailed_logging:
-                logger.setLevel(logging.DEBUG)
-            else:
-                logger.setLevel(logging.INFO)
-        
-        return logger
+        """Set up logging for this component using centralized configuration."""
+        return get_logger('smart_retry.manager', level=logging.DEBUG)
     
     def _ensure_enhanced_schema(self):
         """Ensure enhanced database schema is created."""

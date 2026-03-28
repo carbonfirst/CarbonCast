@@ -28,6 +28,7 @@ from pathlib import Path
 
 # Add current directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from logger_utils import get_logger
 
 from upload_files import submit_batch_files, discover_control_files
 from automation.capacity_manager import CapacityManager, CapacityStatus, CapacityAction
@@ -159,19 +160,8 @@ class UploadAutomationManager:
         self.logger.info("Upload Automation Manager initialized")
     
     def _setup_logging(self) -> logging.Logger:
-        """Set up logging for the upload automation manager."""
-        logger = logging.getLogger('rda_automation.upload_automation')
-        
-        if not logger.handlers:
-            handler = logging.StreamHandler()
-            formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-            )
-            handler.setFormatter(formatter)
-            logger.addHandler(handler)
-            logger.setLevel(logging.INFO)
-            
-        return logger
+        """Set up logging for this component using centralized configuration."""
+        return get_logger('rda_automation.upload_automation', level=logging.INFO)
     
     def _ensure_directories(self):
         """Ensure required directories exist."""
