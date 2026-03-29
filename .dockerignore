@@ -1,0 +1,28 @@
+**pycache**
+_.pyc
+_.pyo
+\*.pyd
+.Python
+env/
+venv/
+.venv/
+env.bak/
+venv.bak/
+.env
+
+.git/
+.gitignore
+
+# Exclude local state data, logs, and results (these should be mounted via volumes)
+
+src/python/data/_.db
+src/python/data/_.db-journal
+logs/
+results/
+\*.log
+
+# Pytest and coverage
+
+.pytest_cache/
+.coverage
+htmlcov/

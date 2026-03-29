@@ -15,10 +15,10 @@ from typing import Dict, List, Any, Optional
 import yaml
 from jinja2 import Environment, FileSystemLoader, Template
 import psutil
+from logger_utils import get_logger
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, level=logging.INFO)
 
 class ReportGenerator:
     """

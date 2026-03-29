@@ -26,6 +26,7 @@ import signal
 
 # Add current directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from logger_utils import get_logger
 
 from batch_automation import BatchAutomationSystem
 from batch_queue_manager import IntelligentQueueManager
@@ -121,30 +122,8 @@ class IntegratedBatchSystem:
         self.logger.info("Integrated Batch Automation System initialized")
     
     def _setup_logging(self) -> logging.Logger:
-        """Setup logging for the integrated system."""
-        logger = logging.getLogger('integrated_batch_system')
-        logger.setLevel(logging.INFO)
-        
-        # Create formatter
-        formatter = logging.Formatter(
-            '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-        )
-        
-        # Console handler
-        console_handler = logging.StreamHandler()
-        console_handler.setFormatter(formatter)
-        logger.addHandler(console_handler)
-        
-        # File handler
-        logs_dir = Path("logs")
-        logs_dir.mkdir(exist_ok=True)
-        
-        log_file = logs_dir / f"integrated_system_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
-        file_handler = logging.FileHandler(log_file)
-        file_handler.setFormatter(formatter)
-        logger.addHandler(file_handler)
-        
-        return logger
+        """Set up logging for this component using centralized configuration."""
+        return get_logger('integrated_batch_system', level=logging.INFO)
     
     def _initialize_dynamic_components(self, db_path: str):
         """Initialize dynamic batch processing components."""

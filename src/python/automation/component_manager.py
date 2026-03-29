@@ -33,6 +33,7 @@ from concurrent.futures import ThreadPoolExecutor, Future
 
 # Add current directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from logger_utils import get_logger
 
 
 class ComponentState(Enum):
@@ -149,19 +150,8 @@ class ComponentManager:
         self.logger.info("Component Manager initialized")
     
     def _setup_logging(self) -> logging.Logger:
-        """Set up logging for the component manager."""
-        logger = logging.getLogger('rda_automation.component_manager')
-        
-        if not logger.handlers:
-            handler = logging.StreamHandler()
-            formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-            )
-            handler.setFormatter(formatter)
-            logger.addHandler(handler)
-            logger.setLevel(logging.INFO)
-        
-        return logger
+        """Set up logging for this component using centralized configuration."""
+        return get_logger('rda_automation.component_manager', level=logging.INFO)
     
     def register_component(self, definition: ComponentDefinition) -> bool:
         """

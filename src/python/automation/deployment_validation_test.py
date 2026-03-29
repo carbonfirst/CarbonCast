@@ -31,6 +31,7 @@ from pathlib import Path
 import yaml
 import sqlite3
 from enum import Enum
+from logger_utils import get_logger
 
 # Add current directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -262,13 +263,10 @@ class SystemInitializer:
             os.makedirs(log_dir, exist_ok=True)
             
             # Configure logging
-            logging.basicConfig(
+            self.logger = get_logger(
+                'system_initializer',
                 level=log_level,
-                format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                handlers=[
-                    logging.StreamHandler(),
-                    logging.FileHandler(os.path.join(log_dir, 'automation.log'))
-                ]
+                log_file=os.path.join(log_dir, 'automation.log')
             )
             
             startup_time = time.time() - start_time

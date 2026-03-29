@@ -20,6 +20,8 @@ import json
 import sqlite3
 import logging
 import subprocess
+import time
+import uuid
 from pathlib import Path
 from typing import Dict, List, Optional, Any, Tuple
 from datetime import datetime, timedelta
@@ -28,6 +30,7 @@ import re
 
 # Add current directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from logger_utils import get_logger
 
 from rdams_client import get_status
 from enhanced_coordinate_utils import get_region_and_variable_from_request_enhanced
@@ -177,25 +180,257 @@ class RDADataSyncService:
         self.logger.info("RDA Data Sync Service initialized")
     
     def _setup_logging(self) -> logging.Logger:
-        """Set up logging for the data sync service."""
-        logger = logging.getLogger('rda_automation.data_sync')
-        
-        if not logger.handlers:
-            handler = logging.StreamHandler()
-            formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-            )
-            handler.setFormatter(formatter)
-            logger.addHandler(handler)
-            logger.setLevel(logging.INFO)
-            
-        return logger
+        """Set up logging for this component using centralized configuration."""
+        return get_logger('rda_automation.data_sync', level=logging.INFO)
     
     def _get_db_connection(self) -> sqlite3.Connection:
         """Get a database connection with row factory."""
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
         return conn
+
+    def _ensure_realtime_tables(self) -> None:
+        with self._get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS realtime_ingestion_events (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    event_id TEXT UNIQUE NOT NULL,
+                    request_id TEXT,
+                    request_index TEXT,
+                    status TEXT,
+                    region TEXT,
+                    variable_type TEXT,
+                    event_time TEXT NOT NULL,
+                    payload TEXT,
+                    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS realtime_sync_checkpoints (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    checkpoint_key TEXT UNIQUE NOT NULL,
+                    checkpoint_value TEXT NOT NULL,
+                    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS model_registry (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    model_version TEXT UNIQUE NOT NULL,
+                    status TEXT NOT NULL,
+                    metrics_json TEXT,
+                    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                    activated_at TEXT,
+                    deactivated_at TEXT
+                )
+            """)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS model_retraining_runs (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    run_id TEXT UNIQUE NOT NULL,
+                    trigger_reason TEXT NOT NULL,
+                    event_count INTEGER NOT NULL DEFAULT 0,
+                    status TEXT NOT NULL,
+                    model_version TEXT,
+                    metadata_json TEXT,
+                    started_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                    completed_at TEXT
+                )
+            """)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS scheduler_inference_outputs (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    output_key TEXT UNIQUE NOT NULL,
+                    payload_json TEXT NOT NULL,
+                    model_version TEXT NOT NULL,
+                    freshness_timestamp TEXT NOT NULL,
+                    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            conn.commit()
+
+    def _set_checkpoint(self, key: str, value: str) -> None:
+        with self._get_db_connection() as conn:
+            conn.execute(
+                """
+                INSERT INTO realtime_sync_checkpoints (checkpoint_key, checkpoint_value, updated_at)
+                VALUES (?, ?, ?)
+                ON CONFLICT(checkpoint_key)
+                DO UPDATE SET checkpoint_value=excluded.checkpoint_value, updated_at=excluded.updated_at
+                """,
+                (key, value, datetime.now().isoformat())
+            )
+            conn.commit()
+
+    def _get_checkpoint(self, key: str) -> Optional[str]:
+        with self._get_db_connection() as conn:
+            row = conn.execute(
+                "SELECT checkpoint_value FROM realtime_sync_checkpoints WHERE checkpoint_key = ?",
+                (key,)
+            ).fetchone()
+        return row['checkpoint_value'] if row else None
+
+    def _derive_event_time(self, request: RDARequest) -> str:
+        return request.date_ready or request.date_rqst or datetime.now().isoformat()
+
+    def _upsert_realtime_events(self, live_requests: List[RDARequest]) -> int:
+        inserted = 0
+        with self._get_db_connection() as conn:
+            cursor = conn.cursor()
+            for request in live_requests:
+                mock_request = {
+                    'request_index': request.request_index,
+                    'request_id': request.request_id,
+                    'rinfo': request.rinfo,
+                    'subset_info': {'note': request.subset_note},
+                    'raw_data': json.loads(request.raw_response) if request.raw_response else {}
+                }
+                try:
+                    region, variable = get_region_and_variable_from_request_enhanced(mock_request)
+                except Exception:
+                    region = self._extract_region_from_rinfo(request.rinfo)
+                    variable = self._extract_variable_from_subset_note(request.subset_note)
+
+                event_time = self._derive_event_time(request)
+                event_id = f"{request.request_id}:{request.status}:{event_time}"
+                cursor.execute(
+                    """
+                    INSERT OR IGNORE INTO realtime_ingestion_events (
+                        event_id, request_id, request_index, status, region, variable_type, event_time, payload
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        event_id,
+                        request.request_id,
+                        request.request_index,
+                        request.status,
+                        region,
+                        variable,
+                        event_time,
+                        request.raw_response
+                    )
+                )
+                if cursor.rowcount > 0:
+                    inserted += 1
+            conn.commit()
+        return inserted
+
+    def _maybe_trigger_retraining_stub(self, inserted_events: int, min_new_events: int = 25) -> Optional[Dict[str, Any]]:
+        if inserted_events < min_new_events:
+            return None
+
+        run_id = f"retrain_{uuid.uuid4().hex[:12]}"
+        model_version = f"model-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+        started = datetime.now().isoformat()
+        completed = datetime.now().isoformat()
+        metrics = {
+            'accuracy': 0.0,
+            'f1': 0.0,
+            'note': 'stub retraining run'
+        }
+
+        with self._get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                INSERT INTO model_retraining_runs (
+                    run_id, trigger_reason, event_count, status, model_version, metadata_json, started_at, completed_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    run_id,
+                    'new_event_threshold',
+                    inserted_events,
+                    'completed_stub',
+                    model_version,
+                    json.dumps({'trigger_threshold': min_new_events}),
+                    started,
+                    completed
+                )
+            )
+
+            cursor.execute(
+                """
+                UPDATE model_registry
+                SET status = CASE WHEN status = 'active' THEN 'inactive' ELSE status END,
+                    deactivated_at = CASE WHEN status = 'active' THEN ? ELSE deactivated_at END
+                WHERE status = 'active'
+                """,
+                (completed,)
+            )
+
+            cursor.execute(
+                """
+                INSERT INTO model_registry (model_version, status, metrics_json, activated_at)
+                VALUES (?, 'active', ?, ?)
+                ON CONFLICT(model_version)
+                DO UPDATE SET status='active', metrics_json=excluded.metrics_json, activated_at=excluded.activated_at
+                """,
+                (model_version, json.dumps(metrics), completed)
+            )
+            conn.commit()
+
+        return {
+            'run_id': run_id,
+            'model_version': model_version,
+            'status': 'completed_stub',
+            'event_count': inserted_events
+        }
+
+    def _publish_scheduler_payload(self) -> Optional[Dict[str, Any]]:
+        with self._get_db_connection() as conn:
+            cursor = conn.cursor()
+            model_row = cursor.execute(
+                "SELECT model_version FROM model_registry WHERE status = 'active' ORDER BY activated_at DESC LIMIT 1"
+            ).fetchone()
+
+            data_row = cursor.execute(
+                """
+                SELECT
+                    COUNT(*) AS total_requests,
+                    SUM(CASE WHEN LOWER(status)='completed' THEN 1 ELSE 0 END) AS completed_requests,
+                    SUM(CASE WHEN LOWER(status) LIKE '%fail%' THEN 1 ELSE 0 END) AS failed_requests,
+                    MAX(updated_at) AS max_updated_at
+                FROM rda_requests
+                """
+            ).fetchone()
+
+            freshness_ts = data_row['max_updated_at'] if data_row and data_row['max_updated_at'] else datetime.now().isoformat()
+            model_version = model_row['model_version'] if model_row else 'baseline-v0'
+            payload = {
+                'generated_at': datetime.now().isoformat(),
+                'freshness_timestamp': freshness_ts,
+                'model_version': model_version,
+                'metrics': {
+                    'total_requests': int(data_row['total_requests'] or 0),
+                    'completed_requests': int(data_row['completed_requests'] or 0),
+                    'failed_requests': int(data_row['failed_requests'] or 0)
+                }
+            }
+
+            cursor.execute(
+                """
+                INSERT INTO scheduler_inference_outputs (
+                    output_key, payload_json, model_version, freshness_timestamp, updated_at
+                ) VALUES (?, ?, ?, ?, ?)
+                ON CONFLICT(output_key)
+                DO UPDATE SET payload_json=excluded.payload_json,
+                              model_version=excluded.model_version,
+                              freshness_timestamp=excluded.freshness_timestamp,
+                              updated_at=excluded.updated_at
+                """,
+                (
+                    'latest',
+                    json.dumps(payload),
+                    model_version,
+                    freshness_ts,
+                    datetime.now().isoformat()
+                )
+            )
+            conn.commit()
+        return payload
     
     def fetch_live_data(self) -> List[RDARequest]:
         """
@@ -570,6 +805,8 @@ class RDADataSyncService:
         self.logger.info("Starting full data synchronization...")
         
         try:
+            self._ensure_realtime_tables()
+
             # Fetch live data
             live_requests = self.fetch_live_data()
             
@@ -584,6 +821,11 @@ class RDADataSyncService:
             rda_count = self.sync_rda_requests_table(live_requests)
             control_count = self.sync_control_files_tracking_table(live_requests)
             regional_count = 0  # regional_progress table removed
+
+            inserted_events = self._upsert_realtime_events(live_requests)
+            self._set_checkpoint('last_sync_timestamp', datetime.now().isoformat())
+            retraining = self._maybe_trigger_retraining_stub(inserted_events)
+            scheduler_payload = self._publish_scheduler_payload()
             
             # Calculate statistics
             status_counts = {}
@@ -614,7 +856,17 @@ class RDADataSyncService:
                 'tables_synced': {
                     'rda_requests': rda_count,
                     'control_files_tracking': control_count,
-                    'regional_progress': regional_count  # Always 0 now
+                    'regional_progress': regional_count,  # Always 0 now
+                    'realtime_ingestion_events_new': inserted_events
+                },
+                'checkpoint': {
+                    'last_sync_timestamp': self._get_checkpoint('last_sync_timestamp')
+                },
+                'retraining': retraining,
+                'scheduler_publish': {
+                    'output_key': 'latest',
+                    'model_version': scheduler_payload.get('model_version') if scheduler_payload else None,
+                    'freshness_timestamp': scheduler_payload.get('freshness_timestamp') if scheduler_payload else None
                 },
                 'statistics': {
                     'status_distribution': status_counts,

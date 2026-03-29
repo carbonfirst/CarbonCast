@@ -79,6 +79,7 @@ import statistics
 
 # Add current directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from logger_utils import get_logger
 
 
 class HealthStatus(Enum):
@@ -218,19 +219,8 @@ class SystemHealthMonitor:
         self.logger.info("System Health Monitor initialized")
     
     def _setup_logging(self) -> logging.Logger:
-        """Set up logging for the health monitor."""
-        logger = logging.getLogger('rda_automation.system_health_monitor')
-        
-        if not logger.handlers:
-            handler = logging.StreamHandler()
-            formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-            )
-            handler.setFormatter(formatter)
-            logger.addHandler(handler)
-            logger.setLevel(logging.INFO)
-        
-        return logger
+        """Set up logging for this component using centralized configuration."""
+        return get_logger('rda_automation.system_health_monitor', level=logging.INFO)
     
     def _setup_default_thresholds(self):
         """Set up default health monitoring thresholds."""

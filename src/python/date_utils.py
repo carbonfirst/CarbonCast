@@ -17,11 +17,11 @@ import logging
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 from datetime import datetime
+from logger_utils import get_logger
 
 # Import automation components
 try:
     from automation.date_manager import DateManager, DateRange, DateValidationError, CTLFileError
-    from automation.config_manager import ConfigManager
     AUTOMATION_AVAILABLE = True
 except ImportError:
     print("❌ Error: Automation components not found. Please ensure the automation package is available.")
@@ -30,15 +30,11 @@ except ImportError:
 
 def setup_logging(log_level: str = "INFO") -> logging.Logger:
     """Setup logging configuration."""
-    logging.basicConfig(
-        level=getattr(logging, log_level.upper()),
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        handlers=[
-            logging.StreamHandler(sys.stdout),
-            logging.FileHandler('./src/python/logs/date_utils.log')
-        ]
+    return get_logger(
+        __name__,
+        level=getattr(logging, log_level.upper(), logging.INFO),
+        log_file='./src/python/logs/date_utils.log'
     )
-    return logging.getLogger(__name__)
 
 
 def parse_date_range_command(args) -> DateRange:

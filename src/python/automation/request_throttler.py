@@ -27,6 +27,7 @@ from collections import deque
 import heapq
 import uuid
 from concurrent.futures import ThreadPoolExecutor, Future
+from logger_utils import get_logger
 
 
 class RequestPriority(Enum):
@@ -196,19 +197,8 @@ class RequestThrottler:
         self.logger.info("RequestThrottler initialized with intelligent queuing and throttling")
     
     def _setup_logging(self) -> logging.Logger:
-        """Set up logging for the request throttler."""
-        logger = logging.getLogger('rda_automation.request_throttler')
-        
-        if not logger.handlers:
-            handler = logging.StreamHandler()
-            formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-            )
-            handler.setFormatter(formatter)
-            logger.addHandler(handler)
-            logger.setLevel(logging.INFO)
-        
-        return logger
+        """Set up logging for this component using centralized configuration."""
+        return get_logger('rda_automation.request_throttler', level=logging.INFO)
     
     def set_integrations(self, rate_limiter=None, error_handler=None, circuit_breaker=None):
         """

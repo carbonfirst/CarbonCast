@@ -30,6 +30,7 @@ import asyncio
 
 # Add current directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from logger_utils import get_logger
 
 from automation.event_system import (
     EventDispatcher, EventType, EventPriority, BaseEvent,
@@ -183,19 +184,8 @@ class DynamicTriggerSystem:
         self.logger.info("DynamicTriggerSystem initialized with rate limiting and error handling")
     
     def _setup_logging(self) -> logging.Logger:
-        """Set up logging for the dynamic trigger system."""
-        logger = logging.getLogger('rda_automation.dynamic_trigger_system')
-        
-        if not logger.handlers:
-            handler = logging.StreamHandler()
-            formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-            )
-            handler.setFormatter(formatter)
-            logger.addHandler(handler)
-            logger.setLevel(logging.INFO)
-        
-        return logger
+        """Set up logging for this component using centralized configuration."""
+        return get_logger('rda_automation.dynamic_trigger_system', level=logging.INFO)
     
     def _get_default_config(self) -> Dict[str, Any]:
         """Get default configuration for dynamic trigger system."""

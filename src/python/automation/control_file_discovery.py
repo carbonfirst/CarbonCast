@@ -27,6 +27,7 @@ import re
 
 # Add current directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from logger_utils import get_logger
 
 
 @dataclass
@@ -106,19 +107,8 @@ class ControlFileDiscovery:
         self.logger.info("Control File Discovery initialized")
     
     def _setup_logging(self) -> logging.Logger:
-        """Set up logging for the control file discovery."""
-        logger = logging.getLogger('rda_automation.control_file_discovery')
-        
-        if not logger.handlers:
-            handler = logging.StreamHandler()
-            formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-            )
-            handler.setFormatter(formatter)
-            logger.addHandler(handler)
-            logger.setLevel(logging.INFO)
-            
-        return logger
+        """Set up logging for this component using centralized configuration."""
+        return get_logger('rda_automation.control_file_discovery', level=logging.INFO)
     
     def _get_db_connection(self) -> sqlite3.Connection:
         """Get a database connection with row factory."""

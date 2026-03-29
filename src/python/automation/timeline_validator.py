@@ -22,6 +22,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional, Any, Tuple, Union
 from dataclasses import dataclass, asdict
 from enum import Enum
+from logger_utils import get_logger
 
 
 class TimestampFormat(Enum):
@@ -144,19 +145,8 @@ class TimestampValidationService:
         }
     
     def _setup_logging(self) -> logging.Logger:
-        """Set up logging for the validation service."""
-        logger = logging.getLogger('rda_automation.timeline_validator')
-        
-        if not logger.handlers:
-            handler = logging.StreamHandler()
-            formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-            )
-            handler.setFormatter(formatter)
-            logger.addHandler(handler)
-            logger.setLevel(logging.INFO)
-            
-        return logger
+        """Set up logging for this component using centralized configuration."""
+        return get_logger('rda_automation.timeline_validator', level=logging.INFO)
     
     def parse_timestamp(self, timestamp_str: Union[str, None], 
                        field_name: str = "timestamp") -> ParsedTimestamp:
@@ -468,19 +458,8 @@ class TimelineValidationRules:
         }
     
     def _setup_logging(self) -> logging.Logger:
-        """Set up logging for the validation rules."""
-        logger = logging.getLogger('rda_automation.timeline_validation_rules')
-        
-        if not logger.handlers:
-            handler = logging.StreamHandler()
-            formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-            )
-            handler.setFormatter(formatter)
-            logger.addHandler(handler)
-            logger.setLevel(logging.INFO)
-            
-        return logger
+        """Set up logging for this component using centralized configuration."""
+        return get_logger('rda_automation.timeline_validation_rules', level=logging.INFO)
     
     def validate_timeline(self, date_rqst: Union[str, datetime, None],
                          date_ready: Union[str, datetime, None],

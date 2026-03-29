@@ -26,6 +26,7 @@ from dataclasses import dataclass, asdict
 
 # Add current directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from logger_utils import get_logger
 
 from automation.enhanced_request_monitor import (
     EnhancedRequestMonitor, create_enhanced_request_monitor
@@ -110,19 +111,8 @@ class EnhancedMonitoringIntegration:
         self.logger.info("EnhancedMonitoringIntegration initialized")
     
     def _setup_logging(self) -> logging.Logger:
-        """Set up logging for the integration layer."""
-        logger = logging.getLogger('rda_automation.enhanced_monitoring_integration')
-        
-        if not logger.handlers:
-            handler = logging.StreamHandler()
-            formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-            )
-            handler.setFormatter(formatter)
-            logger.addHandler(handler)
-            logger.setLevel(logging.INFO)
-        
-        return logger
+        """Set up logging for this component using centralized configuration."""
+        return get_logger('rda_automation.enhanced_monitoring_integration', level=logging.INFO)
     
     def _setup_event_subscriptions(self):
         """Set up event subscriptions for integration."""

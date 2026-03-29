@@ -32,6 +32,7 @@ import threading
 
 # Add current directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from logger_utils import get_logger
 
 # Import existing modules
 try:
@@ -214,19 +215,8 @@ class DatabaseHealthChecker:
         self.logger.info(f"Database Health Checker initialized for: {self.db_path}")
     
     def _setup_logging(self) -> logging.Logger:
-        """Set up logging for the health checker."""
-        logger = logging.getLogger('database_health_checker')
-        
-        if not logger.handlers:
-            handler = logging.StreamHandler()
-            formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-            )
-            handler.setFormatter(formatter)
-            logger.addHandler(handler)
-            logger.setLevel(logging.INFO)
-        
-        return logger
+        """Set up logging for this component using centralized configuration."""
+        return get_logger('database_health_checker', level=logging.INFO)
     
     def _get_db_connection(self, db_path: Optional[str] = None) -> sqlite3.Connection:
         """Get a database connection with row factory."""

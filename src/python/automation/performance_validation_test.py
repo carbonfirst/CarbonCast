@@ -38,6 +38,7 @@ from pathlib import Path
 import concurrent.futures
 from collections import deque
 import gc
+from logger_utils import get_logger
 
 # Add current directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -1199,13 +1200,10 @@ class PerformanceTestRunner:
     
     def setup_logging(self):
         """Set up logging for performance test runner."""
-        logging.basicConfig(
+        self.logger = get_logger(
+            'performance_test_runner',
             level=logging.INFO,
-            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-            handlers=[
-                logging.StreamHandler(),
-                logging.FileHandler('performance_validation_test.log')
-            ]
+            log_file='performance_validation_test.log'
         )
     
     def run_all_performance_tests(self) -> Dict[str, Any]:

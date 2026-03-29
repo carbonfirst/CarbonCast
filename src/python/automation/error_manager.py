@@ -20,6 +20,7 @@ from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional, Tuple
 from dataclasses import dataclass
 from pathlib import Path
+from logger_utils import get_logger
 
 
 @dataclass
@@ -81,20 +82,8 @@ class ErrorManager:
         self.logger = self._setup_logging()
         
     def _setup_logging(self) -> logging.Logger:
-        """Set up logging for the error manager."""
-        logger = logging.getLogger('rda_automation.error_manager')
-        
-        # Only add handler if it doesn't already exist
-        if not logger.handlers:
-            handler = logging.StreamHandler()
-            formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-            )
-            handler.setFormatter(formatter)
-            logger.addHandler(handler)
-            logger.setLevel(logging.INFO)
-            
-        return logger
+        """Set up logging for this component using centralized configuration."""
+        return get_logger('rda_automation.error_manager', level=logging.INFO)
     
     def _get_db_connection(self) -> sqlite3.Connection:
         """Get a database connection with row factory."""

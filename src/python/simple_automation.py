@@ -16,15 +16,12 @@ from pathlib import Path
 
 # Add current directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from logger_utils import get_logger
 
 from coordinate_utils import get_region_and_variable_from_request_enhanced
 
 # Set up logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, level=logging.INFO)
 
 
 class EnhancedAutomationSystem:

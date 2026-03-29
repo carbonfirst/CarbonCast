@@ -17,6 +17,7 @@ from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 import rdams_client as rc
+from logger_utils import get_logger
 
 
 def setup_logging(log_level: str = "INFO") -> logging.Logger:
@@ -29,15 +30,11 @@ def setup_logging(log_level: str = "INFO") -> logging.Logger:
     Returns:
         Configured logger instance
     """
-    logging.basicConfig(
-        level=getattr(logging, log_level.upper()),
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        handlers=[
-            logging.StreamHandler(sys.stdout),
-            logging.FileHandler('./src/python/logs/purge_files.log')
-        ]
+    return get_logger(
+        __name__,
+        level=getattr(logging, log_level.upper(), logging.INFO),
+        log_file='./src/python/logs/purge_files.log'
     )
-    return logging.getLogger(__name__)
 
 
 def load_automation_config() -> Optional[Dict[str, Any]]:

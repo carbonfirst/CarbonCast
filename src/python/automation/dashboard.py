@@ -32,6 +32,7 @@ from flask_cors import CORS
 
 # Add current directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from logger_utils import get_logger
 
 # Import existing modules
 from automation.error_manager import ErrorManager, create_error_manager
@@ -227,19 +228,8 @@ class EnhancedRDADashboard:
         self.logger.info("Enhanced RDA Dashboard with Real-Time Sync initialized")
     
     def _setup_logging(self) -> logging.Logger:
-        """Set up logging for the dashboard."""
-        logger = logging.getLogger('rda_automation.dashboard')
-        
-        if not logger.handlers:
-            handler = logging.StreamHandler()
-            formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-            )
-            handler.setFormatter(formatter)
-            logger.addHandler(handler)
-            logger.setLevel(logging.INFO)
-            
-        return logger
+        """Set up logging for this component using centralized configuration."""
+        return get_logger('rda_automation.dashboard', level=logging.INFO)
     
     def _safe_parse_datetime(self, date_str: str, field_name: str = "timestamp") -> Optional[datetime]:
         """
@@ -1320,6 +1310,69 @@ class EnhancedRDADashboard:
                 'last_updated': datetime.now().isoformat(),
                 'error': str(e)
             }
+
+    def get_scheduler_payload_v1(self) -> Dict[str, Any]:
+        self._trigger_sync_if_needed("scheduler_api_v1")
+        now_iso = datetime.now().isoformat()
+        try:
+            with self._get_db_connection() as conn:
+                row = conn.execute(
+                    """
+                    SELECT payload_json, model_version, freshness_timestamp, updated_at
+                    FROM scheduler_inference_outputs
+                    WHERE output_key = 'latest'
+                    LIMIT 1
+                    """
+                ).fetchone()
+
+                if row:
+                    payload = json.loads(row['payload_json'])
+                    freshness_ts = row['freshness_timestamp'] or now_iso
+                    freshness_age = (datetime.now() - self._safe_parse_datetime(freshness_ts, 'freshness_timestamp')).total_seconds() if self._safe_parse_datetime(freshness_ts, 'freshness_timestamp') else float('inf')
+                    payload.update({
+                        'api_version': 'v1',
+                        'served_at': now_iso,
+                        'freshness_age_seconds': freshness_age
+                    })
+                    return payload
+
+                fallback = conn.execute(
+                    """
+                    SELECT
+                        COUNT(*) AS total_requests,
+                        SUM(CASE WHEN LOWER(status)='completed' THEN 1 ELSE 0 END) AS completed_requests,
+                        SUM(CASE WHEN LOWER(status) LIKE '%fail%' THEN 1 ELSE 0 END) AS failed_requests,
+                        MAX(updated_at) AS max_updated_at
+                    FROM rda_requests
+                    """
+                ).fetchone()
+
+                freshness_ts = fallback['max_updated_at'] if fallback and fallback['max_updated_at'] else now_iso
+                return {
+                    'api_version': 'v1',
+                    'generated_at': now_iso,
+                    'served_at': now_iso,
+                    'freshness_timestamp': freshness_ts,
+                    'freshness_age_seconds': (datetime.now() - self._safe_parse_datetime(freshness_ts, 'freshness_timestamp')).total_seconds() if self._safe_parse_datetime(freshness_ts, 'freshness_timestamp') else float('inf'),
+                    'model_version': 'baseline-v0',
+                    'metrics': {
+                        'total_requests': int(fallback['total_requests'] or 0),
+                        'completed_requests': int(fallback['completed_requests'] or 0),
+                        'failed_requests': int(fallback['failed_requests'] or 0)
+                    }
+                }
+        except Exception as e:
+            self.logger.error(f"Error getting scheduler payload: {e}")
+            return {
+                'api_version': 'v1',
+                'generated_at': now_iso,
+                'served_at': now_iso,
+                'error': str(e),
+                'model_version': 'unknown',
+                'freshness_timestamp': None,
+                'freshness_age_seconds': float('inf'),
+                'metrics': {}
+            }
     
     def _setup_routes(self):
         """Setup Flask routes for the dashboard."""
@@ -1384,6 +1437,10 @@ class EnhancedRDADashboard:
                 return jsonify(freshness_info)
             except Exception as e:
                 return jsonify({'error': str(e)}), 500
+
+        @self.app.route('/api/v1/scheduler/payload')
+        def api_scheduler_payload_v1():
+            return jsonify(self.get_scheduler_payload_v1())
         
         @self.app.route('/api/current-requests')
         def api_current_requests():

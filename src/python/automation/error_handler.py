@@ -27,6 +27,7 @@ from collections import deque, defaultdict
 import json
 import requests
 from requests.exceptions import RequestException, Timeout, ConnectionError
+from logger_utils import get_logger
 
 
 class ErrorSeverity(Enum):
@@ -177,19 +178,8 @@ class ErrorHandler:
         self.logger.info("ErrorHandler initialized with comprehensive error handling")
     
     def _setup_logging(self) -> logging.Logger:
-        """Set up logging for the error handler."""
-        logger = logging.getLogger('rda_automation.error_handler')
-        
-        if not logger.handlers:
-            handler = logging.StreamHandler()
-            formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-            )
-            handler.setFormatter(formatter)
-            logger.addHandler(handler)
-            logger.setLevel(logging.INFO)
-        
-        return logger
+        """Set up logging for this component using centralized configuration."""
+        return get_logger('rda_automation.error_handler', level=logging.INFO)
     
     def _initialize_error_patterns(self) -> List[ErrorPattern]:
         """Initialize predefined error patterns for RDA API."""

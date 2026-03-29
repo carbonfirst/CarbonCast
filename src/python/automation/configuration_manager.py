@@ -33,6 +33,7 @@ import hashlib
 
 # Add current directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from logger_utils import get_logger
 
 
 class ConfigurationSource(Enum):
@@ -144,19 +145,8 @@ class ConfigurationManager:
         self.logger.info("Configuration Manager initialized")
     
     def _setup_logging(self) -> logging.Logger:
-        """Set up logging for the configuration manager."""
-        logger = logging.getLogger('rda_automation.configuration_manager')
-        
-        if not logger.handlers:
-            handler = logging.StreamHandler()
-            formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-            )
-            handler.setFormatter(formatter)
-            logger.addHandler(handler)
-            logger.setLevel(logging.INFO)
-        
-        return logger
+        """Set up logging for this component using centralized configuration."""
+        return get_logger('rda_automation.configuration_manager', level=logging.INFO)
     
     def register_schema(self, profile_name: str, schema: ConfigurationSchema) -> bool:
         """

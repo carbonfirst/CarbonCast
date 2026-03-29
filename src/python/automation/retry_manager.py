@@ -31,6 +31,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from logger_utils import get_logger
 
 from automation.error_manager import ErrorManager, create_error_manager
 from batch_automation import BatchAutomationSystem, RequestStatus
@@ -123,20 +124,8 @@ class RetryManager:
         self.logger.info("RetryManager initialized")
     
     def _setup_logging(self) -> logging.Logger:
-        """Set up logging for the retry manager."""
-        logger = logging.getLogger('rda_automation.retry_manager')
-        
-        # Only add handler if it doesn't already exist
-        if not logger.handlers:
-            handler = logging.StreamHandler()
-            formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-            )
-            handler.setFormatter(formatter)
-            logger.addHandler(handler)
-            logger.setLevel(logging.INFO)
-            
-        return logger
+        """Set up logging for this component using centralized configuration."""
+        return get_logger('rda_automation.retry_manager', level=logging.INFO)
     
     def _get_db_connection(self) -> sqlite3.Connection:
         """Get a database connection with row factory."""

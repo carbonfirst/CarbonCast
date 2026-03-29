@@ -187,7 +187,8 @@ def main():
     print()
     
     # Setup logging
-    logging.basicConfig(level=logging.WARNING)  # Reduce noise during testing
+    from logger_utils import configure_root_logging
+    configure_root_logging(level=logging.WARNING)  # Reduce noise during testing
     
     try:
         # Run tests

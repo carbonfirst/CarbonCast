@@ -10,6 +10,7 @@ import os
 import logging
 from pathlib import Path
 from typing import List, Dict, Tuple
+from logger_utils import configure_root_logging
 
 def ensure_required_directories(base_dir: str = None, logger: logging.Logger = None) -> Dict[str, any]:
     """
@@ -299,8 +300,8 @@ def setup_directories(config: Dict = None, logger: logging.Logger = None) -> boo
 if __name__ == "__main__":
     # Allow running as standalone script
     import logging
-    
-    logging.basicConfig(level=logging.INFO)
+
+    configure_root_logging(level=logging.INFO)
     logger = logging.getLogger(__name__)
     
     print("🔧 Setting up RDA Automation System directories...")

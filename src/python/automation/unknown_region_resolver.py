@@ -26,6 +26,7 @@ import threading
 
 # Add current directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from logger_utils import get_logger
 
 from coordinate_utils import get_region_and_variable_from_request_enhanced
 
@@ -108,19 +109,8 @@ class EnhancedUnknownRegionResolver:
         self.logger.info("Enhanced Unknown Region Resolver initialized")
     
     def _setup_logging(self) -> logging.Logger:
-        """Set up logging for the resolver."""
-        logger = logging.getLogger('rda_automation.unknown_region_resolver')
-        
-        if not logger.handlers:
-            handler = logging.StreamHandler()
-            formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-            )
-            handler.setFormatter(formatter)
-            logger.addHandler(handler)
-            logger.setLevel(logging.INFO)
-            
-        return logger
+        """Set up logging for this component using centralized configuration."""
+        return get_logger('rda_automation.unknown_region_resolver', level=logging.INFO)
     
     def _initialize_database(self):
         """Initialize database tables for unknown region tracking."""

@@ -30,6 +30,7 @@ from dataclasses import dataclass, asdict
 import tempfile
 import shutil
 from pathlib import Path
+from logger_utils import get_logger
 
 # Add current directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -935,13 +936,10 @@ class SystemTestRunner:
     
     def setup_logging(self):
         """Set up logging for test runner."""
-        logging.basicConfig(
+        self.logger = get_logger(
+            'system_test_runner',
             level=logging.INFO,
-            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-            handlers=[
-                logging.StreamHandler(),
-                logging.FileHandler('comprehensive_system_test.log')
-            ]
+            log_file='comprehensive_system_test.log'
         )
     
     def run_all_tests(self) -> Dict[str, Any]:

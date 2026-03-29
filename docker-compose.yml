@@ -1,0 +1,28 @@
+version: "3.8"
+
+services:
+  dashboard:
+    build: .
+    ports:
+      - "5000:5000"
+    volumes:
+      - sqlite_data:/app/src/python/data
+      - ./logs:/app/logs
+    command: python src/python/automation/dashboard.py
+    restart: unless-stopped
+    environment:
+      - PYTHONPATH=/app/src/python
+
+  sync-worker:
+    build: .
+    volumes:
+      - sqlite_data:/app/src/python/data
+      - ./logs:/app/logs
+    command: python src/python/automation/data_sync.py --continuous
+    restart: unless-stopped
+    environment:
+      - PYTHONPATH=/app/src/python
+
+volumes:
+  sqlite_data:
+    description: "Persistent storage for the automation_state.db"

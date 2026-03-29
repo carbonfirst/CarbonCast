@@ -22,6 +22,7 @@ from pathlib import Path
 from typing import Dict, Tuple, Optional, List, Any
 from dataclasses import dataclass
 from datetime import datetime
+from logger_utils import get_logger
 
 logger = logging.getLogger(__name__)
 
@@ -155,19 +156,8 @@ class RobustRegionMapper:
         self.logger.info("Robust Region Mapper initialized with unified coordinate system")
     
     def _setup_logging(self) -> logging.Logger:
-        """Set up logging for the region mapper."""
-        logger = logging.getLogger('rda_automation.robust_region_mapper')
-        
-        if not logger.handlers:
-            handler = logging.StreamHandler()
-            formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-            )
-            handler.setFormatter(formatter)
-            logger.addHandler(handler)
-            logger.setLevel(logging.INFO)
-            
-        return logger
+        """Set up logging for this component using centralized configuration."""
+        return get_logger('rda_automation.robust_region_mapper', level=logging.INFO)
     
     def parse_coordinates_from_rinfo(self, rinfo: str) -> Optional[Tuple[float, float, float, float]]:
         """

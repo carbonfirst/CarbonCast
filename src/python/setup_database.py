@@ -32,6 +32,7 @@ import threading
 
 # Add current directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from logger_utils import get_logger
 
 # Import existing modules
 try:
@@ -90,36 +91,8 @@ class UnifiedDatabaseSetup:
         self.logger.info(f"Unified Database Setup initialized for: {self.db_path}")
     
     def _setup_logging(self) -> logging.Logger:
-        """Set up comprehensive logging for database setup."""
-        logger = logging.getLogger('unified_database_setup')
-        
-        if not logger.handlers:
-            # Create logs directory
-            logs_dir = Path("logs")
-            logs_dir.mkdir(exist_ok=True)
-            
-            # File handler
-            log_file = logs_dir / f"database_setup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
-            file_handler = logging.FileHandler(log_file)
-            file_formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - [%(funcName)s:%(lineno)d] - %(message)s'
-            )
-            file_handler.setFormatter(file_formatter)
-            file_handler.setLevel(logging.DEBUG)
-            logger.addHandler(file_handler)
-            
-            # Console handler
-            console_handler = logging.StreamHandler()
-            console_formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-            )
-            console_handler.setFormatter(console_formatter)
-            console_handler.setLevel(logging.INFO)
-            logger.addHandler(console_handler)
-            
-            logger.setLevel(logging.DEBUG)
-        
-        return logger
+        """Set up logging for this component using centralized configuration."""
+        return get_logger('unified_database_setup', level=logging.DEBUG)
     
     def _get_db_connection(self, db_path: Optional[str] = None) -> sqlite3.Connection:
         """Get a database connection with row factory."""
@@ -354,6 +327,72 @@ class UnifiedDatabaseSetup:
                     timestamp TEXT DEFAULT CURRENT_TIMESTAMP
                 )
             """)
+
+            # Realtime ingestion events (idempotent by event_id)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS realtime_ingestion_events (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    event_id TEXT UNIQUE NOT NULL,
+                    request_id TEXT,
+                    request_index TEXT,
+                    status TEXT,
+                    region TEXT,
+                    variable_type TEXT,
+                    event_time TEXT NOT NULL,
+                    payload TEXT,
+                    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+
+            # Sync checkpoints for restart-safe watermarking
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS realtime_sync_checkpoints (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    checkpoint_key TEXT UNIQUE NOT NULL,
+                    checkpoint_value TEXT NOT NULL,
+                    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+
+            # Minimal model registry and retraining run tracking
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS model_registry (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    model_version TEXT UNIQUE NOT NULL,
+                    status TEXT NOT NULL,
+                    metrics_json TEXT,
+                    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                    activated_at TEXT,
+                    deactivated_at TEXT
+                )
+            """)
+
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS model_retraining_runs (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    run_id TEXT UNIQUE NOT NULL,
+                    trigger_reason TEXT NOT NULL,
+                    event_count INTEGER NOT NULL DEFAULT 0,
+                    status TEXT NOT NULL,
+                    model_version TEXT,
+                    metadata_json TEXT,
+                    started_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                    completed_at TEXT
+                )
+            """)
+
+            # Scheduler-facing payload cache
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS scheduler_inference_outputs (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    output_key TEXT UNIQUE NOT NULL,
+                    payload_json TEXT NOT NULL,
+                    model_version TEXT NOT NULL,
+                    freshness_timestamp TEXT NOT NULL,
+                    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
             
             # Create indexes for performance
             self._create_basic_indexes(cursor)
@@ -383,7 +422,12 @@ class UnifiedDatabaseSetup:
             "CREATE INDEX IF NOT EXISTS idx_retry_attempts_status ON retry_attempts(status)",
             "CREATE INDEX IF NOT EXISTS idx_retry_attempts_scheduled_time ON retry_attempts(scheduled_time)",
             "CREATE INDEX IF NOT EXISTS idx_dashboard_metrics_name ON dashboard_metrics(metric_name)",
-            "CREATE INDEX IF NOT EXISTS idx_dashboard_metrics_region ON dashboard_metrics(region)"
+            "CREATE INDEX IF NOT EXISTS idx_dashboard_metrics_region ON dashboard_metrics(region)",
+            "CREATE INDEX IF NOT EXISTS idx_realtime_events_event_time ON realtime_ingestion_events(event_time)",
+            "CREATE INDEX IF NOT EXISTS idx_realtime_events_request_id ON realtime_ingestion_events(request_id)",
+            "CREATE INDEX IF NOT EXISTS idx_realtime_events_status ON realtime_ingestion_events(status)",
+            "CREATE INDEX IF NOT EXISTS idx_retraining_runs_started_at ON model_retraining_runs(started_at)",
+            "CREATE INDEX IF NOT EXISTS idx_scheduler_outputs_freshness ON scheduler_inference_outputs(freshness_timestamp)"
         ]
         
         for index_sql in indexes:

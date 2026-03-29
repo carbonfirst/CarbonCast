@@ -25,6 +25,7 @@ from pathlib import Path
 
 # Add current directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from logger_utils import get_logger
 
 try:
     from rdams_client import get_status, download, get_filelist
@@ -44,21 +45,7 @@ except ImportError:
 
 def setup_logging() -> logging.Logger:
     """Setup logging for the fix completed requests module."""
-    logger = logging.getLogger('fix_completed_requests')
-    
-    if not logger.handlers:
-        # Console handler
-        console_handler = logging.StreamHandler()
-        console_formatter = logging.Formatter(
-            '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-        )
-        console_handler.setFormatter(console_formatter)
-        console_handler.setLevel(logging.INFO)
-        logger.addHandler(console_handler)
-        
-        logger.setLevel(logging.INFO)
-    
-    return logger
+    return get_logger('fix_completed_requests', level=logging.INFO)
 
 
 def get_completed_requests_from_database(db_path: str = "src/python/data/automation_state.db") -> List[Dict]:

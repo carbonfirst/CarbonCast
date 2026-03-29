@@ -10,16 +10,14 @@ import sys
 import json
 import logging
 from datetime import datetime
+from logger_utils import configure_root_logging
 
 # Add current directory to path for imports
 sys.path.insert(0, os.getcwd())
 
 def setup_logging():
     """Setup logging for the test."""
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(levelname)s - %(message)s'
-    )
+    configure_root_logging(level=logging.INFO, fmt='%(asctime)s - %(levelname)s - %(message)s')
     return logging.getLogger(__name__)
 
 def test_capacity_manager_config():

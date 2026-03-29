@@ -52,6 +52,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # Add current directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from logger_utils import get_logger
 
 from automation.file_organization_manager import EnhancedFileOrganizationManager, create_file_organization_manager
 from automation.automated_request_manager import AutomatedRequestManager, create_automated_request_manager
@@ -344,27 +345,8 @@ class WorkflowOrchestrator:
         self.logger.info("Workflow Orchestrator initialized")
     
     def _setup_logging(self) -> logging.Logger:
-        """
-        Set up logging for the workflow orchestrator.
-        
-        Configures a logger with appropriate formatting and level based on
-        the debug mode setting in the configuration.
-        
-        Returns:
-            logging.Logger: Configured logger instance for the orchestrator.
-        """
-        logger = logging.getLogger('rda_automation.workflow_orchestrator')
-        
-        if not logger.handlers:
-            handler = logging.StreamHandler()
-            formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-            )
-            handler.setFormatter(formatter)
-            logger.addHandler(handler)
-            logger.setLevel(logging.DEBUG if self.config.debug_mode else logging.INFO)
-            
-        return logger
+        """Set up logging for this component using centralized configuration."""
+        return get_logger('rda_automation.workflow_orchestrator', level=logging.INFO)
     
     def _signal_handler(self, signum, frame):
         """
