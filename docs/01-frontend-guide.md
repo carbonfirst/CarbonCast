@@ -34,10 +34,10 @@ Code lives in `CarbonCastUI/web/`. Everything interesting is under `src/`.
 | Charts | Chart.js + react-chartjs-2 |
 | Styling | Tailwind CSS + some hand-written CSS / "glass" components |
 
-> ⚠️ Heads-up: `package.json` also lists **Leaflet, react-leaflet, and
-> mapbox-choropleth**. These are leftovers from an earlier map implementation and
-> are mostly *not used* anymore. Don't add new code against them — the live map is
-> MapLibre. (Removing them is on the cleanup list in the reorganization doc.)
+> ℹ️ Note: the live map is **MapLibre**. Earlier iterations pulled in Leaflet /
+> react-leaflet / mapbox-choropleth, but those unused deps have since been
+> removed from `package.json`. Don't re-introduce them — build new map features
+> on MapLibre.
 
 ---
 
@@ -96,7 +96,6 @@ CarbonCastUI/
 | File | What it does |
 |------|--------------|
 | `cache.ts` | **The heart of data flow.** Fetches carbon-intensity data, caches it, exposes `useCarbonIntensityData(timelineState)`, plus `warmCache` / `initializeCache`. Also defines the `TimelineState` type. |
-| `cache-optimized.ts` | An alternate/optimized caching path. (Two cache files exist — see cleanup notes.) |
 | `useEnergyData.ts` | Fetches the energy-mix breakdown for a region (used by the left panel). |
 | `useSettingsState.ts` | Reads/writes user settings. |
 | `useTheme.ts` | Light/dark theme handling. |
@@ -181,9 +180,9 @@ npm run lint       # eslint
 - **`App.tsx` is ~340 lines and does a lot.** It holds map state, timeline state,
   panel state, *and* the fallback-detection logic. It's readable but dense. If you
   add features, consider pulling logic into hooks rather than growing it.
-- **Two cache implementations** (`cache.ts` and `cache-optimized.ts`) coexist.
-  Make sure you know which one `App.tsx` actually imports (currently `cache.ts`)
-  before editing the other.
+- **Caching lives in `cache.ts`.** (There used to be an unused
+  `cache-optimized.ts` sitting alongside it — it's been removed, so `cache.ts` is
+  now the single source of truth.)
 - **`any` types show up** in a few spots (e.g. `selectedRegionBounds: any`).
   Tightening these is a safe, incremental win.
 - **Geometry lives in `public/us-states.js` and `public/world.js`** as plain JS,

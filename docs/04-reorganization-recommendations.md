@@ -28,26 +28,26 @@ should be identical. If you can't prove that, don't merge it.
 These are nearly zero-risk and immediately reduce noise.
 
 ### Frontend (`CarbonCastUI/web`)
-- **Remove unused map libraries.** `leaflet`, `react-leaflet`, and
-  `mapbox-choropleth` are in `package.json` but the live map is MapLibre. Confirm
-  with a search (`grep -r "leaflet" src/`), then drop the deps. Smaller bundle,
-  less confusion.
+- **✅ DONE — Removed unused map libraries.** `leaflet`, `react-leaflet`,
+  `mapbox-choropleth`, and `@types/leaflet` had 0 references in `src/` and have
+  been dropped from `package.json`. (`npm run build` still passes.)
 - **Replace stray `console.log` with `debugLogger`.** There's already a
   `utils/debugLogger.ts` for exactly this. Route logging through it so production
   builds stay quiet.
 - **Tighten obvious `any` types.** Start with `selectedRegionBounds: any` in
   `App.tsx` and similar spots. Give them real interfaces.
-- **Pick one cache implementation.** `hooks/cache.ts` and `hooks/cache-optimized.ts`
-  both exist. Confirm which `App.tsx` imports (currently `cache.ts`), then either
-  delete the unused one or clearly mark it experimental.
+- **✅ DONE — One cache implementation.** The unused `hooks/cache-optimized.ts`
+  was deleted; `hooks/cache.ts` is now the single source of truth.
 
 ### Backend (`UCSC_CarbonCast_API`)
-- **Swap `print()` for `logging`.** `views.py` prints at import time and inside
-  handlers. Replace with a module logger. Pure cleanup, big readability gain.
-- **De-duplicate imports.** `views.py` imports `status` and `permissions` twice.
-  Trivial to fix.
-- **Add a top-of-file docstring to the big modules** (`views.py`, `tasks.py`)
-  summarizing what lives there and the section order.
+- **Swap `print()` for `logging`.** ⏳ Partial — the import-time `print` is gone;
+  the per-handler debug `print()`s inside the views remain. Route those through a
+  module logger. Pure cleanup, big readability gain.
+- **✅ DONE — De-duplicated imports.** The four duplicate `rest_framework` import
+  lines in the old `views.py` were collapsed into one before the split.
+- **Add a top-of-file docstring to the big modules** (`tasks.py`)
+  summarizing what lives there and the section order. (The new `views/` package
+  already has a docstring in its `__init__.py`.)
 
 ### Automation tool
 - **Add `*_state.json` to `.gitignore`** (or move the committed ones to a
@@ -57,13 +57,16 @@ These are nearly zero-risk and immediately reduce noise.
 
 ## Tier 2 — Structural splits (the high-value ones)
 
-### Split the giant Django `views.py` (~1,900 lines) — **the #1 win**
+### Split the giant Django `views.py` (~1,900 lines) — **✅ DONE**
 
-This is the single biggest readability problem in the repo, and it's very safe to
+This was the single biggest readability problem in the repo, and it was safe to
 fix because Django doesn't care where a view *class* is defined, only that `urls.py`
-can import it.
+can import it. **This has now been done** — `views.py` is a `views/` package, the
+class bodies were carved out byte-for-byte, `__init__.py` re-exports everything,
+and `python manage.py check` passes. The recipe below is kept for reference / in
+case you split another large module the same way.
 
-**Recommended target layout** (turn `views.py` into a `views/` package):
+**Target layout (now in place):**
 
 ```
 CarbonCastRESTAPI/

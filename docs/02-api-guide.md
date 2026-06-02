@@ -82,7 +82,7 @@ UCSC_CarbonCast_API/CarbonCast/
 | File | What it does |
 |------|--------------|
 | `models.py` (~160 lines) | The database schema (see below). |
-| `views.py` (~1,900 lines) | **Every API endpoint lives here.** It's huge — the #1 candidate for splitting. |
+| `views/` (package) | **All API endpoints live here.** Originally one ~1,900-line `views.py`, now split into focused modules — `carbon_intensity.py`, `energy_sources.py`, `forecasts.py`, `regions.py`, `retraining.py`, `auth.py` — sharing a `_base.py` header. `views/__init__.py` re-exports every view so `urls.py` is unchanged. |
 | `urls.py` | Maps URL paths to the views. |
 | `serializers.py` | DRF serializers (user serialization, etc.). |
 | `helper.py` | The CSV-fallback readers + metadata helpers used by the views. |
@@ -191,13 +191,16 @@ want Celery to run.
 
 ## Gotchas & honest notes
 
-- **`views.py` is ~1,900 lines.** This is the single biggest readability problem
-  in the backend. Splitting it is the headline item in the reorganization doc, and
-  it can be done safely (see that doc for the step-by-step).
+- **`views.py` was ~1,900 lines — now split into a `views/` package.** ✅ Done:
+  it's been carved into focused modules (`carbon_intensity`, `energy_sources`,
+  `forecasts`, `regions`, `retraining`, `auth`) sharing a `_base.py`, with
+  `__init__.py` re-exporting everything so imports are unchanged. Verified with
+  `python manage.py check`.
 - **CSV fallback is load-bearing.** Don't delete `real_time/` or `CI_forecast_data/`
   assuming the DB has everything — endpoints rely on them when rows are missing.
-- **There are stray `print()` statements** in `views.py` (e.g. at import time and
-  inside `get` handlers). They're noisy; converting to proper logging is a safe win.
+- **There are still stray `print()` statements** inside the `get` handlers (the
+  import-time one is gone). They're noisy; converting them to proper logging is a
+  safe next win — see the reorganization doc.
 - **Rate limiting is currently disabled** (`check_throttle_limit` always returns
   `True`). The throttle models/fields exist but aren't enforced. Know this before
   you debug "why isn't throttling working."
