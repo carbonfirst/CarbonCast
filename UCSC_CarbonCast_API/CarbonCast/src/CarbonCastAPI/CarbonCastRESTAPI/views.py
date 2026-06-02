@@ -6,10 +6,7 @@ import base64
 # Create your views here.
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status, serializers
-from rest_framework import permissions
-from rest_framework import status
-from rest_framework import permissions, authentication
+from rest_framework import status, serializers, permissions, authentication
 from django.contrib.auth import authenticate,login, logout
 from django.contrib.auth.models import User
 from django.shortcuts import redirect, render
@@ -38,8 +35,7 @@ def check_throttle_limit(user):
 
 # 1: 
 class CarbonIntensityApiView(APIView):
-  
-    print(authentication_classes, permission_classes)
+
     authentication_classes = authentication_classes
     permission_classes = permission_classes
 
