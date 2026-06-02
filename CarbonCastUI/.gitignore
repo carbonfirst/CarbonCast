@@ -1,0 +1,30 @@
+# SQLite database files
+*.sqlite3
+*.sqlite
+*.db
+db.sqlite3
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Django specific
+CarbonCastAPI/src/CarbonCastAPI/db.sqlite3
+CarbonCastAPI/db.sqlite3

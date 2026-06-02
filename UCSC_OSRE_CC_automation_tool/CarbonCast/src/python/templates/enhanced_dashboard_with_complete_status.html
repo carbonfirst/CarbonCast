@@ -1,0 +1,2158 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Enhanced RDA Dashboard - Complete Status Information</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 12px; margin-bottom: 30px; text-align: center; position: relative; }
+        
+        /* Navigation tabs */
+        .nav-tabs {
+            display: flex;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .nav-tab {
+            flex: 1;
+            padding: 15px 20px;
+            text-align: center;
+            cursor: pointer;
+            border: none;
+            background: white;
+            color: #666;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .nav-tab.active {
+            background: #667eea;
+            color: white;
+        }
+        .nav-tab:hover:not(.active) {
+            background: #f8f9fa;
+            color: #333;
+        }
+        
+        /* Tab content */
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Real-time sync status indicators */
+        .sync-status-bar {
+            background: rgba(255,255,255,0.1);
+            padding: 10px 20px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .sync-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9em;
+        }
+        .sync-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        .sync-dot.fresh { background: #28a745; }
+        .sync-dot.acceptable { background: #ffc107; }
+        .sync-dot.stale { background: #fd7e14; }
+        .sync-dot.critical { background: #dc3545; }
+        .sync-dot.syncing { background: #007bff; animation: spin 1s linear infinite; }
+        .sync-dot.error { background: #dc3545; animation: flash 1s infinite; }
+        
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes flash { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        
+        .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .metric-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); position: relative; }
+        .metric-value { font-size: 2em; font-weight: bold; color: #2196F3; }
+        .metric-label { color: #666; margin-top: 5px; }
+        
+        /* Enhanced buttons */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-primary:hover { background: #0056b3; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-success:hover { background: #1e7e34; }
+        .btn-warning { background: #ffc107; color: #212529; }
+        .btn-warning:hover { background: #e0a800; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-danger:hover { background: #c82333; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn-secondary:hover { background: #545b62; }
+        
+        .refresh-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.3);
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0 5px;
+        }
+        .refresh-btn:hover { background: rgba(255,255,255,0.3); }
+        .refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .table-container { background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin: 20px 0; overflow: hidden; }
+        .table-header {
+            padding: 20px;
+            margin: 0;
+            background: #f8f9fa;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        /* Expandable request cards */
+        .request-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin: 10px;
+            background: white;
+            transition: all 0.3s ease;
+        }
+        .request-card:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .request-card.expanded {
+            border-color: #007bff;
+        }
+        
+        .request-summary {
+            padding: 15px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .request-summary:hover {
+            background: #f8f9fa;
+        }
+        
+        .request-basic-info {
+            flex: 1;
+        }
+        .request-id {
+            font-weight: bold;
+            color: #007bff;
+            font-size: 1.1em;
+        }
+        .request-meta {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+        
+        .expand-icon {
+            font-size: 1.2em;
+            color: #666;
+            transition: transform 0.3s ease;
+        }
+        .expand-icon.expanded {
+            transform: rotate(180deg);
+        }
+        
+        .request-details {
+            display: none;
+            border-top: 1px solid #eee;
+            padding: 20px;
+            background: #f9f9f9;
+        }
+        .request-card.expanded .request-details {
+            display: block;
+        }
+        
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .detail-section {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #007bff;
+        }
+        .detail-section h4 {
+            margin: 0 0 10px 0;
+            color: #333;
+            font-size: 1.1em;
+        }
+        
+        .status-badge { 
+            padding: 4px 8px; 
+            border-radius: 12px; 
+            font-size: 0.8em; 
+            font-weight: 500;
+        }
+        .status-processing { background: #cce5ff; color: #004085; }
+        .status-completed { background: #d4edda; color: #155724; }
+        .status-failed { background: #f8d7da; color: #721c24; }
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-queued { background: #e2e3e5; color: #383d41; }
+        
+        .param-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .param-list li {
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .param-list li:last-child {
+            border-bottom: none;
+        }
+        .param-key {
+            font-weight: 500;
+            color: #555;
+            display: inline-block;
+            min-width: 100px;
+        }
+        .param-value {
+            color: #333;
+        }
+        
+        .subset-note {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.9em;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .spatial-bounds {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .bound-item {
+            background: #e9ecef;
+            padding: 8px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .bound-label {
+            font-size: 0.8em;
+            color: #666;
+            display: block;
+        }
+        .bound-value {
+            font-weight: bold;
+            color: #333;
+        }
+        
+        /* Loading states */
+        .loading { opacity: 0.6; pointer-events: none; }
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+        
+        /* Alerts */
+        .alert {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .alert-danger {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .alert-info {
+            background: #cce5ff;
+            color: #004085;
+            border: 1px solid #b3d7ff;
+        }
+        
+        /* Enhanced Interactive Controls */
+        .filter-controls {
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .form-control {
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 0.9em;
+            background: white;
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        }
+        .form-control:focus {
+            border-color: #007bff;
+            outline: 0;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+        
+        /* Pagination Controls */
+        .pagination-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .pagination-info {
+            color: #666;
+            font-size: 0.9em;
+        }
+        .pagination-nav {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+        .pagination-btn {
+            padding: 6px 12px;
+            border: 1px solid #dee2e6;
+            background: white;
+            color: #007bff;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .pagination-btn:hover:not(.disabled) {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+        .pagination-btn.active {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+        .pagination-btn.disabled {
+            color: #6c757d;
+            background: #e9ecef;
+            border-color: #dee2e6;
+            cursor: not-allowed;
+        }
+        
+        /* Enhanced Historical Summary */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px;
+        }
+        .summary-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .summary-card h4 {
+            margin: 0 0 10px 0;
+            color: #333;
+            font-size: 1.1em;
+        }
+        .summary-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 5px;
+        }
+        .summary-label {
+            color: #666;
+            font-size: 0.9em;
+        }
+        .trend-indicator {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 500;
+            margin-left: 8px;
+        }
+        .trend-increasing { background: #d4edda; color: #155724; }
+        .trend-decreasing { background: #f8d7da; color: #721c24; }
+        .trend-stable { background: #e2e3e5; color: #383d41; }
+        
+        /* Enhanced Region Cards */
+        .enhanced-region-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin: 15px;
+            background: white;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+        .enhanced-region-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+        }
+        
+        /* Completed Region Cards - Expandable */
+        .completed-region-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin: 15px;
+            background: white;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+        .completed-region-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .completed-region-card.expanded {
+            border-color: #007bff;
+            box-shadow: 0 4px 12px rgba(0,123,255,0.2);
+        }
+        
+        .completed-region-summary {
+            padding: 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .completed-region-summary:hover {
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+        }
+        
+        .completed-region-basic-info {
+            flex: 1;
+        }
+        .completed-region-name {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .completed-region-meta {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        
+        .completed-region-expand-icon {
+            font-size: 1.2em;
+            color: white;
+            transition: transform 0.3s ease;
+        }
+        .completed-region-expand-icon.expanded {
+            transform: rotate(180deg);
+        }
+        
+        .completed-region-details {
+            display: none;
+            border-top: 1px solid #eee;
+            background: #f9f9f9;
+        }
+        .completed-region-card.expanded .completed-region-details {
+            display: block;
+        }
+        
+        /* Nested Request Cards */
+        .nested-request-card {
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            margin: 10px 15px;
+            background: white;
+            transition: all 0.3s ease;
+        }
+        .nested-request-card:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .nested-request-card.expanded {
+            border-color: #28a745;
+        }
+        
+        .nested-request-summary {
+            padding: 12px 15px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .nested-request-summary:hover {
+            background: #f8f9fa;
+        }
+        
+        .nested-request-basic-info {
+            flex: 1;
+        }
+        .nested-request-id {
+            font-weight: bold;
+            color: #28a745;
+            font-size: 0.95em;
+        }
+        .nested-request-meta {
+            color: #666;
+            font-size: 0.85em;
+            margin-top: 3px;
+        }
+        
+        .nested-expand-icon {
+            font-size: 1em;
+            color: #666;
+            transition: transform 0.3s ease;
+        }
+        .nested-expand-icon.expanded {
+            transform: rotate(180deg);
+        }
+        
+        .nested-request-details {
+            display: none;
+            border-top: 1px solid #eee;
+            padding: 15px;
+            background: #fdfdfd;
+        }
+        .nested-request-card.expanded .nested-request-details {
+            display: block;
+        }
+        
+        .requests-list-header {
+            padding: 15px 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            font-weight: 500;
+            color: #495057;
+        }
+        .region-card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .region-name {
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        .region-stats {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        .region-card-body {
+            padding: 20px;
+        }
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .stat-item {
+            text-align: center;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+        }
+        .stat-value {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #007bff;
+            display: block;
+        }
+        .stat-label {
+            font-size: 0.8em;
+            color: #666;
+            margin-top: 2px;
+        }
+        .performance-bar {
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .performance-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #20c997);
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🌦️ Enhanced RDA Automation Dashboard</h1>
+        <p>Complete get_status information with expandable request details</p>
+        <div class="sync-status-bar">
+            <div class="sync-indicator">
+                <div class="sync-dot fresh" id="syncDot"></div>
+                <span id="syncStatus">Data Fresh</span>
+            </div>
+            <div>
+                <button class="refresh-btn" onclick="refreshData()">🔄 Refresh Data</button>
+            </div>
+            <div>
+                <span>Last updated: <span id="lastUpdate">Loading...</span></span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Navigation Tabs -->
+    <div class="nav-tabs">
+        <button class="nav-tab active" onclick="showTab('overview', this)">📊 Overview</button>
+        <button class="nav-tab" onclick="showTab('current-requests', this)">📋 Current Requests</button>
+        <button class="nav-tab" onclick="showTab('completed-regions', this)">✅ Completed Regions</button>
+        <button class="nav-tab" onclick="showTab('unknown-regions', this)">❓ Unknown Regions</button>
+    </div>
+    
+    <!-- Overview Tab -->
+    <div id="overview" class="tab-content active">
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-value" id="totalRequests">-</div>
+                <div class="metric-label">Total Requests</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value" id="completedRequests">-</div>
+                <div class="metric-label">Completed</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value" id="processingRequests">-</div>
+                <div class="metric-label">Processing</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value" id="purgedRequests">-</div>
+                <div class="metric-label">Purged Requests</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value" id="unknownRegions">-</div>
+                <div class="metric-label">Unknown Regions</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value" id="uniqueRegions">-</div>
+                <div class="metric-label">Active Regions</div>
+            </div>
+        </div>
+        
+        <!-- Error Summary Section -->
+        <div class="table-container" style="margin-top: 30px;">
+            <div class="table-header">
+                <h3>⚠️ Error Summary</h3>
+                <div>
+                    <button class="btn btn-secondary" onclick="refreshErrorSummary()">🔄 Refresh</button>
+                </div>
+            </div>
+            <div id="errorSummaryContent">
+                <div style="text-align: center; padding: 40px;">Loading error summary...</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Current Requests Tab -->
+    <div id="current-requests" class="tab-content">
+        <div class="table-container">
+            <div class="table-header">
+                <h3>📋 Current Requests - Complete Status Information</h3>
+                <div>
+                    <button class="btn btn-secondary" onclick="refreshCurrentRequests()">🔄 Refresh</button>
+                </div>
+            </div>
+            <div id="currentRequestsContent">
+                <div style="text-align: center; padding: 40px;">Loading current requests...</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Completed Regions Tab -->
+    <div id="completed-regions" class="tab-content">
+        <!-- Historical Summary Section -->
+        <div class="table-container" style="margin-bottom: 20px;">
+            <div class="table-header">
+                <h3>📊 Historical Summary</h3>
+                <div>
+                    <button class="btn btn-secondary" onclick="refreshHistoricalSummary()">🔄 Refresh Summary</button>
+                </div>
+            </div>
+            <div id="historicalSummaryContent">
+                <div style="text-align: center; padding: 40px;">Loading historical summary...</div>
+            </div>
+        </div>
+
+        <!-- Enhanced Completed Regions Section -->
+        <div class="table-container">
+            <div class="table-header">
+                <h3>✅ Completed Regions - Enhanced Historical Data</h3>
+                <div>
+                    <span id="completedStats">Loading statistics...</span>
+                    <button class="btn btn-secondary" onclick="refreshCompletedRegions()">🔄 Refresh</button>
+                </div>
+            </div>
+            
+            <!-- Interactive Controls -->
+            <div class="filter-controls" style="padding: 20px; background: #f8f9fa; border-bottom: 1px solid #dee2e6;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px;">
+                    <!-- Date Range Filter -->
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-weight: 500;">📅 Date Range:</label>
+                        <div style="display: flex; gap: 5px;">
+                            <input type="date" id="dateFromFilter" class="form-control" style="flex: 1;">
+                            <input type="date" id="dateToFilter" class="form-control" style="flex: 1;">
+                        </div>
+                    </div>
+                    
+                    <!-- Region Filter -->
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-weight: 500;">🗺️ Region:</label>
+                        <select id="regionFilter" class="form-control">
+                            <option value="">All Regions</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Variable Filter -->
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-weight: 500;">🌡️ Variable:</label>
+                        <select id="variableFilter" class="form-control">
+                            <option value="">All Variables</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Sort Controls -->
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-weight: 500;">📊 Sort By:</label>
+                        <div style="display: flex; gap: 5px;">
+                            <select id="sortByFilter" class="form-control" style="flex: 2;">
+                                <option value="completion_time">Completion Time</option>
+                                <option value="region">Region</option>
+                                <option value="variable">Variable</option>
+                                <option value="processing_time">Processing Time</option>
+                                <option value="file_count">File Count</option>
+                            </select>
+                            <select id="sortOrderFilter" class="form-control" style="flex: 1;">
+                                <option value="desc">Desc</option>
+                                <option value="asc">Asc</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Filter Actions -->
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <button class="btn btn-primary" onclick="applyCompletedRegionsFilters()">🔍 Apply Filters</button>
+                        <button class="btn btn-secondary" onclick="clearCompletedRegionsFilters()">🗑️ Clear</button>
+                    </div>
+                    <div>
+                        <label style="margin-right: 10px;">Items per page:</label>
+                        <select id="perPageFilter" class="form-control" style="width: auto; display: inline-block;">
+                            <option value="25">25</option>
+                            <option value="50" selected>50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Pagination Controls (Top) -->
+            <div id="paginationTop" class="pagination-controls" style="padding: 15px 20px; background: #fff; border-bottom: 1px solid #dee2e6;">
+                <!-- Pagination will be inserted here -->
+            </div>
+            
+            <div id="completedRegionsContent">
+                <div style="text-align: center; padding: 40px;">Loading completed regions...</div>
+            </div>
+            
+            <!-- Pagination Controls (Bottom) -->
+            <div id="paginationBottom" class="pagination-controls" style="padding: 15px 20px; background: #f8f9fa; border-top: 1px solid #dee2e6;">
+                <!-- Pagination will be inserted here -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Unknown Regions Tab -->
+    <div id="unknown-regions" class="tab-content">
+        <div class="table-container">
+            <div class="table-header">
+                <h3>❓ Unknown Regions - Complete Status Information</h3>
+                <div>
+                    <button class="btn btn-secondary" onclick="refreshUnknownRegions()">🔄 Refresh</button>
+                </div>
+            </div>
+            <div id="unknownRegionsContent">
+                <div style="text-align: center; padding: 40px;">Loading unknown regions...</div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let currentTab = 'overview';
+        let completedRegionsState = {
+            currentPage: 1,
+            perPage: 50,
+            filters: {
+                region: '',
+                variable: '',
+                dateFrom: '',
+                dateTo: '',
+                sortBy: 'completion_time',
+                sortOrder: 'desc'
+            },
+            availableFilters: {
+                regions: [],
+                variables: []
+            }
+        };
+        
+        function showTab(tabName, clickedElement) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remove active class from all nav tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to clicked nav tab
+            if (clickedElement) {
+                clickedElement.classList.add('active');
+            }
+            
+            currentTab = tabName;
+            
+            // Load data for the selected tab
+            if (tabName === 'current-requests') {
+                refreshCurrentRequests();
+            } else if (tabName === 'completed-regions') {
+                initializeCompletedRegionsTab();
+            } else if (tabName === 'unknown-regions') {
+                refreshUnknownRegions();
+            }
+        }
+        
+        async function initializeCompletedRegionsTab() {
+            // Load filter options and initial data
+            await loadFilterOptions();
+            await refreshHistoricalSummary();
+            await refreshCompletedRegions();
+        }
+        
+        async function loadFilterOptions() {
+            try {
+                const response = await fetch('/api/filters');
+                const data = await response.json();
+                
+                if (data.error) {
+                    console.error('Error loading filter options:', data.error);
+                    return;
+                }
+                
+                // Update available filters
+                completedRegionsState.availableFilters.regions = data.regions || [];
+                completedRegionsState.availableFilters.variables = data.variables || [];
+                
+                // Populate region filter dropdown
+                const regionSelect = document.getElementById('regionFilter');
+                if (regionSelect) {
+                    regionSelect.innerHTML = '<option value="">All Regions</option>';
+                    data.regions.forEach(region => {
+                        const option = document.createElement('option');
+                        option.value = region;
+                        option.textContent = region.replace('_', ' ').toUpperCase();
+                        regionSelect.appendChild(option);
+                    });
+                }
+                
+                // Populate variable filter dropdown
+                const variableSelect = document.getElementById('variableFilter');
+                if (variableSelect) {
+                    variableSelect.innerHTML = '<option value="">All Variables</option>';
+                    data.variables.forEach(variable => {
+                        const option = document.createElement('option');
+                        option.value = variable;
+                        option.textContent = getParameterDisplayName(variable);
+                        variableSelect.appendChild(option);
+                    });
+                }
+                
+            } catch (error) {
+                console.error('Error loading filter options:', error);
+            }
+        }
+        
+        async function refreshHistoricalSummary() {
+            try {
+                const response = await fetch('/api/completed-regions/summary');
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                updateHistoricalSummaryDisplay(data);
+                
+            } catch (error) {
+                console.error('Error refreshing historical summary:', error);
+                document.getElementById('historicalSummaryContent').innerHTML =
+                    `<div class="alert alert-danger">Error loading historical summary: ${error.message}</div>`;
+            }
+        }
+        
+        function updateHistoricalSummaryDisplay(data) {
+            const container = document.getElementById('historicalSummaryContent');
+            const stats = data.overall_statistics || {};
+            const trends = data.completion_trends || {};
+            const performance = data.performance_insights || {};
+            
+            const html = `
+                <div class="summary-grid">
+                    <div class="summary-card">
+                        <h4>📊 Overall Statistics</h4>
+                        <div class="summary-value">${stats.total_completed_requests || 0}</div>
+                        <div class="summary-label">Total Completed Requests</div>
+                        <div style="margin-top: 10px; font-size: 0.9em; color: #666;">
+                            <div>${stats.total_regions_completed || 0} regions • ${stats.total_variables_completed || 0} variables</div>
+                            <div>Success Rate: ${stats.success_rate || 0}%</div>
+                        </div>
+                    </div>
+                    
+                    <div class="summary-card">
+                        <h4>⏱️ Performance Summary</h4>
+                        <div class="summary-value">${stats.performance_summary?.avg_processing_display || 'N/A'}</div>
+                        <div class="summary-label">Average Processing Time</div>
+                        <div style="margin-top: 10px; font-size: 0.9em; color: #666;">
+                            <div>Total Data: ${(stats.performance_summary?.total_file_size_gb || 0).toFixed(2)} GB</div>
+                            <div>Timeline: ${stats.timeline?.timeline_span_days || 0} days</div>
+                        </div>
+                    </div>
+                    
+                    <div class="summary-card">
+                        <h4>📈 Recent Activity</h4>
+                        <div class="summary-value">${trends.trend_analysis?.avg_daily_completions?.toFixed(1) || 0}</div>
+                        <div class="summary-label">Avg Daily Completions (30d)</div>
+                        <div style="margin-top: 10px; font-size: 0.9em; color: #666;">
+                            <div>Trend: <span class="trend-indicator trend-${trends.trend_analysis?.trend_direction || 'stable'}">${trends.trend_analysis?.trend_direction || 'stable'}</span></div>
+                            <div>Peak Day: ${trends.trend_analysis?.peak_day?.count || 0} completions</div>
+                        </div>
+                    </div>
+                    
+                    <div class="summary-card">
+                        <h4>🏆 Top Performers</h4>
+                        <div style="font-size: 0.9em; color: #333;">
+                            <div><strong>Most Active:</strong> ${performance.most_active_region?.region_name || 'N/A'}</div>
+                            <div><strong>Fastest:</strong> ${performance.fastest_region?.region_name || 'N/A'}</div>
+                            <div><strong>Largest Files:</strong> ${performance.largest_files_region?.region_name || 'N/A'}</div>
+                        </div>
+                        <div style="margin-top: 10px; font-size: 0.8em; color: #666;">
+                            Most Frequent: ${data.most_frequent_combinations?.[0]?.region || 'N/A'} - ${getParameterDisplayName(data.most_frequent_combinations?.[0]?.variable_type || 'unknown')}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+        
+        function applyCompletedRegionsFilters() {
+            // Update state from form inputs
+            completedRegionsState.filters.region = document.getElementById('regionFilter')?.value || '';
+            completedRegionsState.filters.variable = document.getElementById('variableFilter')?.value || '';
+            completedRegionsState.filters.dateFrom = document.getElementById('dateFromFilter')?.value || '';
+            completedRegionsState.filters.dateTo = document.getElementById('dateToFilter')?.value || '';
+            completedRegionsState.filters.sortBy = document.getElementById('sortByFilter')?.value || 'completion_time';
+            completedRegionsState.filters.sortOrder = document.getElementById('sortOrderFilter')?.value || 'desc';
+            completedRegionsState.perPage = parseInt(document.getElementById('perPageFilter')?.value || '50');
+            
+            // Reset to first page when applying new filters
+            completedRegionsState.currentPage = 1;
+            
+            // Refresh data with new filters
+            refreshCompletedRegions();
+        }
+        
+        function clearCompletedRegionsFilters() {
+            // Reset form inputs
+            const regionFilter = document.getElementById('regionFilter');
+            const variableFilter = document.getElementById('variableFilter');
+            const dateFromFilter = document.getElementById('dateFromFilter');
+            const dateToFilter = document.getElementById('dateToFilter');
+            const sortByFilter = document.getElementById('sortByFilter');
+            const sortOrderFilter = document.getElementById('sortOrderFilter');
+            const perPageFilter = document.getElementById('perPageFilter');
+            
+            if (regionFilter) regionFilter.value = '';
+            if (variableFilter) variableFilter.value = '';
+            if (dateFromFilter) dateFromFilter.value = '';
+            if (dateToFilter) dateToFilter.value = '';
+            if (sortByFilter) sortByFilter.value = 'completion_time';
+            if (sortOrderFilter) sortOrderFilter.value = 'desc';
+            if (perPageFilter) perPageFilter.value = '50';
+            
+            // Reset state
+            completedRegionsState.filters = {
+                region: '',
+                variable: '',
+                dateFrom: '',
+                dateTo: '',
+                sortBy: 'completion_time',
+                sortOrder: 'desc'
+            };
+            completedRegionsState.perPage = 50;
+            completedRegionsState.currentPage = 1;
+            
+            // Refresh data
+            refreshCompletedRegions();
+        }
+        
+        function goToPage(page) {
+            completedRegionsState.currentPage = page;
+            refreshCompletedRegions();
+        }
+        
+        function createPaginationControls(paginationData) {
+            const { page, per_page, total_count, total_pages, has_next, has_prev, showing_count } = paginationData;
+            
+            let paginationHtml = `
+                <div class="pagination-info">
+                    Showing ${((page - 1) * per_page) + 1}-${((page - 1) * per_page) + showing_count} of ${total_count} results
+                </div>
+                <div class="pagination-nav">
+            `;
+            
+            // Previous button
+            paginationHtml += `
+                <button class="pagination-btn ${!has_prev ? 'disabled' : ''}"
+                        onclick="${has_prev ? `goToPage(${page - 1})` : ''}"
+                        ${!has_prev ? 'disabled' : ''}>
+                    ← Previous
+                </button>
+            `;
+            
+            // Page numbers (show up to 7 pages around current page)
+            const startPage = Math.max(1, page - 3);
+            const endPage = Math.min(total_pages, page + 3);
+            
+            if (startPage > 1) {
+                paginationHtml += `<button class="pagination-btn" onclick="goToPage(1)">1</button>`;
+                if (startPage > 2) {
+                    paginationHtml += `<span style="padding: 0 8px;">...</span>`;
+                }
+            }
+            
+            for (let i = startPage; i <= endPage; i++) {
+                paginationHtml += `
+                    <button class="pagination-btn ${i === page ? 'active' : ''}"
+                            onclick="goToPage(${i})">
+                        ${i}
+                    </button>
+                `;
+            }
+            
+            if (endPage < total_pages) {
+                if (endPage < total_pages - 1) {
+                    paginationHtml += `<span style="padding: 0 8px;">...</span>`;
+                }
+                paginationHtml += `<button class="pagination-btn" onclick="goToPage(${total_pages})">${total_pages}</button>`;
+            }
+            
+            // Next button
+            paginationHtml += `
+                <button class="pagination-btn ${!has_next ? 'disabled' : ''}"
+                        onclick="${has_next ? `goToPage(${page + 1})` : ''}"
+                        ${!has_next ? 'disabled' : ''}>
+                    Next →
+                </button>
+            `;
+            
+            paginationHtml += '</div>';
+            
+            return paginationHtml;
+        }
+        
+        function createEnhancedRegionCard(region) {
+            const regionName = region.region_name || region.region?.replace('_', ' ').toUpperCase() || 'Unknown Region';
+            const regionCode = region.region || 'UNKNOWN';
+            
+            // Calculate performance percentage
+            const performancePercentage = Math.min(100, (region.success_rate || 0));
+            
+            return `
+                <div class="enhanced-region-card">
+                    <div class="region-card-header">
+                        <div class="region-name">${regionName}</div>
+                        <div class="region-stats">
+                            ${region.total_requests || 0} requests • ${region.downloaded_files || 0} files
+                        </div>
+                    </div>
+                    <div class="region-card-body">
+                        <div class="stats-row">
+                            <div class="stat-item">
+                                <span class="stat-value">${region.total_requests || 0}</span>
+                                <div class="stat-label">Total Requests</div>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-value">${region.downloaded_files || 0}</span>
+                                <div class="stat-label">Downloaded Files</div>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-value">${(region.success_rate || 0).toFixed(1)}%</span>
+                                <div class="stat-label">Success Rate</div>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-value">${region.processing_time_stats?.average_hours?.toFixed(1) || 0}h</span>
+                                <div class="stat-label">Avg Processing</div>
+                            </div>
+                        </div>
+                        
+                        <div class="performance-bar">
+                            <div class="performance-fill" style="width: ${performancePercentage}%"></div>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; font-size: 0.9em;">
+                            <div>
+                                <strong>Most Common Variable:</strong><br>
+                                ${getParameterDisplayName(region.most_common_variable || 'unknown')}
+                            </div>
+                            <div>
+                                <strong>File Size:</strong><br>
+                                ${(region.file_stats?.total_size_mb || 0).toFixed(1)} MB
+                            </div>
+                            <div>
+                                <strong>First Completion:</strong><br>
+                                ${formatTime(region.timeline?.first_completion) || 'N/A'}
+                            </div>
+                            <div>
+                                <strong>Last Completion:</strong><br>
+                                ${formatTime(region.timeline?.last_completion) || 'N/A'}
+                            </div>
+                        </div>
+                        
+                        ${region.timeline?.completion_trend ? `
+                        <div style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 6px; font-size: 0.9em;">
+                            <strong>Completion Trend:</strong>
+                            <span class="trend-indicator trend-${region.timeline.completion_trend.trend_direction || 'stable'}">
+                                ${region.timeline.completion_trend.trend_direction || 'stable'}
+                            </span>
+                            <br>
+                            <small>${region.timeline.completion_trend.requests_per_day?.toFixed(1) || 0} requests/day average</small>
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }
+        
+        function toggleCompletedRegionDetails(regionId) {
+            console.log('toggleCompletedRegionDetails called for:', regionId);
+            
+            // Sanitize the region ID for DOM selection
+            const sanitizedId = sanitizeId(regionId);
+            console.log('Sanitized region ID:', sanitizedId);
+            
+            const card = document.getElementById(`completed-card-${sanitizedId}`);
+            const details = document.getElementById(`completed-details-${sanitizedId}`);
+            const icon = document.getElementById(`completed-icon-${sanitizedId}`);
+            
+            // Error handling for missing DOM elements
+            if (!card || !details) {
+                console.error('Required elements not found for completed region:', {
+                    regionId: regionId,
+                    sanitizedId: sanitizedId,
+                    cardFound: !!card,
+                    detailsFound: !!details
+                });
+                return;
+            }
+            
+            // Simple toggle logic using CSS classes
+            const isExpanded = card.classList.contains('expanded');
+            
+            if (isExpanded) {
+                // Collapse
+                card.classList.remove('expanded');
+                if (icon) icon.classList.remove('expanded');
+                console.log('Collapsed completed region details for:', regionId);
+            } else {
+                // Expand
+                card.classList.add('expanded');
+                if (icon) icon.classList.add('expanded');
+                console.log('Expanded completed region details for:', regionId);
+            }
+        }
+        
+        function toggleNestedRequestDetails(requestId, regionId) {
+            console.log('toggleNestedRequestDetails called for:', requestId, 'in region:', regionId);
+            
+            // Sanitize the request ID for DOM selection
+            const sanitizedRequestId = sanitizeId(requestId);
+            const sanitizedRegionId = sanitizeId(regionId);
+            console.log('Sanitized nested request ID:', sanitizedRequestId);
+            
+            const card = document.getElementById(`nested-card-${sanitizedRegionId}-${sanitizedRequestId}`);
+            const details = document.getElementById(`nested-details-${sanitizedRegionId}-${sanitizedRequestId}`);
+            const icon = document.getElementById(`nested-icon-${sanitizedRegionId}-${sanitizedRequestId}`);
+            
+            // Error handling for missing DOM elements
+            if (!card || !details) {
+                console.error('Required elements not found for nested request:', {
+                    requestId: requestId,
+                    regionId: regionId,
+                    sanitizedRequestId: sanitizedRequestId,
+                    sanitizedRegionId: sanitizedRegionId,
+                    cardFound: !!card,
+                    detailsFound: !!details
+                });
+                return;
+            }
+            
+            // Simple toggle logic using CSS classes
+            const isExpanded = card.classList.contains('expanded');
+            
+            if (isExpanded) {
+                // Collapse
+                card.classList.remove('expanded');
+                if (icon) icon.classList.remove('expanded');
+                console.log('Collapsed nested request details for:', requestId);
+            } else {
+                // Expand
+                card.classList.add('expanded');
+                if (icon) icon.classList.add('expanded');
+                console.log('Expanded nested request details for:', requestId);
+            }
+        }
+        
+        function formatTime(timeStr) {
+            if (!timeStr) return 'N/A';
+            return new Date(timeStr).toLocaleString();
+        }
+        
+        function createNestedRequestCard(req, regionId) {
+            // Sanitize IDs for consistent DOM element IDs
+            const sanitizedRequestId = sanitizeId(req.request_id);
+            const sanitizedRegionId = sanitizeId(regionId);
+            const cardId = `nested-card-${sanitizedRegionId}-${sanitizedRequestId}`;
+            const detailsId = `nested-details-${sanitizedRegionId}-${sanitizedRequestId}`;
+            const iconId = `nested-icon-${sanitizedRegionId}-${sanitizedRequestId}`;
+            
+            console.log('Creating nested request card with IDs:', {
+                originalRequestId: req.request_id,
+                regionId: regionId,
+                sanitizedRequestId: sanitizedRequestId,
+                sanitizedRegionId: sanitizedRegionId,
+                cardId: cardId
+            });
+            
+            // Format spatial bounds if available
+            let spatialBoundsHtml = '';
+            if (req.formatted_subset_info && req.formatted_subset_info.spatial_bounds) {
+                const bounds = req.formatted_subset_info.spatial_bounds;
+                spatialBoundsHtml = `
+                    <div class="spatial-bounds">
+                        <div class="bound-item">
+                            <span class="bound-label">North Lat</span>
+                            <span class="bound-value">${bounds.north_lat}°</span>
+                        </div>
+                        <div class="bound-item">
+                            <span class="bound-label">South Lat</span>
+                            <span class="bound-value">${bounds.south_lat}°</span>
+                        </div>
+                        <div class="bound-item">
+                            <span class="bound-label">West Lon</span>
+                            <span class="bound-value">${bounds.west_lon}°</span>
+                        </div>
+                        <div class="bound-item">
+                            <span class="bound-label">East Lon</span>
+                            <span class="bound-value">${bounds.east_lon}°</span>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Format rinfo parameters
+            let rinfoParamsHtml = '';
+            if (req.rinfo_params && Object.keys(req.rinfo_params).length > 0) {
+                rinfoParamsHtml = '<ul class="param-list">';
+                for (const [key, value] of Object.entries(req.rinfo_params)) {
+                    rinfoParamsHtml += `
+                        <li>
+                            <span class="param-key">${key}:</span>
+                            <span class="param-value">${value}</span>
+                        </li>
+                    `;
+                }
+                rinfoParamsHtml += '</ul>';
+            }
+            
+            // Format date range if available
+            let dateRangeHtml = '';
+            if (req.formatted_subset_info && req.formatted_subset_info.date_range) {
+                const dateRange = req.formatted_subset_info.date_range;
+                dateRangeHtml = `
+                    <p><strong>Start:</strong> ${dateRange.formatted_start || dateRange.start}</p>
+                    <p><strong>End:</strong> ${dateRange.formatted_end || dateRange.end}</p>
+                `;
+            }
+            
+            // Format parameters list
+            let parametersHtml = '';
+            if (req.formatted_subset_info && req.formatted_subset_info.parameters) {
+                parametersHtml = '<ul>';
+                req.formatted_subset_info.parameters.forEach(param => {
+                    parametersHtml += `<li>${param}</li>`;
+                });
+                parametersHtml += '</ul>';
+            }
+            
+            return `
+                <div class="nested-request-card" id="${cardId}">
+                    <div class="nested-request-summary" onclick="toggleNestedRequestDetails('${req.request_id}', '${regionId}')" style="cursor: pointer;">
+                        <div class="nested-request-basic-info">
+                            <div class="nested-request-id">${req.request_id.replace(/^id_/, '')}</div>
+                            <div class="nested-request-meta">
+                                ${getStatusBadge(req.status)} |
+                                ${getParameterDisplayName(req.variable_type || 'unknown')} |
+                                Index: ${req.request_index} |
+                                ${formatProcessingTime(req.processing_time_hours)}
+                            </div>
+                        </div>
+                        <div class="nested-expand-icon" id="${iconId}">▼</div>
+                    </div>
+                    <div class="nested-request-details" id="${detailsId}">
+                        <div class="details-grid">
+                            <div class="detail-section">
+                                <h4>📋 Request Information</h4>
+                                <ul class="param-list">
+                                    <li><span class="param-key">Request ID:</span> <span class="param-value">${req.request_id.replace(/^id_/, '')}</span></li>
+                                    <li><span class="param-key">Request Index:</span> <span class="param-value">${req.request_index}</span></li>
+                                    <li><span class="param-key">Dataset ID:</span> <span class="param-value">${req.dsid || 'N/A'}</span></li>
+                                    <li><span class="param-key">Status:</span> <span class="param-value">${getStatusBadge(req.status)}</span></li>
+                                    <li><span class="param-key">Variable:</span> <span class="param-value">${getParameterDisplayName(req.variable_type || 'unknown')}</span></li>
+                                </ul>
+                            </div>
+                            
+                            <div class="detail-section">
+                                <h4>📅 Timeline</h4>
+                                <ul class="param-list">
+                                    <li><span class="param-key">Requested:</span> <span class="param-value">${formatTime(req.date_rqst)}</span></li>
+                                    <li><span class="param-key">Ready:</span> <span class="param-value">${formatTime(req.date_ready)}</span></li>
+                                    <li><span class="param-key">Purge:</span> <span class="param-value">${formatTime(req.date_purge)}</span></li>
+                                    <li><span class="param-key">Processing Time:</span> <span class="param-value">${formatProcessingTime(req.processing_time_hours)}</span></li>
+                                </ul>
+                            </div>
+                            
+                            <div class="detail-section">
+                                <h4>👤 Contact & Location</h4>
+                                <ul class="param-list">
+                                    <li><span class="param-key">NCAR Contact:</span> <span class="param-value">${req.NCAR_contact || req.ncar_contact || 'N/A'}</span></li>
+                                    <li><span class="param-key">Location:</span> <span class="param-value">${req.location || 'N/A'}</span></li>
+                                </ul>
+                            </div>
+                            
+                            <div class="detail-section">
+                                <h4>⚙️ Request Parameters</h4>
+                                ${rinfoParamsHtml || '<p>No parameters available</p>'}
+                            </div>
+                            
+                            ${dateRangeHtml ? `
+                            <div class="detail-section">
+                                <h4>📅 Data Range</h4>
+                                ${dateRangeHtml}
+                            </div>
+                            ` : ''}
+                            
+                            ${parametersHtml ? `
+                            <div class="detail-section">
+                                <h4>🌡️ Parameters</h4>
+                                ${parametersHtml}
+                            </div>
+                            ` : ''}
+                            
+                            ${spatialBoundsHtml ? `
+                            <div class="detail-section">
+                                <h4>🗺️ Spatial Bounds</h4>
+                                ${spatialBoundsHtml}
+                            </div>
+                            ` : ''}
+                            
+                            <div class="detail-section" style="grid-column: 1 / -1;">
+                                <h4>📝 Subset Information</h4>
+                                <div class="subset-note">${req.formatted_subset_info?.raw_note || req.subset_note || 'No subset information available'}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function formatProcessingTime(hours) {
+            if (!hours) return 'N/A';
+            if (hours < 1) return Math.round(hours * 60) + ' min';
+            return hours.toFixed(1) + ' hrs';
+        }
+        
+        function getStatusBadge(status) {
+            // Handle undefined, null, or empty status values
+            if (!status || typeof status !== 'string') {
+                status = 'unknown';
+            }
+            const statusClass = status.toLowerCase().replace(/[^a-z]/g, '');
+            return `<span class="status-badge status-${statusClass}">${status}</span>`;
+        }
+        
+        function getParameterDisplayName(param) {
+            // Handle undefined, null, or empty parameter values
+            if (!param || typeof param !== 'string') {
+                return 'Unknown Variable';
+            }
+            
+            // Clean the parameter string
+            const cleanParam = param.toLowerCase().trim();
+            
+            const names = {
+                'dswrf': 'Solar Radiation',
+                'ugrd_vgrd': 'Wind Speed',
+                'ugrd': 'Wind Speed (U-component)',
+                'vgrd': 'Wind Speed (V-component)',
+                'tmp_dpt': 'Temperature',
+                'tmp': 'Temperature',
+                'dpt': 'Dew Point Temperature',
+                'apcp': 'Precipitation',
+                'rain': 'Precipitation',
+                'wind': 'Wind Speed',
+                'temp': 'Temperature',
+                'solar': 'Solar Radiation',
+                'radiation': 'Solar Radiation',
+                'unknown': 'Unknown Variable'
+            };
+            
+            // Return mapped name or formatted original parameter
+            return names[cleanParam] || param.replace(/_/g, ' ').toUpperCase();
+        }
+        
+        function sanitizeId(id) {
+            // Simplified ID sanitization
+            if (!id || typeof id !== 'string') {
+                return 'req_unknown_' + Date.now();
+            }
+            
+            // Clean approach: replace non-alphanumeric with underscores and add prefix
+            return 'req_' + id.replace(/[^a-zA-Z0-9]/g, '_');
+        }
+        
+        function toggleRequestDetails(requestId) {
+            console.log('toggleRequestDetails called for:', requestId);
+            
+            // Sanitize the request ID for DOM selection
+            const sanitizedId = sanitizeId(requestId);
+            console.log('Sanitized ID:', sanitizedId);
+            
+            const card = document.getElementById(`card-${sanitizedId}`);
+            const details = document.getElementById(`details-${sanitizedId}`);
+            const icon = document.getElementById(`icon-${sanitizedId}`);
+            
+            // Error handling for missing DOM elements
+            if (!card || !details) {
+                console.error('Required elements not found:', {
+                    requestId: requestId,
+                    sanitizedId: sanitizedId,
+                    cardFound: !!card,
+                    detailsFound: !!details
+                });
+                return;
+            }
+            
+            // Simple toggle logic using CSS classes
+            const isExpanded = card.classList.contains('expanded');
+            
+            if (isExpanded) {
+                // Collapse
+                card.classList.remove('expanded');
+                if (icon) icon.classList.remove('expanded');
+                console.log('Collapsed details for:', requestId);
+            } else {
+                // Expand
+                card.classList.add('expanded');
+                if (icon) icon.classList.add('expanded');
+                console.log('Expanded details for:', requestId);
+            }
+        }
+        
+        function createRequestCard(req) {
+            // Sanitize the request ID for consistent DOM element IDs
+            const sanitizedRequestId = sanitizeId(req.request_id);
+            const cardId = `card-${sanitizedRequestId}`;
+            const detailsId = `details-${sanitizedRequestId}`;
+            const iconId = `icon-${sanitizedRequestId}`;
+            
+            console.log('Creating request card with IDs:', {
+                originalId: req.request_id,
+                sanitizedId: sanitizedRequestId,
+                cardId: cardId,
+                detailsId: detailsId,
+                iconId: iconId
+            });
+            
+            // Format spatial bounds if available
+            let spatialBoundsHtml = '';
+            if (req.formatted_subset_info && req.formatted_subset_info.spatial_bounds) {
+                const bounds = req.formatted_subset_info.spatial_bounds;
+                spatialBoundsHtml = `
+                    <div class="spatial-bounds">
+                        <div class="bound-item">
+                            <span class="bound-label">North Lat</span>
+                            <span class="bound-value">${bounds.north_lat}°</span>
+                        </div>
+                        <div class="bound-item">
+                            <span class="bound-label">South Lat</span>
+                            <span class="bound-value">${bounds.south_lat}°</span>
+                        </div>
+                        <div class="bound-item">
+                            <span class="bound-label">West Lon</span>
+                            <span class="bound-value">${bounds.west_lon}°</span>
+                        </div>
+                        <div class="bound-item">
+                            <span class="bound-label">East Lon</span>
+                            <span class="bound-value">${bounds.east_lon}°</span>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Format rinfo parameters
+            let rinfoParamsHtml = '';
+            if (req.rinfo_params && Object.keys(req.rinfo_params).length > 0) {
+                rinfoParamsHtml = '<ul class="param-list">';
+                for (const [key, value] of Object.entries(req.rinfo_params)) {
+                    rinfoParamsHtml += `
+                        <li>
+                            <span class="param-key">${key}:</span>
+                            <span class="param-value">${value}</span>
+                        </li>
+                    `;
+                }
+                rinfoParamsHtml += '</ul>';
+            }
+            
+            // Format date range if available
+            let dateRangeHtml = '';
+            if (req.formatted_subset_info && req.formatted_subset_info.date_range) {
+                const dateRange = req.formatted_subset_info.date_range;
+                dateRangeHtml = `
+                    <p><strong>Start:</strong> ${dateRange.formatted_start || dateRange.start}</p>
+                    <p><strong>End:</strong> ${dateRange.formatted_end || dateRange.end}</p>
+                `;
+            }
+            
+            // Format parameters list
+            let parametersHtml = '';
+            if (req.formatted_subset_info && req.formatted_subset_info.parameters) {
+                parametersHtml = '<ul>';
+                req.formatted_subset_info.parameters.forEach(param => {
+                    parametersHtml += `<li>${param}</li>`;
+                });
+                parametersHtml += '</ul>';
+            }
+            
+            return `
+                <div class="request-card" id="${cardId}">
+                    <div class="request-summary" onclick="toggleRequestDetails('${req.request_id}')" style="cursor: pointer;">
+                        <div class="request-basic-info">
+                            <div class="request-id">${req.request_id.replace(/^id_/, '')}</div>
+                            <div class="request-meta">
+                                ${getStatusBadge(req.status)} |
+                                ${req.region || 'UNKNOWN'} |
+                                ${getParameterDisplayName(req.variable_type || 'unknown')} |
+                                Index: ${req.request_index}
+                            </div>
+                        </div>
+                        <div class="expand-icon" id="${iconId}">▼</div>
+                    </div>
+                    <div class="request-details" id="${detailsId}">
+                        <div class="details-grid">
+                            <div class="detail-section">
+                                <h4>📋 Request Information</h4>
+                                <ul class="param-list">
+                                    <li><span class="param-key">Request ID:</span> <span class="param-value">${req.request_id.replace(/^id_/, '')}</span></li>
+                                    <li><span class="param-key">Request Index:</span> <span class="param-value">${req.request_index}</span></li>
+                                    <li><span class="param-key">Dataset ID:</span> <span class="param-value">${req.dsid || 'N/A'}</span></li>
+                                    <li><span class="param-key">Status:</span> <span class="param-value">${getStatusBadge(req.status)}</span></li>
+                                    <li><span class="param-key">Region:</span> <span class="param-value">${req.region || 'UNKNOWN'}</span></li>
+                                    <li><span class="param-key">Variable:</span> <span class="param-value">${getParameterDisplayName(req.variable_type || 'unknown')}</span></li>
+                                </ul>
+                            </div>
+                            
+                            <div class="detail-section">
+                                <h4>📅 Timeline</h4>
+                                <ul class="param-list">
+                                    <li><span class="param-key">Requested:</span> <span class="param-value">${formatTime(req.date_rqst)}</span></li>
+                                    <li><span class="param-key">Ready:</span> <span class="param-value">${formatTime(req.date_ready)}</span></li>
+                                    <li><span class="param-key">Purge:</span> <span class="param-value">${formatTime(req.date_purge)}</span></li>
+                                    <li><span class="param-key">Processing Time:</span> <span class="param-value">${formatProcessingTime(req.processing_time_hours)}</span></li>
+                                </ul>
+                            </div>
+                            
+                            <div class="detail-section">
+                                <h4>👤 Contact & Location</h4>
+                                <ul class="param-list">
+                                    <li><span class="param-key">NCAR Contact:</span> <span class="param-value">${req.NCAR_contact || req.ncar_contact || 'N/A'}</span></li>
+                                    <li><span class="param-key">Location:</span> <span class="param-value">${req.location || 'N/A'}</span></li>
+                                </ul>
+                            </div>
+                            
+                            <div class="detail-section">
+                                <h4>⚙️ Request Parameters</h4>
+                                ${rinfoParamsHtml || '<p>No parameters available</p>'}
+                            </div>
+                            
+                            ${dateRangeHtml ? `
+                            <div class="detail-section">
+                                <h4>📅 Data Range</h4>
+                                ${dateRangeHtml}
+                            </div>
+                            ` : ''}
+                            
+                            ${parametersHtml ? `
+                            <div class="detail-section">
+                                <h4>🌡️ Parameters</h4>
+                                ${parametersHtml}
+                            </div>
+                            ` : ''}
+                            
+                            ${spatialBoundsHtml ? `
+                            <div class="detail-section">
+                                <h4>🗺️ Spatial Bounds</h4>
+                                ${spatialBoundsHtml}
+                            </div>
+                            ` : ''}
+                            
+                            <div class="detail-section" style="grid-column: 1 / -1;">
+                                <h4>📝 Subset Information</h4>
+                                <div class="subset-note">${req.formatted_subset_info?.raw_note || req.subset_note || 'No subset information available'}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function createCompletedRegionCard(region) {
+            console.log('Creating expandable completed region card for region:', region);
+            console.log('Region data structure:', JSON.stringify(region, null, 2));
+            console.log('Has detailed_requests:', !!(region.detailed_requests && region.detailed_requests.length > 0));
+            
+            const regionCode = region.region || 'UNKNOWN';
+            const regionName = region.region_name || regionCode.replace('_', ' ').toUpperCase();
+            const totalRequests = region.total_requests || region.completed_requests || 0;
+            const downloadedFiles = region.downloaded_files || totalRequests;
+            const successRate = region.success_rate || 100.0;
+            const avgProcessingTime = region.processing_time_stats?.average_hours || region.average_processing_time_hours || 0;
+            const mostCommonVariable = region.most_common_variable || 'unknown';
+            
+            // Sanitize region ID for DOM elements
+            const sanitizedRegionId = sanitizeId(regionCode);
+            const cardId = `completed-card-${sanitizedRegionId}`;
+            const detailsId = `completed-details-${sanitizedRegionId}`;
+            const iconId = `completed-icon-${sanitizedRegionId}`;
+            
+            console.log('Creating expandable completed region card with IDs:', {
+                regionCode: regionCode,
+                sanitizedRegionId: sanitizedRegionId,
+                cardId: cardId
+            });
+            
+            // Create nested request cards if detailed_requests are available
+            let nestedRequestsHtml = '';
+            if (region.detailed_requests && region.detailed_requests.length > 0) {
+                console.log('Creating nested request cards for', region.detailed_requests.length, 'requests');
+                
+                nestedRequestsHtml = `
+                    <div class="requests-list-header">
+                        📋 Individual Requests (${region.detailed_requests.length} total)
+                    </div>
+                `;
+                
+                region.detailed_requests.forEach((request, index) => {
+                    try {
+                        nestedRequestsHtml += createNestedRequestCard(request, regionCode);
+                    } catch (error) {
+                        console.warn(`Error creating nested request card ${index}:`, error, request);
+                        nestedRequestsHtml += `
+                            <div class="nested-request-card" style="border-color: #dc3545;">
+                                <div class="nested-request-summary" style="background: #f8d7da; color: #721c24;">
+                                    <div class="nested-request-basic-info">
+                                        <div class="nested-request-id">Error Loading Request</div>
+                                        <div class="nested-request-meta">Failed to load request data</div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+            } else {
+                nestedRequestsHtml = `
+                    <div class="requests-list-header">
+                        📋 Request Details
+                    </div>
+                    <div style="padding: 20px; text-align: center; color: #666;">
+                        <p>Detailed request information is not available for this region.</p>
+                        <p>This may be because the requests were completed before detailed tracking was implemented.</p>
+                    </div>
+                `;
+            }
+            
+            return `
+                <div class="completed-region-card" id="${cardId}">
+                    <div class="completed-region-summary" onclick="toggleCompletedRegionDetails('${regionCode}')" style="cursor: pointer;">
+                        <div class="completed-region-basic-info">
+                            <div class="completed-region-name">${regionName}</div>
+                            <div class="completed-region-meta">
+                                ${totalRequests} requests • ${downloadedFiles} files • ${successRate.toFixed(1)}% success • ${getParameterDisplayName(mostCommonVariable)}
+                            </div>
+                        </div>
+                        <div class="completed-region-expand-icon" id="${iconId}">▼</div>
+                    </div>
+                    <div class="completed-region-details" id="${detailsId}">
+                        ${nestedRequestsHtml}
+                    </div>
+                </div>
+            `;
+        }
+        
+        async function refreshData() {
+            try {
+                // Update summary metrics
+                const summaryResponse = await fetch('/api/summary');
+                const summaryData = await summaryResponse.json();
+                updateSummaryMetrics(summaryData);
+                
+                // Refresh current tab data
+                if (currentTab === 'current-requests') {
+                    await refreshCurrentRequests();
+                } else if (currentTab === 'completed-regions') {
+                    await refreshCompletedRegions();
+                } else if (currentTab === 'unknown-regions') {
+                    await refreshUnknownRegions();
+                }
+                
+                document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+            } catch (error) {
+                console.error('Error refreshing data:', error);
+                showAlert('Error refreshing data: ' + error.message, 'danger');
+            }
+        }
+        
+        function updateSummaryMetrics(data) {
+            const overview = data.overview;
+            document.getElementById('totalRequests').textContent = overview.total_requests || 0;
+            document.getElementById('completedRequests').textContent = overview.completed_requests || 0;
+            document.getElementById('processingRequests').textContent = (overview.processing_requests || 0) + (overview.queued_requests || 0);
+            document.getElementById('purgedRequests').textContent = overview.purged_requests || 0;
+            document.getElementById('uniqueRegions').textContent = overview.unique_regions || 0;
+        }
+        
+        async function refreshCurrentRequests() {
+            try {
+                const response = await fetch('/api/current-requests');
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                updateCurrentRequestsDisplay(data);
+                
+            } catch (error) {
+                console.error('Error refreshing current requests:', error);
+                document.getElementById('currentRequestsContent').innerHTML = 
+                    `<div class="alert alert-danger">Error loading current requests: ${error.message}</div>`;
+            }
+        }
+        
+        function updateCurrentRequestsDisplay(requests) {
+            const container = document.getElementById('currentRequestsContent');
+            
+            if (requests.length === 0) {
+                container.innerHTML = `
+                    <div class="alert alert-info">
+                        <strong>📋 No Current Requests</strong><br>
+                        No active requests found in the system.
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '';
+            requests.forEach(req => {
+                html += createRequestCard(req);
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        async function refreshCompletedRegions() {
+            try {
+                // Build query parameters from current state
+                const params = new URLSearchParams({
+                    page: completedRegionsState.currentPage.toString(),
+                    per_page: completedRegionsState.perPage.toString(),
+                    sort_by: completedRegionsState.filters.sortBy,
+                    sort_order: completedRegionsState.filters.sortOrder,
+                    include_details: 'true'
+                });
+                
+                // Add optional filters
+                if (completedRegionsState.filters.region) {
+                    params.append('region', completedRegionsState.filters.region);
+                }
+                if (completedRegionsState.filters.variable) {
+                    params.append('variable', completedRegionsState.filters.variable);
+                }
+                if (completedRegionsState.filters.dateFrom) {
+                    params.append('date_from', completedRegionsState.filters.dateFrom);
+                }
+                if (completedRegionsState.filters.dateTo) {
+                    params.append('date_to', completedRegionsState.filters.dateTo);
+                }
+                
+                const response = await fetch(`/api/completed-regions?${params}`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                updateCompletedRegionsDisplay(data);
+                
+            } catch (error) {
+                console.error('Error refreshing completed regions:', error);
+                document.getElementById('completedRegionsContent').innerHTML =
+                    `<div class="alert alert-danger">Error loading completed regions: ${error.message}</div>`;
+                
+                // Clear pagination controls on error
+                const paginationTop = document.getElementById('paginationTop');
+                const paginationBottom = document.getElementById('paginationBottom');
+                if (paginationTop) paginationTop.innerHTML = '';
+                if (paginationBottom) paginationBottom.innerHTML = '';
+            }
+        }
+        
+        function updateCompletedRegionsDisplay(data) {
+            const container = document.getElementById('completedRegionsContent');
+            const statsElement = document.getElementById('completedStats');
+            
+            console.log('updateCompletedRegionsDisplay called with enhanced data:', data);
+            
+            try {
+                // Add error handling for missing data structure
+                if (!data || typeof data !== 'object') {
+                    throw new Error('Invalid data structure received');
+                }
+                
+                // Update statistics with enhanced data structure
+                const stats = data.statistics?.filtered_results || data.statistics || {};
+                const totalFiles = stats.total_completed_requests || stats.total_downloaded_files || 0;
+                const uniqueRegions = stats.unique_regions || 0;
+                const uniqueVariables = stats.unique_variables || 0;
+                const avgHours = stats.avg_processing_hours || 0;
+                const totalSize = stats.total_file_size_gb || 0;
+                
+                if (statsElement) {
+                    statsElement.innerHTML = `
+                        <strong>${totalFiles}</strong> completed |
+                        <strong>${uniqueRegions}</strong> regions |
+                        <strong>${uniqueVariables}</strong> variables |
+                        Avg: <strong>${avgHours.toFixed(1)}h</strong> |
+                        Size: <strong>${totalSize.toFixed(2)}GB</strong>
+                    `;
+                }
+                
+                // Update pagination controls
+                if (data.pagination) {
+                    const paginationHtml = createPaginationControls(data.pagination);
+                    const paginationTop = document.getElementById('paginationTop');
+                    const paginationBottom = document.getElementById('paginationBottom');
+                    if (paginationTop) paginationTop.innerHTML = paginationHtml;
+                    if (paginationBottom) paginationBottom.innerHTML = paginationHtml;
+                }
+                
+                // Handle completed regions array safely
+                const completedRegions = data.completed_regions || [];
+                console.log('Processing completed regions:', completedRegions.length, 'regions found');
+                
+                if (completedRegions.length === 0) {
+                    container.innerHTML = `
+                        <div class="alert alert-info">
+                            <strong>✅ No Completed Requests Found</strong><br>
+                            ${data.filters && Object.values(data.filters).some(v => v) ?
+                                'No completed requests match the current filters. Try adjusting your search criteria.' :
+                                'No completed requests found in the system. This may be because all requests are still processing.'
+                            }
+                        </div>
+                    `;
+                    return;
+                }
+                
+                let html = '';
+                let successfulCards = 0;
+                let failedCards = 0;
+                
+                completedRegions.forEach((region, index) => {
+                    try {
+                        console.log(`Processing enhanced region ${index}:`, {
+                            region: region.region,
+                            total_requests: region.total_requests,
+                            most_common_variable: region.most_common_variable,
+                            has_detailed_requests: !!(region.detailed_requests && region.detailed_requests.length > 0)
+                        });
+                        
+                        // Use expandable completed region card for better display
+                        html += createCompletedRegionCard(region);
+                        successfulCards++;
+                    } catch (cardError) {
+                        console.warn(`Error creating enhanced region card ${index}:`, cardError, region);
+                        failedCards++;
+                        // Create a fallback card for problematic regions
+                        html += `
+                            <div class="enhanced-region-card" style="border-color: #dc3545;">
+                                <div class="region-card-header" style="background: #dc3545;">
+                                    <div class="region-name">Error Loading Region</div>
+                                    <div class="region-stats">Failed to load data</div>
+                                </div>
+                                <div class="region-card-body">
+                                    <div class="alert alert-danger">
+                                        <strong>Region:</strong> ${region.region || 'Unknown'}<br>
+                                        <strong>Error:</strong> Failed to render region data
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+                
+                console.log(`Enhanced regions processing: ${successfulCards} successful, ${failedCards} failed`);
+                container.innerHTML = html;
+                
+            } catch (error) {
+                console.error('Error updating enhanced completed regions display:', error);
+                container.innerHTML = `
+                    <div class="alert alert-danger">
+                        <strong>❌ Error Loading Enhanced Completed Regions</strong><br>
+                        ${error.message || 'An unexpected error occurred while loading completed regions data.'}<br>
+                        <small>Check the browser console for more details.</small>
+                    </div>
+                `;
+                
+                // Update stats with error message
+                if (statsElement) {
+                    statsElement.innerHTML = '<span style="color: #dc3545;">Error loading statistics</span>';
+                }
+                
+                // Clear pagination controls on error
+                const paginationTop = document.getElementById('paginationTop');
+                const paginationBottom = document.getElementById('paginationBottom');
+                if (paginationTop) paginationTop.innerHTML = '';
+                if (paginationBottom) paginationBottom.innerHTML = '';
+            }
+        }
+        
+        async function refreshUnknownRegions() {
+            try {
+                const response = await fetch('/api/unknown-regions');
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                updateUnknownRegionsDisplay(data);
+                
+                // Update unknown regions count in overview
+                document.getElementById('unknownRegions').textContent = data.unknown_requests.length;
+                
+            } catch (error) {
+                console.error('Error refreshing unknown regions:', error);
+                document.getElementById('unknownRegionsContent').innerHTML = 
+                    `<div class="alert alert-danger">Error loading unknown regions: ${error.message}</div>`;
+            }
+        }
+        
+        function updateUnknownRegionsDisplay(data) {
+            const container = document.getElementById('unknownRegionsContent');
+            
+            if (data.unknown_requests.length === 0) {
+                container.innerHTML = `
+                    <div class="alert alert-success">
+                        <strong>🎉 Great!</strong> No unknown regions found. All requests have been properly resolved.
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = `
+                <div class="alert alert-info">
+                    <strong>📊 Summary:</strong> ${data.status.summary.total_unknown} unknown regions found, 
+                    ${data.status.summary.resolved} resolved, ${data.status.summary.fallback_assigned} with fallback names.
+                </div>
+            `;
+            
+            data.unknown_requests.forEach(req => {
+                html += createRequestCard(req);
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        function showAlert(message, type = 'info') {
+            // Remove existing alerts
+            const existingAlerts = document.querySelectorAll('.alert-temporary');
+            existingAlerts.forEach(alert => alert.remove());
+            
+            // Create new alert
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type} alert-temporary`;
+            alert.innerHTML = message;
+            alert.style.position = 'fixed';
+            alert.style.top = '20px';
+            alert.style.right = '20px';
+            alert.style.zIndex = '9999';
+            alert.style.maxWidth = '400px';
+            alert.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';
+            
+            // Add close button
+            const closeBtn = document.createElement('button');
+            closeBtn.innerHTML = '×';
+            closeBtn.style.float = 'right';
+            closeBtn.style.background = 'none';
+            closeBtn.style.border = 'none';
+            closeBtn.style.fontSize = '20px';
+            closeBtn.style.cursor = 'pointer';
+            closeBtn.onclick = () => alert.remove();
+            alert.appendChild(closeBtn);
+            
+            document.body.appendChild(alert);
+            
+            // Auto-remove after 5 seconds for non-info alerts
+            if (type !== 'info') {
+                setTimeout(() => {
+                    if (alert.parentNode) {
+                        alert.remove();
+                    }
+                }, 5000);
+            }
+        }
+        
+        async function refreshErrorSummary() {
+            try {
+                const response = await fetch('/api/error-tracking/summary');
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                updateErrorSummaryDisplay(data);
+                
+            } catch (error) {
+                console.error('Error refreshing error summary:', error);
+                document.getElementById('errorSummaryContent').innerHTML =
+                    `<div class="alert alert-danger">Error loading error summary: ${error.message}</div>`;
+            }
+        }
+        
+        function updateErrorSummaryDisplay(data) {
+            const container = document.getElementById('errorSummaryContent');
+            const summary = data.summary || {};
+            
+            const html = `
+                <div class="metrics-grid" style="margin: 20px;">
+                    <div class="metric-card">
+                        <div class="metric-value" style="color: #dc3545;">${summary.total_errors || 0}</div>
+                        <div class="metric-label">Total Errors</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" style="color: #fd7e14;">${summary.active_errors || 0}</div>
+                        <div class="metric-label">Active Errors</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" style="color: #28a745;">${summary.resolved_errors || 0}</div>
+                        <div class="metric-label">Resolved</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" style="color: #dc3545;">${summary.critical_errors || 0}</div>
+                        <div class="metric-label">Critical</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" style="color: #6f42c1;">${summary.error_rate_24h || 0}</div>
+                        <div class="metric-label">Errors/Hour (24h)</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" style="color: #20c997;">${summary.resolution_rate || 0}%</div>
+                        <div class="metric-label">Resolution Rate</div>
+                    </div>
+                </div>
+                <div style="padding: 20px;">
+                    <div class="alert alert-info">
+                        <strong>Most Common Error:</strong> ${summary.most_common_error_type || 'None'}<br>
+                        <strong>Most Affected Region:</strong> ${summary.most_affected_region || 'None'}<br>
+                        <strong>Average Resolution Time:</strong> ${summary.average_resolution_time_hours || 0} hours
+                    </div>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+        
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            refreshData();
+            refreshErrorSummary();
+            // Auto-refresh every 30 seconds
+            setInterval(() => {
+                refreshData();
+                refreshErrorSummary();
+            }, 30000);
+        });
+    </script>
+</body>
+</html>

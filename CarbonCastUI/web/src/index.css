@@ -1,0 +1,471 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Basic styling with performance optimizations */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  font-family: system-ui, sans-serif;
+}
+
+/* Global performance optimizations */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Enable hardware acceleration for specific animations only */
+.tooltip-animation,
+.button-animation {
+  will-change: transform, opacity;
+}
+
+body {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%);
+  color: #111827;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Dark mode */
+.dark body {
+  background: #111827;
+  color: #f3f4f6;
+}
+
+/* Dark mode map controls */
+.dark .maplibregl-ctrl.maplibregl-ctrl-group.maplibregl-ctrl.maplibregl-ctrl-group button {
+  background: rgba(31, 41, 55, 0.9) !important;
+  border: 1px solid rgba(75, 85, 99, 0.6) !important;
+  color: #f3f4f6 !important;
+}
+
+.dark .maplibregl-ctrl.maplibregl-ctrl-group.maplibregl-ctrl.maplibregl-ctrl-group button:not(:disabled):hover {
+  background: rgba(31, 41, 55, 1) !important;
+}
+
+/* CSS variables for light theme */
+:root {
+  --glassBg: rgba(255, 255, 255, 0.45);
+  --glassBorder: rgba(156, 163, 175, 0.4);
+  --glassText: #111827;
+  --muted: #6b7280;
+  --buttonBg: rgba(255, 255, 255, 0.1);
+  --buttonBgHover: rgba(255, 255, 255, 0.2);
+  --cardBg: rgba(255, 255, 255, 0.55);
+  --regionStroke: rgba(0,0,0,0.42);
+  --regionSelected: rgba(0,0,0,0.78);
+  --regionHoverStroke: rgba(0,0,0,0.85);
+  --regionHoverFill: rgba(255,255,255,0.55);
+  
+  /* Left Panel specific variables */
+  --panelBg: rgba(255, 255, 255, 0.55);
+  --panelBorder: rgba(156, 163, 175, 0.4);
+  --panelText: #111827;
+  --cardSecondaryBg: rgba(243, 244, 246, 0.3);
+  --progressBarBg: #e5e7eb;
+  --toggleActiveBg: rgba(0,0,0,0.12);
+  --toggleInactiveBg: rgba(0,0,0,0.06);
+  --chartStroke: #e5e7eb;
+  --infoIconBg: #e5e7eb;
+  --valueText: #374151;
+  --subText: #4b5563; /* Darker gray for better contrast in light theme */
+  --accentYellow: #ca8a04; /* Darker yellow for better contrast */
+  
+  /* Fallback banner variables - Light theme (glass style with amber text) */
+  --fallbackBannerBg: rgba(255, 255, 255, 0.45);
+  --fallbackBannerBorder: rgba(156, 163, 175, 0.4);
+  --fallbackBannerTitle: #92400E;
+  --fallbackBannerText: #78350F;
+  --fallbackBannerDismiss: #B45309;
+  
+  /* Loading banner variables - Light theme (blue accent like fallback but blue) */
+  --loadingBannerBg: rgba(255, 255, 255, 0.45);
+  --loadingBannerBorder: rgba(59, 130, 246, 0.3);
+  --loadingBannerTitle: #1D4ED8;
+  --loadingBannerText: #1E40AF;
+  
+  /* Sidebar specific variables */
+  --sidebarBg: rgba(255, 255, 255, 0.85);
+  --sidebarBorder: rgba(0, 0, 0, 0.08);
+  --sidebarText: #6b7280;
+  --sidebarHover: #111827;
+  --sidebarHoverBg: rgba(0, 0, 0, 0.04);
+  --sidebarActive: #111827;
+  --sidebarActiveBg: rgba(0, 0, 0, 0.06);
+  --sidebarActiveIndicator: #3b82f6;
+  
+  /* Time Slider variables - Light theme */
+  --sliderThumbBg: #ffffff;
+  --sliderThumbBorder: rgba(209, 213, 219, 1);
+  --sliderTrackDay: rgba(245, 245, 245, 1);
+  --sliderTrackNight: rgba(209, 213, 219, 1);
+  --sliderContainerBg: rgba(0, 0, 0, 0.03);
+  --sliderContainerBorder: rgba(0, 0, 0, 0.06);
+  
+  /* Timeline container - Light theme (more frosted/see-through) */
+  --timelineBg: rgba(255, 255, 255, 0.35);
+  --timelineBorder: rgba(255, 255, 255, 0.5);
+  
+  /* Date picker button - Light theme */
+  --datePickerBg: rgba(0, 0, 0, 0.04);
+  --datePickerBorder: rgba(0, 0, 0, 0.08);
+  
+  /* Legend - Light theme (frosted) */
+  --legendBg: rgba(255, 255, 255, 0.35);
+  --legendBorder: rgba(255, 255, 255, 0.5);
+  --legendBarBorder: rgba(0, 0, 0, 0.1);
+  
+  /* Frosted glass - Light theme (for components using inline styles) */
+  --frostedGlassBg: rgba(255, 255, 255, 0.35);
+  --frostedGlassBorder: rgba(255, 255, 255, 0.5);
+}
+
+/* CSS variables for dark theme - Enhanced for Electricity Maps style */
+.dark {
+  --glassBg: rgba(31, 41, 55, 0.8);
+  --glassBorder: rgba(255, 255, 255, 0.1);
+  --glassText: #f3f4f6;
+  --muted: #9ca3af;
+  --buttonBg: rgba(255, 255, 255, 0.08);
+  --buttonBgHover: rgba(255, 255, 255, 0.12);
+  --cardBg: rgba(255, 255, 255, 0.05);
+  --regionStroke: rgba(255,255,255,0.42);
+  --regionSelected: rgba(255,255,255,0.90);
+  --regionHoverStroke: rgba(255,255,255,0.95);
+  --regionHoverFill: rgba(255,255,255,0.30);
+  
+  /* Left Panel specific variables - Dark theme with stronger glass morphism */
+  --panelBg: rgba(15, 15, 15, 0.85);
+  --panelBorder: rgba(255, 255, 255, 0.1);
+  --panelText: #f3f4f6;
+  --cardSecondaryBg: rgba(255, 255, 255, 0.03);
+  --progressBarBg: rgba(255, 255, 255, 0.1);
+  --toggleActiveBg: rgba(255,255,255,0.15);
+  --toggleInactiveBg: rgba(255,255,255,0.05);
+  --chartStroke: rgba(255, 255, 255, 0.1);
+  --infoIconBg: rgba(255, 255, 255, 0.1);
+  --valueText: #e5e7eb;
+  --subText: #9ca3af;
+  --accentYellow: #ffd700;
+  
+  /* Fallback banner variables - Dark theme (glass style with amber text) */
+  --fallbackBannerBg: rgba(31, 41, 55, 0.8);
+  --fallbackBannerBorder: rgba(255, 255, 255, 0.1);
+  --fallbackBannerTitle: #fbbf24;
+  --fallbackBannerText: #fcd34d;
+  --fallbackBannerDismiss: #f59e0b;
+  
+  /* Loading banner variables - Dark theme (blue accent) */
+  --loadingBannerBg: rgba(31, 41, 55, 0.8);
+  --loadingBannerBorder: rgba(59, 130, 246, 0.3);
+  --loadingBannerTitle: #60a5fa;
+  --loadingBannerText: #93c5fd;
+  
+  /* Sidebar specific variables - Dark theme */
+  --sidebarBg: rgba(10, 10, 10, 0.95);
+  --sidebarBorder: rgba(255, 255, 255, 0.08);
+  --sidebarText: #9ca3af;
+  --sidebarHover: #f3f4f6;
+  --sidebarHoverBg: rgba(255, 255, 255, 0.05);
+  --sidebarActive: #f3f4f6;
+  --sidebarActiveBg: rgba(255, 255, 255, 0.08);
+  --sidebarActiveIndicator: #3b82f6;
+  
+  /* Time Slider variables - Dark theme */
+  --sliderThumbBg: #1f2937;
+  --sliderThumbBorder: rgba(75, 85, 99, 0.6);
+  --sliderTrackDay: rgba(82, 82, 82, 0.8);
+  --sliderTrackNight: rgba(38, 38, 38, 0.8);
+  --sliderContainerBg: rgba(255, 255, 255, 0.06);
+  --sliderContainerBorder: rgba(255, 255, 255, 0.12);
+  
+  /* Timeline container - Dark theme (frosted dark glass) */
+  --timelineBg: rgba(15, 15, 20, 0.6);
+  --timelineBorder: rgba(255, 255, 255, 0.08);
+  
+  /* Date picker button - Dark theme */
+  --datePickerBg: rgba(255, 255, 255, 0.05);
+  --datePickerBorder: rgba(255, 255, 255, 0.1);
+  
+  /* Legend - Dark theme (frosted dark glass) */
+  --legendBg: rgba(15, 15, 20, 0.6);
+  --legendBorder: rgba(255, 255, 255, 0.08);
+  --legendBarBorder: rgba(255, 255, 255, 0.15);
+  
+  /* Frosted glass - Dark theme (for components using inline styles) */
+  --frostedGlassBg: rgba(15, 15, 20, 0.6);
+  --frostedGlassBorder: rgba(255, 255, 255, 0.08);
+}
+
+/* Left Panel dynamic styling using CSS variables */
+.left-panel-container {
+  pointer-events: auto;
+  z-index: 21;
+  display: flex;
+  height: calc(100% - 120px);
+  width: 100%;
+  flex-direction: column;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  padding-top: max(2.5rem, env(safe-area-inset-top));
+  border-radius: 1.5rem 1.5rem 0 0;  /* Rounded top corners, square bottom */
+  margin: 0.75rem;
+  margin-bottom: 0;
+  border: 1px solid var(--panelBorder);
+  color: var(--panelText);
+  box-shadow:
+    0 24px 80px rgba(0, 0, 0, 0.12),
+    0 12px 40px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.dark .left-panel-container {
+  box-shadow:
+    0 32px 96px rgba(0, 0, 0, 0.4),
+    0 16px 48px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.zone-header-close-btn {
+  display: flex;
+  height: 2rem;
+  width: 2rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background-color: var(--buttonBg);
+  color: var(--muted);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.zone-header-close-btn:hover {
+  background-color: var(--buttonBgHover) !important;
+  transform: scale(1.05);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15), 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Custom scrollbar styling */
+*::-webkit-scrollbar {
+  background-color: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  border-radius: 20px;
+  border: 4px solid transparent;
+  height: 50px;
+  width: 5px;
+  background-color: rgba(0, 0, 0, 0.2);
+  background-clip: content-box;
+}
+
+/* Dark mode scrollbar */
+.dark *::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Left Panel scrollbar - hidden by default, shown on hover/interaction */
+#panel-scroller::-webkit-scrollbar {
+  width: 8px;
+  background-color: transparent;
+}
+
+#panel-scroller::-webkit-scrollbar-thumb {
+  border-radius: 20px;
+  border: 2px solid transparent;
+  background-color: rgba(0, 0, 0, 0);
+  background-clip: content-box;
+  transition: background-color 0.3s ease;
+}
+
+/* Show scrollbar on hover */
+#panel-scroller:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+/* Show scrollbar when scrolling */
+#panel-scroller::-webkit-scrollbar-thumb:active {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+/* Dark mode left panel scrollbar */
+.dark #panel-scroller::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0);
+}
+
+.dark #panel-scroller:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.dark #panel-scroller::-webkit-scrollbar-thumb:active {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Firefox scrollbar support for left panel */
+@supports (scrollbar-width: thin) {
+  #panel-scroller {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+    transition: scrollbar-color 0.3s ease;
+  }
+  
+  #panel-scroller:hover {
+    scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+  }
+  
+  .dark #panel-scroller:hover {
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+  }
+}
+
+/* Dark theme for form controls */
+.dark input[type="range"] {
+  background: transparent;
+}
+
+.dark input[type="range"]::-webkit-slider-track {
+  background: rgba(75, 85, 99, 0.6);
+  border-radius: 5px;
+  height: 4px;
+}
+
+.dark input[type="range"]::-webkit-slider-thumb {
+  background: #f3f4f6;
+  border: 1px solid rgba(75, 85, 99, 0.6);
+}
+
+.dark input[type="date"] {
+  color-scheme: dark;
+}
+
+/* Light theme for form controls */
+input[type="range"] {
+  background: transparent;
+}
+
+input[type="range"]::-webkit-slider-track {
+  background: rgba(229, 231, 235, 0.6);
+  border-radius: 5px;
+  height: 4px;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  background: #111827;
+  border: 1px solid rgba(229, 231, 235, 0.6);
+}
+
+/* Optimized button interactions for smooth performance */
+button {
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+button:not(:disabled):not(.timeline-button):hover {
+  background: var(--buttonBgHover) !important;
+  transform: translateY(-1px) translateZ(0); /* Add translateZ for hardware acceleration */
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.12), 0 10px 24px rgba(0, 0, 0, 0.06);
+}
+
+.dark button:not(:disabled):not(.timeline-button):hover {
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.25), 0 10px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* Glassmorphic utility classes - Enhanced */
+.glass-effect {
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  background: rgba(255, 255, 255, 0.45);
+  border: 1px solid rgba(156, 163, 175, 0.4);
+  box-shadow:
+    0 24px 72px rgba(0, 0, 0, 0.08),
+    0 12px 36px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.glass-effect-dark {
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.3),
+    0 6px 20px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.glass-effect-subtle {
+  backdrop-filter: blur(32px) saturate(160%);
+  -webkit-backdrop-filter: blur(32px) saturate(160%);
+  background: rgba(255, 255, 255, 0.35);
+  border: 1px solid rgba(156, 163, 175, 0.3);
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, 0.06),
+    0 8px 20px rgba(0, 0, 0, 0.03);
+}
+
+/* Remove debug styling */
+
+/* Map region theming */
+:root {
+  --regionStroke: rgba(0,0,0,0.42);
+  --regionSelected: rgba(0,0,0,0.78);
+  --regionHoverStroke: rgba(0,0,0,0.85);
+  --regionHoverFill: rgba(255,255,255,0.55);
+}
+
+.dark {
+  --regionStroke: rgba(255,255,255,0.42);
+  --regionSelected: rgba(255,255,255,0.90);
+  --regionHoverStroke: rgba(255,255,255,0.95);
+  --regionHoverFill: rgba(255,255,255,0.30);
+}
+
+/* Spin animation for loading indicators */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Fade in animation for modals/panels */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Settings Modal specific styling */
+.settings-modal {
+  animation: fadeIn 0.15s ease-out;
+}
+
+/* Settings toggle switch track colors */
+.settings-toggle-track-on {
+  background-color: #4ade80 !important;
+}
+
+.settings-toggle-track-off {
+  background-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.dark .settings-toggle-track-off {
+  background-color: rgba(255, 255, 255, 0.15) !important;
+}

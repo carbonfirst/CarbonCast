@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Enhanced RDA Dashboard - Unknown Regions Management</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 12px; margin-bottom: 30px; text-align: center; position: relative; }
+        
+        /* Navigation tabs */
+        .nav-tabs {
+            display: flex;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .nav-tab {
+            flex: 1;
+            padding: 15px 20px;
+            text-align: center;
+            cursor: pointer;
+            border: none;
+            background: white;
+            color: #666;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .nav-tab.active {
+            background: #667eea;
+            color: white;
+        }
+        .nav-tab:hover:not(.active) {
+            background: #f8f9fa;
+            color: #333;
+        }
+        
+        /* Tab content */
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Real-time sync status indicators */
+        .sync-status-bar {
+            background: rgba(255,255,255,0.1);
+            padding: 10px 20px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .sync-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9em;
+        }
+        .sync-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        .sync-dot.fresh { background: #28a745; }
+        .sync-dot.acceptable { background: #ffc107; }
+        .sync-dot.stale { background: #fd7e14; }
+        .sync-dot.critical { background: #dc3545; }
+        .sync-dot.syncing { background: #007bff; animation: spin 1s linear infinite; }
+        .sync-dot.error { background: #dc3545; animation: flash 1s infinite; }
+        
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes flash { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        
+        .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .metric-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); position: relative; }
+        .metric-value { font-size: 2em; font-weight: bold; color: #2196F3; }
+        .metric-label { color: #666; margin-top: 5px; }
+        
+        /* Enhanced buttons */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-primary:hover { background: #0056b3; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-success:hover { background: #1e7e34; }
+        .btn-warning { background: #ffc107; color: #212529; }
+        .btn-warning:hover { background: #e0a800; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-danger:hover { background: #c82333; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn-secondary:hover { background: #545b62; }
+        
+        .refresh-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.3);
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0 5px;
+        }
+        .refresh-btn:hover { background: rgba(255,255,255,0.3); }
+        .refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .table-container { background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin: 20px 0; overflow: hidden; }
+        .table-header {
+            padding: 20px;
+            margin: 0;
+            background: #f8f9fa;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background: #f8f9fa; font-weight: 600; }
+        .status-badge { padding: 4px 8px; border-radius: 12px; font-size: 0.8em; }
+        .status-processing { background: #cce5ff; color: #004085; }
+        .status-completed { background: #d4edda; color: #155724; }
+        .status-failed { background: #f8d7da; color: #721c24; }
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-unknown { background: #e2e3e5; color: #383d41; }
+        
+        /* Unknown regions specific styles */
+        .unknown-region-card {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 6px;
+        }
+        .unknown-region-card.resolved {
+            background: #d4edda;
+            border-left-color: #28a745;
+        }
+        .resolution-attempts {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 10px;
+        }
+        .resolution-strategy {
+            display: inline-block;
+            background: #e9ecef;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin: 2px;
+            font-size: 0.8em;
+        }
+        .resolution-strategy.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .resolution-strategy.failed {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        /* Manual override form */
+        .override-form {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 10px;
+            display: none;
+        }
+        .override-form.active {
+            display: block;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        /* Loading states */
+        .loading { opacity: 0.6; pointer-events: none; }
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+        
+        /* Alerts */
+        .alert {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .alert-danger {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .alert-info {
+            background: #cce5ff;
+            color: #004085;
+            border: 1px solid #b3d7ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🌦️ Enhanced RDA Automation Dashboard</h1>
+        <p>Real-time monitoring with unknown regions management</p>
+        <div class="sync-status-bar">
+            <div class="sync-indicator">
+                <div class="sync-dot fresh" id="syncDot"></div>
+                <span id="syncStatus">Data Fresh</span>
+            </div>
+            <div>
+                <button class="refresh-btn" onclick="refreshData()">🔄 Refresh Data</button>
+                <button class="refresh-btn btn-success" onclick="resolveAllUnknown()">🔧 Resolve All Unknown</button>
+            </div>
+            <div>
+                <span>Last updated: <span id="lastUpdate">Loading...</span></span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Navigation Tabs -->
+    <div class="nav-tabs">
+        <button class="nav-tab active" onclick="showTab('overview')">📊 Overview</button>
+        <button class="nav-tab" onclick="showTab('unknown-regions')">❓ Unknown Regions</button>
+        <button class="nav-tab" onclick="showTab('completed-regions')">✅ Completed Regions</button>
+        <button class="nav-tab" onclick="showTab('current-requests')">📋 Current Requests</button>
+        <button class="nav-tab" onclick="showTab('regional-metrics')">🗺️ Regional Metrics</button>
+    </div>
+    
+    <!-- Overview Tab -->
+    <div id="overview" class="tab-content active">
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-value" id="totalRequests">-</div>
+                <div class="metric-label">Total Requests</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value" id="completedRequests">-</div>
+                <div class="metric-label">Completed</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value" id="processingRequests">-</div>
+                <div class="metric-label">Processing</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value" id="unknownRegions">-</div>
+                <div class="metric-label">Unknown Regions</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value" id="successRate">-</div>
+                <div class="metric-label">Success Rate</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value" id="uniqueRegions">-</div>
+                <div class="metric-label">Active Regions</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Unknown Regions Tab -->
+    <div id="unknown-regions" class="tab-content">
+        <div class="table-container">
+            <div class="table-header">
+                <h3>❓ Unknown Regions Management</h3>
+                <div>
+                    <button class="btn btn-success" onclick="resolveAllUnknown()">🔧 Resolve All</button>
+                    <button class="btn btn-secondary" onclick="refreshUnknownRegions()">🔄 Refresh</button>
+                </div>
+            </div>
+            <div id="unknownRegionsContent">
+                <div style="text-align: center; padding: 40px;">Loading unknown regions...</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Completed Regions Tab -->
+    <div id="completed-regions" class="tab-content">
+        <div class="table-container">
+            <div class="table-header">
+                <h3>✅ Completed Regions</h3>
+                <div>
+                    <span id="completedStats">Loading statistics...</span>
+                    <button class="btn btn-secondary" onclick="refreshCompletedRegions()">🔄 Refresh</button>
+                </div>
+            </div>
+            <table id="completedRegionsTable">
+                <thead>
+                    <tr>
+                        <th>Request ID</th>
+                        <th>Region</th>
+                        <th>Variable</th>
+                        <th>Completed</th>
+                        <th>Processing Time</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="completedRegionsTableBody">
+                    <tr><td colspan="6" style="text-align: center; padding: 40px;">Loading completed regions...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Current Requests Tab -->
+    <div id="current-requests" class="tab-content">
+        <div class="table-container">
+            <div class="table-header">
+                <h3>📋 Current Requests</h3>
+            </div>
+            <table id="requestsTable">
+                <thead>
+                    <tr>
+                        <th>Region</th>
+                        <th>Weather Variable</th>
+                        <th>Status</th>
+                        <th>Submitted</th>
+                        <th>Processing Time</th>
+                        <th>Request Index</th>
+                    </tr>
+                </thead>
+                <tbody id="requestsTableBody">
+                    <tr><td colspan="6" style="text-align: center; padding: 40px;">Loading requests...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Regional Metrics Tab -->
+    <div id="regional-metrics" class="tab-content">
+        <div class="table-container">
+            <div class="table-header">
+                <h3>🗺️ Regional Performance</h3>
+            </div>
+            <table id="regionalTable">
+                <thead>
+                    <tr>
+                        <th>Region</th>
+                        <th>Total Requests</th>
+                        <th>Success Rate</th>
+                        <th>Most Common Variable</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="regionalTableBody">
+                    <tr><td colspan="5" style="text-align: center; padding: 40px;">Loading regional data...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <script>
+        let currentTab = 'overview';
+        
+        function showTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remove active class from all nav tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to clicked nav tab
+            event.target.classList.add('active');
+            
+            currentTab = tabName;
+            
+            // Load data for the selected tab
+            if (tabName === 'unknown-regions') {
+                refreshUnknownRegions();
+            } else if (tabName === 'completed-regions') {
+                refreshCompletedRegions();
+            } else if (tabName === 'current-requests') {
+                refreshCurrentRequests();
+            } else if (tabName === 'regional-metrics') {
+                refreshRegionalMetrics();
+            }
+        }
+        
+        function formatTime(timeStr) {
+            if (!timeStr) return 'N/A';
+            return new Date(timeStr).toLocaleString();
+        }
+        
+        function formatProcessingTime(hours) {
+            if (!hours) return 'N/A';
+            if (hours < 1) return Math.round(hours * 60) + ' min';
+            return hours.toFixed(1) + ' hrs';
+        }
+        
+        function getStatusBadge(status) {
+            // Handle undefined, null, or empty status values
+            if (!status || typeof status !== 'string') {
+                status = 'unknown';
+            }
+            const statusClass = status.toLowerCase().replace(/[^a-z]/g, '');
+            return `<span class="status-badge status-${statusClass}">${status.charAt(0).toUpperCase() + status.slice(1)}</span>`;
+        }
+        
+        function getParameterDisplayName(param) {
+            const names = {
+                'dswrf': 'Solar Radiation',
+                'ugrd_vgrd': 'Wind Speed',
+                'tmp_dpt': 'Temperature',
+                'apcp': 'Precipitation'
+            };
+            return names[param] || param.toUpperCase();
+        }
+        
+        async function refreshData() {
+            try {
+                // Update summary metrics
+                const summaryResponse = await fetch('/api/summary');
+                const summaryData = await summaryResponse.json();
+                updateSummaryMetrics(summaryData);
+                
+                // Refresh current tab data
+                if (currentTab === 'unknown-regions') {
+                    await refreshUnknownRegions();
+                } else if (currentTab === 'completed-regions') {
+                    await refreshCompletedRegions();
+                } else if (currentTab === 'current-requests') {
+                    await refreshCurrentRequests();
+                } else if (currentTab === 'regional-metrics') {
+                    await refreshRegionalMetrics();
+                }
+                
+                document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+            } catch (error) {
+                console.error('Error refreshing data:', error);
+                showAlert('Error refreshing data: ' + error.message, 'danger');
+            }
+        }
+        
+        function updateSummaryMetrics(data) {
+            const overview = data.overview;
+            document.getElementById('totalRequests').textContent = overview.total_requests || 0;
+            document.getElementById('completedRequests').textContent = overview.completed_requests || 0;
+            document.getElementById('processingRequests').textContent = (overview.processing_requests || 0) + (overview.queued_requests || 0);
+            document.getElementById('successRate').textContent = (overview.success_rate || 0).toFixed(1) + '%';
+            document.getElementById('uniqueRegions').textContent = overview.unique_regions || 0;
+        }
+        
+        async function refreshUnknownRegions() {
+            try {
+                const response = await fetch('/api/unknown-regions');
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                updateUnknownRegionsDisplay(data);
+                
+                // Update unknown regions count in overview
+                document.getElementById('unknownRegions').textContent = data.unknown_requests.length;
+                
+            } catch (error) {
+                console.error('Error refreshing unknown regions:', error);
+                document.getElementById('unknownRegionsContent').innerHTML = 
+                    `<div class="alert alert-danger">Error loading unknown regions: ${error.message}</div>`;
+            }
+        }
+        
+        function updateUnknownRegionsDisplay(data) {
+            const container = document.getElementById('unknownRegionsContent');
+            
+            if (data.unknown_requests.length === 0) {
+                container.innerHTML = `
+                    <div class="alert alert-success">
+                        <strong>🎉 Great!</strong> No unknown regions found. All requests have been properly resolved.
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = `
+                <div class="alert alert-info">
+                    <strong>📊 Summary:</strong> ${data.status.summary.total_unknown} unknown regions found, 
+                    ${data.status.summary.resolved} resolved, ${data.status.summary.fallback_assigned} with fallback names.
+                </div>
+            `;
+            
+            data.unknown_requests.forEach(req => {
+                const isResolved = req.resolved_region && req.resolved_region !== 'UNKNOWN';
+                const cardClass = isResolved ? 'unknown-region-card resolved' : 'unknown-region-card';
+                
+                html += `
+                    <div class="${cardClass}">
+                        <div style="display: flex; justify-content: space-between; align-items: start;">
+                            <div style="flex: 1;">
+                                <h4>${req.request_id} (Index: ${req.request_index})</h4>
+                                <p><strong>Region:</strong> ${req.resolved_region || 'UNKNOWN'}</p>
+                                <p><strong>Variable:</strong> ${req.resolved_variable || 'unknown'}</p>
+                                ${req.assigned_name ? `<p><strong>Assigned Name:</strong> ${req.assigned_name}</p>` : ''}
+                                <p><strong>RInfo:</strong> <code>${req.rinfo || 'N/A'}</code></p>
+                                <p><strong>Subset Note:</strong> ${req.subset_note || 'N/A'}</p>
+                                ${req.manual_override ? '<p><span class="status-badge status-completed">Manual Override</span></p>' : ''}
+                            </div>
+                            <div>
+                                <button class="btn btn-warning btn-sm" onclick="showOverrideForm('${req.request_id}')">
+                                    🔧 Override
+                                </button>
+                                <button class="btn btn-secondary btn-sm" onclick="showResolutionDetails('${req.request_id}')">
+                                    📋 Details
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Manual Override Form -->
+                        <div id="override-form-${req.request_id}" class="override-form">
+                            <h5>Manual Override for ${req.request_id}</h5>
+                            <div class="form-group">
+                                <label>Region:</label>
+                                <select id="override-region-${req.request_id}">
+                                    <option value="CISO">CISO (California)</option>
+                                    <option value="ERCOT">ERCOT (Texas)</option>
+                                    <option value="PJM">PJM (Eastern)</option>
+                                    <option value="MISO">MISO (Midwest)</option>
+                                    <option value="SPP">SPP (Southwest)</option>
+                                    <option value="NYISO">NYISO (New York)</option>
+                                    <option value="ISONE">ISONE (New England)</option>
+                                    <option value="AT">AT (Austria)</option>
+                                    <option value="AECI">AECI (Associated Electric)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Variable:</label>
+                                <select id="override-variable-${req.request_id}">
+                                    <option value="dswrf">Solar Radiation (DSWRF)</option>
+                                    <option value="ugrd_vgrd">Wind Speed (UGRD/VGRD)</option>
+                                    <option value="tmp_dpt">Temperature (TMP/DPT)</option>
+                                    <option value="apcp">Precipitation (APCP)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <button class="btn btn-success" onclick="submitOverride('${req.request_id}')">
+                                    ✅ Apply Override
+                                </button>
+                                <button class="btn btn-secondary" onclick="hideOverrideForm('${req.request_id}')">
+                                    ❌ Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        async function refreshCompletedRegions() {
+            try {
+                const response = await fetch('/api/completed-regions');
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                updateCompletedRegionsDisplay(data);
+                
+            } catch (error) {
+                console.error('Error refreshing completed regions:', error);
+                document.getElementById('completedRegionsTableBody').innerHTML = 
+                    `<tr><td colspan="6" class="alert alert-danger">Error loading completed regions: ${error.message}</td></tr>`;
+            }
+        }
+        
+        function updateCompletedRegionsDisplay(data) {
+            const statsElement = document.getElementById('completedStats');
+            const tbody = document.getElementById('completedRegionsTableBody');
+            
+            // Update statistics
+            const stats = data.statistics;
+            statsElement.innerHTML = `
+                <strong>${stats.total_completed}</strong> completed | 
+                <strong>${stats.unique_regions}</strong> regions | 
+                <strong>${stats.unique_variables}</strong> variables | 
+                Avg: <strong>${stats.avg_processing_hours.toFixed(1)}h</strong>
+            `;
+            
+            // Update table
+            if (data.completed_regions.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px;">No completed regions found</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = data.completed_regions.map(req => `
+                <tr>
+                    <td><code>${req.request_id}</code></td>
+                    <td><strong>${req.region}</strong></td>
+                    <td>${getParameterDisplayName(req.variable_type)}</td>
+                    <td>${formatTime(req.date_ready)}</td>
+                    <td>${formatProcessingTime(req.processing_hours)}</td>
+                    <td>${getStatusBadge(req.status)}</td>
+                </tr>
+            `).join('');
+        }
+        
+        async function refreshCurrentRequests() {
+            try {
+                const response = await fetch('/api/current-requests');
+                const data = await response.json();
+                updateRequestsTable(data);
+            } catch (error) {
+                console.error('Error refreshing current requests:', error);
+            }
+        }
+        
+        function updateRequestsTable(requests) {
+            const tbody = document.getElementById('requestsTableBody');
+            if (requests.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px;">No requests found</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = requests.map(req => `
+                <tr>
+                    <td>${req.region || 'UNKNOWN'}</td>
+                    <td>${getParameterDisplayName(req.variable_type || 'unknown')}</td>
+                    <td>${getStatusBadge(req.status)}</td>
+                    <td>${formatTime(req.date_rqst)}</td>
+                    <td>${formatProcessingTime(req.processing_time_hours)}</td>
+                    <td>${req.request_index}</td>
+                </tr>
+            `).join('');
+        }
+        
+        async function refreshRegionalMetrics() {
+            try {
+                const response = await fetch('/api/regional-metrics');
+                const data = await response.json();
+                updateRegionalTable(data);
+            } catch (error) {
+                console.error('Error refreshing regional metrics:', error);
+            }
+        }
+        
+        function updateRegionalTable(regions) {
+            const tbody = document.getElementById('regionalTableBody');
+            if (regions.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px;">No regional data found</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = regions.map(region => `
+                <tr>
+                    <td><strong>${region.region}</strong></td>
+                    <td>${region.total_requests}</td>
+                    <td>${region.success_rate.toFixed(1)}%</td>
+                    <td>${getParameterDisplayName(region.most_common_variable)}</td>
+                    <td>
+                        <small>
+                            ✅ ${region.completed_requests} |
+                            🔄 ${region.processing_requests} |
+                            🗑️ ${region.purged_requests}
+                        </small>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        async function resolveAllUnknown() {
+            try {
+                showAlert('🔄 Resolving all unknown regions...', 'info');
+                
+                const response = await fetch('/api/unknown-regions/resolve-all', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert(`✅ Resolution completed: ${result.resolved_count} resolved, ${result.fallback_count} fallback assignments`, 'success');
+                    await refreshUnknownRegions();
+                    await refreshData(); // Refresh overview metrics
+                } else {
+                    showAlert(`❌ Resolution failed: ${result.error || 'Unknown error'}`, 'danger');
+                }
+                
+            } catch (error) {
+                console.error('Error resolving unknown regions:', error);
+                showAlert('❌ Error resolving unknown regions: ' + error.message, 'danger');
+            }
+        }
+        
+        function showOverrideForm(requestId) {
+            document.getElementById(`override-form-${requestId}`).classList.add('active');
+        }
+        
+        function hideOverrideForm(requestId) {
+            document.getElementById(`override-form-${requestId}`).classList.remove('active');
+        }
+        
+        async function submitOverride(requestId) {
+            try {
+                const region = document.getElementById(`override-region-${requestId}`).value;
+                const variable = document.getElementById(`override-variable-${requestId}`).value;
+                
+                const response = await fetch('/api/unknown-regions/manual-override', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        request_id: requestId,
+                        region: region,
+                        variable: variable,
+                        override_by: 'dashboard_user'
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert(`✅ Override applied successfully for ${requestId}`, 'success');
+                    hideOverrideForm(requestId);
+                    await refreshUnknownRegions();
+                    await refreshData(); // Refresh overview metrics
+                } else {
+                    showAlert(`❌ Override failed: ${result.error}`, 'danger');
+                }
+                
+            } catch (error) {
+                console.error('Error applying override:', error);
+                showAlert('❌ Error applying override: ' + error.message, 'danger');
+            }
+        }
+        
+        async function showResolutionDetails(requestId) {
+            try {
+                const response = await fetch(`/api/resolution-details/${requestId}`);
+                const details = await response.json();
+                
+                if (details.error) {
+                    showAlert(`❌ Error getting details: ${details.error}`, 'danger');
+                    return;
+                }
+                
+                let detailsHtml = `
+                    <div class="alert alert-info">
+                        <h4>Resolution Details for ${requestId}</h4>
+                        <p><strong>Current Status:</strong> ${details.tracking_info.resolved_region || 'UNKNOWN'} / ${details.tracking_info.resolved_variable || 'unknown'}</p>
+                        <p><strong>Manual Override:</strong> ${details.tracking_info.manual_override ? 'Yes' : 'No'}</p>
+                        <p><strong>Last Updated:</strong> ${formatTime(details.tracking_info.updated_at)}</p>
+                        
+                        <h5>Resolution Attempts:</h5>
+                `;
+                
+                if (details.resolution_attempts && details.resolution_attempts.length > 0) {
+                    details.resolution_attempts.forEach(attempt => {
+                        const statusClass = attempt.success ? 'success' : 'failed';
+                        detailsHtml += `
+                            <div class="resolution-strategy ${statusClass}">
+                                <strong>${attempt.strategy}</strong>: ${attempt.result_region}/${attempt.result_variable}
+                                (confidence: ${(attempt.confidence * 100).toFixed(1)}%)
+                                ${attempt.error_message ? ` - Error: ${attempt.error_message}` : ''}
+                            </div>
+                        `;
+                    });
+                } else {
+                    detailsHtml += '<p>No resolution attempts recorded.</p>';
+                }
+                
+                detailsHtml += '</div>';
+                
+                // Show details in a modal-like alert
+                showAlert(detailsHtml, 'info');
+                
+            } catch (error) {
+                console.error('Error getting resolution details:', error);
+                showAlert('❌ Error getting resolution details: ' + error.message, 'danger');
+            }
+        }
+        
+        function showAlert(message, type = 'info') {
+            // Remove existing alerts
+            const existingAlerts = document.querySelectorAll('.alert-temporary');
+            existingAlerts.forEach(alert => alert.remove());
+            
+            // Create new alert
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type} alert-temporary`;
+            alert.innerHTML = message;
+            alert.style.position = 'fixed';
+            alert.style.top = '20px';
+            alert.style.right = '20px';
+            alert.style.zIndex = '9999';
+            alert.style.maxWidth = '400px';
+            alert.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';
+            
+            // Add close button
+            const closeBtn = document.createElement('button');
+            closeBtn.innerHTML = '×';
+            closeBtn.style.float = 'right';
+            closeBtn.style.background = 'none';
+            closeBtn.style.border = 'none';
+            closeBtn.style.fontSize = '20px';
+            closeBtn.style.cursor = 'pointer';
+            closeBtn.onclick = () => alert.remove();
+            alert.appendChild(closeBtn);
+            
+            document.body.appendChild(alert);
+            
+            // Auto-remove after 5 seconds for non-info alerts
+            if (type !== 'info') {
+                setTimeout(() => {
+                    if (alert.parentNode) {
+                        alert.remove();
+                    }
+                }, 5000);
+            }
+        }
+        
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            refreshData();
+            // Auto-refresh every 30 seconds
+            setInterval(refreshData, 30000);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced RDA Automation Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f5f5f5; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .header { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            color: white; 
+            padding: 30px; 
+            border-radius: 12px; 
+            margin-bottom: 30px; 
+            text-align: center; 
+        }
+        .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .metric-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .metric-value { font-size: 2em; font-weight: bold; color: #2196F3; }
+        .metric-label { color: #666; margin-top: 5px; }
+        .progress-bar { width: 100%; height: 20px; background-color: #e0e0e0; border-radius: 10px; overflow: hidden; margin: 10px 0; }
+        .progress-fill { height: 100%; background-color: #4CAF50; transition: width 0.3s ease; }
+        
+        .table-container { 
+            background: white; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+            margin-bottom: 30px; 
+            overflow: hidden; 
+        }
+        .table-header { 
+            padding: 20px; 
+            margin: 0; 
+            background: #f8f9fa; 
+            border-bottom: 1px solid #ddd;
+            font-size: 1.2em;
+            font-weight: 600;
+        }
+        .stats-summary {
+            padding: 20px; 
+            background: #f8f9fa; 
+            border-bottom: 1px solid #ddd;
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+            gap: 15px; 
+            margin-bottom: 0;
+        }
+        .stats-item {
+            display: flex;
+            flex-direction: column;
+        }
+        .stats-label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        .stats-value {
+            font-size: 1.1em;
+            color: #2196F3;
+            font-weight: bold;
+        }
+        .data-source {
+            font-size: 0.9em; 
+            color: #666;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background: #f8f9fa; font-weight: 600; }
+        tbody tr:hover { background-color: #f8f9fa; }
+        
+        .status-badge { 
+            padding: 4px 8px; 
+            border-radius: 12px; 
+            font-size: 0.8em; 
+            font-weight: 500;
+        }
+        .status-processing { background: #cce5ff; color: #004085; }
+        .status-completed { background: #d4edda; color: #155724; }
+        .status-failed { background: #f8d7da; color: #721c24; }
+        .status-pending { background: #fff3cd; color: #856404; }
+        
+        .refresh-btn { 
+            background: rgba(255,255,255,0.2); 
+            color: white; 
+            border: 2px solid rgba(255,255,255,0.3); 
+            padding: 12px 24px; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            transition: all 0.3s ease; 
+            margin: 0 5px;
+        }
+        .refresh-btn:hover { background: rgba(255,255,255,0.3); }
+        .refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .loading { opacity: 0.6; pointer-events: none; }
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        
+        .variable-breakdown {
+            font-size: 0.9em;
+            color: #666;
+        }
+        .region-name {
+            font-weight: 600;
+            color: #333;
+        }
+        .success-rate {
+            font-weight: 600;
+        }
+        .success-high { color: #28a745; }
+        .success-medium { color: #ffc107; }
+        .success-low { color: #dc3545; }
+        
+        .no-data {
+            text-align: center; 
+            padding: 40px; 
+            color: #666;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌦️ Enhanced RDA Automation Dashboard</h1>
+            <p>Real-time monitoring of weather data requests with progress tracking</p>
+            <button class="refresh-btn" onclick="refreshAllData()">🔄 Refresh Data</button>
+            <p>Last updated: <span id="lastUpdate">Loading...</span></p>
+        </div>
+        
+        <!-- Progress Tracking Section -->
+        <div class="table-container" style="margin-bottom: 30px;">
+            <h3 class="table-header">📊 Progress Tracking</h3>
+            <div class="stats-summary">
+                <div class="stats-item">
+                    <div class="stats-label">Files Done</div>
+                    <div class="stats-value" id="progressTracker_filesDone">-</div>
+                </div>
+                <div class="stats-item">
+                    <div class="stats-label">Files Remaining</div>
+                    <div class="stats-value" id="progressTracker_filesRemaining">-</div>
+                </div>
+                <div class="stats-item">
+                    <div class="stats-label">Progress</div>
+                    <div class="stats-value" id="progressTracker_percentage">-</div>
+                </div>
+                <div class="stats-item">
+                    <div class="stats-label">Status</div>
+                    <div class="stats-value" id="progressTracker_status">-</div>
+                </div>
+            </div>
+            <div style="padding: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <span style="font-weight: 600;">Overall Progress</span>
+                    <span id="progressTracker_percentageText" style="font-weight: 600; color: #2196F3;">0%</span>
+                </div>
+                <div class="progress-bar" style="height: 30px; margin: 0;">
+                    <div class="progress-fill" id="mainProgressBar" style="width: 0%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.9em;"></div>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-top: 5px; font-size: 0.9em; color: #666;">
+                    <span id="progressTracker_filesDoneLabel">0 files done</span>
+                    <span id="progressTracker_filesRemainingLabel">0 files remaining</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-value" id="totalRequests">-</div>
+                <div class="metric-label">Total Requests</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value" id="completedRequests">-</div>
+                <div class="metric-label">Completed Requests</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressBar" style="width: 0%"></div>
+                </div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value" id="processingRequests">-</div>
+                <div class="metric-label">Processing</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value" id="uniqueRegions">-</div>
+                <div class="metric-label">Active Regions</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value" id="totalDownloadedFiles">-</div>
+                <div class="metric-label">Downloaded Files</div>
+            </div>
+        </div>
+        
+        <!-- Completed Regions Section -->
+        <div class="table-container">
+            <h3 class="table-header">✅ Completed Regions</h3>
+            <div class="stats-summary">
+                <div class="stats-item">
+                    <div class="stats-label">Total Completed Requests</div>
+                    <div class="stats-value" id="completedRegionsStats_totalRequests">-</div>
+                </div>
+                <div class="stats-item">
+                    <div class="stats-label">Total Downloaded Files</div>
+                    <div class="stats-value" id="completedRegionsStats_totalFiles">-</div>
+                </div>
+                <div class="stats-item">
+                    <div class="stats-label">Unique Regions</div>
+                    <div class="stats-value" id="completedRegionsStats_uniqueRegions">-</div>
+                </div>
+                <div class="stats-item">
+                    <div class="stats-label">Regions with Downloads</div>
+                    <div class="stats-value" id="completedRegionsStats_regionsWithDownloads">-</div>
+                </div>
+                <div class="data-source">
+                    <strong>Data Source:</strong> <span id="completedRegionsStats_dataSource">-</span> | 
+                    <strong>Last Updated:</strong> <span id="completedRegionsStats_lastUpdate">-</span>
+                </div>
+            </div>
+            <table id="completedRegionsTable">
+                <thead>
+                    <tr>
+                        <th>Region</th>
+                        <th>Region Name</th>
+                        <th>Total Requests</th>
+                        <th>Downloaded Files</th>
+                        <th>Progress</th>
+                        <th>Most Common Variable</th>
+                        <th>Avg Processing Time</th>
+                        <th>Last Completion</th>
+                    </tr>
+                </thead>
+                <tbody id="completedRegionsTableBody">
+                    <tr><td colspan="8" class="no-data">Loading completed regions data...</td></tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Current Requests Section -->
+        <div class="table-container">
+            <h3 class="table-header">📋 Current Requests</h3>
+            <table id="requestsTable">
+                <thead>
+                    <tr>
+                        <th>Region</th>
+                        <th>Weather Variable</th>
+                        <th>Status</th>
+                        <th>Submitted</th>
+                        <th>Processing Time</th>
+                        <th>Request Index</th>
+                    </tr>
+                </thead>
+                <tbody id="requestsTableBody">
+                    <tr><td colspan="6" class="no-data">Loading current requests...</td></tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Regional Performance Section -->
+        <div class="table-container">
+            <h3 class="table-header">🗺️ Regional Performance</h3>
+            <table id="regionalTable">
+                <thead>
+                    <tr>
+                        <th>Region</th>
+                        <th>Total Requests</th>
+                        <th>Progress</th>
+                        <th>Most Common Variable</th>
+                        <th>Status Distribution</th>
+                    </tr>
+                </thead>
+                <tbody id="regionalTableBody">
+                    <tr><td colspan="5" class="no-data">Loading regional performance data...</td></tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Weather Variable Analysis Section -->
+        <div class="table-container">
+            <h3 class="table-header">🌡️ Weather Variable Analysis</h3>
+            <table id="variableTable">
+                <thead>
+                    <tr>
+                        <th>Weather Variable</th>
+                        <th>Total Requests</th>
+                        <th>Progress</th>
+                        <th>Most Active Regions</th>
+                        <th>Status Distribution</th>
+                    </tr>
+                </thead>
+                <tbody id="variableTableBody">
+                    <tr><td colspan="5" class="no-data">Loading weather variable data...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <script>
+        // Utility functions
+        function formatTime(timeStr) {
+            if (!timeStr || timeStr === 'N/A') return 'N/A';
+            try {
+                return new Date(timeStr).toLocaleString();
+            } catch (e) {
+                return timeStr;
+            }
+        }
+        
+        function formatProcessingTime(hours) {
+            if (!hours || hours === 0) return 'N/A';
+            if (hours < 1) return Math.round(hours * 60) + ' min';
+            return hours.toFixed(1) + ' hrs';
+        }
+        
+        function getStatusBadge(status) {
+            const statusClass = `status-${status.toLowerCase()}`;
+            return `<span class="status-badge ${statusClass}">${status.charAt(0).toUpperCase() + status.slice(1)}</span>`;
+        }
+        
+        function getParameterDisplayName(param) {
+            const names = {
+                'dswrf': 'Solar Radiation',
+                'ugrd_vgrd': 'Wind Speed',
+                'tmp_dpt': 'Temperature',
+                'apcp': 'Precipitation'
+            };
+            return names[param] || param.toUpperCase();
+        }
+        
+        function getSuccessRateClass(rate) {
+            if (rate >= 80) return 'success-high';
+            if (rate >= 50) return 'success-medium';
+            return 'success-low';
+        }
+        
+        // Update progress tracking section
+        function updateProgressTracker() {
+            fetch('/api/progress-tracking')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('progressTracker_filesDone').textContent = data.files_done || 0;
+                    document.getElementById('progressTracker_filesRemaining').textContent = data.files_remaining || 0;
+                    document.getElementById('progressTracker_percentage').textContent = (data.progress_percentage || 0).toFixed(1) + '%';
+                    document.getElementById('progressTracker_status').textContent = data.status || 'Unknown';
+                    
+                    // Update main progress bar
+                    const progressBar = document.getElementById('mainProgressBar');
+                    const percentage = data.progress_percentage || 0;
+                    progressBar.style.width = percentage + '%';
+                    progressBar.textContent = percentage.toFixed(1) + '%';
+                    
+                    // Update percentage text
+                    document.getElementById('progressTracker_percentageText').textContent = percentage.toFixed(1) + '%';
+                    
+                    // Update file labels
+                    document.getElementById('progressTracker_filesDoneLabel').textContent = `${data.files_done || 0} files done`;
+                    document.getElementById('progressTracker_filesRemainingLabel').textContent = `${data.files_remaining || 0} files remaining`;
+                    
+                    // Color coding based on progress
+                    const progressFill = document.getElementById('mainProgressBar');
+                    progressFill.className = 'progress-fill';
+                    if (percentage >= 80) {
+                        progressFill.style.backgroundColor = '#28a745'; // Green
+                    } else if (percentage >= 50) {
+                        progressFill.style.backgroundColor = '#ffc107'; // Yellow
+                    } else {
+                        progressFill.style.backgroundColor = '#dc3545'; // Red
+                    }
+                    
+                    // Update regional progress if available
+                    if (data.regional_progress) {
+                        updateRegionalProgress(data.regional_progress);
+                    }
+                    
+                    // Update variable progress if available
+                    if (data.variable_progress) {
+                        updateVariableProgress(data.variable_progress);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error updating progress tracker:', error);
+                    // Set default values on error
+                    document.getElementById('progressTracker_filesDone').textContent = '0';
+                    document.getElementById('progressTracker_filesRemaining').textContent = '0';
+                    document.getElementById('progressTracker_percentage').textContent = '0%';
+                    document.getElementById('progressTracker_status').textContent = 'Error';
+                });
+        }
+
+        // Update regional progress displays
+        function updateRegionalProgress(regionalProgress) {
+            const tbody = document.getElementById('regionalTableBody');
+            if (!tbody) return;
+            
+            regionalProgress.forEach(region => {
+                const rows = tbody.querySelectorAll('tr');
+                rows.forEach(row => {
+                    const regionCell = row.cells[0];
+                    if (regionCell && regionCell.textContent.trim() === region.region) {
+                        // Update progress cell (replacing success rate)
+                        const progressCell = row.cells[2]; // Progress is 3rd column
+                        if (progressCell) {
+                            const percentage = region.progress_percentage || 0;
+                            progressCell.innerHTML = `
+                                <div class="progress" style="height: 20px;">
+                                    <div class="progress-bar ${percentage >= 80 ? 'bg-success' : percentage >= 50 ? 'bg-warning' : 'bg-danger'}"
+                                         style="width: ${percentage}%; background-color: ${percentage >= 80 ? '#28a745' : percentage >= 50 ? '#ffc107' : '#dc3545'}; color: white; display: flex; align-items: center; justify-content: center; font-weight: 600;">${percentage.toFixed(1)}%</div>
+                                </div>
+                            `;
+                        }
+                    }
+                });
+            });
+        }
+
+        // Update variable progress displays
+        function updateVariableProgress(variableProgress) {
+            const tbody = document.getElementById('variableTableBody');
+            if (!tbody) return;
+            
+            variableProgress.forEach(variable => {
+                const rows = tbody.querySelectorAll('tr');
+                rows.forEach(row => {
+                    const variableCell = row.cells[0];
+                    if (variableCell && variableCell.textContent.trim() === getParameterDisplayName(variable.variable_type)) {
+                        // Update progress cell (replacing success rate)
+                        const progressCell = row.cells[2]; // Progress is 3rd column
+                        if (progressCell) {
+                            const percentage = variable.progress_percentage || 0;
+                            progressCell.innerHTML = `
+                                <div class="progress" style="height: 20px;">
+                                    <div class="progress-bar ${percentage >= 80 ? 'bg-success' : percentage >= 50 ? 'bg-warning' : 'bg-danger'}"
+                                         style="width: ${percentage}%; background-color: ${percentage >= 80 ? '#28a745' : percentage >= 50 ? '#ffc107' : '#dc3545'}; color: white; display: flex; align-items: center; justify-content: center; font-weight: 600;">${percentage.toFixed(1)}%</div>
+                                </div>
+                            `;
+                        }
+                    }
+                });
+            });
+        }
+
+        // Main data refresh function
+        async function refreshAllData() {
+            try {
+                document.body.classList.add('loading');
+                console.log('Starting data refresh...');
+                
+                // Fetch all data in parallel with individual error handling
+                const [summaryResponse, completedRegionsResponse, requestsResponse, regionalResponse, variableResponse] = await Promise.all([
+                    fetch('/api/summary').catch(err => {
+                        console.error('Error fetching summary:', err);
+                        return { ok: false, error: err };
+                    }),
+                    fetch('/api/completed-regions').catch(err => {
+                        console.error('Error fetching completed regions:', err);
+                        return { ok: false, error: err };
+                    }),
+                    fetch('/api/current-requests').catch(err => {
+                        console.error('Error fetching current requests:', err);
+                        return { ok: false, error: err };
+                    }),
+                    fetch('/api/regional-metrics').catch(err => {
+                        console.error('Error fetching regional metrics:', err);
+                        return { ok: false, error: err };
+                    }),
+                    fetch('/api/weather-variable-metrics').catch(err => {
+                        console.error('Error fetching variable metrics:', err);
+                        return { ok: false, error: err };
+                    })
+                ]);
+                
+                // Parse responses with individual error handling
+                let summaryData = {};
+                let completedRegionsData = {};
+                let requestsData = [];
+                let regionalData = [];
+                let variableData = [];
+                
+                // Handle summary data
+                if (summaryResponse.ok) {
+                    try {
+                        summaryData = await summaryResponse.json();
+                        console.log('Summary data loaded:', summaryData);
+                    } catch (err) {
+                        console.error('Error parsing summary JSON:', err);
+                    }
+                }
+                
+                // Handle completed regions data with detailed logging
+                if (completedRegionsResponse.ok) {
+                    try {
+                        completedRegionsData = await completedRegionsResponse.json();
+                        console.log('Completed regions raw response:', completedRegionsData);
+                        console.log('Completed regions response type:', typeof completedRegionsData);
+                        console.log('Completed regions response keys:', Object.keys(completedRegionsData || {}));
+                    } catch (err) {
+                        console.error('Error parsing completed regions JSON:', err);
+                        completedRegionsData = { completed_regions: [], statistics: {} };
+                    }
+                } else {
+                    console.error('Failed to fetch completed regions:', completedRegionsResponse.error || 'Unknown error');
+                    completedRegionsData = { completed_regions: [], statistics: {} };
+                }
+                
+                // Handle other responses
+                if (requestsResponse.ok) {
+                    try {
+                        requestsData = await requestsResponse.json();
+                        console.log('Requests data loaded:', requestsData.length, 'requests');
+                    } catch (err) {
+                        console.error('Error parsing requests JSON:', err);
+                    }
+                }
+                
+                if (regionalResponse.ok) {
+                    try {
+                        regionalData = await regionalResponse.json();
+                        console.log('Regional data loaded:', regionalData.length, 'regions');
+                    } catch (err) {
+                        console.error('Error parsing regional JSON:', err);
+                    }
+                }
+                
+                if (variableResponse.ok) {
+                    try {
+                        variableData = await variableResponse.json();
+                        console.log('Variable data loaded:', variableData.length, 'variables');
+                    } catch (err) {
+                        console.error('Error parsing variable JSON:', err);
+                    }
+                }
+                
+                // Update all sections
+                console.log('Updating UI sections...');
+                updateSummaryMetrics(summaryData, completedRegionsData);
+                updateCompletedRegionsSection(completedRegionsData);
+                updateRequestsTable(requestsData);
+                updateRegionalTable(regionalData);
+                updateVariableTable(variableData);
+                updateProgressTracker(); // Add progress tracking to refresh cycle
+                
+                document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+                console.log('Data refresh completed successfully');
+                
+            } catch (error) {
+                console.error('Error refreshing data:', error);
+                // Show error in UI
+                document.getElementById('lastUpdate').textContent = 'Error loading data';
+                
+                // Update completed regions section with error message
+                const tbody = document.getElementById('completedRegionsTableBody');
+                if (tbody) {
+                    tbody.innerHTML = '<tr><td colspan="8" class="no-data">Error loading completed regions data. Check console for details.</td></tr>';
+                }
+            } finally {
+                document.body.classList.remove('loading');
+            }
+        }
+        
+        function updateSummaryMetrics(summaryData, completedRegionsData) {
+            const overview = summaryData.overview || {};
+            const completedStats = completedRegionsData.statistics || {};
+            
+            document.getElementById('totalRequests').textContent = overview.total_requests || 0;
+            document.getElementById('completedRequests').textContent = overview.completed_requests || 0;
+            document.getElementById('processingRequests').textContent = (overview.processing_requests || 0) + (overview.queued_requests || 0);
+            document.getElementById('successRate').textContent = (overview.success_rate || 0).toFixed(1) + '%';
+            document.getElementById('uniqueRegions').textContent = overview.unique_regions || 0;
+            document.getElementById('totalDownloadedFiles').textContent = completedStats.total_downloaded_files || 0;
+            
+            // Update progress bar
+            const progressPercent = overview.progress_percentage || 0;
+            document.getElementById('progressBar').style.width = progressPercent + '%';
+        }
+        
+        function updateCompletedRegionsSection(data) {
+            console.log('updateCompletedRegionsSection called with data:', data);
+            
+            // Handle different possible response structures
+            let stats, regions;
+            
+            if (data && typeof data === 'object') {
+                // Check if data has the expected structure
+                if (data.statistics && data.completed_regions) {
+                    stats = data.statistics;
+                    regions = data.completed_regions;
+                } else if (Array.isArray(data)) {
+                    // If data is directly an array of regions
+                    regions = data;
+                    stats = {};
+                } else if (data.regions) {
+                    // Alternative structure
+                    regions = data.regions;
+                    stats = data.stats || {};
+                } else {
+                    console.warn('Unexpected data structure for completed regions:', data);
+                    regions = [];
+                    stats = {};
+                }
+            } else {
+                console.error('Invalid data received for completed regions:', data);
+                regions = [];
+                stats = {};
+            }
+            
+            console.log('Processed stats:', stats);
+            console.log('Processed regions:', regions);
+            
+            // Update statistics summary with safe access
+            document.getElementById('completedRegionsStats_totalRequests').textContent =
+                stats.total_completed_requests || stats.total_requests || 0;
+            document.getElementById('completedRegionsStats_totalFiles').textContent =
+                stats.total_downloaded_files || stats.total_files || 0;
+            document.getElementById('completedRegionsStats_uniqueRegions').textContent =
+                stats.unique_regions || (regions ? regions.length : 0);
+            document.getElementById('completedRegionsStats_regionsWithDownloads').textContent =
+                stats.regions_with_downloads || stats.regions_with_files || 0;
+            document.getElementById('completedRegionsStats_dataSource').textContent =
+                data.data_source || data.source || 'Completed Requests Database';
+            document.getElementById('completedRegionsStats_lastUpdate').textContent =
+                formatTime(data.timestamp || data.last_updated || new Date().toISOString());
+            
+            // Update table
+            const tbody = document.getElementById('completedRegionsTableBody');
+            if (!regions || regions.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="no-data">No completed regions found. This is expected for a fresh system with no completed requests yet.</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = regions.map((region, index) => {
+                console.log(`Processing region ${index}:`, region);
+                
+                // Safe access to region data with multiple fallback options
+                const regionCode = region.region || region.region_code || region.name || `REGION_${index + 1}`;
+                const regionName = region.region_name || region.name || region.display_name || regionCode;
+                
+                // Handle variable type with multiple possible field names
+                let mostCommonVariable = region.most_common_variable || region.variable_type || region.variable || 'unknown';
+                if (mostCommonVariable === 'unknown' || mostCommonVariable === 'N/A' || !mostCommonVariable) {
+                    // Try to get from sample requests if available
+                    if (region.sample_requests && region.sample_requests.length > 0) {
+                        mostCommonVariable = region.sample_requests[0].variable_type ||
+                                           region.sample_requests[0].variable || 'unknown';
+                    }
+                }
+                
+                // Handle request counts with multiple possible field names
+                const totalRequests = region.total_requests || region.request_count || region.requests || 0;
+                const downloadedFiles = region.downloaded_files || region.files_downloaded ||
+                                      region.file_count || region.files || 0;
+                
+                // Calculate progress percentage
+                const progressPercentage = totalRequests > 0 ? (downloadedFiles / totalRequests) * 100 : 0;
+                
+                // Handle processing time with multiple possible field names
+                const avgProcessingTime = region.average_processing_time_hours ||
+                                        region.avg_processing_time ||
+                                        region.processing_time || 0;
+                
+                // Handle last completion with multiple possible field names
+                const lastCompletion = region.last_completion ||
+                                     region.last_completed ||
+                                     region.completion_time ||
+                                     (region.sample_requests && region.sample_requests.length > 0 ?
+                                      region.sample_requests[0].completion_time : null);
+                
+                console.log(`Region ${regionCode} processed:`, {
+                    regionCode, regionName, mostCommonVariable, totalRequests,
+                    downloadedFiles, progressPercentage, avgProcessingTime, lastCompletion
+                });
+                
+                // Progress bar color based on percentage
+                let progressColor = '#dc3545'; // Red for <50%
+                if (progressPercentage >= 80) progressColor = '#28a745'; // Green for ≥80%
+                else if (progressPercentage >= 50) progressColor = '#ffc107'; // Yellow for ≥50%
+                
+                return `
+                    <tr>
+                        <td><strong>${regionCode}</strong></td>
+                        <td class="region-name">${regionName}</td>
+                        <td>${totalRequests}</td>
+                        <td><strong>${downloadedFiles}</strong></td>
+                        <td>
+                            <div class="progress" style="height: 20px;">
+                                <div class="progress-bar"
+                                     style="width: ${progressPercentage.toFixed(1)}%; background-color: ${progressColor}; color: white; display: flex; align-items: center; justify-content: center; font-weight: 600;">${progressPercentage.toFixed(1)}%</div>
+                            </div>
+                        </td>
+                        <td>${getParameterDisplayName(mostCommonVariable)}</td>
+                        <td>${formatProcessingTime(avgProcessingTime)}</td>
+                        <td>${formatTime(lastCompletion)}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        function updateRequestsTable(requests) {
+            const tbody = document.getElementById('requestsTableBody');
+            if (requests.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="no-data">No current requests found</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = requests.map(req => {
+                // Safe access to request data with fallbacks
+                const region = req.region || 'UNKNOWN';
+                const variableType = req.variable_type || 'unknown';
+                const status = req.status || 'unknown';
+                const dateRequested = req.date_rqst || null;
+                const processingTime = req.processing_time_hours || 0;
+                const requestIndex = req.request_index || 'N/A';
+                
+                return `
+                    <tr>
+                        <td>${region}</td>
+                        <td>${getParameterDisplayName(variableType)}</td>
+                        <td>${getStatusBadge(status)}</td>
+                        <td>${formatTime(dateRequested)}</td>
+                        <td>${formatProcessingTime(processingTime)}</td>
+                        <td>${requestIndex}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        function updateRegionalTable(regions) {
+            const tbody = document.getElementById('regionalTableBody');
+            if (regions.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="no-data">No regional data found</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = regions.map(region => {
+                // Safe access to regional data with fallbacks
+                const regionName = region.region || 'UNKNOWN';
+                const totalRequests = region.total_requests || 0;
+                const completedRequests = region.completed_requests || 0;
+                const processingRequests = region.processing_requests || 0;
+                const purgedRequests = region.purged_requests || 0;
+                const mostCommonVariable = region.most_common_variable || 'unknown';
+                
+                // Calculate progress percentage from available data
+                const progressPercentage = totalRequests > 0 ? (completedRequests / totalRequests) * 100 : 0;
+                
+                // Progress bar color based on percentage
+                let progressColor = '#dc3545'; // Red for <50%
+                if (progressPercentage >= 80) progressColor = '#28a745'; // Green for ≥80%
+                else if (progressPercentage >= 50) progressColor = '#ffc107'; // Yellow for ≥50%
+                
+                return `
+                    <tr>
+                        <td class="region-name">${regionName}</td>
+                        <td>${totalRequests}</td>
+                        <td>
+                            <div class="progress" style="height: 20px;">
+                                <div class="progress-bar"
+                                     style="width: ${progressPercentage.toFixed(1)}%; background-color: ${progressColor}; color: white; display: flex; align-items: center; justify-content: center; font-weight: 600;">${progressPercentage.toFixed(1)}%</div>
+                            </div>
+                        </td>
+                        <td>${getParameterDisplayName(mostCommonVariable)}</td>
+                        <td>
+                            <small>
+                                ✅ ${completedRequests} |
+                                🔄 ${processingRequests} |
+                                🗑️ ${purgedRequests}
+                            </small>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        function updateVariableTable(variables) {
+            const tbody = document.getElementById('variableTableBody');
+            if (variables.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="no-data">No weather variable data found</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = variables.map(variable => {
+                // Safe access to variable data with fallbacks
+                const variableType = variable.variable_type || 'unknown';
+                const totalRequests = variable.total_requests || 0;
+                const completedRequests = variable.completed_requests || 0;
+                const processingRequests = variable.processing_requests || 0;
+                const purgedRequests = variable.purged_requests || 0;
+                const mostActiveRegions = variable.most_active_regions || [];
+                
+                // Calculate progress percentage from available data
+                const progressPercentage = totalRequests > 0 ? (completedRequests / totalRequests) * 100 : 0;
+                
+                // Progress bar color based on percentage
+                let progressColor = '#dc3545'; // Red for <50%
+                if (progressPercentage >= 80) progressColor = '#28a745'; // Green for ≥80%
+                else if (progressPercentage >= 50) progressColor = '#ffc107'; // Yellow for ≥50%
+                
+                return `
+                    <tr>
+                        <td class="region-name">${getParameterDisplayName(variableType)}</td>
+                        <td>${totalRequests}</td>
+                        <td>
+                            <div class="progress" style="height: 20px;">
+                                <div class="progress-bar"
+                                     style="width: ${progressPercentage.toFixed(1)}%; background-color: ${progressColor}; color: white; display: flex; align-items: center; justify-content: center; font-weight: 600;">${progressPercentage.toFixed(1)}%</div>
+                            </div>
+                        </td>
+                        <td>${mostActiveRegions.length > 0 ? mostActiveRegions.join(', ') : 'N/A'}</td>
+                        <td>
+                            <small>
+                                ✅ ${completedRequests} |
+                                🔄 ${processingRequests} |
+                                🗑️ ${purgedRequests}
+                            </small>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            refreshAllData();
+            // Auto-refresh every 30 seconds
+            setInterval(refreshAllData, 30000);
+        });
+    </script>
+</body>
+</html>

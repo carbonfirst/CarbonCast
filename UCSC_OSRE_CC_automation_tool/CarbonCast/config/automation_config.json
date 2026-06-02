@@ -1,0 +1,533 @@
+{
+  "automation": {
+    "max_concurrent_requests": 10,
+    "check_interval_seconds": 60,
+    "retry_attempts": 3,
+    "retry_delay_seconds": 30,
+    "download_timeout_seconds": 3600,
+    "auto_purge_after_download": true,
+    "auto_purge_failed_requests": true,
+    "purge_retry_attempts": 3,
+    "purge_retry_delay_seconds": 15,
+    "request_limit_safety_margin": 0,
+    "auto_upload_enabled": true,
+    "status_check_interval_seconds": 60,
+    "completed_request_scan_interval_minutes": 2,
+    "aggressive_10_request_targeting": true,
+    "immediate_slot_filling": true,
+    "max_upload_batch_size": 10,
+    "dynamic_batch_processing_enabled": true,
+    "dynamic_trigger_response_time_ms": 500,
+    "batch_optimization_enabled": true,
+    "enhanced_monitoring_enabled": true
+  },
+  "rate_limiting": {
+    "enabled": true,
+    "requests_per_minute": 10,
+    "requests_per_hour": 600,
+    "burst_allowance": 5,
+    "adaptive_enabled": true,
+    "min_requests_per_minute": 5,
+    "max_requests_per_minute": 60,
+    "adaptation_factor": 0.1,
+    "circuit_breaker_enabled": true,
+    "failure_threshold": 5,
+    "recovery_timeout_seconds": 300,
+    "half_open_max_calls": 3,
+    "base_backoff_seconds": 1.0,
+    "max_backoff_seconds": 300.0,
+    "backoff_multiplier": 2.0,
+    "jitter_enabled": true,
+    "monitoring_window_minutes": 15,
+    "health_check_interval_seconds": 60
+  },
+  "error_handling": {
+    "enabled": true,
+    "default_max_retries": 3,
+    "default_base_delay": 1.0,
+    "default_max_delay": 300.0,
+    "retry_jitter_enabled": true,
+    "rate_limit_base_delay": 60.0,
+    "rate_limit_max_delay": 1800.0,
+    "rate_limit_backoff_multiplier": 1.5,
+    "circuit_breaker_enabled": true,
+    "error_threshold_for_circuit": 5,
+    "error_tracking_window_minutes": 60,
+    "alert_threshold_errors_per_minute": 10,
+    "pattern_recognition_enabled": true,
+    "graceful_degradation_enabled": true,
+    "degradation_timeout_seconds": 300
+  },
+  "request_throttling": {
+    "enabled": true,
+    "max_queue_size": 1000,
+    "max_concurrent_requests": 5,
+    "default_timeout_seconds": 300.0,
+    "throttle_mode": "balanced",
+    "adaptive_throttling": true,
+    "min_request_interval_seconds": 1.0,
+    "max_request_interval_seconds": 60.0,
+    "priority_boost_threshold_minutes": 30,
+    "emergency_queue_size_limit": 50,
+    "rate_limiter_integration": true,
+    "error_handler_integration": true,
+    "circuit_breaker_respect": true,
+    "performance_tracking_enabled": true,
+    "queue_health_monitoring": true,
+    "alert_on_queue_full": true
+  },
+  "upload": {
+    "dest_file": "./ds0841.1_control.ctl",
+    "rate_limit_delay": 0.5,
+    "auto_discover_incoming": true,
+    "aggressive_upload_enabled": true,
+    "upload_on_any_available_slot": true,
+    "dynamic_upload_optimization": true
+  },
+  "dynamic_batch_processing": {
+    "enabled": true,
+    "trigger_system": {
+      "enabled": true,
+      "response_time_target_ms": 500,
+      "max_concurrent_triggers": 3,
+      "trigger_cooldown_seconds": 30,
+      "emergency_mode_enabled": true
+    },
+    "batch_optimizer": {
+      "enabled": true,
+      "strategy": "adaptive",
+      "mode": "balanced",
+      "target_utilization": 0.9,
+      "optimization_interval_seconds": 30,
+      "learning_enabled": true,
+      "predictive_window_seconds": 300,
+      "risk_tolerance": 0.7
+    },
+    "enhanced_monitoring": {
+      "enabled": true,
+      "adaptive_intervals": true,
+      "base_interval_seconds": 15,
+      "min_interval_seconds": 5,
+      "max_interval_seconds": 60,
+      "event_system_enabled": true
+    },
+    "capacity_management": {
+      "enhanced_mode": true,
+      "crisis_resolution_timeout_seconds": 1800,
+      "aggressive_processing_enabled": true,
+      "auto_purge_completed": true,
+      "auto_purge_errors": true,
+      "priority_boost_at_critical": true
+    }
+  },
+  "directories": {
+    "base_download_dir": "src/python/downloaded_files",
+    "logs_dir": "./logs",
+    "control_files_dir": "./control_files"
+  },
+  "regions": {
+    "CISO": {
+      "name": "California ISO",
+      "description": "California Independent System Operator region",
+      "coordinates": [42, 32, -124.75, -113.5]
+    },
+    "ERCOT": {
+      "name": "Electric Reliability Council of Texas",
+      "description": "Texas electricity grid region",
+      "coordinates": [36.5, 25.25, -104.5, -93.25]
+    },
+    "PJM": {
+      "name": "PJM Interconnection",
+      "description": "Mid-Atlantic and Midwest electricity grid",
+      "coordinates": [43, 34.25, -91, -73.5]
+    },
+    "MISO": {
+      "name": "Midcontinent Independent System Operator",
+      "description": "Midwest electricity grid region",
+      "coordinates": [50.00, 28.50, -107.75, -81.75]
+    },
+    "ISNE": {
+      "name": "ISO New England",
+      "description": "New England electricity grid region",
+      "coordinates": [48, 40, -74.25, -66.5]
+    },
+    "BPAT": {
+      "name": "Bonneville Power Administration",
+      "description": "Pacific Northwest electricity region",
+      "coordinates": [49.50, 39.50, -125.25, -105.50]
+    },
+    "SWPP": {
+      "name": "Southwest Power Pool",
+      "description": "Southwest electricity grid region",
+      "coordinates": [49.50, 30.25, -107.75, -89.50]
+    },
+    "SOCO": {
+      "name": "Southern Company",
+      "description": "Southeastern electricity region",
+      "coordinates": [35.50, 29.25, -90.50, -80.25]
+    },
+    "FPL": {
+      "name": "Florida Power & Light",
+      "description": "Florida electricity region",
+      "coordinates": [31.25, 24.00, -83.50, -79.50]
+    },
+    "NYISO": {
+      "name": "New York ISO",
+      "description": "New York electricity grid region",
+      "coordinates": [45.50, 40.00, -80.25, -71.25]
+    },
+    "BANC": {
+      "name": "Balancing Authority of Northern California",
+      "description": "Northern California electricity region",
+      "coordinates": [41.75, 37.00, -124.00, -120.00]
+    },
+    "LDWP": {
+      "name": "Los Angeles Department of Water and Power",
+      "description": "Los Angeles electricity region",
+      "coordinates": [38.00, 33.25, -119.00, -117.00]
+    },
+    "TIDC": {
+      "name": "Turlock Irrigation District",
+      "description": "Central California electricity region",
+      "coordinates": [38.25, 36.75, -121.75, -119.75]
+    },
+    "DUK": {
+      "name": "Duke Energy",
+      "description": "Carolinas electricity region",
+      "coordinates": [37.00, 33.00, -84.75, -77.75]
+    },
+    "SC": {
+      "name": "South Carolina Electric & Gas",
+      "description": "South Carolina electricity region",
+      "coordinates": [35.25, 31.50, -82.75, -78.00]
+    },
+    "SCEG": {
+      "name": "South Carolina Electric & Gas",
+      "description": "South Carolina electricity region",
+      "coordinates": [35.25, 31.50, -83.00, -78.75]
+    },
+    "SPA": {
+      "name": "Southwestern Power Administration",
+      "description": "Southwestern electricity region",
+      "coordinates": [40.75, 34.25, -98.00, -89.00]
+    },
+    "FMPP": {
+      "name": "Florida Municipal Power Pool",
+      "description": "Florida municipal electricity region",
+      "coordinates": [30.75, 24.00, -83.00, -79.50]
+    },
+    "FPC": {
+      "name": "Florida Power Corporation",
+      "description": "Florida electricity region",
+      "coordinates": [31.25, 25.75, -86.50, -80.00]
+    },
+    "TAL": {
+      "name": "City of Tallahassee",
+      "description": "Tallahassee electricity region",
+      "coordinates": [31.25, 29.75, -84.75, -83.50]
+    },
+    "TEC": {
+      "name": "Tampa Electric Company",
+      "description": "Tampa electricity region",
+      "coordinates": [29.00, 27.00, -83.25, -81.25]
+    },
+    "AECI": {
+      "name": "Associated Electric Cooperative",
+      "description": "Missouri electricity cooperative",
+      "coordinates": [41.75, 34.25, -98.50, -88.50]
+    },
+    "LGEE": {
+      "name": "Louisville Gas and Electric",
+      "description": "Kentucky electricity region",
+      "coordinates": [39.50, 36.00, -89.75, -82.25]
+    },
+    "DOPD": {
+      "name": "PUD No. 1 of Douglas County",
+      "description": "Washington electricity region",
+      "coordinates": [49.50, 46.75, -120.75, -118.25]
+    },
+    "GCPD": {
+      "name": "Grant County PUD",
+      "description": "Washington electricity region",
+      "coordinates": [48.50, 46.25, -120.50, -118.50]
+    },
+    "GRID": {
+      "name": "Gridforce Energy Management",
+      "description": "Pacific Northwest electricity region",
+      "coordinates": [46.25, 44.75, -119.75, -118.25]
+    },
+    "IPCO": {
+      "name": "Idaho Power Company",
+      "description": "Idaho electricity region",
+      "coordinates": [47.25, 41.50, -120.50, -111.00]
+    },
+    "NEVP": {
+      "name": "Nevada Power Company",
+      "description": "Nevada electricity region",
+      "coordinates": [42.50, 34.50, -122.00, -111.00]
+    },
+    "NWMT": {
+      "name": "NorthWestern Energy",
+      "description": "Montana electricity region",
+      "coordinates": [49.50, 43.25, -116.50, -103.50]
+    },
+    "PACE": {
+      "name": "PacifiCorp East",
+      "description": "Western electricity region",
+      "coordinates": [45.50, 33.00, -115.75, -104.25]
+    },
+    "PACW": {
+      "name": "PacifiCorp West",
+      "description": "Western electricity region",
+      "coordinates": [47.50, 38.75, -124.75, -115.75]
+    },
+    "PGE": {
+      "name": "Portland General Electric",
+      "description": "Oregon electricity region",
+      "coordinates": [46.50, 44.25, -124.25, -121.25]
+    },
+    "PSCO": {
+      "name": "Public Service Company of Colorado",
+      "description": "Colorado electricity region",
+      "coordinates": [41.75, 35.75, -109.50, -102.00]
+    },
+    "PSEI": {
+      "name": "Puget Sound Energy",
+      "description": "Washington electricity region",
+      "coordinates": [49.50, 45.75, -123.75, -119.75]
+    },
+    "SCL": {
+      "name": "Seattle City Light",
+      "description": "Seattle electricity region",
+      "coordinates": [48.25, 47.00, -123.00, -121.75]
+    },
+    "TPWR": {
+      "name": "Tacoma Power",
+      "description": "Tacoma electricity region",
+      "coordinates": [48.25, 45.75, -124.00, -120.50]
+    },
+    "WACM": {
+      "name": "Western Area Colorado Missouri",
+      "description": "Western electricity region",
+      "coordinates": [48.00, 35.50, -114.50, -95.75]
+    },
+    "AZPS": {
+      "name": "Arizona Public Service",
+      "description": "Arizona electricity region",
+      "coordinates": [36.75, 30.75, -115.25, -108.75]
+    },
+    "EPE": {
+      "name": "El Paso Electric",
+      "description": "Texas/New Mexico electricity region",
+      "coordinates": [34.00, 26.75, -108.75, -98.25]
+    },
+    "PNM": {
+      "name": "Public Service Company of New Mexico",
+      "description": "New Mexico electricity region",
+      "coordinates": [44.50, 30.75, -123.50, -101.50]
+    },
+    "SRP": {
+      "name": "Salt River Project",
+      "description": "Arizona electricity region",
+      "coordinates": [34.50, 32.00, -113.75, -110.50]
+    },
+    "TEPC": {
+      "name": "Tucson Electric Power",
+      "description": "Arizona electricity region",
+      "coordinates": [36.75, 31.25, -115.25, -110.00]
+    },
+    "WALC": {
+      "name": "Western Area Lower Colorado",
+      "description": "Western electricity region",
+      "coordinates": [44.00, 30.75, -124.25, -105.00]
+    },
+    "TVA": {
+      "name": "Tennessee Valley Authority",
+      "description": "Tennessee Valley electricity region",
+      "coordinates": [38.00, 31.75, -90.75, -81.25]
+    },
+    "AL": {
+      "name": "Albania",
+      "description": "Albanian electricity region",
+      "coordinates": [42.75, 39.50, 19.25, 21.00]
+    },
+    "AT": {
+      "name": "Austria",
+      "description": "Austrian electricity region",
+      "coordinates": [49.00, 46.50, 9.50, 17.00]
+    },
+    "BE": {
+      "name": "Belgium",
+      "description": "Belgian electricity region",
+      "coordinates": [51.50, 49.50, 2.50, 6.25]
+    },
+    "BG": {
+      "name": "Bulgaria",
+      "description": "Bulgarian electricity region",
+      "coordinates": [44.25, 41.25, 22.25, 28.50]
+    },
+    "HR": {
+      "name": "Croatia",
+      "description": "Croatian electricity region",
+      "coordinates": [46.50, 42.50, 13.75, 19.50]
+    },
+    "DK": {
+      "name": "Denmark",
+      "description": "Danish electricity region",
+      "coordinates": [57.75, 54.50, 7.50, 13.25]
+    },
+    "EE": {
+      "name": "Estonia",
+      "description": "Estonian electricity region",
+      "coordinates": [59.50, 57.50, 23.25, 28.25]
+    },
+    "FI": {
+      "name": "Finland",
+      "description": "Finnish electricity region",
+      "coordinates": [70.00, 59.75, 20.50, 31.50]
+    },
+    "FR": {
+      "name": "France",
+      "description": "French electricity region",
+      "coordinates": [51.25, 42.25, -5.25, 8.25]
+    },
+    "DE": {
+      "name": "Germany",
+      "description": "German electricity region",
+      "coordinates": [55.25, 47.25, 5.75, 15]
+    },
+    "GR": {
+      "name": "Greece",
+      "description": "Greek electricity region",
+      "coordinates": [41.75, 35.00, 20.25, 26.50]
+    },
+    "HU": {
+      "name": "Hungary",
+      "description": "Hungarian electricity region",
+      "coordinates": [48.50, 45.75, 16.25, 22.75]
+    },
+    "IE": {
+      "name": "Ireland",
+      "description": "Irish electricity region",
+      "coordinates": [55.25, 51.75, -10.00, -6.00]
+    },
+    "IT": {
+      "name": "Italy",
+      "description": "Italian electricity region",
+      "coordinates": [47.00, 36.50, 6.75, 18.50]
+    },
+    "LV": {
+      "name": "Latvia",
+      "description": "Latvian electricity region",
+      "coordinates": [58.00, 55.50, 21.00, 28.25]
+    },
+    "LT": {
+      "name": "Lithuania",
+      "description": "Lithuanian electricity region",
+      "coordinates": [56.25, 54.00, 21.00, 26.50]
+    },
+    "NL": {
+      "name": "Netherlands",
+      "description": "Dutch electricity region",
+      "coordinates": [53.50, 50.75, 3.25, 7.00]
+    },
+    "PL": {
+      "name": "Poland",
+      "description": "Polish electricity region",
+      "coordinates": [54.75, 49, 14, 24]
+    },
+    "PT": {
+      "name": "Portugal",
+      "description": "Portuguese electricity region",
+      "coordinates": [42.75, 36.50, -10.00, -5.75]
+    },
+    "RO": {
+      "name": "Romania",
+      "description": "Romanian electricity region",
+      "coordinates": [48.25, 43.75, 20.25, 29.50]
+    },
+    "RS": {
+      "name": "Serbia",
+      "description": "Serbian electricity region",
+      "coordinates": [46.25, 42.25, 18.75, 23.00]
+    },
+    "SK": {
+      "name": "Slovakia",
+      "description": "Slovak electricity region",
+      "coordinates": [49.50, 47.75, 16.75, 22.50]
+    },
+    "SI": {
+      "name": "Slovenia",
+      "description": "Slovenian electricity region",
+      "coordinates": [46.75, 45.50, 13.75, 16.50]
+    },
+    "ES": {
+      "name": "Spain",
+      "description": "Spanish electricity region",
+      "coordinates": [43.75, 36.00, -9.25, 3.50]
+    },
+    "SE": {
+      "name": "Sweden",
+      "description": "Swedish electricity region",
+      "coordinates": [69, 55.25, 11.25, 21.25]
+    },
+    "CH": {
+      "name": "Switzerland",
+      "description": "Swiss electricity region",
+      "coordinates": [47.75, 45.75, 6.00, 10.50]
+    },
+    "CZ": {
+      "name": "Czech Republic",
+      "description": "Czech electricity region",
+      "coordinates": [51.00, 48.50, 12.25, 18.75]
+    },
+    "GB": {
+      "name": "Great Britain",
+      "description": "British electricity region",
+      "coordinates": [61, 49.75, -8.25, 2.25]
+    }
+  },
+  "weather_variables": {
+    "dswrf": {
+      "name": "Downward Short-Wave Radiation Flux",
+      "description": "Solar radiation data",
+      "units": "W/m^2",
+      "aliases": ["DSWRF", "Downward shortwave radiation flux", "Solar radiation"]
+    },
+    "temp": {
+      "name": "Temperature",
+      "description": "Air temperature data",
+      "units": "K",
+      "aliases": ["tmp", "TMP", "Temperature", "TMP/DPT"]
+    },
+    "wind": {
+      "name": "Wind Components",
+      "description": "Wind speed and direction components",
+      "units": "m/s",
+      "aliases": ["ugrd", "vgrd", "UGRD", "VGRD", "U GRD", "V GRD", "u-component of wind", "v-component of wind", "U GRD/V GRD"]
+    },
+    "rain": {
+      "name": "Precipitation",
+      "description": "Total precipitation data",
+      "units": "kg/m^2",
+      "aliases": ["apcp", "APCP", "A PCP", "Total precipitation", "precipitation"]
+    }
+  },
+  "datasets": {
+    "ds084.1": {
+      "name": "NCEP GFS 0.25 Degree Global Forecast Grids Historical Archive",
+      "description": "High-resolution global weather forecast data"
+    }
+  },
+  "logging": {
+    "level": "INFO",
+    "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    "max_log_size_mb": 10,
+    "backup_count": 5
+  },
+  "safety": {
+    "require_confirmation": true,
+    "dry_run_mode": false,
+    "max_files_per_download": 1000
+  }
+}

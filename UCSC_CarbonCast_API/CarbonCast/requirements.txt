@@ -1,0 +1,47 @@
+## Tested with Python 3.10. TensorFlow 2.9.x and NumPy 1.23.x do not support Python 3.11+, so use a <=3.10 interpreter.
+## The RDA automation tool has its own requirements.txt and MUST use a separate virtualenv
+## (pandas/matplotlib version conflicts).
+
+# ML / Data
+numpy==1.23.2
+pandas==1.4.4
+tensorflow-macos==2.9.2; sys_platform == 'darwin' and platform_machine == 'arm64'
+tensorflow==2.9.1; sys_platform != 'darwin' or platform_machine != 'arm64'
+keras==2.9.0
+scikit-learn==1.1.2
+scipy==1.9.1
+pytz==2022.1
+matplotlib==3.5.3
+json5==0.9.10
+seaborn==0.11.2
+statsmodels==0.13.2
+xarray==2023.7.0
+cfgrib>=0.9
+netCDF4>=1.6
+
+# Django core
+Django==4.2.5
+djangorestframework==3.14.0
+django-cors-headers==4.3.1
+drf-yasg==1.21.7
+sqlparse==0.4.4
+python-dotenv>=1.0
+
+# Auth
+qrcode==7.4.2
+pyotp==2.9.0
+
+# PostgreSQL
+psycopg[binary]>=3.1.8
+
+# Celery + Redis
+celery>=5.3
+redis>=5.0
+django-celery-beat>=2.5
+django-celery-results>=2.5
+django-redis>=5.4
+
+# Energy APIs
+entsoe-py>=0.7.11
+python-dateutil>=2.8
+requests>=2.31

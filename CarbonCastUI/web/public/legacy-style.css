@@ -1,0 +1,95 @@
+* {
+  font-family: 'Poppins', sans-serif;
+}
+
+html, body {
+    height: 100%;
+    margin: 0;
+  }
+  
+.leaflet-container {
+  height: 400px;
+  width: 600px;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.leaflet-verticalcenter {
+  position: absolute;
+  z-index: 1000;
+  pointer-events: none;
+  top: 27.5%;
+  transform: translateY(-50%);
+  padding-top: 10px;
+}
+
+.leaflet-verticalcenter .leaflet-control {
+  margin-bottom: 10px;
+}
+  
+#map {
+  width: 100%;
+  height: 100%;
+}
+  
+.info {
+    position: relative; 
+    top: 35px;
+    padding: 6px 8px;
+    font: 14px/16px Arial, Helvetica, sans-serif;
+    background: white;
+    background: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+    border-radius: 5px;
+    margin-bottom: e0px;
+  }
+  
+.info h4 {
+  margin: 0 0 5px;
+  color: #777;
+}
+
+.legend {
+  position: static;
+  text-align: left;
+  line-height: 18px;
+  color: #555;
+  z-index: 1000;
+}
+
+.legend i {
+  bottom: 0px;
+  width: 18px;
+  height: 18px;
+  float: left;
+  margin-right: 8px;
+  opacity: 0.7;
+}
+
+/* Add styles for toggle buttons */
+.toggle-container {
+  position: absolute;
+  top: 1.5%;
+  right: 0px;
+  z-index: 1000;
+}
+
+.toggle {
+  font: 14px/16px Arial;
+  display: inline-block;
+  padding: 4px 8px;
+  margin-right: 10px;
+  background: white;
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+  border-radius: 5px;
+  margin-bottom: e0px;
+  color: #000;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.toggle.active {
+  background-color: #007bff;
+  color: #fff;
+}

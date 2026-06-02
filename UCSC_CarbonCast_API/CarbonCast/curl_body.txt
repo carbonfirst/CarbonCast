@@ -1,0 +1,1 @@
+{"data":[{"UTC time":"2024-01-03T23:00:00+00:00","creation_time (UTC)":"2024-07-17 00:00:00","version":"3.1","region_code":"AECI","carbon_intensity_avg_lifecycle":606.83,"carbon_intensity_avg_direct":606.83,"cabon_intensity_unit":"gCO2eg/kWh"}]}

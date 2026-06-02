@@ -1,0 +1,35 @@
+[
+  {
+    "endpoint": "CarbonIntensity",
+    "status": "SUCCESS",
+    "using_sqlite": true,
+    "csv_fallback": false,
+    "records": 1
+  },
+  {
+    "endpoint": "CarbonIntensityHistory",
+    "status": "SUCCESS",
+    "using_sqlite": true,
+    "csv_fallback": false,
+    "records": 8832
+  },
+  {
+    "endpoint": "EnergySources",
+    "status": "SUCCESS",
+    "using_sqlite": true,
+    "csv_fallback": false,
+    "records": 1
+  },
+  {
+    "endpoint": "CarbonIntensityForecasts",
+    "status": "EXCEPTION",
+    "error": "[Errno 2] No such file or directory: '/Users/tanushsavadi/Documents/Research/UCSC_CarbonCast_API/CarbonCast/src/CarbonCastAPI/real_time'"
+  },
+  {
+    "endpoint": "SupportedRegions",
+    "status": "SUCCESS",
+    "using_sqlite": true,
+    "csv_fallback": false,
+    "records": 0
+  }
+]

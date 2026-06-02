@@ -1,0 +1,140 @@
+* {
+  font-family: 'Poppins', sans-serif;
+}
+
+.tooltip-container {
+  position: absolute;
+  bottom: 5px;
+  left: 5px;
+  background-color: rgb(255, 255, 255);
+  border-radius: 10px;
+  padding: 5px 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 100000; /* Ensure the tooltip box appears above the map */
+  width: 430px; /* Adjust the width as needed */
+  height: 150px; /* Adjust the height as needed */
+}
+
+.tooltip-header {
+  text-align: center;
+  font-size: 16px;
+  margin-top: 5px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.pill-icons {
+  display: flex;
+  justify-content:space-between;
+  margin-top: 15px;
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+.pill {
+  padding: 5px 10px;
+  background-color: #f2f2f2;
+  border-radius: 20px;
+  cursor: pointer;
+}
+
+.pill.active {
+  background-color: #007bff;
+  color: white;
+}
+
+.pill:hover {
+  background-color: #e6e6e6;
+}
+
+.slider {
+  width: 100%;
+}
+
+.tooltip .tooltip-body {
+  margin-top: 20px;
+}
+
+.tooltip .pill-icons {
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+  align-items: center;
+}
+
+.tooltip .pill {
+  background-color: white;
+  color: gray;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.tooltip .slider {
+  width: 100%;
+  margin-top: 10px;
+}
+
+.tooltip .slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 15px;
+  height: 25px;
+  background-color: white;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.tooltip .slider::-moz-range-thumb {
+  width: 15px;
+  height: 25px;
+  background-color: white;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.tooltip .slider::-ms-thumb {
+  width: 15px;
+  height: 25px;
+  background-color: white;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.list-inline {
+  display: flex;
+  justify-content: space-between;
+  padding: 0;
+  margin: 10px 0 0 0; /* Adjust margin as needed */
+}
+
+.list-inline-item {
+  list-style: none;
+  font-size: 9px;
+}
+
+.list-inline-item span {
+  display: inline-block;
+  text-align: center;
+  width: 40px; /* Adjust width as needed */
+  position: relative;
+}
+
+.list-inline-item span {
+  right: 35%;
+  display: inline-block;
+  width: 66px;
+}
+
+.list-inline-item span::before {
+  content: '';
+  position: absolute;
+  top: -10px; /* Adjust the position as needed */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  height: 5px;
+  background-color: #999;
+}
