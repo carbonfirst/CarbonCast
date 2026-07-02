@@ -56,9 +56,9 @@ LIFECYCLE_EMISSION_FACTORS = {
 }
 
 EIA_BAL_AUTH_LIST = [
-    "AECI", "AZPS", "BPAT", "CISO", "DUK", "EPE", "ERCOT", "FPC",
+    "AECI", "AZPS", "BPAT", "CISO", "DUK", "EPE", "ERCO", "FPC",
     "FPL", "GRID", "IPCO", "ISNE", "LDWP", "MISO", "NEVP", "NWMT",
-    "NYISO", "PACE", "PACW", "PJM", "PSCO", "PSEI", "SC", "SCEG",
+    "NYIS", "PACE", "PACW", "PJM", "PSCO", "PSEI", "SC", "SCEG",
     "SOCO", "SPA", "SRP", "SWPP", "TIDC", "TVA", "WACM", "WALC",
 ]
 
