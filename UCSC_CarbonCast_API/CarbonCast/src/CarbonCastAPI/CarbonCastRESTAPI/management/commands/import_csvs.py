@@ -34,10 +34,13 @@ class Command(BaseCommand):
             self.stdout.write("no files found")
             return 0
 
-        # target filename patterns
-        patterns = (
+        # target filename patterns: suffixes for actuals, infix tokens for
+        # forecast files (which end in a date, e.g. _CI_forecasts_2023-04-19.csv)
+        suffix_patterns = (
             '_lifecycle_emissions.csv',
             '_direct_emissions.csv',
+        )
+        infix_patterns = (
             '_lifecycle_CI_forecasts_',
             '_direct_CI_forecasts_',
             '_96hr_forecasts_',
@@ -48,7 +51,7 @@ class Command(BaseCommand):
         files_found = []
         for root, dirs, files in os.walk(path):
             for f in files:
-                if f.endswith(patterns):
+                if f.endswith(suffix_patterns) or any(token in f for token in infix_patterns):
                     files_found.append(os.path.join(root, f))
 
         if not files_found:
