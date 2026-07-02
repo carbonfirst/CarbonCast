@@ -13,7 +13,7 @@ class UserModel(AbstractUser):
     name = models.CharField(max_length=50)
     throttle_limit = models.OneToOneField(UserThrottleLimit, on_delete=models.CASCADE, null=True)
     email = models.EmailField(max_length=100, unique=True)
-    password = models.CharField(max_length=32)
+    password = models.CharField(max_length=128)
     otp_enabled = models.BooleanField(default=False)
     otp_verified = models.BooleanField(default=False)
     otp_base32 = models.CharField(max_length=255, null=True)
