@@ -28,7 +28,11 @@ class CarbonIntensityForecastsApiView(APIView):
                     "carbon_cast_version": carbon_cast_version
                 }, status=status.HTTP_429_TOO_MANY_REQUESTS, headers={'Retry-After': 86400})
 
-        region_code = request.query_params.get('regionCode', '')  
+        region_code = request.query_params.get('regionCode', '')
+        # Validate against known regions: region_code is used to build
+        # filesystem paths in the CSV fallback, so arbitrary values are unsafe
+        if region_code not in US_region_codes:
+            return Response({"error": "Invalid region code parameter"}, status=status.HTTP_400_BAD_REQUEST)
         f = request.query_params.get('forecastPeriod', '24h')
 
         f_value = str(f)
@@ -442,6 +446,10 @@ class EnergySourcesForecastsHistoryApiView(APIView):
                 }, status=status.HTTP_429_TOO_MANY_REQUESTS, headers={'Retry-After': 86400})
 
         region_code = request.query_params.get('regionCode', '')
+        # Validate against known regions: region_code is used to build
+        # filesystem paths in the CSV fallback, so arbitrary values are unsafe
+        if region_code not in US_region_codes:
+            return Response({"error": "Invalid region code parameter"}, status=status.HTTP_400_BAD_REQUEST)
         date = request.query_params.get('date', '')
         hour = request.query_params.get('hour', None)  # Get the hour parameter
         print(f"[EnergySourcesForecastsHistoryApiView] Requested date: {date}, hour: {hour}, Region: {region_code}")
