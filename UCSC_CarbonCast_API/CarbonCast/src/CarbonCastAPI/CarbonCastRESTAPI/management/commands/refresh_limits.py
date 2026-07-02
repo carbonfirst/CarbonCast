@@ -1,23 +1,26 @@
 from django.core.management.base import BaseCommand
-from django.utils import timezone
-from CarbonCastRESTAPI.models import UserThrottleLimit, UserModel
 from django.conf import settings
-from CarbonCastRESTAPI.throttling import SimpleRateThrottle
+from CarbonCastRESTAPI.models import UserModel
+
 
 class Command(BaseCommand):
-    help = 'Reset username and throttling limits daily at 12:00 am'
+    help = 'Reset user throttling limits daily at 12:00 am'
 
     def handle(self, *args, **kwargs):
-        # Find all users and reset their username and throttle limits
-        users = UserModel.objects.all()
-        for user in users:
-            user.username = user.get_username()
-            user.throttle_limit.throttle_limit = settings.DEFAULT_THROTTLE_LIMIT 
-            user.save()
+        # Throttling is disabled when DEFAULT_THROTTLE_LIMIT is None; the
+        # throttle_limit column is non-nullable, so skip the reset entirely.
+        if settings.DEFAULT_THROTTLE_LIMIT is None:
+            self.stdout.write(self.style.SUCCESS(
+                'Throttling disabled (DEFAULT_THROTTLE_LIMIT is None); nothing to reset.'))
+            return
+
+        reset_count = 0
+        for user in UserModel.objects.select_related('throttle_limit'):
+            if user.throttle_limit is None:
+                continue
+            user.throttle_limit.throttle_limit = settings.DEFAULT_THROTTLE_LIMIT
             user.throttle_limit.save()
+            reset_count += 1
 
-        global_throttle_limit = '100/day'
-        SimpleRateThrottle.rate = global_throttle_limit
-        settings.REST_FRAMEWORK['DEFAULT_THROTTLE_RATES']['default'] = global_throttle_limit
-
-        self.stdout.write(self.style.SUCCESS('Username and throttling limits reset for all users.'))
+        self.stdout.write(self.style.SUCCESS(
+            f'Throttling limits reset for {reset_count} users.'))
