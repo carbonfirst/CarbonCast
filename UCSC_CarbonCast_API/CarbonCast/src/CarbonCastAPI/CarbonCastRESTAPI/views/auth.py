@@ -1,4 +1,16 @@
 from ._base import *
+from io import BytesIO
+
+
+def _qrcode_base64(otp_auth_url):
+    """Render the OTP provisioning URL as a base64 PNG, in memory.
+
+    In-memory rendering avoids the shared qr_auth.png file in the working
+    directory, which raced between concurrent signups/signins.
+    """
+    buffer = BytesIO()
+    qrcode.make(otp_auth_url).save(buffer)
+    return base64.b64encode(buffer.getvalue()).decode('utf-8')
 
 
 class UserAuthenticationEnforcedView(APIView):
@@ -73,15 +85,17 @@ class SignUpApiView(APIView):
 
                 if username.startswith('Test'):
                     throttle_limit_value = settings.EXTENDED_THROTTLE_LIMIT
-                    throttle_limit = UserThrottleLimit(user=user, throttle_limit=throttle_limit_value)
-                    throttle_limit.save()
                 else:
                     throttle_limit_value = settings.DEFAULT_THROTTLE_LIMIT
+                # Throttle limits are disabled when the setting is None;
+                # throttle_limit is a non-nullable PositiveIntegerField, so
+                # saving None raised IntegrityError and broke every signup.
+                if throttle_limit_value is not None:
                     throttle_limit = UserThrottleLimit(user=user, throttle_limit=throttle_limit_value)
                     throttle_limit.save()
-                    
+                    print(f"Throttle Limit: {throttle_limit.throttle_limit}")
+
                 print(f"Username: {user.username}")
-                print(f"Throttle Limit: {throttle_limit.throttle_limit}")
 
                 otp_base32 = pyotp.random_base32()
                 email = request.data.get('email').lower()
@@ -96,11 +110,7 @@ class SignUpApiView(APIView):
                 user.otp_verified = False
                 user.password_checked = True
                 
-                qrcode_filename = "qr_auth.png"
-                qrcode.make(user.otp_auth_url).save(qrcode_filename)
-                with open(qrcode_filename, "rb") as image_file:
-                    qrcode_image = base64.b64encode(image_file.read()).decode('utf-8')
-
+                qrcode_image = _qrcode_base64(user.otp_auth_url)
                 user.otp_qrcode_image = qrcode_image
                 user.save()
 
@@ -188,12 +198,20 @@ class SignInApiView(APIView):
         serializer = self.serializer_class(user)
         user.otp_verified = False
         user.password_checked = True
-        
-        qrcode_filename = "qr_auth.png"
-        qrcode.make(user.otp_auth_url).save(qrcode_filename)
-        with open(qrcode_filename, "rb") as image_file:
-            qrcode_image = base64.b64encode(image_file.read()).decode('utf-8')
+
+        # Users created outside SignUp may have no OTP secret yet; rebuild
+        # the provisioning URL rather than crashing on qrcode.make(None)
+        if not user.otp_auth_url:
+            if not user.otp_base32:
+                user.otp_base32 = pyotp.random_base32()
+            user.otp_auth_url = pyotp.totp.TOTP(user.otp_base32).provisioning_uri(
+                name=user.email, issuer_name="carboncast.com")
+
+        qrcode_image = _qrcode_base64(user.otp_auth_url)
         user.otp_qrcode_image = qrcode_image
+        # persist password_checked/otp fields — VerifyOTP rejects users whose
+        # password_checked flag was never saved
+        user.save()
 
         return Response({
             "status": "success", 
