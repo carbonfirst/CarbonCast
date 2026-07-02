@@ -41,7 +41,7 @@ Required runtime variables:
 - `REDIS_URL`
 - `REDIS_CACHE_URL`
 - `EIA_API_KEY` (US ingestion)
-- `ENTSOE_API_KEY` (EU ingestion; optional — ENTSO-E ingestion is skipped if unset)
+- `ENTSOE_API_TOKEN` (EU ingestion; optional — ENTSO-E ingestion is skipped if unset)
 - `RDA_DOWNLOAD_DIR`
 - `RDA_CONTROL_FILES_DIR`
 

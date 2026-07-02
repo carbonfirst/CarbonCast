@@ -6,8 +6,9 @@ control areas and writes hourly rows into EmissionActual using the same
 schema as the EIA service. This complements EIA (US) so the daily
 ingestion task can keep both regions current.
 
-Requires ENTSOE_API_KEY env var. Uses entsoe-py if available; falls back
-to a no-op (with logged error) so the rest of the pipeline keeps running.
+Requires ENTSOE_API_TOKEN (or legacy ENTSOE_API_KEY) env var. Uses
+entsoe-py if available; falls back to a no-op (with logged error) so the
+rest of the pipeline keeps running.
 """
 
 import logging
@@ -141,9 +142,9 @@ def fetch_and_store_entsoe_data(target_date: str) -> dict:
     """
     from CarbonCastRESTAPI.models import EmissionActual
 
-    api_key = os.environ.get("ENTSOE_API_KEY", "")
+    api_key = os.environ.get("ENTSOE_API_TOKEN", "") or os.environ.get("ENTSOE_API_KEY", "")
     if not api_key:
-        logger.warning("ENTSOE_API_KEY not set; skipping ENTSO-E ingestion")
+        logger.warning("ENTSOE_API_TOKEN not set; skipping ENTSO-E ingestion")
         return {"inserted": 0, "updated": 0, "errors": 0, "skipped": True}
 
     try:
