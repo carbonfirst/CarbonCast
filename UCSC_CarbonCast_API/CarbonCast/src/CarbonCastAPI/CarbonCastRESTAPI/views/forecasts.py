@@ -202,6 +202,10 @@ class CarbonIntensityForecastsHistoryApiView(APIView):
                 regions = [region_code]
             else:
                 return Response({"error": "Invalid region code parameter"}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            # e.g. blank region_code fails CharField validation; without this
+            # branch `regions` is unbound below and the view 500s
+            return Response({"error": "Invalid region code parameter"}, status=status.HTTP_400_BAD_REQUEST)
         date = request.query_params.get('date', '')
         hour = request.query_params.get('hour', None)  # Get the hour parameter
         print(f"[CarbonIntensityForecastsHistoryApiView] Requested date: {date}, hour: {hour}, Regions: {regions}")
