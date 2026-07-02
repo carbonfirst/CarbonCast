@@ -103,8 +103,9 @@ class CarbonIntensityForecastsApiView(APIView):
                     temp_dict[field_names[1]] = CI_lifecycle_filtered[i][1]
                     temp_dict[field_names[2]] = CI_lifecycle_filtered[i][2]
                     temp_dict[field_names[3]] = region_code
-                    temp_dict[field_names[4]] = float(CI_lifecycle_filtered[i][3])
-                    temp_dict[field_names[5]] = float(CI_direct_filtered[i][3])
+                    # CSV columns: [3]=carbon_intensity_actual, [4]=avg_carbon_intensity_forecast
+                    temp_dict[field_names[4]] = float(CI_lifecycle_filtered[i][4])
+                    temp_dict[field_names[5]] = float(CI_direct_filtered[i][4])
                     temp_dict[field_names[6]] = "gCO2eg/kWh"
                     final_list.append(temp_dict)
                 cache.set(cache_key, final_list, 10)
