@@ -472,6 +472,9 @@ class EnergySourcesForecastsHistoryApiView(APIView):
             cache_key = f"energy_forecast_{region_code}_{forecastPeriod}_{date}_hour_{hour}"
         else:
             cache_key = f"energy_forecast_{region_code}_{forecastPeriod}_{date}"
+        # energy_metadata must exist on every path: the response code below
+        # references it even when the result comes from cache
+        energy_metadata = None
         cached = cache.get(cache_key)
         if cached:
             final_list = cached
@@ -496,9 +499,7 @@ class EnergySourcesForecastsHistoryApiView(APIView):
                 "avg_wind_production_forecast", "avg_other_production_forecast"
             ]
             final_list = []
-            # Initialize metadata
-            energy_metadata = None
-            
+
             if energy_qs.exists():
                 for obj in energy_qs:
                     temp_dict = {field: "0" for field in fields}
