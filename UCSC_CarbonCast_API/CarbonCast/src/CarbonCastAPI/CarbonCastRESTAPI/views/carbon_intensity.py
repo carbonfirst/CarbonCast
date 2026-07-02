@@ -47,7 +47,7 @@ class CarbonIntensityApiView(APIView):
         
             fields = [
                  "UTC time", "creation_time (UTC)", "version", "region_code", "carbon_intensity_avg_lifecycle", 
-                 "carbon_intensity_avg_direct", "cabon_intensity_unit"
+                 "carbon_intensity_avg_direct", "carbon_intensity_unit"
                  ]
         
             final_list=[]
@@ -116,17 +116,13 @@ class CarbonIntensityApiView(APIView):
                 final_list.append(temp_dict)
                 
             response = {
-                "data": final_list
+                "data": final_list,
+                "carbon_cast_version": carbon_cast_version
             }
             return Response(response, status=status.HTTP_200_OK)
-            final_list.append(temp_dict)
-            
-        response = {
-            "data": final_list,
-            "carbon_cast_version": carbon_cast_version
-        }
-        return Response(response, status=status.HTTP_200_OK)
-        
+
+        return Response({"error": query_params_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
 #2    
 class CarbonIntensityHistoryApiView(APIView):
     authentication_classes = authentication_classes
@@ -170,6 +166,10 @@ class CarbonIntensityHistoryApiView(APIView):
                 regions = [region_code]
             else:
                 return Response({"error": "Invalid region code parameter"}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            # e.g. blank region_code fails CharField validation; without this
+            # branch `regions` is unbound below and the view 500s
+            return Response({"error": "Invalid region code parameter"}, status=status.HTTP_400_BAD_REQUEST)
         date = request.query_params.get('date', '')
         hour = request.query_params.get('hour', None)  # Get the hour parameter
         start_time = time.time()
