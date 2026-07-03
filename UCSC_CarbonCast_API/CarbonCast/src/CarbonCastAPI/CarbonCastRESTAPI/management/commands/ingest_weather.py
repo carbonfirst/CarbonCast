@@ -16,13 +16,27 @@ to avoid re-processing files.  Source files are NEVER deleted.
 import json
 import logging
 import os
-from datetime import datetime, timezone
+import re
+import tarfile
+import tempfile
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
 logger = logging.getLogger(__name__)
+
+# RDA download directories are named with the tool's region codes, which for
+# some balancing authorities differ from the API's (EIA) region codes.
+REGION_ALIASES = {
+    'ERCOT': 'ERCO',
+    'NYISO': 'NYIS',
+}
+
+# GFS member filenames look like gfs.0p25.2023010100.f003.grib2 —
+# capture the forecast cycle (YYYYMMDDHH) and forecast hour (fNNN).
+GFS_FILENAME_RE = re.compile(r'gfs\.0p25\.(\d{10})\.f(\d{3})')
 
 KNOWN_VARIABLES = {'temp', 'wind', 'dswrf', 'rain'}
 VARIABLE_ALIASES = {
@@ -114,9 +128,13 @@ class Command(BaseCommand):
         rel_parts = [part.upper() for part in path.relative_to(root).parts]
         for part in rel_parts:
             token = part.split('.')[0]
+            if token in REGION_ALIASES:
+                return REGION_ALIASES[token]
             if token in known_regions:
                 return token
             prefix = token.split('_')[0].split('-')[0]
+            if prefix in REGION_ALIASES:
+                return REGION_ALIASES[prefix]
             if prefix in known_regions:
                 return prefix
         return None
@@ -168,6 +186,8 @@ class Command(BaseCommand):
         """Attempt multiple parsers in order of preference."""
         suffix = path.suffix.lower()
 
+        if suffix == '.tar' or path.name.endswith(('.grib2.tar', '.tar.gz', '.tgz')):
+            return self._parse_tar(path, region, variable, created_at)
         if suffix in ('.grib', '.grib2', '.grb', '.grb2'):
             return self._parse_grib(path, region, variable, created_at)
         if suffix in ('.nc', '.nc4', '.netcdf'):
@@ -187,6 +207,61 @@ class Command(BaseCommand):
 
         logger.warning("Cannot parse %s — unsupported format", path)
         return []
+
+    def _parse_tar(self, path, region, variable, created_at):
+        """
+        Extract a RDA .tar archive of GFS GRIB members and parse each one.
+
+        Member names look like gfs.0p25.2023010100.f003.grib2: the cycle
+        timestamp becomes forecast_created and the fNNN hour offset gives
+        forecast_target. Members without that pattern fall back to the
+        archive-level created_at and the timestamps inside the GRIB data.
+        """
+        records = []
+        mode = 'r:gz' if path.name.endswith(('.tar.gz', '.tgz')) else 'r'
+        with tarfile.open(path, mode) as tar, tempfile.TemporaryDirectory() as tmpdir:
+            for member in tar.getmembers():
+                if not member.isfile():
+                    continue
+                member_name = os.path.basename(member.name)
+                if not member_name.lower().endswith(('.grib', '.grib2', '.grb', '.grb2')):
+                    continue
+
+                # extract just this member, without trusting archive paths
+                member.name = member_name
+                tar.extract(member, tmpdir)
+                member_path = Path(tmpdir) / member_name
+
+                forecast_created = created_at
+                forecast_target = None
+                match = GFS_FILENAME_RE.search(member_name)
+                if match:
+                    cycle_str, fhour_str = match.groups()
+                    try:
+                        forecast_created = datetime.strptime(
+                            cycle_str, '%Y%m%d%H').replace(tzinfo=timezone.utc)
+                        forecast_target = forecast_created + timedelta(hours=int(fhour_str))
+                    except ValueError:
+                        forecast_created = created_at
+                        forecast_target = None
+
+                try:
+                    member_records = self._parse_grib(
+                        member_path, region, variable, forecast_created)
+                except Exception:
+                    logger.exception("Error parsing %s from %s", member_name, path)
+                    continue
+                finally:
+                    member_path.unlink(missing_ok=True)
+                    # cfgrib writes .idx sidecar files next to the GRIB
+                    for idx in Path(tmpdir).glob(f"{member_name}*.idx"):
+                        idx.unlink(missing_ok=True)
+
+                if forecast_target is not None:
+                    for rec in member_records:
+                        rec['forecast_target'] = forecast_target
+                records.extend(member_records)
+        return records
 
     def _parse_grib(self, path, region, variable, created_at):
         import xarray as xr
