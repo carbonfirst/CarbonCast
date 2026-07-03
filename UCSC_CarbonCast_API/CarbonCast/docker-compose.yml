@@ -1,11 +1,89 @@
-version: '3.9'
 services:
-  web:
-    build:
-      dockerfile: src/CarbonCastAPI/dockerfile
-    container_name: carbon_cast_api
-    ports:
-    - "8000:8000"
+  db:
+    image: postgres:15-alpine
+    container_name: carbon_cast_db
+    environment:
+      POSTGRES_DB: ${DB_NAME:-carboncast}
+      POSTGRES_USER: ${DB_USER:-carboncast}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-carboncast}
     volumes:
-      - ./real_time/:/CarbonCast/real_time/
-      - ./src/CarbonCastAPI/db.sqlite3:/CarbonCast/src/CarbonCastAPI/db.sqlite3
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-carboncast} -d ${DB_NAME:-carboncast}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: carbon_cast_redis
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  web:
+    build: .
+    container_name: carbon_cast_api
+    command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    ports:
+      - "8000:8000"
+    environment: &app_env
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-insecure-dev-only-secret}
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-False}
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,0.0.0.0}
+      DB_NAME: ${DB_NAME:-carboncast}
+      DB_USER: ${DB_USER:-carboncast}
+      DB_PASSWORD: ${DB_PASSWORD:-carboncast}
+      DB_HOST: db
+      DB_PORT: "5432"
+      REDIS_URL: redis://redis:6379/0
+      REDIS_CACHE_URL: redis://redis:6379/1
+      REQUIRES_AUTH: ${REQUIRES_AUTH:-False}
+      EIA_API_KEY: ${EIA_API_KEY:-}
+      ENTSOE_API_TOKEN: ${ENTSOE_API_TOKEN:-}
+      RDA_TOKEN: ${RDA_TOKEN:-}
+      RDA_DOWNLOAD_DIR: ${RDA_DOWNLOAD_DIR:-}
+      RDA_CONTROL_FILES_DIR: ${RDA_CONTROL_FILES_DIR:-}
+      RDA_CONFIG_PATH: ${RDA_CONFIG_PATH:-}
+    volumes:
+      - ./real_time:/app/real_time
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker:
+    build: .
+    container_name: carbon_cast_worker
+    command: celery -A CarbonCastAPI worker -l info
+    environment: *app_env
+    volumes:
+      - ./real_time:/app/real_time
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  beat:
+    build: .
+    container_name: carbon_cast_beat
+    # setup_pipeline_schedules is idempotent (update_or_create) and seeds the
+    # DatabaseScheduler entries the pipeline relies on
+    command: sh -c "python manage.py setup_pipeline_schedules && celery -A CarbonCastAPI beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler"
+    environment: *app_env
+    volumes:
+      - ./real_time:/app/real_time
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      web:
+        condition: service_started
+
+volumes:
+  postgres_data:

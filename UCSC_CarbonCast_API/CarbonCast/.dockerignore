@@ -1,0 +1,20 @@
+# Heavy data directories — real_time/ is bind-mounted by docker-compose,
+# the rest is training data / archives not needed inside the image
+real_time/
+data/
+data_old (v2.1)/
+data_old(v3.1)/
+CI_forecast_data/
+build/
+images/
+
+# Local artifacts
+db.sqlite3
+src/CarbonCastAPI/db.sqlite3
+server.log
+*.pyc
+__pycache__/
+.venv/
+venv/
+.git/
+.env
