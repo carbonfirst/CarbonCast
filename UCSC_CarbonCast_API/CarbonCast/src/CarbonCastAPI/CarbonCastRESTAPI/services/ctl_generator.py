@@ -57,10 +57,17 @@ def generate_weekly_ctl_files(output_dir: str):
     files_written = 0
 
     for region_code, bbox in regions.items():
-        nlat = bbox.get('nlat', bbox.get('n_lat', 0))
-        slat = bbox.get('slat', bbox.get('s_lat', 0))
-        wlon = bbox.get('wlon', bbox.get('w_lon', 0))
-        elon = bbox.get('elon', bbox.get('e_lon', 0))
+        # automation_config.json stores each region's bounding box as
+        # "coordinates": [nlat, slat, wlon, elon]; the built-in fallback
+        # uses explicit nlat/slat/wlon/elon keys.
+        coords = bbox.get('coordinates') if isinstance(bbox, dict) else None
+        if coords and len(coords) == 4:
+            nlat, slat, wlon, elon = coords
+        else:
+            nlat = bbox.get('nlat', bbox.get('n_lat', 0))
+            slat = bbox.get('slat', bbox.get('s_lat', 0))
+            wlon = bbox.get('wlon', bbox.get('w_lon', 0))
+            elon = bbox.get('elon', bbox.get('e_lon', 0))
 
         for var_name, var_cfg in WEATHER_VARIABLES.items():
             filename = f"{region_code}_{var_name}_control.ctl"
