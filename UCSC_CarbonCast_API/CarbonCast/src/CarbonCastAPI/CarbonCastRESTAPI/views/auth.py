@@ -55,8 +55,6 @@ class SignUpApiView(APIView):
     queryset = UserModel.objects.all()
     throttle_classes = []
 
-    print(settings.DEFAULT_THROTTLE_LIMIT, settings.EXTENDED_THROTTLE_LIMIT)
-
     @swagger_auto_schema(
         request_body=serializer_class,
         responses={

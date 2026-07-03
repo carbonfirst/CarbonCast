@@ -13,11 +13,8 @@ authentication_classes = []
 permission_classes = []
 
 if settings.REQUIRES_AUTH == 'True':
-    print("From here if")
     authentication_classes = [authentication.SessionAuthentication, authentication.BasicAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 else:
-    print("From here else")
     authentication_classes = []
     permission_classes = [permissions.AllowAny]
-    
