@@ -433,7 +433,9 @@ def read_control_file(control_file):
         if line.startswith('#') or line == "":
             continue
         li = line.rstrip()
-        (key, value) = li.split('=', 2)
+        # maxsplit=1: values (e.g. date ranges, params) may contain '=' and
+        # a 2-way unpack of a 3-element split raises ValueError
+        (key, value) = li.split('=', 1)
         control_params[key] = value
 
     # Handle empty params
@@ -559,23 +561,47 @@ def download_files(filelist, out_dir='./', cookie_file=None):
         out_dir (str): directory to put downloaded files
 
     Returns:
-        None
+        (list): files that were fully downloaded. Failed downloads are
+                logged and skipped; partial files are removed.
     """
+    downloaded = []
     for _file in filelist:
         file_base = os.path.basename(_file)
         out_file = os.path.join(out_dir, file_base)
-        print('Downloading',file_base)
-        header = requests.head(_file, allow_redirects=True, stream=True)
-        filesize = int(header.headers['Content-Length'])
-        req = requests.get(_file, allow_redirects=True, stream=True)
-        with open(out_file, 'wb') as outfile:
-            chunk_size=1048576
-            for chunk in req.iter_content(chunk_size=chunk_size):
-                outfile.write(chunk)
-                if chunk_size < filesize:
-                    check_file_status(out_file, filesize)
-        check_file_status(out_file, filesize)
-        print()
+        print('Downloading', file_base)
+        # temp name so an interrupted download never masquerades as complete
+        tmp_file = out_file + '.part'
+        try:
+            header = requests.head(_file, allow_redirects=True, stream=True,
+                                   timeout=(30, 120))
+            header.raise_for_status()
+            filesize = int(header.headers.get('Content-Length') or 0)
+            req = requests.get(_file, allow_redirects=True, stream=True,
+                               timeout=(30, 300))
+            req.raise_for_status()
+            with open(tmp_file, 'wb') as outfile:
+                chunk_size = 1048576
+                for chunk in req.iter_content(chunk_size=chunk_size):
+                    outfile.write(chunk)
+                    if filesize and chunk_size < filesize:
+                        check_file_status(tmp_file, filesize)
+            actual_size = os.stat(tmp_file).st_size
+            if filesize and actual_size != filesize:
+                raise IOError(
+                    f'Incomplete download: got {actual_size} of {filesize} bytes')
+            os.replace(tmp_file, out_file)
+            if filesize:
+                check_file_status(out_file, filesize)
+            downloaded.append(out_file)
+            print()
+        except Exception as e:
+            print(f'Failed to download {file_base}: {e}')
+            try:
+                if os.path.exists(tmp_file):
+                    os.remove(tmp_file)
+            except OSError:
+                pass
+    return downloaded
 
 def encode_url(url, token):
     return url + '?token=' + token
@@ -806,20 +832,28 @@ def download(request_idx, out_dir='./'):
         request_idx (str): Request Index, typically a 6-digit integer.
 
     Returns:
-        None
+        dict: filelist response, augmented with 'download_summary' so
+              callers can verify files actually landed on disk before
+              purging the request.
     """
     ret = get_filelist(request_idx)
     if len(ret['data']) == 0:
+        ret['download_summary'] = {'expected': 0, 'downloaded': 0, 'complete': False}
         return ret
 
     filelist = ret['data']['web_files']
 
-    token = get_authentication()
-
     web_files = list(map(lambda x: x['web_path'], filelist))
 
     # Only download unique files.
-    download_files(set(web_files), out_dir)
+    unique_files = set(web_files)
+    downloaded = download_files(unique_files, out_dir)
+    ret['download_summary'] = {
+        'expected': len(unique_files),
+        'downloaded': len(downloaded),
+        'complete': len(downloaded) == len(unique_files) and len(downloaded) > 0,
+        'files': downloaded,
+    }
     return ret
 
 def globus_download(request_idx):

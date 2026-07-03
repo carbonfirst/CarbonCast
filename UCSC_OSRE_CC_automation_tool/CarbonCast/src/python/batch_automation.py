@@ -74,7 +74,10 @@ class BatchAutomationSystem:
         self.executor = ThreadPoolExecutor(
             max_workers=self.config['automation']['max_concurrent_requests']
         )
-        self.status_lock = threading.Lock()
+        # RLock: _save_state snapshots under this lock and can be invoked
+        # from the signal handler, which may interrupt a lock-holding
+        # section of the main thread — a plain Lock would deadlock there
+        self.status_lock = threading.RLock()
         
         # Load existing state
         self._load_state()
@@ -86,26 +89,40 @@ class BatchAutomationSystem:
         self.logger.info("Batch Automation System initialized")
     
     def _load_config(self, config_file: str) -> Dict:
-        """Load configuration from JSON file."""
-        try:
-            with open(config_file, 'r') as f:
-                return json.load(f)
-        except FileNotFoundError:
-            # Return default configuration
-            return {
-                "automation": {
-                    "max_concurrent_requests": 10,
-                    "check_interval_seconds": 300,
-                    "retry_attempts": 3,
-                    "retry_delay_seconds": 60,
-                    "download_timeout_seconds": 3600
-                },
-                "directories": {
-                    "base_download_dir": "./downloaded_files",
-                    "logs_dir": "./logs",
-                    "control_files_dir": "./control_files"
-                }
+        """Load configuration from JSON file.
+
+        The path is tried as given (CWD-relative/absolute), then against the
+        repo's config/ directory, so running from src/python/ or the repo root
+        both find CarbonCast/config/automation_config.json instead of
+        silently falling back to defaults.
+        """
+        candidates = [
+            Path(config_file),
+            Path(__file__).resolve().parents[2] / 'config' / Path(config_file).name,
+        ]
+        for candidate in candidates:
+            try:
+                with open(candidate, 'r') as f:
+                    return json.load(f)
+            except FileNotFoundError:
+                continue
+
+        print(f"Config file not found in {[str(c) for c in candidates]}; using defaults")
+        # Return default configuration
+        return {
+            "automation": {
+                "max_concurrent_requests": 10,
+                "check_interval_seconds": 300,
+                "retry_attempts": 3,
+                "retry_delay_seconds": 60,
+                "download_timeout_seconds": 3600
+            },
+            "directories": {
+                "base_download_dir": "./downloaded_files",
+                "logs_dir": "./logs",
+                "control_files_dir": "./control_files"
             }
+        }
     
     def _setup_logging(self) -> logging.Logger:
         """Setup logging configuration."""
@@ -150,25 +167,46 @@ class BatchAutomationSystem:
                 
                 # Convert dictionaries back to RequestStatus objects
                 for control_file, status_dict in state_data.items():
-                    self.requests_state[control_file] = RequestStatus(**status_dict)
-                
+                    request_status = RequestStatus(**status_dict)
+                    # Recover requests wedged in a transient state by a
+                    # crash/kill mid-operation; nothing will ever move
+                    # "downloading" forward after a restart
+                    if request_status.status == "downloading":
+                        request_status.status = "ready_for_download"
+                        request_status.error_message = "Recovered from interrupted download"
+                    elif request_status.status == "submitting":
+                        request_status.status = "pending"
+                        request_status.error_message = "Recovered from interrupted submission"
+                    self.requests_state[control_file] = request_status
+
                 self.logger.info(f"Loaded state for {len(self.requests_state)} requests")
             except Exception as e:
                 self.logger.error(f"Error loading state: {e}")
                 self.requests_state = {}
     
     def _save_state(self):
-        """Save current automation state."""
+        """Save current automation state (atomically).
+
+        Writes to a temp file and renames it into place so a crash or
+        SIGKILL mid-write can't leave a truncated/corrupt JSON that
+        wipes all request state on the next start.
+        """
         try:
-            # Convert RequestStatus objects to dictionaries
-            state_data = {
-                control_file: asdict(status)
-                for control_file, status in self.requests_state.items()
-            }
-            
-            with open(self.state_file, 'w') as f:
+            # Snapshot under the lock so a thread mutating requests_state
+            # mid-serialization can't corrupt the dump
+            with self.status_lock:
+                state_data = {
+                    control_file: asdict(status)
+                    for control_file, status in self.requests_state.items()
+                }
+
+            tmp_file = self.state_file.with_suffix('.json.tmp')
+            with open(tmp_file, 'w') as f:
                 json.dump(state_data, f, indent=2)
-            
+                f.flush()
+                os.fsync(f.fileno())
+            os.replace(tmp_file, self.state_file)
+
             self.logger.debug("State saved successfully")
         except Exception as e:
             self.logger.error(f"Error saving state: {e}")
@@ -422,8 +460,13 @@ class BatchAutomationSystem:
             
             # Download using rdams_client with proper path handling
             download_result = rdams_client.download(request_id, download_dir + "/")
-            
-            if download_result:
+
+            # Only treat the download as successful when files actually landed
+            # on disk — a truthy filelist response with zero downloaded files
+            # previously marked requests "downloaded" and then purged them,
+            # permanently losing the data.
+            summary = (download_result or {}).get('download_summary', {})
+            if summary.get('complete'):
                 with self.status_lock:
                     # CRITICAL FIX: Only mark as "downloaded" AFTER successful download
                     request_status.status = "downloaded"
@@ -443,9 +486,15 @@ class BatchAutomationSystem:
                 with self.status_lock:
                     # Reset to ready_for_download for retry, not "completed"
                     request_status.status = "ready_for_download"
-                    request_status.error_message = "Download failed"
-                
-                self.logger.error(f"Failed to download request {request_id}")
+                    request_status.error_message = (
+                        f"Download incomplete: {summary.get('downloaded', 0)}"
+                        f"/{summary.get('expected', '?')} files"
+                    )
+
+                self.logger.error(
+                    f"Failed to download request {request_id}: "
+                    f"{summary.get('downloaded', 0)}/{summary.get('expected', '?')} files"
+                )
                 return False
         
         except Exception as e:
@@ -673,8 +722,10 @@ class BatchAutomationSystem:
                     
                     # Download using rdams_client
                     download_result = rdams_client.download(request_id, temp_download_dir + "/")
-                    
-                    if download_result and 'data' in download_result and len(download_result['data']) > 0:
+
+                    # Require verified on-disk files before purging — purging a
+                    # request whose download silently failed loses the data
+                    if (download_result or {}).get('download_summary', {}).get('complete'):
                         downloaded_count += 1
                         self.logger.info(f"✅ Crisis download successful: Request {request_id}")
                         
