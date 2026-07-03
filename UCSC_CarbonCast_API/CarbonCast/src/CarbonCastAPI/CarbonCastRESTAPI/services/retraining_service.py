@@ -234,16 +234,27 @@ def _try_run_existing_carboncast(region, forecast_start, artifact_dir):
         return {'attempted': True, 'status': 'skipped_missing_config'}
 
     try:
+        # firstTierForecasts/secondTierForecasts live in CarbonCast/src/,
+        # which is not on sys.path when Django runs from src/CarbonCastAPI/
+        import sys
+        ml_src_dir = str(Path(__file__).resolve().parents[3])
+        if ml_src_dir not in sys.path:
+            sys.path.insert(0, ml_src_dir)
         from firstTierForecasts import runFirstTierInRealTime
         from secondTierForecasts import runSecondTierInRealTime
 
         creation_time = tz.now().astimezone(timezone.utc).isoformat()
         start_date = forecast_start.date().isoformat()
         electricity_date = (forecast_start - timedelta(days=1)).date().isoformat()
+        # the ML scripts build paths by string concatenation
+        # (realTimeFileDir + region + "/..."), so dirs need a trailing slash
         real_time_dir = os.environ.get("CARBONCAST_REAL_TIME_DIR", str(artifact_dir))
         weather_dir = os.environ.get("CARBONCAST_REAL_TIME_WEATHER_DIR", str(artifact_dir))
+        real_time_dir = real_time_dir.rstrip('/') + '/'
+        weather_dir = weather_dir.rstrip('/') + '/'
         version = os.environ.get("CARBONCAST_MODEL_VERSION", "db-pipeline-v1")
 
+        # returns a dict: {region: aggregated 96hr forecast csv path}
         first_tier_files = runFirstTierInRealTime(
             config_file,
             [region],
@@ -255,7 +266,9 @@ def _try_run_existing_carboncast(region, forecast_start, artifact_dir):
             creation_time,
             version,
         )
-        for cef_type in ("direct", "lifecycle"):
+        # cefType is the historical CLI flag: "-l" = lifecycle, "-d" = direct;
+        # the second tier indexes realTimeForeCastFileName[region] itself
+        for cef_type in ("-d", "-l"):
             runSecondTierInRealTime(
                 config_file,
                 [region],
@@ -264,7 +277,7 @@ def _try_run_existing_carboncast(region, forecast_start, artifact_dir):
                 electricity_date,
                 real_time_dir,
                 weather_dir,
-                first_tier_files[0] if first_tier_files else "",
+                first_tier_files,
                 creation_time,
                 version,
             )
