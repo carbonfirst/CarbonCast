@@ -14,6 +14,7 @@ import TopControls from './components/TopControls'
 import AppSidebar from './components/AppSidebar'
 import LeftPanelEM from './components/LeftPanelEM'
 import DataStatusIndicator, { type FallbackInfo } from './components/DataStatusIndicator'
+import { getCurrentUtcDate, getCurrentUtcHour } from './utils/dateUtils'
 
 function App() {
   return (
@@ -37,8 +38,8 @@ function MainView({ region }: { region?: string }) {
   const [showLeftPanel, setShowLeftPanel] = useState(false)
   const [timelineState, setTimelineState] = useState<TimelineState>({
     mode: 'now',
-    date: new Date().toISOString().split('T')[0],
-    hour: new Date().getHours()
+    date: getCurrentUtcDate(),
+    hour: getCurrentUtcHour()
   })
   
   // CRITICAL FIX: State for forcing LeftPanelEM update when date changes

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useCarbonIntensityData, type TimelineState } from '../hooks/cache'
 import { apiToMapRegionMapping } from '../utils/regionMapping'
+import { getCurrentUtcDate, getCurrentUtcHour } from '../utils/dateUtils'
 
 // Optimized state management for maximum performance and minimal latency
 let mousePosition = { x: 0, y: 0 }
@@ -93,8 +94,8 @@ export default function InfoPopover({ timelineState }: { timelineState?: Timelin
   // Default timeline state for current time
   const defaultTimelineState: TimelineState = {
     mode: 'now',
-    date: new Date().toISOString().split('T')[0],
-    hour: new Date().getHours()
+    date: getCurrentUtcDate(),
+    hour: getCurrentUtcHour()
   }
   
   // Fetch carbon intensity data

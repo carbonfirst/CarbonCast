@@ -66,11 +66,30 @@ export function getAdjacentDates(dateString: string): string[] {
 
 /**
  * Get current date as YYYY-MM-DD string in local timezone
- * 
+ *
  * @returns Current date string in YYYY-MM-DD format
  */
 export function getCurrentLocalDate(): string {
   return formatLocalDate(new Date())
+}
+
+/**
+ * Current UTC date as YYYY-MM-DD.
+ *
+ * The CarbonCast API stores and filters all timestamps in UTC (Django
+ * TIME_ZONE='UTC'; ?hour= filters ts__hour in UTC). Any date+hour pair sent
+ * to the API must therefore come from the UTC clock — mixing a UTC date
+ * with a local hour (or vice versa) queries the wrong rows.
+ */
+export function getCurrentUtcDate(): string {
+  return new Date().toISOString().split('T')[0]
+}
+
+/**
+ * Current UTC hour (0-23), matching the API's ts__hour filtering.
+ */
+export function getCurrentUtcHour(): number {
+  return new Date().getUTCHours()
 }
 
 /**

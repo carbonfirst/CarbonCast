@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import type { TimelineState } from './cache'
 import { convertToApiRegionCode } from '../utils/regionMapping'
+import { getCurrentUtcDate, getCurrentUtcHour } from '../utils/dateUtils'
 
 // Use environment variable for API URL, fallback to localhost for development
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
@@ -54,17 +55,19 @@ const clearRegionCache = (regionCode?: string): void => {
 // Track if this is the initial load
 let isInitialLoad = true
 
-// Helper to get priority hour for progressive loading
+// Helper to get priority hour for progressive loading.
+// Hours sent to the API must be UTC: the backend filters ts__hour in UTC,
+// so a local-clock hour paired with a UTC date fetches the wrong rows.
 const getPriorityHour = (timelineState?: TimelineState): number => {
   if (isInitialLoad) {
-    // On initial load, use user's local time hour
+    // On initial load, use the current UTC hour
     isInitialLoad = false
-    return new Date().getHours()
+    return getCurrentUtcHour()
   } else if (timelineState) {
     // On date change, use current slider position
     return timelineState.hour
   }
-  return new Date().getHours()
+  return getCurrentUtcHour()
 }
 
 export interface EnergySource {
@@ -235,7 +238,7 @@ export function useEnergyMix(regionCode: string | undefined, timelineState?: Tim
         const apiRegionCode = convertToApiRegionCode(regionCode)
         
         // Progressive loading: determine priority hour
-        const priorityHour = dateChanged || isInitialLoad ? getPriorityHour(timelineState) : timelineState?.hour ?? new Date().getHours()
+        const priorityHour = dateChanged || isInitialLoad ? getPriorityHour(timelineState) : timelineState?.hour ?? getCurrentUtcHour()
         
         // Build cache key for current hour
         let endpoint: string
@@ -529,7 +532,7 @@ export function useCarbonIntensityHistory(regionCode: string | undefined, timeli
         const apiRegionCode = convertToApiRegionCode(regionCode)
         
         // Progressive loading: determine priority hour
-        const priorityHour = dateChanged || isInitialLoad ? getPriorityHour(timelineState) : timelineState?.hour ?? new Date().getHours()
+        const priorityHour = dateChanged || isInitialLoad ? getPriorityHour(timelineState) : timelineState?.hour ?? getCurrentUtcHour()
         
         // First, fetch data for priority hour for immediate display
         let priorityActualUrl: string
@@ -728,8 +731,8 @@ export function useCurrentCarbonIntensity(regionCode: string | undefined, timeli
     const currentFetch = {
       region: regionCode,
       mode: timelineState?.mode || 'now',
-      date: timelineState?.date || new Date().toISOString().split('T')[0],
-      hour: timelineState?.hour ?? new Date().getHours()
+      date: timelineState?.date || getCurrentUtcDate(),
+      hour: timelineState?.hour ?? getCurrentUtcHour()
     }
     
     const shouldSkipFetch = lastFetchRef.current &&

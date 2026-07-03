@@ -7,6 +7,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { setMousePosition, setHoveredZone, setMapMoving, triggerDataUpdate } from './InfoPopover'
 import { useCarbonIntensityData, type TimelineState } from '../hooks/cache'
 import { apiToMapRegionMapping, getAllSubRegions, getDisplayZoneId } from '../utils/regionMapping'
+import { getCurrentUtcDate, getCurrentUtcHour } from '../utils/dateUtils'
 
 // Import MapLibre globally to make it available
 import maplibregl from 'maplibre-gl'
@@ -95,8 +96,8 @@ const MapEM = forwardRef<MapEMRef, MapEMProps>(
   // Fetch carbon intensity data
   const defaultTimelineState: TimelineState = {
     mode: 'now',
-    date: new Date().toISOString().split('T')[0],
-    hour: new Date().getHours()
+    date: getCurrentUtcDate(),
+    hour: getCurrentUtcHour()
   }
   const { data: carbonData, _updateId } = useCarbonIntensityData(timelineState || defaultTimelineState)
   

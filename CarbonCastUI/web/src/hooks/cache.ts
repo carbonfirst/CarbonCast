@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { getAdjacentDates as getAdjacentDatesUtil } from '../utils/dateUtils'
+import { getAdjacentDates as getAdjacentDatesUtil, getCurrentUtcDate, getCurrentUtcHour } from '../utils/dateUtils'
 import { PerformanceLogger } from './performance-logger'
 import { debugLogger } from '../utils/debugLogger'
 
@@ -465,9 +465,9 @@ const fetchData = async (endpoint: string, params: Record<string, any>, mode: st
 // Cache warming on app startup
 export const warmCache = async () => {
   if (!ENABLE_WARM_CACHE) return
-  const now = new Date()
-  const currentHour = now.getHours()
-  const currentDate = now.toISOString().split('T')[0]
+  // UTC clock: the API filters date+hour in UTC
+  const currentHour = getCurrentUtcHour()
+  const currentDate = getCurrentUtcDate()
   
   // Prefetch current data and adjacent hours
   const endpoints = ['/v1/CarbonIntensity', '/v1/EnergySources']

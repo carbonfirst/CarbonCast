@@ -5,11 +5,12 @@ import { useEnergyMix, useCarbonIntensityHistory } from '../hooks/useEnergyData'
 import { type TimelineState, useCarbonIntensityData } from '../hooks/cache'
 import { getRegionDisplayName, convertToApiRegionCode, getDisplayZoneId } from '../utils/regionMapping'
 import { setHoveredZone } from './InfoPopover'
+import { getCurrentUtcDate, getCurrentUtcHour } from '../utils/dateUtils'
 // Extract defaultTimelineState to prevent object recreation
 const defaultTimelineState: TimelineState = {
   mode: 'now',
-  date: new Date().toISOString().split('T')[0],
-  hour: new Date().getHours()
+  date: getCurrentUtcDate(),
+  hour: getCurrentUtcHour()
 }
 
 // Separate component for carbon intensity value display
