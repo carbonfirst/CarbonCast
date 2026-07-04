@@ -42,7 +42,9 @@ except ImportError:
     print("Rate limiting components not available - running in basic mode")
 
 
-BASE_URL = 'https://rda.ucar.edu/api/'
+# NCAR migrated the RDA API host from rda.ucar.edu to gdex.ucar.edu
+# (old host 301-redirects; POST bodies don't survive the redirect).
+BASE_URL = 'https://gdex.ucar.edu/api/'
 DEFAULT_AUTH_FILE = './rdams_token.txt'
 
 # Python 2 compatibility

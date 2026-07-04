@@ -45,12 +45,19 @@ def _load_regions():
 
 
 def generate_weekly_ctl_files(output_dir: str):
-    """Write .ctl files for the next 7 days for all regions and variables."""
+    """Write .ctl files covering recent GFS init cycles for all regions/variables.
+
+    ds084.1 is an *archive* of past model runs: datetype=init date ranges in
+    the future match nothing (the old today/+7d window returned empty
+    requests). Instead request the last 2 days of init cycles — each cycle
+    carries forecast products out to 168h, so yesterday's 00Z run already
+    covers the whole coming week.
+    """
     os.makedirs(output_dir, exist_ok=True)
 
     now = datetime.now(timezone.utc)
-    start = now.strftime('%Y%m%d0000')
-    end = (now + timedelta(days=7)).strftime('%Y%m%d0000')
+    start = (now - timedelta(days=2)).strftime('%Y%m%d0000')
+    end = now.strftime('%Y%m%d%H00')
     date_line = f"{start}/to/{end}"
 
     regions = _load_regions()
