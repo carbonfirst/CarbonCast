@@ -34,6 +34,26 @@ REGION_ALIASES = {
     'NYISO': 'NYIS',
 }
 
+
+def _load_rda_config_regions():
+    """Region codes from the automation tool's config (via RDA_CONFIG_PATH).
+
+    The tool covers ~72 regions while consts.US_region_codes lists only the
+    ones the API serves energy data for. Weather downloads for tool-only
+    regions (BANC, PNM, TEPC, ...) are still worth ingesting — they'd
+    otherwise be skipped as "cannot infer region".
+    """
+    config_path = os.environ.get('RDA_CONFIG_PATH', '')
+    if not config_path or not os.path.exists(config_path):
+        return set()
+    try:
+        with open(config_path) as f:
+            config = json.load(f)
+        return {str(code).upper() for code in config.get('regions', {})}
+    except Exception:
+        logger.exception("Could not load regions from RDA_CONFIG_PATH=%s", config_path)
+        return set()
+
 # GFS member filenames look like gfs.0p25.2023010100.f003.grib2 —
 # capture the forecast cycle (YYYYMMDDHH) and forecast hour (fNNN).
 GFS_FILENAME_RE = re.compile(r'gfs\.0p25\.(\d{10})\.f(\d{3})')
@@ -121,10 +141,15 @@ class Command(BaseCommand):
             f"rows_updated: {rows_updated}"
         )
 
-    def _infer_region(self, path, root):
+    def _known_regions(self):
         from CarbonCastRESTAPI.consts import US_region_codes
 
-        known_regions = set(US_region_codes)
+        if not hasattr(self, '_known_regions_cache'):
+            self._known_regions_cache = set(US_region_codes) | _load_rda_config_regions()
+        return self._known_regions_cache
+
+    def _infer_region(self, path, root):
+        known_regions = self._known_regions()
         rel_parts = [part.upper() for part in path.relative_to(root).parts]
         for part in rel_parts:
             token = part.split('.')[0]
