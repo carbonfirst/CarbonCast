@@ -30,6 +30,36 @@ export interface MapEMRef {
   getMapRef: () => MapRef | null
 }
 
+// Compute bounds covering an entire Polygon or MultiPolygon geometry.
+// Polygon coordinates are rings of [lng, lat]; MultiPolygon adds one more
+// nesting level (array of polygons) — indexing coordinates[0] alone reads a
+// ring as a coordinate pair for MultiPolygons and yields garbage bounds.
+function computeGeometryBounds(geometry: any): maplibregl.LngLatBounds | null {
+  if (!geometry || typeof maplibregl === 'undefined' || !maplibregl.LngLatBounds) return null
+  const bounds = new maplibregl.LngLatBounds()
+  let extended = false
+
+  const extendRing = (ring: any) => {
+    if (!Array.isArray(ring)) return
+    ring.forEach((coord: any) => {
+      if (Array.isArray(coord) && typeof coord[0] === 'number' && typeof coord[1] === 'number') {
+        bounds.extend([coord[0], coord[1]] as [number, number])
+        extended = true
+      }
+    })
+  }
+
+  if (geometry.type === 'Polygon') {
+    (geometry.coordinates || []).forEach(extendRing)
+  } else if (geometry.type === 'MultiPolygon') {
+    (geometry.coordinates || []).forEach((polygon: any) => {
+      (polygon || []).forEach(extendRing)
+    })
+  }
+
+  return extended ? bounds : null
+}
+
 // Color scale function for carbon intensity
 function getColor(d: number | undefined, isForecast: boolean = false) {
   const v = d ?? -1
@@ -699,19 +729,9 @@ const MapEM = forwardRef<MapEMRef, MapEMProps>(
       
       // IMMEDIATE: Notify parent about selection (opens left panel immediately)
       if (onRegionSelect) {
-        // Calculate bounds for the parent to store
-        let bounds = null
-        if (feature?.geometry && typeof maplibregl !== 'undefined' && maplibregl.LngLatBounds) {
-          const boundsObj = new maplibregl.LngLatBounds()
-          const coords = feature.geometry.coordinates[0]
-          if (Array.isArray(coords)) {
-            coords.forEach((coord: number[]) => {
-              boundsObj.extend([coord[0], coord[1]] as [number, number])
-            })
-            bounds = boundsObj
-          }
-        }
-        
+        // Calculate bounds for the parent to store (handles MultiPolygon)
+        const bounds = computeGeometryBounds(feature?.geometry)
+
         // Use the display zone ID (parent region) for navigation and display
         onRegionSelect(displayZoneId, bounds)
       }
@@ -742,21 +762,15 @@ const MapEM = forwardRef<MapEMRef, MapEMProps>(
         // IMMEDIATE zoom to the clicked feature - simplified approach!
         if (feature?.geometry) {
           try {
-            // Create bounds using maplibregl directly - we've already verified it's available
-            const bounds = new maplibregl.LngLatBounds()
-            const coords = feature.geometry.coordinates[0] // Assuming polygon
+            const bounds = computeGeometryBounds(feature.geometry)
 
-            if (Array.isArray(coords)) {
-              coords.forEach((coord: number[]) => {
-                bounds.extend([coord[0], coord[1]] as [number, number])
-              })
-              
+            if (bounds) {
               // CRITICAL: Store bounds in module-level storage BEFORE navigation
               // This persists across component remounts caused by route changes
               persistentZoomState.bounds = bounds
               persistentZoomState.regionName = name
               persistentZoomState.timestamp = Date.now()
-              
+
               // SIMPLIFIED: Just call fitBounds directly - no waiting!
               // The map is already working (selection and panel work), so zoom should work too
               try {
@@ -765,12 +779,12 @@ const MapEM = forwardRef<MapEMRef, MapEMProps>(
                   duration: 800,
                   maxZoom: 4.5 // Much less zoomed in - shows region without excessive detail
                 })
-                
+
                 // Save zoom state after animation completes (for restoration after navigation)
                 setTimeout(() => {
                   const postZoomCenter = map.getCenter()
                   const postZoomZoom = map.getZoom()
-                  
+
                   // Store the zoom state for restoration after navigation
                   savedZoomStateRef.current = {
                     center: [postZoomCenter.lng, postZoomCenter.lat],
