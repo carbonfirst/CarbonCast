@@ -136,16 +136,25 @@ DEFAULT_THROTTLE_LIMIT = None
 EXTENDED_THROTTLE_LIMIT = None
 REQUIRES_AUTH = os.environ.get('REQUIRES_AUTH', 'False')
 
-# Cache (shared across processes via Redis)
-CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": os.environ.get("REDIS_CACHE_URL", "redis://127.0.0.1:6379/1"),
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        },
+# Cache (shared across processes via Redis).
+# CACHE_BACKEND=locmem is a single-process escape hatch for local testing
+# without a Redis server — task locks then only guard within one process.
+if os.environ.get('CACHE_BACKEND', 'redis').lower() == 'locmem':
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        }
     }
-}
+else:
+    CACHES = {
+        "default": {
+            "BACKEND": "django_redis.cache.RedisCache",
+            "LOCATION": os.environ.get("REDIS_CACHE_URL", "redis://127.0.0.1:6379/1"),
+            "OPTIONS": {
+                "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            },
+        }
+    }
 
 # Celery
 CELERY_BROKER_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
@@ -155,6 +164,10 @@ CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 CELERY_TIMEZONE = 'UTC'
 CELERY_TASK_TRACK_STARTED = True
 DJANGO_CELERY_BEAT_TZ_AWARE = True
+# Eager mode runs tasks synchronously in-process (no broker needed) while
+# still writing TaskResult rows — used for local E2E verification.
+CELERY_TASK_ALWAYS_EAGER = os.environ.get('CELERY_TASK_ALWAYS_EAGER', 'False') == 'True'
+CELERY_TASK_STORE_EAGER_RESULT = True
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [

@@ -115,7 +115,7 @@ class Command(BaseCommand):
                 continue
 
             region = self._infer_region(data_file, root)
-            variable = self._infer_variable(data_file)
+            variable = self._infer_variable(data_file.relative_to(root))
             if not region or not variable:
                 logger.warning("Cannot infer region/variable for %s", data_file)
                 files_skipped += 1
