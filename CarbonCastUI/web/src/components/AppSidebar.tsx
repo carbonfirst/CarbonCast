@@ -48,6 +48,16 @@ const AppSidebar = memo(() => {
       ),
       label: 'Insights',
       path: '/insights'
+    },
+    {
+      id: 'status',
+      icon: (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+        </svg>
+      ),
+      label: 'Pipeline Status',
+      path: '/status'
     }
   ]
 

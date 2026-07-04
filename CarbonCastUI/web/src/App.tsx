@@ -15,6 +15,7 @@ import AppSidebar from './components/AppSidebar'
 import LeftPanelEM from './components/LeftPanelEM'
 import DataStatusIndicator, { type FallbackInfo } from './components/DataStatusIndicator'
 import { getCurrentUtcDate, getCurrentUtcHour } from './utils/dateUtils'
+import StatusPage from './components/status/StatusPage'
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
       <Route path="/" element={<Navigate to="/map" replace />} />
       <Route path="/map" element={<MainView />} />
       <Route path="/zone/:region" element={<ZoneRoute />} />
+      <Route path="/status" element={<StatusPage />} />
     </Routes>
   )
 }
