@@ -43,10 +43,12 @@ services:
       REQUIRES_AUTH: ${REQUIRES_AUTH:-False}
       EIA_API_KEY: ${EIA_API_KEY:-}
       ENTSOE_API_TOKEN: ${ENTSOE_API_TOKEN:-}
-      RDA_TOKEN: ${RDA_TOKEN:-}
       RDA_DOWNLOAD_DIR: ${RDA_DOWNLOAD_DIR:-}
       RDA_CONTROL_FILES_DIR: ${RDA_CONTROL_FILES_DIR:-}
       RDA_CONFIG_PATH: ${RDA_CONFIG_PATH:-}
+      RDA_STATE_FILE: ${RDA_STATE_FILE:-}
+      RDA_CLEANUP_ENABLED: ${RDA_CLEANUP_ENABLED:-false}
+      RDA_RETENTION_DAYS: ${RDA_RETENTION_DAYS:-14}
     volumes:
       - ./real_time:/app/real_time
     depends_on:
