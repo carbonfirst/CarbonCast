@@ -106,16 +106,30 @@ PASSWORD_HASHERS = [
 ]
 
 # Database
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('DB_NAME', 'carboncast'),
-        'USER': os.environ.get('DB_USER', 'carboncast'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', ''),
-        'HOST': os.environ.get('DB_HOST', 'localhost'),
-        'PORT': os.environ.get('DB_PORT', '5432'),
+# PostgreSQL is the default; DB_ENGINE=sqlite is the escape hatch for
+# environments without a Postgres server (e.g. user-space container
+# deployments and local test runs).
+if os.environ.get('DB_ENGINE', 'postgres').lower() == 'sqlite':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': os.environ.get('DB_NAME', str(BASE_DIR / 'carboncast.sqlite3')),
+            # 30s lock wait so the API and Celery workers can share the file;
+            # WAL mode is enabled per-connection in CarbonCastRESTAPI.apps
+            'OPTIONS': {'timeout': 30},
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('DB_NAME', 'carboncast'),
+            'USER': os.environ.get('DB_USER', 'carboncast'),
+            'PASSWORD': os.environ.get('DB_PASSWORD', ''),
+            'HOST': os.environ.get('DB_HOST', 'localhost'),
+            'PORT': os.environ.get('DB_PORT', '5432'),
+        }
+    }
 
 # Set to None to disable throttle limits
 DEFAULT_THROTTLE_LIMIT = None
