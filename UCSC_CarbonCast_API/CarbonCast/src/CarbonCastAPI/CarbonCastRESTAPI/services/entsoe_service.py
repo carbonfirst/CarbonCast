@@ -145,14 +145,28 @@ def fetch_and_store_entsoe_data(target_date: str) -> dict:
     api_key = os.environ.get("ENTSOE_API_TOKEN", "") or os.environ.get("ENTSOE_API_KEY", "")
     if not api_key:
         logger.warning("ENTSOE_API_TOKEN not set; skipping ENTSO-E ingestion")
-        return {"inserted": 0, "updated": 0, "errors": 0, "skipped": True}
+        return {
+            "status": "waiting_on_credential",
+            "inserted": 0,
+            "updated": 0,
+            "errors": [],
+            "regions_ok": 0,
+            "regions_failed": 0,
+        }
 
     try:
         import pandas as pd  # noqa: F401  (used by entsoe-py)
         from entsoe import EntsoePandasClient
     except ImportError:
         logger.exception("entsoe-py not installed; skipping ENTSO-E ingestion")
-        return {"inserted": 0, "updated": 0, "errors": 0, "skipped": True}
+        return {
+            "status": "failed",
+            "inserted": 0,
+            "updated": 0,
+            "errors": [{"region": "*", "error": "entsoe-py not installed"}],
+            "regions_ok": 0,
+            "regions_failed": 1,
+        }
 
     import pandas as pd
 
@@ -162,7 +176,8 @@ def fetch_and_store_entsoe_data(target_date: str) -> dict:
 
     inserted = 0
     updated = 0
-    errors = 0
+    errors = []
+    regions_ok = 0
 
     for region_code, area_code in ENTSOE_AREA_CODES.items():
         try:
@@ -221,9 +236,24 @@ def fetch_and_store_entsoe_data(target_date: str) -> dict:
                     inserted += 1
                 else:
                     updated += 1
+            regions_ok += 1
 
-        except Exception:
+        except Exception as exc:
             logger.exception("ENTSO-E fetch failed for %s on %s", region_code, target_date)
-            errors += 1
+            errors.append({"region": region_code, "error": str(exc)[:500]})
 
-    return {"inserted": inserted, "updated": updated, "errors": errors, "skipped": False}
+    if errors and regions_ok == 0:
+        status = "failed"
+    elif errors:
+        status = "partial"
+    else:
+        status = "ok"
+
+    return {
+        "status": status,
+        "inserted": inserted,
+        "updated": updated,
+        "errors": errors,
+        "regions_ok": regions_ok,
+        "regions_failed": len(errors),
+    }

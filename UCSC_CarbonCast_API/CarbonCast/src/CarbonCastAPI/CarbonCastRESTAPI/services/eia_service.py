@@ -185,13 +185,28 @@ def fetch_and_store_eia_data(target_date: str) -> dict:
     """
     Fetch energy data for all BAs for the given date and store in EmissionActual.
 
-    Returns summary dict with inserted/updated counts.
+    Returns a structured summary that lands in the Celery TaskResult and is
+    read by the pipeline status API: per-region errors are recorded (not just
+    counted) and a missing API key is reported as 'waiting_on_credential'
+    rather than 32 identical failures.
     """
     from CarbonCastRESTAPI.models import EmissionActual
 
+    if not os.environ.get("EIA_API_KEY", ""):
+        logger.warning("EIA_API_KEY not set; skipping EIA ingestion")
+        return {
+            'status': 'waiting_on_credential',
+            'inserted': 0,
+            'updated': 0,
+            'errors': [],
+            'regions_ok': 0,
+            'regions_failed': 0,
+        }
+
     inserted = 0
     updated = 0
-    errors = 0
+    errors = []
+    regions_ok = 0
 
     for ba in EIA_BAL_AUTH_LIST:
         try:
@@ -221,9 +236,24 @@ def fetch_and_store_eia_data(target_date: str) -> dict:
                     inserted += 1
                 else:
                     updated += 1
+            regions_ok += 1
 
-        except Exception:
+        except Exception as exc:
             logger.exception("Error fetching EIA data for %s on %s", ba, target_date)
-            errors += 1
+            errors.append({'region': ba, 'error': str(exc)[:500]})
 
-    return {'inserted': inserted, 'updated': updated, 'errors': errors}
+    if errors and regions_ok == 0:
+        status = 'failed'
+    elif errors:
+        status = 'partial'
+    else:
+        status = 'ok'
+
+    return {
+        'status': status,
+        'inserted': inserted,
+        'updated': updated,
+        'errors': errors,
+        'regions_ok': regions_ok,
+        'regions_failed': len(errors),
+    }
