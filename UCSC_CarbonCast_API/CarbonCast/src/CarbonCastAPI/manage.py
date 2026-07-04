@@ -18,7 +18,6 @@ def main():
     if load_dotenv:
         load_dotenv(Path(__file__).resolve().parent / ".env", override=False)
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'CarbonCastAPI.settings')
-    os.environ.setdefault('REQUIRES_AUTH', 'True')    
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:
@@ -27,15 +26,15 @@ def main():
             "available on your PYTHONPATH environment variable? Did you "
             "forget to activate a virtual environment?"
         ) from exc
-    
+
+    # Legacy flag kept for compatibility: auth is off by default
+    # (settings.REQUIRES_AUTH defaults to 'False'; set REQUIRES_AUTH=True
+    # in the environment/.env to require authentication).
     args = sys.argv
     if "--rmauth" in args:
-        idx = args.index("--rmauth")
+        args.remove("--rmauth")
         os.environ['REQUIRES_AUTH'] = 'False'
-        args.pop(idx)
-        execute_from_command_line(args)
-    else:
-        execute_from_command_line(args)
+    execute_from_command_line(args)
 
 
 if __name__ == '__main__':
