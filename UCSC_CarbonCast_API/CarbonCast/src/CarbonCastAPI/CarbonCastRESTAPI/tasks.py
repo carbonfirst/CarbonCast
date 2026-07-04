@@ -68,6 +68,17 @@ def ingest_rda_weather_data():
 
 
 @shared_task
+def cleanup_rda_downloads():
+    """Reclaim disk from already-ingested RDA downloads past retention."""
+    download_dir = os.environ.get('RDA_DOWNLOAD_DIR', '')
+    if not download_dir:
+        logger.warning("RDA_DOWNLOAD_DIR not set, skipping cleanup")
+        return 'skipped'
+    call_command('cleanup_rda_downloads')
+    return 'ok'
+
+
+@shared_task
 def trigger_rda_control_files():
     """Generate fresh .ctl control files for the upcoming week."""
     from CarbonCastRESTAPI.services.ctl_generator import generate_weekly_ctl_files

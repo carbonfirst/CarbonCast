@@ -91,6 +91,8 @@ class PipelineV1Test(TestCase):
     def test_setup_pipeline_schedules_is_idempotent(self):
         from django_celery_beat.models import PeriodicTask
 
+        from CarbonCastRESTAPI.management.commands.setup_pipeline_schedules import Command
+
         call_command('setup_pipeline_schedules')
         call_command('setup_pipeline_schedules')
 
@@ -98,4 +100,9 @@ class PipelineV1Test(TestCase):
             PeriodicTask.objects.filter(name='carboncast.weekly_retraining').count(),
             1,
         )
-        self.assertEqual(PeriodicTask.objects.filter(name__startswith='carboncast.').count(), 5)
+        # Compare against the command's own task list so adding a schedule
+        # doesn't silently break this test
+        self.assertEqual(
+            PeriodicTask.objects.filter(name__startswith='carboncast.').count(),
+            len(Command.TASKS),
+        )

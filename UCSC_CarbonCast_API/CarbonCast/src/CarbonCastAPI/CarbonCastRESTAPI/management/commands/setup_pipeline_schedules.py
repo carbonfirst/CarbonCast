@@ -11,6 +11,22 @@ class Command(BaseCommand):
 
     TASKS = [
         {
+            'name': 'carboncast.heartbeat',
+            'task': 'CarbonCastRESTAPI.tasks.heartbeat',
+            'minute': '*/5',
+            'hour': '*',
+            'day_of_week': '*',
+            'description': 'Worker liveness heartbeat every 5 minutes (read by /v1/PipelineHealth).',
+        },
+        {
+            'name': 'carboncast.daily_rda_cleanup',
+            'task': 'CarbonCastRESTAPI.tasks.cleanup_rda_downloads',
+            'minute': '0',
+            'hour': '4',
+            'day_of_week': '*',
+            'description': 'Reclaim disk from ingested RDA downloads daily at 04:00 UTC.',
+        },
+        {
             'name': 'carboncast.daily_eia_ingestion',
             'task': 'CarbonCastRESTAPI.tasks.fetch_daily_energy_data',
             'minute': '0',
