@@ -106,3 +106,61 @@ class PipelineV1Test(TestCase):
             PeriodicTask.objects.filter(name__startswith='carboncast.').count(),
             len(Command.TASKS),
         )
+
+
+@override_settings(
+    CACHES={'default': {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'}},
+)
+class PipelineStatusTest(TestCase):
+    def test_pipeline_status_returns_all_stages(self):
+        response = self.client.get('/v1/PipelineStatus')
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        stage_keys = [s['key'] for s in payload['stages']]
+        self.assertEqual(stage_keys, [
+            'ctl_generation', 'rda_tool', 'weather_ingestion',
+            'energy_eia', 'energy_entsoe', 'freshness_fallback',
+            'retraining', 'forecast_serving',
+        ])
+        for stage in payload['stages']:
+            self.assertIn(stage['status'], {
+                'ok', 'degraded', 'failed', 'stale',
+                'waiting_on_credential', 'waiting_on_config', 'never_ran',
+            })
+        self.assertIn('overall', payload)
+
+    def test_pipeline_status_reflects_retraining_failures(self):
+        ModelRun.objects.create(
+            region='CISO', model_name='litecast', status='failed',
+            metrics={'error': 'boom'},
+        )
+        ModelRun.objects.create(
+            region='PJM', model_name='litecast', status='completed',
+            run_completed=timezone.now(),
+        )
+
+        response = self.client.get('/v1/PipelineStatus')
+        retraining = next(
+            s for s in response.json()['stages'] if s['key'] == 'retraining'
+        )
+        self.assertEqual(retraining['status'], 'degraded')
+        self.assertEqual(retraining['metrics']['counts']['failed'], 1)
+        self.assertEqual(
+            retraining['metrics']['failed_regions'][0]['region'], 'CISO')
+
+    def test_pipeline_health_reports_components(self):
+        response = self.client.get('/v1/PipelineHealth')
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(
+            set(payload['checks'].keys()),
+            {'database', 'redis_cache', 'celery_worker', 'celery_beat'},
+        )
+        # DB and (locmem) cache must pass in tests; worker/beat won't be
+        # running, so overall ok must be False
+        self.assertTrue(payload['checks']['database']['ok'])
+        self.assertTrue(payload['checks']['redis_cache']['ok'])
+        self.assertFalse(payload['checks']['celery_worker']['ok'])
+        self.assertFalse(payload['ok'])
