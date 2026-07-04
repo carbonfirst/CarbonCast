@@ -211,6 +211,51 @@ class BatchAutomationSystem:
         except Exception as e:
             self.logger.error(f"Error saving state: {e}")
     
+    def reset_changed_control_files(self) -> int:
+        """Reset state entries whose control file changed since they ran.
+
+        State is keyed by ctl-file path, so weekly regeneration (same
+        filenames, new date ranges) would otherwise leave entries stuck at
+        "downloaded" and the new date window would never be submitted.
+        An entry is reset to pending when the ctl file's mtime is newer
+        than the entry's most recent lifecycle timestamp.
+        """
+        reset_count = 0
+        with self.status_lock:
+            for control_file, request_status in self.requests_state.items():
+                if not os.path.exists(control_file):
+                    continue
+                timestamps = [
+                    t for t in (
+                        request_status.download_time,
+                        request_status.completion_time,
+                        request_status.submission_time,
+                    ) if t
+                ]
+                if not timestamps:
+                    continue
+                try:
+                    last_activity = max(
+                        datetime.fromisoformat(t).timestamp() for t in timestamps
+                    )
+                except ValueError:
+                    continue
+                if os.path.getmtime(control_file) > last_activity:
+                    self.requests_state[control_file] = RequestStatus(
+                        control_file=control_file,
+                        region=request_status.region,
+                        variable_type=request_status.variable_type,
+                        download_directory=request_status.download_directory,
+                    )
+                    reset_count += 1
+
+        if reset_count:
+            self.logger.info(
+                f"Reset {reset_count} requests whose control files changed since last run"
+            )
+            self._save_state()
+        return reset_count
+
     def discover_control_files(self) -> List[str]:
         """Discover all control files in the control_files directory."""
         control_files_dir = Path(self.config['directories']['control_files_dir'])
@@ -1088,14 +1133,20 @@ def main():
                        help='Monitor existing requests without submitting new ones')
     parser.add_argument('--resolve-crisis', action='store_true',
                        help='Manually resolve request limit crisis by downloading and purging completed requests')
+    parser.add_argument('--reprocess-changed', action='store_true',
+                       help='Reset requests whose control files were modified after they completed '
+                            '(needed for weekly regenerated ctl files)')
     parser.add_argument('--config', default='automation_config.json',
                        help='Configuration file path')
-    
+
     args = parser.parse_args()
-    
+
     # Initialize system
     system = BatchAutomationSystem(args.config)
-    
+
+    if args.reprocess_changed:
+        system.reset_changed_control_files()
+
     if args.status:
         system.print_status_summary()
     elif args.monitor_only:
