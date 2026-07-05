@@ -152,6 +152,46 @@ def _check_weather_freshness_and_fallback(WeatherForecast):
         logger.info("Copied %d historical fallback rows", count)
         return f'historical_fallback:{count}'
 
+    # Tier 3: best-available — no fresh data and nothing in the 12-month
+    # window either. Rather than giving up (which leaves retraining with
+    # nothing), copy the most recent batch we have per region, shifted to
+    # cover the coming forecast window, and mark it clearly as fallback.
+    latest_any = (
+        WeatherForecast.objects
+        .exclude(source='historical_fallback')
+        .order_by('-forecast_created')
+        .values_list('forecast_created', flat=True)
+        .first()
+    )
+    if latest_any:
+        from django.utils import timezone as tz
+        now = tz.now()
+        batch_qs = WeatherForecast.objects.filter(forecast_created=latest_any)
+        # shift targets so the copied horizon starts now (whole days keeps
+        # the diurnal cycle aligned)
+        first_target = batch_qs.order_by('forecast_target').values_list(
+            'forecast_target', flat=True).first()
+        shift_days = max(0, (now - first_target).days)
+        count = 0
+        for row in batch_qs.iterator():
+            WeatherForecast.objects.update_or_create(
+                region=row.region,
+                forecast_created=now,
+                forecast_target=row.forecast_target + timedelta(days=shift_days),
+                variable=row.variable,
+                defaults={
+                    'value': row.value,
+                    'source': 'historical_fallback',
+                    'data': row.data,
+                },
+            )
+            count += 1
+        logger.warning(
+            "Tier-3 fallback: copied %d rows from %s (shifted %d days)",
+            count, latest_any.isoformat(), shift_days,
+        )
+        return f'historical_fallback:{count}'
+
     logger.critical("No weather data available at all — retraining will use stale data")
     return 'no_data'
 
