@@ -126,7 +126,9 @@ def _load_rda_state():
     if not state_path:
         return None, None, 'RDA_STATE_FILE not set'
     if not os.path.exists(state_path):
-        return None, None, f'state file not found: {state_path}'
+        # the tool creates this on its first run — absence means "hasn't
+        # run yet", not "broken"
+        return None, None, 'never_ran'
     try:
         with open(state_path) as f:
             state = json.load(f)
@@ -203,6 +205,9 @@ class PipelineStatusApiView(APIView):
 
     def _rda_tool_stage(self, now):
         state, mtime, err = _load_rda_state()
+        if err == 'never_ran':
+            return _stage('rda_tool', 'RDA download tool', 'never_ran',
+                          'Tool has not run yet — no state file created')
         if err:
             status_value = 'waiting_on_config' if 'not set' in err else 'degraded'
             return _stage('rda_tool', 'RDA download tool', status_value, err)

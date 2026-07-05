@@ -129,6 +129,9 @@ class Command(BaseCommand):
                 rows_updated += upd
                 files_processed += 1
                 processed[rel_path] = now.isoformat()
+                # persist after every file: archives can take minutes each,
+                # and a killed run must not lose completed work
+                self._save_manifest(manifest_path, processed)
             except Exception:
                 logger.exception("Error ingesting %s", data_file)
 
