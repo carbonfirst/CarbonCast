@@ -80,13 +80,14 @@ def _has_incomplete_state(state_file: Path) -> bool:
     )
 
 
-def _run_batch_automation(config: str) -> int:
+def _run_batch_automation(config: str, control_files_dir: str) -> int:
     cmd = [
         sys.executable,
         str(SCRIPT_DIR / 'batch_automation.py'),
         '--process-all-control-files',
         '--reprocess-changed',
         '--config', config,
+        '--control-files-dir', control_files_dir,
     ]
     logger.info("Starting batch automation: %s", ' '.join(cmd))
     proc = subprocess.Popen(cmd, cwd=str(SCRIPT_DIR))
@@ -140,7 +141,7 @@ def main():
         if ctl_changed or incomplete:
             reason = 'control files changed' if ctl_changed else 'incomplete requests in state'
             logger.info("Work detected (%s) — launching batch automation", reason)
-            rc = _run_batch_automation(args.config)
+            rc = _run_batch_automation(args.config, str(control_dir))
             last_fingerprint = _ctl_fingerprint(control_dir)
             if args.once:
                 sys.exit(rc)

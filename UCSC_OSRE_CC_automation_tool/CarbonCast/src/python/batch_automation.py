@@ -398,9 +398,20 @@ class BatchAutomationSystem:
             
             # Submit using rdams_client
             result = rdams_client.submit(control_file)
-            
-            if result and 'request_index' in result:
-                request_id = str(result['request_index'])
+
+            # Request ID location differs by API generation: the legacy
+            # rda.ucar.edu API returned top-level 'request_index'; the gdex
+            # API nests it as data.request_id. Missing this meant successful
+            # submissions were recorded as failures while the request lived
+            # on untracked at NCAR, silently burning the 10-request quota.
+            request_id = None
+            if isinstance(result, dict):
+                if result.get('request_index'):
+                    request_id = str(result['request_index'])
+                elif isinstance(result.get('data'), dict) and result['data'].get('request_id'):
+                    request_id = str(result['data']['request_id'])
+
+            if request_id:
                 
                 # Extract region and variable
                 region, variable = self.extract_region_and_variable_from_control_file(control_file)
@@ -453,31 +464,68 @@ class BatchAutomationSystem:
             
             request_id = request_status.request_id
             self.logger.debug(f"Checking status for request {request_id}")
-            
+
             # Get status from RDA
             status_result = rdams_client.get_status(request_id)
-            
-            if status_result and 'data' in status_result:
-                rda_status = status_result['data'].get('status', '').lower()
-                
-                with self.status_lock:
-                    request_status.last_check_time = datetime.now().isoformat()
-                    
-                    if rda_status == 'completed':
-                        # CRITICAL FIX: Only mark as "ready_for_download", not "completed"
-                        # This prevents the race condition where status shows completed but files aren't downloaded
-                        if request_status.status != "ready_for_download":
-                            request_status.status = "ready_for_download"
-                            request_status.completion_time = datetime.now().isoformat()
-                            self.logger.info(f"Request {request_id} ready for download")
-                        return True
-                    elif rda_status in ['processing', 'queued', 'running']:
-                        request_status.status = "processing"
-                    elif rda_status in ['failed', 'error']:
+
+            if not status_result:
+                return False
+
+            # Top-level API errors (e.g. 421 "Request Index not found" during
+            # the indexing lag right after submission, or rate limiting) are
+            # transient — do NOT mark the request failed, just retry later.
+            if str(status_result.get('status', '')).lower() == 'error':
+                self.logger.warning(
+                    f"Transient status API error for request {request_id}: "
+                    f"{status_result.get('error_messages')}"
+                )
+                return False
+
+            # gdex may return data as a dict or a single-element list
+            data = status_result.get('data')
+            if isinstance(data, list):
+                data = data[0] if data else {}
+            if not isinstance(data, dict):
+                return False
+
+            # gdex status vocabulary: 'Queued for Processing', 'Processing',
+            # 'Completed', 'Error', 'Set for Purge' — match by substring.
+            rda_status = str(data.get('status', '')).lower()
+
+            with self.status_lock:
+                request_status.last_check_time = datetime.now().isoformat()
+
+                if rda_status == 'completed':
+                    # CRITICAL FIX: Only mark as "ready_for_download", not "completed"
+                    # This prevents the race condition where status shows completed but files aren't downloaded
+                    if request_status.status != "ready_for_download":
+                        request_status.status = "ready_for_download"
+                        request_status.completion_time = datetime.now().isoformat()
+                        self.logger.info(f"Request {request_id} ready for download")
+                    return True
+                elif any(t in rda_status for t in ('queue', 'process', 'running', 'building')):
+                    request_status.status = "processing"
+                elif any(t in rda_status for t in ('error', 'fail')):
+                    # Grace period: freshly submitted requests can briefly
+                    # report an error state before the subset job registers.
+                    # Only trust a failure reading once the request is >5 min old.
+                    age_ok = True
+                    if request_status.submission_time:
+                        try:
+                            submitted = datetime.fromisoformat(request_status.submission_time)
+                            age_ok = (datetime.now() - submitted).total_seconds() > 300
+                        except ValueError:
+                            pass
+                    if age_ok:
                         request_status.status = "failed"
                         request_status.error_message = f"RDA status: {rda_status}"
                         self.logger.error(f"Request {request_id} failed with status: {rda_status}")
-            
+                    else:
+                        self.logger.warning(
+                            f"Request {request_id} reports '{rda_status}' shortly after "
+                            f"submission — treating as transient"
+                        )
+
             return False
         
         except Exception as e:
@@ -1138,11 +1186,15 @@ def main():
                             '(needed for weekly regenerated ctl files)')
     parser.add_argument('--config', default='automation_config.json',
                        help='Configuration file path')
+    parser.add_argument('--control-files-dir', default=None,
+                       help='Override the config control_files_dir (e.g. for single-file tests)')
 
     args = parser.parse_args()
 
     # Initialize system
     system = BatchAutomationSystem(args.config)
+    if args.control_files_dir:
+        system.config['directories']['control_files_dir'] = args.control_files_dir
 
     if args.reprocess_changed:
         system.reset_changed_control_files()

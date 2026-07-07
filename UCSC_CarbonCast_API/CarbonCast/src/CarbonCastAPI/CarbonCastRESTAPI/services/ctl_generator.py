@@ -12,18 +12,44 @@ from datetime import datetime, timedelta, timezone
 
 logger = logging.getLogger(__name__)
 
-WEATHER_VARIABLES = {
-    'temp': {'param': 'TMP/DPT', 'level': 'HTGL:2'},
-    'dswrf': {'param': 'DSWRF', 'level': 'SFC:0'},
-    'wind': {'param': 'UGRD/VGRD', 'level': 'HTGL:10'},
-    'rain': {'param': 'APCP', 'level': 'SFC:0'},
-}
+# Product vocabulary mirrors the automation tool's proven control files
+# (control_files/CISO_*.ctl) and NCAR's ds084.1 metadata:
+# - Instantaneous fields (TMP/DPT, U GRD/V GRD) exist as
+#   "Analysis" + "N-hour Forecast" products every 3 hours.
+# - Flux/accumulation fields are NOT plain forecasts: DSWRF only exists as
+#   "N-hour Average (initial+A to initial+B)" and A PCP as
+#   "N-hour Accumulation (...)" products. Requesting "3-hour Forecast" for
+#   them makes NCAR's subset job fail server-side with status Error.
+# - Param names contain spaces on the API side: "U GRD", "A PCP".
 
-PRODUCT_LINE = (
-    "Analysis/3-hour Forecast/6-hour Forecast/12-hour Forecast/"
-    "24-hour Forecast/48-hour Forecast/72-hour Forecast/"
-    "96-hour Forecast/120-hour Forecast/144-hour Forecast/168-hour Forecast"
-)
+
+def _forecast_products(horizon_hours=168, step=3):
+    products = ['Analysis']
+    products += [f'{h}-hour Forecast' for h in range(step, horizon_hours + 1, step)]
+    return '/'.join(products)
+
+
+def _interval_products(kind, horizon_hours=168):
+    """DSWRF/APCP product list: alternating 3h and 6h windows, e.g.
+    '3-hour Average (initial+0 to initial+3)/6-hour Average (initial+0 to initial+6)/...'
+    """
+    products = []
+    for start in range(0, horizon_hours, 6):
+        products.append(f'3-hour {kind} (initial+{start} to initial+{start + 3})')
+        products.append(f'6-hour {kind} (initial+{start} to initial+{start + 6})')
+    return '/'.join(products)
+
+
+WEATHER_VARIABLES = {
+    'temp': {'param': 'TMP/DPT', 'level': 'HTGL:2',
+             'products': _forecast_products()},
+    'wind': {'param': 'U GRD/V GRD', 'level': 'HTGL:10',
+             'products': _forecast_products()},
+    'dswrf': {'param': 'DSWRF', 'level': 'SFC:0',
+              'products': _interval_products('Average')},
+    'rain': {'param': 'A PCP', 'level': 'SFC:0',
+             'products': _interval_products('Accumulation')},
+}
 
 
 def _load_regions():
@@ -89,7 +115,7 @@ def generate_weekly_ctl_files(output_dir: str):
                 f"slat={slat}\n"
                 f"wlon={wlon}\n"
                 f"elon={elon}\n"
-                f"product={PRODUCT_LINE}\n"
+                f"product={var_cfg['products']}\n"
             )
             with open(filepath, 'w') as f:
                 f.write(content)
