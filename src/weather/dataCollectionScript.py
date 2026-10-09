@@ -108,7 +108,7 @@ def getWeatherData(fileList, csvFields, outFileName, fcstCol, weatherVariable):
             val = subprocess.call(GRIB2_CMD + " " + fileList[fileIdx] + " -csv tmp.csv", shell=True)
             fileIdx+=1
             if(val == 0):
-                dataset = pd.read_csv("tmp.csv", infer_datetime_format=True, 
+                dataset = pd.read_csv("tmp.csv", 
                         names=HEADER) #, header=0,  parse_dates=['UTC time'], index_col=['UTC time'])    
                 # print(dataset.head(2))
                 if (weatherVariable == "TEMP"):
@@ -169,7 +169,7 @@ def getWindData(fileList, csvFields, outFileName):
             val = subprocess.call(GRIB2_CMD + " " + fileList[fileIdx] + " -csv tmp.csv", shell=True)
             fileIdx+=1
             if(val == 0):
-                dataset = pd.read_csv("tmp.csv", infer_datetime_format=True, 
+                dataset = pd.read_csv("tmp.csv", 
                         names=HEADER) #, header=0,  parse_dates=['UTC time'], index_col=['UTC time'])    
                 # print(dataset.head(2))
                 vdataset = dataset[UGRD_VGRD_SEPRATOR[ISO]:]
@@ -232,9 +232,9 @@ def getWindSpeedAcrossAllRegions(inFileName):
                 vval = 0 #subprocess.call(GRIB2_CMD + " " + vWindFileList[fileIdx] + " -csv vtmp.csv", shell=True)
                 fileIdx+=1
                 if (vval == 0):
-                    udataset = pd.read_csv("utmp.csv", infer_datetime_format=True, 
+                    udataset = pd.read_csv("utmp.csv", 
                             names=HEADER)
-                    # vdataset = pd.read_csv("vtmp.csv", infer_datetime_format=True, 
+                    # vdataset = pd.read_csv("vtmp.csv", 
                     #         names=HEADER)
                     vdataset = udataset[UGRD_VGRD_SEPRATOR[ISO]:]
                     udataset = udataset[:UGRD_VGRD_SEPRATOR[ISO]]
@@ -283,7 +283,7 @@ def getTotalDWSRFcrossAllRegions():
             uval = subprocess.call(GRIB2_CMD + " " + dswrfFileList[fileIdx] + " -csv utmp.csv", shell=True)
             if(uval == 0):
                 fileIdx+=1
-                udataset = pd.read_csv("utmp.csv", infer_datetime_format=True, 
+                udataset = pd.read_csv("utmp.csv", 
                         names=HEADER)
                 totalWindSpeed = np.sum(udataset["value"].values)
                 avgWindSpeed = np.average(udataset["value"].values)
@@ -356,7 +356,6 @@ def area_grid(lat, lon):
     https://github.com/chadagreene/CDT/blob/master/cdt/cdtarea.m
     """
     from numpy import meshgrid, deg2rad, gradient, cos
-    from xarray import DataArray
 
     xlon, ylat = meshgrid(lon, lat)
     # print(ylat)

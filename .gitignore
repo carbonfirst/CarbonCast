@@ -1,0 +1,11 @@
+# Python virtual environment and caches
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Files generated when running CarbonCast
+src/*_best_model_iter*.h5
+src/best_model_ann.h5
+CI_forecast_data/
+.DS_Store

@@ -15,19 +15,20 @@ import numpy as np
 import pandas as pd
 import pytz as pytz
 from keras.layers import Dense, Flatten, LSTM
-from keras.layers.convolutional import Conv1D, MaxPooling1D
-from keras.layers.core import Activation, Dropout
+from keras.layers import Conv1D, MaxPooling1D
+from keras.layers import Activation, Dropout
 from keras.models import Sequential
 import tensorflow as tf
 from keras.callbacks import EarlyStopping
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
-from keras.models import load_model, save_model
+from keras.models import save_model
 from keras.layers import RepeatVector
 
 import json5 as json
 
 import common
 import utility
+from common import load_model
 
 
 # [DM] Sweden "unknown" carbon emission factor is different. Refer ElectricityMap github for details
@@ -99,7 +100,7 @@ def runSecondTier(configFileName, cefType, loadFromSavedModel):
         # split into train and test
         print("Spliting dataset into train/test...")
         # dataset = dataset[:-BUFFER_HOURS]
-        trainData, valData, testData, _ = common.splitDataset(dataset.values, 
+        trainData, valData, testData, _ = common.splitDataset(dataset.to_numpy(copy=True), 
                                                 (numTestDays+BUFFER_HOURS//24), numValDays, 
                                                 MAX_PREDICTION_WINDOW_HOURS-PREDICTION_WINDOW_HOURS)
         trainDates = dateTime[: -((numTestDays+BUFFER_HOURS//24)*24):]
@@ -113,7 +114,7 @@ def runSecondTier(configFileName, cefType, loadFromSavedModel):
         print("TestData shape: ", testData.shape) # days x hour x features
 
         wTrainData, wValData, wTestData, wFullTrainData = common.splitWeatherDataset(
-                forecastDataset.values, numTestDays, numValDays, MAX_PREDICTION_WINDOW_HOURS)
+                forecastDataset.to_numpy(copy=True), numTestDays, numValDays, MAX_PREDICTION_WINDOW_HOURS)
         wTrainData = wTrainData[:, :numForecastFeatures]
         wValData = wValData[:, :numForecastFeatures]
         wTestData = wTestData[:, :numForecastFeatures]
@@ -225,7 +226,7 @@ def runSecondTier(configFileName, cefType, loadFromSavedModel):
 def initialize(inFileName, forecastInFileName, startCol):
     print(inFileName)
     # load the new file
-    dataset = pd.read_csv(inFileName, header=0, infer_datetime_format=True, 
+    dataset = pd.read_csv(inFileName, header=0, 
                             parse_dates=['UTC time'], index_col=['UTC time'])    
     # dataset = dataset[:8784]
     print(dataset.head())
@@ -233,7 +234,7 @@ def initialize(inFileName, forecastInFileName, startCol):
     dateTime = dataset.index.values
 
     print(forecastInFileName)
-    forecastDataset = pd.read_csv(forecastInFileName, header=0, infer_datetime_format=True, 
+    forecastDataset = pd.read_csv(forecastInFileName, header=0, 
                             parse_dates=['UTC time'], index_col=['UTC time'])    
     # dataset = dataset[:8784]
     print(forecastDataset.head())

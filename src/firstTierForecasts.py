@@ -14,12 +14,11 @@ import pytz as pytz
 from keras.layers import Dense, Flatten
 from keras.layers import LSTM
 from keras.models import Sequential
-from scipy.sparse import data
 import tensorflow as tf
 from tensorflow import keras
 from keras.callbacks import EarlyStopping
 from keras.callbacks import ModelCheckpoint
-from keras.models import load_model
+from common import load_model
 from keras.layers import RepeatVector
 
 import common
@@ -106,13 +105,13 @@ def runFirstTier(configFileName):
 
                     # split into train and test
                     print("Spliting dataset into train/test...")
-                    trainData, valData, testData, fullTrainData = common.splitDataset(dataset.values, numTestDays, 
+                    trainData, valData, testData, fullTrainData = common.splitDataset(dataset.to_numpy(copy=True), numTestDays, 
                                                             numValDays)
                     trainDates = dateTime[: -(numTestDays*24)]
                     fullTrainDates = np.copy(trainDates)
                     trainDates, validationDates = trainDates[: -(numValDays*24)], trainDates[-(numValDays*24):]
                     testDates = dateTime[-(numTestDays*24):]
-                    bufferPeriod = bufferPeriod.values
+                    bufferPeriod = bufferPeriod.to_numpy(copy=True)
                     trainData = trainData[:, sourceCol: sourceCol+numFeatures]
                     valData = valData[:, sourceCol: sourceCol+numFeatures]
                     testData = testData[:, sourceCol: sourceCol+numFeatures]
@@ -130,7 +129,7 @@ def runFirstTier(configFileName):
                     wTrainData, wValData, wTestData, wFullTrainData = None, None, None, None
                     if (isRenewableSource):
                         wTrainData, wValData, wTestData, wFullTrainData = common.splitWeatherDataset(
-                                weatherDataset.values, numTestDays, numValDays, PREDICTION_WINDOW_HOURS)
+                                weatherDataset.to_numpy(copy=True), numTestDays, numValDays, PREDICTION_WINDOW_HOURS)
                         print("WeatherTrainData shape: ", wTrainData.shape) # (days x hour) x features
                         print("WeatherValData shape: ", wValData.shape) # (days x hour) x features
                         print("WeatherTestData shape: ", wTestData.shape) # (days x hour) x features
@@ -158,7 +157,7 @@ def runFirstTier(configFileName):
                     print("Features: ", featureList)
                         
                     if (partialSourceProductionForecastAvailable):
-                        partialSourceProductionForecast = dataset["avg_"+source.lower()+"_production_forecast"].iloc[-numTestDays*24:].values
+                        partialSourceProductionForecast = dataset["avg_"+source.lower()+"_production_forecast"].iloc[-numTestDays*24:].to_numpy(copy=True)
                         partialSourceProductionForecast = common.scaleColumn(partialSourceProductionForecast, 
                                 ftMin[DEPENDENT_VARIABLE_COL], ftMax[DEPENDENT_VARIABLE_COL])
                         # print(partialSourceProductionForecast, ftMax[DEPENDENT_VARIABLE_COL], ftMin[DEPENDENT_VARIABLE_COL])
@@ -224,14 +223,14 @@ def initialize(inFileName, weatherForecastInFileName, startCol, datasetLimiter,
 
     global BUFFER_HOURS
     # load the new file
-    dataset = pd.read_csv(inFileName, header=0, infer_datetime_format=True, 
+    dataset = pd.read_csv(inFileName, header=0, 
                             parse_dates=['UTC time'], index_col=['UTC time'])
 
     # print(dataset.head())
     # print(dataset.columns)
     dateTime = dataset.index.values
 
-    weatherDataset = pd.read_csv(weatherForecastInFileName, header=0, infer_datetime_format=True, 
+    weatherDataset = pd.read_csv(weatherForecastInFileName, header=0, 
                             parse_dates=['UTC time'], index_col=['UTC time'])
     # print(weatherDataset.head())
     

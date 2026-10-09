@@ -29,7 +29,7 @@ PREDICTION_WINDOW_HOURS = 24 * PREDICTION_PERIOD_DAYS
 
 def readFile(inFileName):
     print("Filename: ", inFileName)
-    dataset = pd.read_csv(inFileName, header=0, infer_datetime_format=True, 
+    dataset = pd.read_csv(inFileName, header=0, 
                             parse_dates=['datetime'], index_col=['datetime'])    
     print(dataset.head())
     print(dataset.columns)
@@ -78,7 +78,7 @@ def createForecastColumns(dataset, modifiedDataset, colName):
         while (j<=PREDICTION_WINDOW_HOURS): # changed from 24 for 96 hour forecast
             if(fcstIdx < j):
                 fcstColName = str(j)+" hr fcst"
-                modifiedDataset[colName].iloc[i] = dataset[fcstColName].iloc[idx]
+                modifiedDataset.iloc[i, modifiedDataset.columns.get_loc(colName)] = dataset[fcstColName].iloc[idx]
                 # print(i, j, idx, fcstIdx)
                 fcstIdx += 1
                 i += 1
@@ -91,7 +91,7 @@ def createForecastColumns(dataset, modifiedDataset, colName):
         modifiedDataset[colName] = np.abs(modifiedDataset[colName].values)
 
     for i in range(PREDICTION_WINDOW_HOURS, len(modifiedDataset.index.values), PREDICTION_WINDOW_HOURS): # Check correctness
-        modifiedDataset[colName].iloc[i] = modifiedDataset[colName].iloc[i-((PREDICTION_PERIOD_DAYS-1)*24)]
+        modifiedDataset.iloc[i, modifiedDataset.columns.get_loc(colName)] = modifiedDataset[colName].iloc[i-((PREDICTION_PERIOD_DAYS-1)*24)]
 
     return modifiedDataset
 
@@ -112,13 +112,13 @@ def createAvgOrAccForecastColumns(dataset, modifiedDataset, colName, avgOrAcc):
             nHourAvgorAcc = dataset[timePeriod].iloc[idx]
             while(fcstIdx < hour+3 and i < modifiedDatasetLength):
                 # print(timePeriod, idx, i ,len(modifiedDataset.index.values))
-                modifiedDataset[colName].iloc[i] = nHourAvgorAcc
+                modifiedDataset.iloc[i, modifiedDataset.columns.get_loc(colName)] = nHourAvgorAcc
                 i += 1
                 fcstIdx += 1
         idx += 1 # changed from 4 to 1 since we are not collecting updated weather data at 06, 12, 18 hours anymore
 
     for i in range(PREDICTION_WINDOW_HOURS, len(modifiedDataset.index.values), PREDICTION_WINDOW_HOURS):  # Check correctness
-        modifiedDataset[colName].iloc[i] = modifiedDataset[colName].iloc[i-((PREDICTION_PERIOD_DAYS-1)*24)]
+        modifiedDataset.iloc[i, modifiedDataset.columns.get_loc(colName)] = modifiedDataset[colName].iloc[i-((PREDICTION_PERIOD_DAYS-1)*24)]
 
     return modifiedDataset
 
@@ -127,7 +127,7 @@ def calcluateWindSpeed(dataset):
     for i in range(len(dataset)):
         u = dataset["forecast_u_wind"].iloc[i]
         v = dataset["forecast_v_wind"].iloc[i]
-        dataset["forecast_wind_speed"].iloc[i] = round(math.sqrt(u*u * v*v), 5)
+        dataset.iloc[i, dataset.columns.get_loc("forecast_wind_speed")] = round(math.sqrt(u*u * v*v), 5)
     return dataset
 
 dataset, dateTime = readFile(FILE_DIR+IN_FILE_NAMES[0])
@@ -139,14 +139,14 @@ modifiedDataset.index.name = "datetime"
 for i in range(len(IN_FILE_NAMES)):
     dataset, dateTime = readFile(FILE_DIR+IN_FILE_NAMES[i])
     colName = modifiedDataset.columns.values[i]
-    modifiedDataset[colName].iloc[0] = 0
+    modifiedDataset.iloc[0, modifiedDataset.columns.get_loc(colName)] = 0
     if "dswrf" in colName:
         modifiedDataset = createAvgOrAccForecastColumns(dataset, modifiedDataset, colName, "avg")
     elif "precipitation" in colName:
         modifiedDataset = createAvgOrAccForecastColumns(dataset, modifiedDataset, colName, "acc")
     else:
         modifiedDataset = createForecastColumns(dataset, modifiedDataset, colName)    
-    modifiedDataset[colName].iloc[0] = modifiedDataset[colName].iloc[1]
+    modifiedDataset.iloc[0, modifiedDataset.columns.get_loc(colName)] = modifiedDataset[colName].iloc[1]
     
 modifiedDataset.to_csv(FILE_DIR+OUT_FILE_NAMES[0])
 
