@@ -53,13 +53,13 @@ forcast_carbonRateLifecycle = {"avg_coal_production_forecast": 820, "avg_biomass
 
 def initialize(inFileName):
     print("FILE: ", inFileName)
-    dataset = pd.read_csv(inFileName, header=0, infer_datetime_format=True, 
+    dataset = pd.read_csv(inFileName, header=0, 
                             parse_dates=["UTC time"]) #, index_col=["Local time"]
     print(dataset.head(2))
     print(dataset.tail(2))
     dataset.replace(np.nan, 0, inplace=True) # replace NaN with 0.0
-    num = dataset._get_numeric_data()
-    num[num<0] = 0
+    num = dataset.select_dtypes(include="number")
+    dataset[num.columns] = num.mask(num < 0, 0) # replace negative values with 0
     
     print(dataset.columns)
     # print("UTC time", dataset["UTC time"].dtype)

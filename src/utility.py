@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 import pytz as pytz
-from scipy.fftpack import ss_diff
 import tensorflow as tf
 import matplotlib.pyplot as plt
 import csv
@@ -230,7 +229,7 @@ def createFeatureViolinGraph(features, dataset, dateTime):
     dataset = dataset.astype(np.float64)
     plt.figure() #figsize=(12, 6)
     datasetMod = dataset.melt(var_name='Column', value_name='Normalized values')
-    ax = sns.violinplot(x='Column', y='Normalized values', data=datasetMod, scale="count")
+    ax = sns.violinplot(x='Column', y='Normalized values', data=datasetMod, density_norm="count")
     # ax = plt.boxplot(dataset, vert=True)
     # for ft in features:
     #     print(ft, np.amax(dataset[ft].values), np.amin(dataset[ft].values))
@@ -262,10 +261,10 @@ def calcCarbonIntensityFromForecasts(dataset):
             sourceForecasts.append(dataset[col].values)
             energySource.append(col[9:]) # removing "forecast_"
             # sources are stored in the same order
-    sourceForecasts = np.array(sourceForecasts, dtype=np.float)
+    sourceForecasts = np.array(sourceForecasts, dtype=np.float64)
     sourceForecasts = sourceForecasts.T
     for i in range(24):
-        carbonIntensity[i] = dataset.iloc[i][0]
+        carbonIntensity[i] = dataset.iloc[i, 0]
     for i in range(24, len(dataset)):
         carbonIntensity[i] = round(calcCarbonIntensity(sourceForecasts[i-24, :], energySource), 6)
     return carbonIntensity

@@ -2,13 +2,28 @@ import numpy as np
 import pandas as pd
 import pytz as pytz
 import tensorflow as tf
+import keras
 import matplotlib.pyplot as plt
 import csv
 import math
+import os
 import seaborn as sns
 from statsmodels.tsa.stattools import adfuller
 import matplotlib.dates as mdates
 
+
+# Compatibility: models in saved_second_tier_models/ were saved with TF/Keras 2.9.
+# Their LSTM config contains "time_major", which Keras 3 no longer accepts.
+# This subclass simply drops that obsolete argument so the old .h5 models load as-is.
+# Loaded models are only used for inference, so the (Keras 2 style) training config
+# is skipped with compile=False.
+class _LegacyLSTM(keras.layers.LSTM):
+    def __init__(self, *args, time_major=False, **kwargs):
+        super().__init__(*args, **kwargs)
+
+def load_model(filePath):
+    return keras.models.load_model(filePath, custom_objects={"LSTM": _LegacyLSTM},
+                                   compile=False)
 
 
 def inverseDataScaling(data, cmax, cmin):
@@ -54,8 +69,10 @@ def writeOutFile(outFileName, data, fuel, writeMode):
     fields = ["datetime", fuel+"_actual", "avg_"+fuel+"_production_forecast"]
     if (fuel == "carbon_intensity"):
         fields = ["datetime", fuel+"_actual", "avg_"+fuel+"_forecast"]
-    
-    # writing to csv file 
+
+    # create the output directory if it does not exist yet
+    os.makedirs(os.path.dirname(outFileName) or ".", exist_ok=True)
+    # writing to csv file
     with open(outFileName, writeMode) as csvfile: 
         # creating a csv writer object 
         csvwriter = csv.writer(csvfile)   
@@ -269,7 +286,7 @@ def createFeatureViolinGraph(features, dataset, dateTime):
     dataset = dataset.astype(np.float64)
     plt.figure() #figsize=(12, 6)
     datasetMod = dataset.melt(var_name='Column', value_name='Normalized values')
-    ax = sns.violinplot(x='Column', y='Normalized values', data=datasetMod, scale="count")
+    ax = sns.violinplot(x='Column', y='Normalized values', data=datasetMod, density_norm="count")
     # ax = plt.boxplot(dataset, vert=True)
     # for ft in features:
     #     print(ft, np.amax(dataset[ft].values), np.amin(dataset[ft].values))
@@ -301,10 +318,10 @@ def calcCarbonIntensityFromForecasts(dataset):
             sourceForecasts.append(dataset[col].values)
             energySource.append(col[9:]) # removing "forecast_"
             # sources are stored in the same order
-    sourceForecasts = np.array(sourceForecasts, dtype=np.float)
+    sourceForecasts = np.array(sourceForecasts, dtype=np.float64)
     sourceForecasts = sourceForecasts.T
     for i in range(24):
-        carbonIntensity[i] = dataset.iloc[i][0]
+        carbonIntensity[i] = dataset.iloc[i, 0]
     for i in range(24, len(dataset)):
         carbonIntensity[i] = round(calcCarbonIntensity(sourceForecasts[i-24, :], energySource), 6)
     return carbonIntensity
